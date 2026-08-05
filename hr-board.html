@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR Board</title>
+<title>Going Yard</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0d0b' rx='18'/%3E%3Cpath d='M50 20 L80 50 L50 80 L20 50 Z' fill='none' stroke='%23e3a548' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%234fdb9a'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg: #0a0d0b;
@@ -18,9 +18,9 @@
     --gold: #e3a548;
     --green: #4fdb9a;
     --red: #d96b5b;
-    --mono: 'IBM Plex Mono', monospace;
-    --display: 'Oswald', sans-serif;
-    --body: 'Inter', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Manrope', sans-serif;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
@@ -32,7 +32,7 @@
     background-attachment:fixed;
   }
 
-  .wrap{max-width:720px; margin:0 auto; padding:0 14px 80px;}
+  .wrap{max-width:600px; margin:0 auto; padding:0 14px 80px;}
 
   /* ---- Header ---- */
   header{
@@ -48,14 +48,14 @@
     background:repeating-linear-gradient(90deg, var(--gold) 0 10px, transparent 10px 20px);
     opacity:0.35;
   }
-  .titlebar{max-width:720px; margin:0 auto; display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
+  .titlebar{max-width:600px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .title{
-    font-family:var(--display); font-weight:700; letter-spacing:0.5px;
-    font-size:26px; text-transform:uppercase; color:var(--text);
-    display:flex; align-items:center; gap:8px;
+    font-family:var(--display); font-weight:700; letter-spacing:-0.5px;
+    font-size:28px; text-transform:uppercase; color:var(--text);
+    display:flex; align-items:center; gap:9px;
   }
   .title-icon{color:var(--gold); flex-shrink:0;}
-  .title .dot{color:var(--gold);}
+  .title .dot{color:var(--gold); margin:0 1px;}
   .count{
     font-family:var(--mono); font-size:12px; color:var(--muted);
     border:1px solid var(--line); border-radius:20px; padding:4px 10px; white-space:nowrap;
@@ -63,7 +63,7 @@
   .subtitle{font-size:12px; color:var(--muted2); margin-top:2px; font-family:var(--body);}
 
   .hrcounter{
-    max-width:720px; margin:10px auto 0; display:flex; align-items:center; gap:7px;
+    max-width:600px; margin:10px auto 0; display:flex; align-items:center; gap:7px;
     font-family:var(--mono); font-size:12px; color:var(--red); font-weight:600;
   }
   .hrcounter-dot{
@@ -72,7 +72,7 @@
   }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-  .controls{max-width:720px; margin:12px auto 0; display:flex; gap:8px;}
+  .controls{max-width:600px; margin:12px auto 0; display:flex; gap:8px;}
   .search{
     flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:10px;
     color:var(--text); font-family:var(--body); font-size:14px; padding:10px 12px;
@@ -90,11 +90,11 @@
   /* ---- Game filter (horizontal scroll) ---- */
   .gamefilter-label{
     font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase;
-    letter-spacing:1px; padding:10px 2px 0; max-width:720px; margin:0 auto;
+    letter-spacing:1px; padding:10px 2px 0; max-width:600px; margin:0 auto;
   }
   .gamefilter{
     display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
-    padding:8px 2px 2px; max-width:720px; margin:0 auto; scrollbar-width:thin;
+    padding:8px 2px 2px; max-width:600px; margin:0 auto; scrollbar-width:thin;
   }
   .gamefilter::-webkit-scrollbar{height:4px;}
   .gamefilter::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
@@ -111,43 +111,35 @@
   /* ---- Legend ---- */
   .legend{
     display:flex; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:10px; color:var(--muted2);
-    padding:10px 2px 0; max-width:720px; margin:0 auto;
+    padding:10px 2px 0; max-width:600px; margin:0 auto;
   }
   .legend span{display:flex; align-items:center; gap:4px;}
   .swatch{width:8px; height:8px; border-radius:2px; display:inline-block;}
 
   /* ---- List ---- */
-  .list{padding-top:14px; display:flex; flex-direction:column; gap:8px;}
+  .list{padding-top:14px; display:flex; flex-direction:column; gap:12px;}
 
   .card{
     background:var(--surface2); border:1px solid var(--line); border-radius:14px;
-    padding:12px 14px; transition:border-color .15s ease;
+    padding:16px 18px; transition:border-color .15s ease;
   }
   .card:active{border-color:var(--gold);}
-  .card.tier-green{
-    border-color:rgba(79,219,154,0.5);
-    background:linear-gradient(180deg, rgba(79,219,154,0.08), var(--surface2) 40%);
-  }
   .card.tier-green .scoreval{color:var(--green);}
-
-  .card.tier-blue{border-color:rgba(106,159,216,0.45);}
   .card.tier-blue .scoreval{color:#6a9fd8;}
-
-  .card.tier-orange{border-color:rgba(224,118,63,0.45);}
   .card.tier-orange .scoreval{color:#e0763f;}
-
-  .card.tier-grey{border-color:var(--line);}
   .card.tier-grey .scoreval{color:var(--muted);}
 
   .row1{display:flex; align-items:center; gap:12px;}
 
   .headshot-wrap{
-    position:relative; width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    position:relative; width:58px; height:58px; border-radius:50%; flex-shrink:0;
     border:2px solid var(--line); overflow:hidden; background:#1a201c;
+    box-shadow:0 2px 6px rgba(0,0,0,0.4);
   }
   .headshot-fallback{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-family:var(--display); font-weight:600; font-size:14px; color:var(--muted);
+    font-family:var(--display); font-weight:700; font-size:18px; color:#fff;
+    text-shadow:0 1px 2px rgba(0,0,0,0.5);
   }
   .headshot-img{
     position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top center;
@@ -183,7 +175,7 @@
   .favtier-longshot{color:var(--muted); background:rgba(139,148,141,0.1); border:1px solid var(--line);}
 
   /* segmented bar */
-  .segbar{display:flex; height:5px; border-radius:3px; overflow:hidden; margin-top:10px; background:#1c231f;}
+  .segbar{display:flex; height:5px; border-radius:3px; overflow:hidden; margin-top:14px; background:#1c231f;}
   .seg{height:100%;}
   .seg.power{background:var(--gold);}
   .seg.matchup{background:var(--green);}
@@ -191,7 +183,7 @@
   .seg.platoon{background:#c77dd6;}
   .seg.opportunity{background:#e0763f;}
 
-  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;}
+  .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px;}
   .chip{
     font-family:var(--mono); font-size:10px; color:var(--muted); background:#1a201c;
     border:1px solid var(--line); border-radius:6px; padding:3px 7px;
@@ -202,12 +194,12 @@
   /* ---- Always-visible stat box grid (swiftprops-style) ---- */
   .statboxwrap{
     display:grid; grid-template-columns:repeat(3, 1fr); gap:1px;
-    margin-top:10px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;
+    margin-top:14px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;
   }
-  .statbox{background:var(--surface2); padding:8px 6px; text-align:center;}
+  .statbox{background:var(--surface2); padding:12px 6px; text-align:center;}
   .statbox .sblabel{
     font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase;
-    letter-spacing:0.4px; display:block; margin-bottom:3px; white-space:nowrap;
+    letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;
   }
   .statbox .sbval{font-family:var(--mono); font-weight:600; font-size:14px; color:var(--text);}
   .statbox.hot .sbval{color:var(--green);}
@@ -216,7 +208,7 @@
   .empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:13px; padding:40px 0;}
 
   footer{
-    max-width:720px; margin:24px auto 0; padding:0 4px;
+    max-width:600px; margin:24px auto 0; padding:0 4px;
     font-family:var(--body); font-size:11px; color:var(--muted2); line-height:1.5;
   }
 </style>
@@ -226,7 +218,7 @@
 <header>
   <div class="titlebar">
     <div>
-      <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>HR<span class="dot">·</span>BOARD</div>
+      <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>GOING<span class="dot">·</span>YARD</div>
       <div class="subtitle">Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted</div>
     </div>
     <div class="count" id="count">60 players</div>
@@ -500,12 +492,12 @@ function render(){
     const teamColor = TEAM_COLORS[p.team] || '#3a4038';
     const initials = p.player.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
     const headshotImg = p.playerId
-      ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_100/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
+      ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : '';
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(105deg, ${teamColor}14 0%, transparent 30%);">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}38 0%, ${teamColor}08 22%, transparent 45%);">
       <div class="row1">
-        <div class="headshot-wrap" style="border-color:${teamColor};">
+        <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
           <div class="headshot-fallback">${initials}</div>
           ${headshotImg}
         </div>
