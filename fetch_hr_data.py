@@ -345,13 +345,19 @@ def main():
     statcast = fetch_batter_statcast()
 
     players = []
+    sides_with_pitcher = 0
+    sides_with_lineup = 0
+    sides_missing_pitcher = 0
+    sides_missing_lineup = 0
 
     for g in games:
         for side, opp_side in [("home", "away"), ("away", "home")]:
             team = g[f"{side}_team"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
             if not opp_pitcher:
+                sides_missing_pitcher += 1
                 continue
+            sides_with_pitcher += 1
             pitcher_id, pitcher_hand = get_pitcher_hand_and_id(opp_pitcher)
             pitcher_stat = pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20})
 
@@ -362,6 +368,11 @@ def main():
             wind_score = wind_park_factor(wind_speed, wind_dir)
 
             lineup = get_lineup(g["game_pk"], side)
+            if lineup:
+                sides_with_lineup += 1
+            else:
+                sides_missing_lineup += 1
+                print(f"  no lineup yet for {team} ({g['away_team']} @ {g['home_team']})")
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
@@ -393,6 +404,11 @@ def main():
                 player_row.update(compute_score(player_row))
                 players.append(player_row)
                 time.sleep(0.05)  # be polite to the free API
+
+    print(f"  sides with a probable pitcher: {sides_with_pitcher} "
+          f"(missing: {sides_missing_pitcher})")
+    print(f"  sides with a posted lineup: {sides_with_lineup} "
+          f"(missing/not posted yet: {sides_missing_lineup})")
 
     players.sort(key=lambda p: -p["score"])
 
