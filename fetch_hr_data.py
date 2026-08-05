@@ -95,16 +95,30 @@ def get_todays_games():
 
 
 def get_lineup(game_pk, side):
-    """Gets confirmed lineup from MLB."""
+    """Gets batting order from MLB live feed/boxscore."""
     try:
-        data = statsapi_get(f"game/{game_pk}/lineups")
+        url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
 
-        team_lineup = data["teams"][side]["batters"]
+        team_box = data["liveData"]["boxscore"]["teams"][side]
 
-        return {
-            batter["id"]: i + 1
-            for i, batter in enumerate(team_lineup)
-        }
+        batters = team_box.get("batters", [])
+        players = team_box.get("players", {})
+
+        lineup = {}
+
+        for player_id in batters:
+            player_key = f"ID{player_id}"
+            player = players.get(player_key, {})
+
+            batting_order = player.get("battingOrder")
+
+            if batting_order:
+                lineup[player_id] = int(batting_order)
+
+        return lineup
 
     except Exception as e:
         print("Lineup error:", e)
@@ -333,7 +347,8 @@ def main():
                 wind_speed, wind_dir = get_wind(park["lat"], park["lon"])
             wind_score = wind_park_factor(wind_speed, wind_dir)
 
-            lineup = get_lineup(g["game_pk"], side)
+          lineup = get_lineup(g["game_pk"], side)
+print(team, "lineup size:", len(lineup))
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
