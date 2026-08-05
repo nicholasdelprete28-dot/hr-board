@@ -434,7 +434,9 @@ def main():
     statcast = fetch_batter_statcast()
     print(f"  parsed {len(statcast)} batters with Statcast data")
 
-    players = []
+    # ---- PASS 1: build every player row using only data we already have in
+    # memory (no network calls in this loop) - fast, a few seconds at most.
+    rows = []  # each entry: (player_row_dict, batter_id, pitcher_hand)
     sides_with_pitcher = 0
     sides_confirmed_lineup = 0
     sides_projected_lineup = 0
@@ -464,8 +466,6 @@ def main():
             if lineup:
                 sides_confirmed_lineup += 1
             else:
-                # Today's lineup isn't posted yet - fall back to this team's
-                # most recent game as a "probable starters" estimate.
                 lineup = get_recent_lineup(team_id)
                 lineup_confirmed = False
                 if lineup:
@@ -479,9 +479,8 @@ def main():
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
-                name = bstats.get("name") or get_player_name(batter_id)
+                name = bstats.get("name") or ""  # filled in pass 2 if still blank
                 sc = statcast.get(batter_id, {})
-                platoon_avg = get_platoon_split(batter_id, pitcher_hand)
 
                 player_row = {
                     "player": name,
@@ -498,24 +497,52 @@ def main():
                     "iso": bstats.get("iso"),
                     "phr9": pitcher_stat["hr9"],
                     "whip": pitcher_stat["whip"],
-                    "avgmix": platoon_avg,          # our platoon-split substitute
+                    "avgmix": None,   # filled in pass 2
                     "wind": wind_score,
                     "park": park["factor"],
-                    "l15hr": get_l15_hr(batter_id),
-                    "lbonus": max(1, 9 - order_pos), # 1st = +8 ... 9th = +1 (roughly matches old scale)
-                    "crush": 1 if (platoon_avg or 0) >= 0.280 else 0,
-                    "split": 1 if (platoon_avg or 0) >= 0.260 else 0,
-                    "hrprob": None,  # no swiftprops number to reference anymore
+                    "l15hr": None,    # filled in pass 2
+                    "lbonus": max(1, 9 - order_pos),
+                    "crush": 0,       # finalized after pass 2
+                    "split": 0,
+                    "hrprob": None,
                 }
-                player_row.update(compute_score(player_row))
-                players.append(player_row)
-                time.sleep(0.05)  # be polite to the free API
+                rows.append((player_row, batter_id, pitcher_hand))
 
     print(f"  sides with a probable pitcher: {sides_with_pitcher} "
           f"(missing: {sides_missing_pitcher})")
     print(f"  sides with a CONFIRMED lineup: {sides_confirmed_lineup}")
     print(f"  sides using a PROJECTED lineup (from last game): {sides_projected_lineup}")
     print(f"  sides with no lineup available at all: {sides_no_lineup_at_all}")
+
+    # ---- PASS 2: the slow part - platoon split, L15 HR, and any missing name
+    # lookups - run CONCURRENTLY across many threads instead of one at a time.
+    # This is what previously made the whole run take 4-10+ minutes; with
+    # ~20 requests in flight at once instead of 1, it should drop to well
+    # under a minute for a typical ~270-player slate.
+    print(f"Fetching per-player matchup data ({len(rows)} players, concurrently)...")
+
+    def fetch_one(item):
+        player_row, batter_id, pitcher_hand = item
+        if not player_row["player"]:
+            player_row["player"] = get_player_name(batter_id)
+        platoon_avg = get_platoon_split(batter_id, pitcher_hand)
+        l15hr = get_l15_hr(batter_id)
+        player_row["avgmix"] = platoon_avg
+        player_row["l15hr"] = l15hr
+        player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
+        player_row["split"] = 1 if (platoon_avg or 0) >= 0.260 else 0
+        return player_row
+
+    import concurrent.futures
+    players = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        for i, result in enumerate(executor.map(fetch_one, rows)):
+            players.append(result)
+            if (i + 1) % 50 == 0:
+                print(f"  ...{i + 1}/{len(rows)} done")
+
+    for player_row in players:
+        player_row.update(compute_score(player_row))
 
     players.sort(key=lambda p: -p["score"])
 
