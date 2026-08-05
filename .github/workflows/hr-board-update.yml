@@ -11,6 +11,12 @@ on:
     - cron: "0 19 * * *"
   workflow_dispatch:
 
+# Explicitly grant this workflow permission to push commits. Without this,
+# many repos default the automated token to read-only, which lets the bot
+# commit locally but blocks the actual push with a 403 error.
+permissions:
+  contents: write
+
 jobs:
   update-data:
     runs-on: ubuntu-latest
@@ -35,4 +41,8 @@ jobs:
           git config user.email "actions@github.com"
           git add players.json
           git diff --quiet --cached || git commit -m "Update player data ($(date -u +%Y-%m-%dT%H:%M))"
+          # Pull in anything pushed to the repo (e.g. a manual edit on GitHub's
+          # website) since this job's checkout, then push. Avoids "rejected -
+          # fetch first" errors when you and the bot edit around the same time.
+          git pull --rebase origin main
           git push
