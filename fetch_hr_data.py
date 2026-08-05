@@ -206,6 +206,27 @@ def get_season_batting_stats():
     return out
 
 
+_name_cache = {}
+
+
+def get_player_name(player_id):
+    """
+    Fallback for players missing from get_season_batting_stats() - usually
+    rookies or recent call-ups with too few plate appearances to appear in
+    season aggregate stats yet. Without this, those players showed up with a
+    blank name in players.json even though their other stats were fine.
+    """
+    if player_id in _name_cache:
+        return _name_cache[player_id]
+    try:
+        data = statsapi_get(f"people/{player_id}")
+        name = data.get("people", [{}])[0].get("fullName", "")
+    except Exception:
+        name = ""
+    _name_cache[player_id] = name
+    return name
+
+
 def get_platoon_split(batter_id, vs_hand):
     """Batter's AVG facing LHP or RHP this season. vs_hand is 'L' or 'R'."""
     sit_code = "vl" if vs_hand == "L" else "vr"
@@ -251,6 +272,14 @@ def get_wind(lat, lon):
 
 
 def fetch_batter_statcast():
+    """
+    Returns a dict keyed by MLBAM player ID (an integer both Baseball Savant
+    and MLB's Stats API use for the same players), NOT by name. Matching by
+    name string was unreliable - accented letters, "Jr." formatting, and
+    suffix punctuation don't line up character-for-character between the two
+    sources (e.g. "Garcia" from Savant vs "Garcia" with an accent from MLB's
+    API). Player ID is the correct join key.
+    """
     url = (f"https://baseballsavant.mlb.com/leaderboard/statcast"
            f"?type=batter&year={YEAR}&position=&team=&min=q&csv=true")
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
@@ -258,16 +287,12 @@ def fetch_batter_statcast():
     reader = csv.DictReader(io.StringIO(resp.text))
     out = {}
     for row in reader:
-        # Savant exports names as "Last, First" - MLB's Stats API (which we use
-        # everywhere else) gives "First Last". Normalize so lookups actually match.
-        raw_name = row.get("player_name") or row.get("last_name, first_name", "")
-        if "," in raw_name:
-            last, first = [p.strip() for p in raw_name.split(",", 1)]
-            name = f"{first} {last}"
-        else:
-            name = raw_name.strip()
+        pid_raw = row.get("player_id")
+        if not pid_raw:
+            continue
         try:
-            out[name] = {
+            pid = int(pid_raw)
+            out[pid] = {
                 "ev": float(row.get("avg_hit_speed") or 0),
                 "barrel": float(row.get("brl_percent") or 0) / 100,
                 "hardhit": float(row.get("hard_hit_percent") or 0) / 100,
@@ -423,8 +448,8 @@ def main():
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
-                name = bstats.get("name", "")
-                sc = statcast.get(name, {})
+                name = bstats.get("name") or get_player_name(batter_id)
+                sc = statcast.get(batter_id, {})
                 platoon_avg = get_platoon_split(batter_id, pitcher_hand)
 
                 player_row = {
@@ -461,8 +486,11 @@ def main():
 
     players.sort(key=lambda p: -p["score"])
 
+    # allow_nan=False makes Python raise a clear error HERE if any stat somehow
+    # came out as NaN/Infinity, instead of silently writing invalid JSON that
+    # would then fail to parse in the browser with a cryptic "syntax error".
     with open("players.json", "w") as f:
-        json.dump(players, f, indent=2)
+        json.dump(players, f, indent=2, allow_nan=False)
 
     print(f"Wrote players.json with {len(players)} players.")
 
