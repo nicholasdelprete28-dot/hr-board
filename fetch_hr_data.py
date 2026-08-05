@@ -33,6 +33,7 @@ import csv
 import io
 import json
 import time
+import datetime
 import requests
 
 YEAR = 2026
@@ -100,6 +101,8 @@ def get_todays_games():
                 "game_pk": g["gamePk"],
                 "home_team": team_abbr(g["teams"]["home"]["team"]),
                 "away_team": team_abbr(g["teams"]["away"]["team"]),
+                "home_team_id": g["teams"]["home"]["team"].get("id"),
+                "away_team_id": g["teams"]["away"]["team"].get("id"),
                 "home_pitcher": g["teams"]["home"].get("probablePitcher", {}),
                 "away_pitcher": g["teams"]["away"].get("probablePitcher", {}),
             })
@@ -126,6 +129,37 @@ def get_lineup(game_pk, side):
                 slot = int(order_code) // 100  # '300' -> 3rd in the order
                 lineup[pid] = slot
         return lineup
+    except Exception:
+        return {}
+
+
+def get_recent_lineup(team_id):
+    """
+    FALLBACK for when today's official lineup isn't posted yet (usually not
+    available until 1-3 hours before first pitch). Pulls the starting lineup
+    from this team's most recently completed game instead - regulars are
+    usually stable day to day, so this is a reasonable 'probable starters'
+    estimate, NOT a confirmed lineup. Rows built this way are tagged
+    lineup_confirmed=False so you always know which you're looking at.
+    """
+    try:
+        end = datetime.date.today() - datetime.timedelta(days=1)
+        start = end - datetime.timedelta(days=10)
+        data = statsapi_get("schedule", {
+            "sportId": 1, "teamId": team_id,
+            "startDate": start.isoformat(), "endDate": end.isoformat(),
+        })
+        games = []
+        for d in data.get("dates", []):
+            games.extend(d.get("games", []))
+        finished = [g for g in games
+                    if g.get("status", {}).get("abstractGameState") == "Final"]
+        if not finished:
+            return {}
+        finished.sort(key=lambda g: g["gameDate"], reverse=True)
+        most_recent = finished[0]
+        side = "home" if most_recent["teams"]["home"]["team"]["id"] == team_id else "away"
+        return get_lineup(most_recent["gamePk"], side)
     except Exception:
         return {}
 
@@ -346,13 +380,15 @@ def main():
 
     players = []
     sides_with_pitcher = 0
-    sides_with_lineup = 0
+    sides_confirmed_lineup = 0
+    sides_projected_lineup = 0
     sides_missing_pitcher = 0
-    sides_missing_lineup = 0
+    sides_no_lineup_at_all = 0
 
     for g in games:
         for side, opp_side in [("home", "away"), ("away", "home")]:
             team = g[f"{side}_team"]
+            team_id = g[f"{side}_team_id"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
             if not opp_pitcher:
                 sides_missing_pitcher += 1
@@ -368,11 +404,22 @@ def main():
             wind_score = wind_park_factor(wind_speed, wind_dir)
 
             lineup = get_lineup(g["game_pk"], side)
+            lineup_confirmed = True
             if lineup:
-                sides_with_lineup += 1
+                sides_confirmed_lineup += 1
             else:
-                sides_missing_lineup += 1
-                print(f"  no lineup yet for {team} ({g['away_team']} @ {g['home_team']})")
+                # Today's lineup isn't posted yet - fall back to this team's
+                # most recent game as a "probable starters" estimate.
+                lineup = get_recent_lineup(team_id)
+                lineup_confirmed = False
+                if lineup:
+                    sides_projected_lineup += 1
+                    print(f"  using PROJECTED lineup for {team} (from last game) "
+                          f"- {g['away_team']} @ {g['home_team']}")
+                else:
+                    sides_no_lineup_at_all += 1
+                    print(f"  no lineup available (today OR recent) for {team} "
+                          f"- {g['away_team']} @ {g['home_team']}")
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
@@ -386,6 +433,7 @@ def main():
                     "pitcher": opp_pitcher.get("fullName", ""),
                     "hand": pitcher_hand,
                     "game": f"{g['away_team']} @ {g['home_team']}",
+                    "lineupConfirmed": lineup_confirmed,
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
@@ -407,8 +455,9 @@ def main():
 
     print(f"  sides with a probable pitcher: {sides_with_pitcher} "
           f"(missing: {sides_missing_pitcher})")
-    print(f"  sides with a posted lineup: {sides_with_lineup} "
-          f"(missing/not posted yet: {sides_missing_lineup})")
+    print(f"  sides with a CONFIRMED lineup: {sides_confirmed_lineup}")
+    print(f"  sides using a PROJECTED lineup (from last game): {sides_projected_lineup}")
+    print(f"  sides with no lineup available at all: {sides_no_lineup_at_all}")
 
     players.sort(key=lambda p: -p["score"])
 
