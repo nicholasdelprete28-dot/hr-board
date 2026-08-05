@@ -38,6 +38,12 @@
     backdrop-filter: blur(6px);
     border-bottom:1px solid var(--line);
     padding:18px 14px 12px;
+    position:relative;
+  }
+  header::after{
+    content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px;
+    background:repeating-linear-gradient(90deg, var(--gold) 0 10px, transparent 10px 20px);
+    opacity:0.35;
   }
   .titlebar{max-width:720px; margin:0 auto; display:flex; align-items:baseline; justify-content:space-between; gap:10px;}
   .title{
@@ -51,6 +57,16 @@
     border:1px solid var(--line); border-radius:20px; padding:4px 10px; white-space:nowrap;
   }
   .subtitle{font-size:12px; color:var(--muted2); margin-top:2px; font-family:var(--body);}
+
+  .hrcounter{
+    max-width:720px; margin:10px auto 0; display:flex; align-items:center; gap:7px;
+    font-family:var(--mono); font-size:12px; color:var(--red); font-weight:600;
+  }
+  .hrcounter-dot{
+    width:7px; height:7px; border-radius:50%; background:var(--red); display:inline-block;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
   .controls{max-width:720px; margin:12px auto 0; display:flex; gap:8px;}
   .search{
@@ -108,28 +124,30 @@
     border-color:rgba(79,219,154,0.5);
     background:linear-gradient(180deg, rgba(79,219,154,0.08), var(--surface2) 40%);
   }
-  .card.tier-green .rank{color:var(--green);}
   .card.tier-green .scoreval{color:var(--green);}
 
   .card.tier-blue{border-color:rgba(106,159,216,0.45);}
-  .card.tier-blue .rank{color:#6a9fd8;}
   .card.tier-blue .scoreval{color:#6a9fd8;}
 
   .card.tier-orange{border-color:rgba(224,118,63,0.45);}
-  .card.tier-orange .rank{color:#e0763f;}
   .card.tier-orange .scoreval{color:#e0763f;}
 
   .card.tier-grey{border-color:var(--line);}
-  .card.tier-grey .rank{color:var(--muted2);}
   .card.tier-grey .scoreval{color:var(--muted);}
 
   .row1{display:flex; align-items:center; gap:12px;}
-  .rank{
-    font-family:var(--display); font-weight:600; font-size:22px; color:var(--muted2);
-    width:30px; text-align:center; flex-shrink:0;
+
+  .headshot-wrap{
+    position:relative; width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    border:2px solid var(--line); overflow:hidden; background:#1a201c;
   }
-  .card.top .rank{color:var(--gold);}
-  /* legacy .top styling replaced by tier-green below, kept as fallback */
+  .headshot-fallback{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:600; font-size:14px; color:var(--muted);
+  }
+  .headshot-img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:top center;
+  }
 
   .info{flex:1; min-width:0;}
   .name{font-family:var(--body); font-weight:600; font-size:15px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -209,6 +227,10 @@
     </div>
     <div class="count" id="count">60 players</div>
   </div>
+  <div class="hrcounter" id="hrcounter" style="display:none;">
+    <span class="hrcounter-dot"></span>
+    <span id="hrcounter-text">Today's HRs: &ndash;</span>
+  </div>
   <div class="controls">
     <input class="search" id="search" type="text" placeholder="Search player or team...">
   </div>
@@ -263,6 +285,17 @@ const TEAM_IDS = {
   PHI:143, ATL:144, CWS:145, MIA:146, NYY:147, MIL:158,
 };
 
+// Approximate official primary team colors, used as a small accent stripe
+// on each card so the list doesn't read as one flat color throughout.
+const TEAM_COLORS = {
+  LAA:'#BA0021', AZ:'#A71930', BAL:'#DF4601', BOS:'#BD3039', CHC:'#0E3386',
+  CIN:'#C6011F', CLE:'#00385D', COL:'#333366', DET:'#0C2340', HOU:'#EB6E1F',
+  KC:'#004687', LAD:'#005A9C', WSH:'#AB0003', NYM:'#FF5910', ATH:'#003831',
+  PIT:'#FDB827', SD:'#2F241D', SEA:'#0C2C56', SF:'#FD5A1E', STL:'#C41E3A',
+  TB:'#092C5C', TEX:'#003278', TOR:'#134A8E', MIN:'#002B5C', PHI:'#E81828',
+  ATL:'#CE1141', CWS:'#27251F', MIA:'#00A3E0', NYY:'#003087', MIL:'#12284B',
+};
+
 function teamLogo(abbr, size){
   const id = TEAM_IDS[abbr];
   if(!id) return '';
@@ -282,10 +315,90 @@ async function loadPlayers() {
     const res = await fetch(DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     players = await res.json();
+    await applyLiveGameStatus();
     buildGameFilter();
     render();
   } catch (err) {
     list.innerHTML = '<div class="empty">Could not load live data (' + err.message + ').<br>Check that DATA_URL near the top of the script is set to your GitHub raw URL.</div>';
+  }
+}
+
+async function applyLiveGameStatus(){
+  // players.json only has game status from whenever the backend script last
+  // ran (usually 10am, before anything's started) - it's a snapshot, not
+  // live. This checks MLB's schedule directly, every time the page loads,
+  // so games that have since gone Live or Final grey out/hide correctly
+  // without needing the whole backend pipeline to re-run.
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
+    if (!res.ok) return; // fall back silently to whatever players.json already has
+    const data = await res.json();
+    const statusByMatchup = {};
+    const activeGamePks = [];
+    (data.dates || []).forEach(d => {
+      (d.games || []).forEach(g => {
+        const home = g.teams.home.team.name;
+        const away = g.teams.away.team.name;
+        const status = (g.status || {}).abstractGameState;
+        // Match loosely by team name substrings since players.json uses
+        // abbreviations (e.g. "HOU") and this API returns full names
+        // (e.g. "Houston Astros").
+        statusByMatchup[`${away}__${home}`] = status;
+        if (status === 'Live' || status === 'Final') activeGamePks.push(g.gamePk);
+      });
+    });
+    players.forEach(p => {
+      const parts = p.game.split(' @ ');
+      if (parts.length !== 2) return;
+      const [awayAbbr, homeAbbr] = parts;
+      const match = Object.keys(statusByMatchup).find(key => {
+        const [awayName, homeName] = key.split('__');
+        return awayName.includes(TEAM_FULLNAME_HINT(awayAbbr)) && homeName.includes(TEAM_FULLNAME_HINT(homeAbbr));
+      });
+      if (match) p.gameStatus = statusByMatchup[match];
+    });
+    updateHrCounter(activeGamePks);
+  } catch (err) {
+    // network hiccup or CORS block - not fatal, just keep whatever
+    // players.json already had baked in.
+  }
+}
+
+// Rough city/nickname hint per abbreviation, used only to loosely match
+// against MLB's full team names above (e.g. "HOU" -> "Astros").
+function TEAM_FULLNAME_HINT(abbr){
+  const hints = {
+    LAA:'Angels', AZ:'Diamondbacks', BAL:'Orioles', BOS:'Red Sox', CHC:'Cubs',
+    CIN:'Reds', CLE:'Guardians', COL:'Rockies', DET:'Tigers', HOU:'Astros',
+    KC:'Royals', LAD:'Dodgers', WSH:'Nationals', NYM:'Mets', ATH:'Athletics',
+    PIT:'Pirates', SD:'Padres', SEA:'Mariners', SF:'Giants', STL:'Cardinals',
+    TB:'Rays', TEX:'Rangers', TOR:'Blue Jays', MIN:'Twins', PHI:'Phillies',
+    ATL:'Braves', CWS:'White Sox', MIA:'Marlins', NYY:'Yankees', MIL:'Brewers',
+  };
+  return hints[abbr] || abbr;
+}
+
+async function updateHrCounter(gamePks){
+  const el = document.getElementById('hrcounter');
+  const textEl = document.getElementById('hrcounter-text');
+  if (!gamePks.length){ el.style.display = 'none'; return; }
+  try {
+    const boxscores = await Promise.all(gamePks.map(pk =>
+      fetch(`https://statsapi.mlb.com/api/v1.1/game/${pk}/feed/live`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ));
+    let total = 0;
+    boxscores.forEach(g => {
+      if (!g) return;
+      const teams = g.liveData && g.liveData.boxscore && g.liveData.boxscore.teams;
+      if (!teams) return;
+      total += (teams.home.teamStats.batting.homeRuns || 0);
+      total += (teams.away.teamStats.batting.homeRuns || 0);
+    });
+    textEl.textContent = `Today's HRs so far: ${total}`;
+    el.style.display = 'flex';
+  } catch (err) {
+    el.style.display = 'none';
   }
 }
 
@@ -349,12 +462,12 @@ function render(){
     const q = query.toLowerCase();
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
-    // Once a game is Final, hide it from the general list by default - it's
-    // no longer an upcoming pick. Still viewable by tapping that specific
-    // game's chip, since selectedGame overrides the auto-hide.
-    const isFinal = p.gameStatus === 'Final';
-    const hideBecauseFinal = isFinal && !selectedGame;
-    return matchesSearch && matchesGame && !hideBecauseFinal;
+    // Once a game has started (Live) or finished (Final), hide it from the
+    // general list by default - it's no longer an upcoming pick. Still
+    // viewable by tapping that specific game's chip.
+    const hasStarted = p.gameStatus === 'Final' || p.gameStatus === 'Live';
+    const hideBecauseStarted = hasStarted && !selectedGame;
+    return matchesSearch && matchesGame && !hideBecauseStarted;
   });
   filtered.sort((a,b) => {
     const diff = a[sortKey] - b[sortKey];
@@ -372,16 +485,23 @@ function render(){
 
 
   list.innerHTML = filtered.map((p, i) => {
-    const rank = i+1;
     const tier = tierFor(i);
     const coldBarrel = p.conf < 1.0;
     const platoonGood = p.crush === 1 || p.split === 1;
     const isProjected = p.lineupConfirmed === false;
     const isLive = p.gameStatus === 'Live';
+    const teamColor = TEAM_COLORS[p.team] || '#3a4038';
+    const initials = p.player.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    const headshotImg = p.playerId
+      ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_100/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
+      : '';
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor};">
       <div class="row1">
-        <div class="rank">${rank}</div>
+        <div class="headshot-wrap" style="border-color:${teamColor};">
+          <div class="headshot-fallback">${initials}</div>
+          ${headshotImg}
+        </div>
         <div class="info">
           <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''}</div>
           <div class="meta">${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})</div>
