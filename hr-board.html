@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HR Board</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0d0b' rx='18'/%3E%3Cpath d='M50 20 L80 50 L50 80 L20 50 Z' fill='none' stroke='%23e3a548' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%234fdb9a'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -26,7 +27,9 @@
   body{
     background-image:
       radial-gradient(ellipse 900px 500px at 50% -10%, rgba(227,165,72,0.08), transparent 60%),
+      radial-gradient(ellipse 800px 400px at 50% 100%, rgba(79,219,154,0.05), transparent 60%),
       repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+    background-attachment:fixed;
   }
 
   .wrap{max-width:720px; margin:0 auto; padding:0 14px 80px;}
@@ -49,8 +52,9 @@
   .title{
     font-family:var(--display); font-weight:700; letter-spacing:0.5px;
     font-size:26px; text-transform:uppercase; color:var(--text);
-    display:flex; align-items:baseline; gap:8px;
+    display:flex; align-items:center; gap:8px;
   }
+  .title-icon{color:var(--gold); flex-shrink:0;}
   .title .dot{color:var(--gold);}
   .count{
     font-family:var(--mono); font-size:12px; color:var(--muted);
@@ -222,7 +226,7 @@
 <header>
   <div class="titlebar">
     <div>
-      <div class="title">HR<span class="dot">·</span>BOARD</div>
+      <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>HR<span class="dot">·</span>BOARD</div>
       <div class="subtitle">Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted</div>
     </div>
     <div class="count" id="count">60 players</div>
@@ -267,7 +271,10 @@
 // EDIT THIS LINE: paste your GitHub raw URL for players.json here.
 // It looks like: https://raw.githubusercontent.com/YOUR-USERNAME/YOUR-REPO/main/players.json
 // ---------------------------------------------------------------------
-const DATA_URL = "https://cdn.jsdelivr.net/gh/nicholasdelprete28-dot/hr-board@main/players.json";
+// Relative path: players.json lives right next to this page on GitHub Pages,
+// so it's fetched from the same place, same deploy, no third-party CDN layer
+// in between - one less place for stale caching to hide.
+const DATA_URL = "./players.json";
 
 let players = [];
 let sortKey = 'score';
@@ -444,9 +451,9 @@ function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 // itself. >=45% = strongest read, 35-44.9% = solid, below 35% = speculative.
 function favTierName(score){
   if(score == null) return 'N/A';
-  if(score >= 45) return 'PRIME';
-  if(score >= 35) return 'IN PLAY';
-  return 'LONG SHOT';
+  if(score >= 45) return '&#9670; PRIME';
+  if(score >= 35) return '&#9651; IN PLAY';
+  return '&#9633; LONG SHOT';
 }
 function favTierClass(score){
   if(score == null) return 'unknown';
@@ -496,7 +503,7 @@ function render(){
       ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/w_180,q_100/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : '';
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor};">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(105deg, ${teamColor}14 0%, transparent 30%);">
       <div class="row1">
         <div class="headshot-wrap" style="border-color:${teamColor};">
           <div class="headshot-fallback">${initials}</div>
