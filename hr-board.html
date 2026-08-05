@@ -239,7 +239,8 @@ function tierFor(i){
   return 'tier-grey';
 }
 
-function fmtPct(x){ return (x*100).toFixed(1) + '%'; }
+function fmtPct(x){ return x == null ? 'N/A' : (x*100).toFixed(1) + '%'; }
+function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
 function render(){
   const list = document.getElementById('list');
@@ -277,7 +278,7 @@ function render(){
           <div class="meta"><b>${p.game}</b> &middot; vs ${p.pitcher} (${p.hand})</div>
         </div>
         <div class="scorebox">
-          <div class="scoreval">${p.score.toFixed(1)}%</div>
+          <div class="scoreval">${fmtNum(p.score, 1)}%</div>
           <div class="scorelabel">favorability</div>
         </div>
       </div>
@@ -295,15 +296,15 @@ function render(){
         <div class="chip">lineup +${p.lbonus}</div>
       </div>
       <div class="statboxwrap">
-        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${p.avgmix.toFixed(3)}</span></div>
-        <div class="statbox"><span class="sblabel">Exit Velo</span><span class="sbval">${p.ev.toFixed(1)}</span></div>
-        <div class="statbox ${p.phr9 >= 1.3 ? 'hot' : (p.phr9 <= 0.8 ? 'cold' : '')}"><span class="sblabel">Pitcher HR/9</span><span class="sbval">${p.phr9.toFixed(2)}</span></div>
-        <div class="statbox"><span class="sblabel">L15 HR</span><span class="sbval">${p.l15hr}</span></div>
+        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${fmtNum(p.avgmix, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">Exit Velo</span><span class="sbval">${fmtNum(p.ev, 1)}</span></div>
+        <div class="statbox ${p.phr9 != null && p.phr9 >= 1.3 ? 'hot' : (p.phr9 != null && p.phr9 <= 0.8 ? 'cold' : '')}"><span class="sblabel">Pitcher HR/9</span><span class="sbval">${fmtNum(p.phr9, 2)}</span></div>
+        <div class="statbox"><span class="sblabel">L15 HR</span><span class="sbval">${p.l15hr == null ? 'N/A' : p.l15hr}</span></div>
         <div class="statbox ${p.wind > 0 ? 'hot' : (p.wind < 0 ? 'cold' : '')}"><span class="sblabel">Wind</span><span class="sbval">${p.wind > 0 ? '+' : ''}${p.wind}</span></div>
-        <div class="statbox"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${p.whip.toFixed(2)}</span></div>
+        <div class="statbox"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${fmtNum(p.whip, 2)}</span></div>
         <div class="statbox ${coldBarrel ? 'cold' : 'hot'}"><span class="sblabel">Barrel%</span><span class="sbval">${fmtPct(p.barrel)}</span></div>
         <div class="statbox"><span class="sblabel">Hard Hit%</span><span class="sbval">${fmtPct(p.hardhit)}</span></div>
-        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${p.iso.toFixed(3)}</span></div>
+        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${fmtNum(p.iso, 3)}</span></div>
       </div>
     </div>`;
   }).join('');
