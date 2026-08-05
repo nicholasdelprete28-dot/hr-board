@@ -33,10 +33,12 @@ import csv
 import io
 import json
 import time
+from datetime import datetime
+from zoneinfo import ZoneInfo
 import requests
 
 YEAR = 2026
-TODAY = time.strftime("%Y-%m-%d")
+TODAY = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
 
 # ---------------------------------------------------------------------------
 # Fixed park factors (rough HR-friendliness, -2 pitcher-friendly to +2 hitter-
@@ -72,6 +74,8 @@ def statsapi_get(path, params=None):
 
 def get_todays_games():
     """Today's schedule with probable starting pitchers."""
+    print("MLB date requested:", TODAY)
+
     data = statsapi_get("schedule", {
         "sportId": 1, "date": TODAY, "hydrate": "probablePitcher,linescore"
     })
@@ -88,7 +92,7 @@ def get_todays_games():
     return games
 
 
-def get_lineup(game_pk, side):
+def get_lineup(game_pk, side) print("Lineup:", lineup):
     """Confirmed batting order for 'home' or 'away' side, if posted yet."""
     try:
         box = statsapi_get(f"game/{game_pk}/boxscore")
