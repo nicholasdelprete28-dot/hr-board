@@ -64,6 +64,15 @@ PARKS = {
     # Add remaining parks as needed - default factor 0 is used if a team is missing.
 }
 
+def normalize_name(name):
+    if not name:
+        return ""
+
+    return (
+        name.lower()
+        .replace(".", "")
+        .replace(",", "")
+        .strip()
 
 def statsapi_get(path, params=None):
     url = f"https://statsapi.mlb.com/api/v1/{path}"
@@ -237,20 +246,37 @@ def get_wind(lat, lon):
 def fetch_batter_statcast():
     url = (f"https://baseballsavant.mlb.com/leaderboard/statcast"
            f"?type=batter&year={YEAR}&position=&team=&min=q&csv=true")
-    resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+
+    resp = requests.get(
+        url,
+        timeout=30,
+        headers={"User-Agent": "Mozilla/5.0"}
+    )
+
     resp.raise_for_status()
+
     reader = csv.DictReader(io.StringIO(resp.text))
+
     out = {}
+
     for row in reader:
         name = row.get("player_name") or row.get("last_name, first_name", "")
+
+        if not name:
+            continue
+
+        name = normalize_name(name)
+
         try:
             out[name] = {
                 "ev": float(row.get("avg_hit_speed") or 0),
                 "barrel": float(row.get("brl_percent") or 0) / 100,
                 "hardhit": float(row.get("hard_hit_percent") or 0) / 100,
             }
+
         except (TypeError, ValueError):
             continue
+
     return out
 
 
@@ -409,7 +435,7 @@ def main():
                 bstats = batting_stats.get(batter_id, {})
                 name = bstats.get("name", "")
 
-                sc = statcast.get(name, {})
+               sc = statcast.get(normalize_name(name), {})
 
                 platoon_avg = get_platoon_split(
                     batter_id,
