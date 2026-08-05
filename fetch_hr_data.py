@@ -288,7 +288,15 @@ def fetch_batter_statcast():
            f"?type=batter&year={YEAR}&position=&team=&min=q&csv=true")
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
     resp.raise_for_status()
-    reader = csv.DictReader(io.StringIO(resp.text))
+    # decode with utf-8-sig, NOT resp.text: Savant's CSV starts with a BOM
+    # (byte-order-mark) character that sits directly before the quoted
+    # "last_name, first_name" header. That BOM breaks Python's csv parser's
+    # ability to recognize the opening quote for that one field, which
+    # splits it into two garbage columns and shifts every column after it
+    # by one position - silently misaligning player_id with the wrong data.
+    # utf-8-sig strips the BOM before parsing, fixing this at the root.
+    text = resp.content.decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(text))
     rows = list(reader)
     print(f"  Savant CSV columns: {reader.fieldnames}")
     print(f"  Savant CSV row count: {len(rows)}")
