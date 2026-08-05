@@ -92,7 +92,7 @@ def get_todays_games():
     return games
 
 
-def get_lineup(game_pk, side) print("Lineup:", lineup):
+def get_lineup(game_pk, side):
     """Confirmed batting order for 'home' or 'away' side, if posted yet."""
     try:
         box = statsapi_get(f"game/{game_pk}/boxscore")
