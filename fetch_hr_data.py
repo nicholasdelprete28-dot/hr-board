@@ -491,6 +491,7 @@ def main():
                     "game": f"{g['away_team']} @ {g['home_team']}",
                     "lineupConfirmed": lineup_confirmed,
                     "gameStatus": g["status"],
+                    "playerId": batter_id,
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
