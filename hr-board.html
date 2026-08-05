@@ -67,6 +67,20 @@
   }
   .sortbtn.active{color:var(--gold); border-color:var(--gold);}
 
+  /* ---- Game filter (horizontal scroll) ---- */
+  .gamefilter{
+    display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding:8px 2px 2px; max-width:720px; margin:0 auto; scrollbar-width:thin;
+  }
+  .gamefilter::-webkit-scrollbar{height:4px;}
+  .gamefilter::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
+  .gamechip{
+    flex-shrink:0; background:var(--surface2); border:1px solid var(--line); border-radius:20px;
+    color:var(--muted); font-family:var(--mono); font-size:11px; padding:6px 12px;
+    cursor:pointer; white-space:nowrap; user-select:none;
+  }
+  .gamechip.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
+
   /* ---- Legend ---- */
   .legend{
     display:flex; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:10px; color:var(--muted2);
@@ -182,6 +196,7 @@
     <div class="sortbtn" data-key="l15hr">RECENT FORM</div>
     <div class="sortbtn" data-key="ev">EV</div>
   </div>
+  <div class="gamefilter" id="gamefilter"></div>
   <div class="legend">
     <span><i class="swatch" style="background:var(--gold)"></i>Power 35%</span>
     <span><i class="swatch" style="background:var(--green)"></i>Matchup 30%</span>
@@ -214,6 +229,7 @@ let players = [];
 let sortKey = 'score';
 let sortDesc = true;
 let query = '';
+let selectedGame = null;
 const sortLabels = { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' };
 
 async function loadPlayers() {
@@ -223,10 +239,26 @@ async function loadPlayers() {
     const res = await fetch(DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     players = await res.json();
+    buildGameFilter();
     render();
   } catch (err) {
     list.innerHTML = '<div class="empty">Could not load live data (' + err.message + ').<br>Check that DATA_URL near the top of the script is set to your GitHub raw URL.</div>';
   }
+}
+
+function buildGameFilter(){
+  const bar = document.getElementById('gamefilter');
+  const games = [...new Set(players.map(p => p.game))].sort();
+  const chips = ['<div class="gamechip active" data-game="">All Games</div>']
+    .concat(games.map(g => `<div class="gamechip" data-game="${g}">${g}</div>`));
+  bar.innerHTML = chips.join('');
+  bar.querySelectorAll('.gamechip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      selectedGame = chip.dataset.game || null;
+      bar.querySelectorAll('.gamechip').forEach(c => c.classList.toggle('active', c === chip));
+      render();
+    });
+  });
 }
 </script>
 
@@ -247,7 +279,9 @@ function render(){
   const emptyEl = document.getElementById('empty');
   let filtered = players.filter(p => {
     const q = query.toLowerCase();
-    return p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
+    const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
+    const matchesGame = !selectedGame || p.game === selectedGame;
+    return matchesSearch && matchesGame;
   });
   filtered.sort((a,b) => {
     const diff = a[sortKey] - b[sortKey];
@@ -262,6 +296,7 @@ function render(){
     return;
   }
   emptyEl.style.display = 'none';
+
 
   list.innerHTML = filtered.map((p, i) => {
     const rank = i+1;
