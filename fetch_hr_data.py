@@ -97,14 +97,17 @@ def get_todays_games():
 def get_lineup(game_pk, side):
     """Gets lineup from MLB live feed if available."""
     try:
-        data = statsapi_get(f"game/{game_pk}/feed/live")
+        url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
 
         team_id = data["gameData"]["teams"][side]["id"]
         players = data["gameData"]["players"]
 
         lineup = {}
 
-        for player_key, player in players.items():
+        for player_id, player in players.items():
             if player.get("currentTeam", {}).get("id") == team_id:
                 batting_order = player.get("battingOrder")
 
