@@ -43,11 +43,6 @@
     padding:18px 14px 12px;
     position:relative;
   }
-  header::after{
-    content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px;
-    background:repeating-linear-gradient(90deg, var(--gold) 0 10px, transparent 10px 20px);
-    opacity:0.35;
-  }
   .titlebar{max-width:600px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .title{
     font-family:var(--display); font-weight:700; letter-spacing:-0.5px;
@@ -79,13 +74,22 @@
     outline:none;
   }
   .search::placeholder{color:var(--muted2);}
-  .search:focus{border-color:var(--gold);}
+  .search:focus{border-color:var(--gold); box-shadow:0 0 0 3px rgba(227,165,72,0.12);}
   .sortbtn{
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
     color:var(--muted); font-family:var(--mono); font-size:11px; padding:0 10px; height:36px;
     flex:1; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; white-space:nowrap;
   }
   .sortbtn.active{color:var(--gold); border-color:var(--gold);}
+  .tierselect{
+    background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+    color:var(--muted); font-family:var(--mono); font-size:11px; padding:0 10px; height:36px;
+    flex:0.8; cursor:pointer; -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b948d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center; background-size:14px;
+    padding-right:28px;
+  }
+  .tierselect:focus{outline:none; border-color:var(--gold); color:var(--gold);}
 
   /* ---- Game filter (horizontal scroll) ---- */
   .gamefilter-label{
@@ -120,8 +124,8 @@
   .list{padding-top:14px; display:flex; flex-direction:column; gap:12px;}
 
   .card{
-    background:var(--surface2); border:1px solid var(--line); border-radius:14px;
-    padding:16px 18px; transition:border-color .15s ease;
+    background:var(--surface2); border:1px solid var(--line); border-radius:16px;
+    padding:20px 22px; transition:border-color .15s ease;
   }
   .card:active{border-color:var(--gold);}
   .card.tier-green .scoreval{color:var(--green);}
@@ -129,16 +133,16 @@
   .card.tier-orange .scoreval{color:#e0763f;}
   .card.tier-grey .scoreval{color:var(--muted);}
 
-  .row1{display:flex; align-items:center; gap:12px;}
+  .row1{display:flex; align-items:center; gap:14px;}
 
   .headshot-wrap{
-    position:relative; width:58px; height:58px; border-radius:50%; flex-shrink:0;
+    position:relative; width:72px; height:72px; border-radius:50%; flex-shrink:0;
     border:2px solid var(--line); overflow:hidden; background:#1a201c;
     box-shadow:0 2px 6px rgba(0,0,0,0.4);
   }
   .headshot-fallback{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-    font-family:var(--display); font-weight:700; font-size:18px; color:#fff;
+    font-family:var(--display); font-weight:700; font-size:22px; color:#fff;
     text-shadow:0 1px 2px rgba(0,0,0,0.5);
   }
   .headshot-img{
@@ -146,7 +150,7 @@
   }
 
   .info{flex:1; min-width:0;}
-  .name{font-family:var(--body); font-weight:600; font-size:15px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .name{font-family:var(--body); font-weight:700; font-size:17px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .badge-projected{
     font-family:var(--mono); font-size:8px; font-weight:600; color:#e0763f;
     border:1px solid rgba(224,118,63,0.5); border-radius:4px; padding:1px 4px;
@@ -158,20 +162,21 @@
     letter-spacing:0.5px; vertical-align:middle;
   }
   .card-live{opacity:0.55;}
-  .meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .meta{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .meta b{color:var(--muted); font-weight:500;}
 
   .scorebox{text-align:right; flex-shrink:0;}
-  .scoreval{font-family:var(--mono); font-weight:600; font-size:20px; color:var(--gold);}
+  .scoreval{font-family:var(--mono); font-weight:700; font-size:24px; color:var(--gold);}
   .card.top .scoreval{color:var(--green);}
   .scorelabel{font-family:var(--mono); font-size:9px; color:var(--muted2); letter-spacing:1px; text-transform:uppercase;}
 
   .favtier{
-    font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:0.5px;
-    border-radius:4px; padding:2px 6px; margin-bottom:3px; display:inline-block;
+    font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.5px;
+    border-radius:5px; padding:3px 8px; margin-bottom:4px; display:inline-block;
   }
-  .favtier-prime{color:var(--green); background:rgba(79,219,154,0.12); border:1px solid rgba(79,219,154,0.35);}
-  .favtier-inplay{color:var(--gold); background:rgba(227,165,72,0.12); border:1px solid rgba(227,165,72,0.35);}
+  .favtier-prime{color:#4fdb9a; background:rgba(79,219,154,0.16); border:1px solid rgba(79,219,154,0.45);}
+  .favtier-strong{color:#5bc8e8; background:rgba(91,200,232,0.16); border:1px solid rgba(91,200,232,0.45);}
+  .favtier-inplay{color:#e3a548; background:rgba(227,165,72,0.16); border:1px solid rgba(227,165,72,0.45);}
   .favtier-longshot{color:var(--muted); background:rgba(139,148,141,0.1); border:1px solid var(--line);}
 
   /* segmented bar */
@@ -185,8 +190,8 @@
 
   .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:14px;}
   .chip{
-    font-family:var(--mono); font-size:10px; color:var(--muted); background:#1a201c;
-    border:1px solid var(--line); border-radius:6px; padding:3px 7px;
+    font-family:var(--mono); font-size:11px; color:var(--muted); background:#1a201c;
+    border:1px solid var(--line); border-radius:6px; padding:4px 8px;
   }
   .chip.flag{color:var(--red); border-color:rgba(217,107,91,0.4);}
   .chip.good{color:var(--green); border-color:rgba(79,219,154,0.3);}
@@ -201,7 +206,7 @@
     font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase;
     letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;
   }
-  .statbox .sbval{font-family:var(--mono); font-weight:600; font-size:14px; color:var(--text);}
+  .statbox .sbval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text);}
   .statbox.hot .sbval{color:var(--green);}
   .statbox.cold .sbval{color:var(--red);}
 
@@ -234,16 +239,16 @@
     <div class="sortbtn active" data-key="score">FAVORABILITY ↓</div>
     <div class="sortbtn" data-key="l15hr">RECENT FORM</div>
     <div class="sortbtn" data-key="ev">EV</div>
+    <select class="tierselect" id="tierselect">
+      <option value="">All Tiers</option>
+      <option value="prime">Prime</option>
+      <option value="strong">Strong</option>
+      <option value="inplay">In Play</option>
+      <option value="longshot">Long Shot</option>
+    </select>
   </div>
   <div class="gamefilter-label">Upcoming Games</div>
   <div class="gamefilter" id="gamefilter"></div>
-  <div class="legend">
-    <span><i class="swatch" style="background:var(--gold)"></i>Power 35%</span>
-    <span><i class="swatch" style="background:var(--green)"></i>Matchup 30%</span>
-    <span><i class="swatch" style="background:#6a9fd8"></i>Recent 15%</span>
-    <span><i class="swatch" style="background:#c77dd6"></i>Platoon 10%</span>
-    <span><i class="swatch" style="background:#e0763f"></i>Opportunity 10%</span>
-  </div>
 </header>
 
 <div class="wrap">
@@ -273,6 +278,7 @@ let sortKey = 'score';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
+let selectedTier = '';
 
 // MLB team IDs, used to build logo URLs from MLB's own public CDN
 // (mlbstatic.com/team-logos/{id}.svg). Mirrors the same table the fetch
@@ -443,13 +449,15 @@ function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 // itself. >=45% = strongest read, 35-44.9% = solid, below 35% = speculative.
 function favTierName(score){
   if(score == null) return 'N/A';
-  if(score >= 45) return '&#9670; PRIME';
+  if(score >= 55) return '&#9670; PRIME';
+  if(score >= 40) return '&#9733; STRONG';
   if(score >= 35) return '&#9651; IN PLAY';
   return '&#9633; LONG SHOT';
 }
 function favTierClass(score){
   if(score == null) return 'unknown';
-  if(score >= 45) return 'prime';
+  if(score >= 55) return 'prime';
+  if(score >= 40) return 'strong';
   if(score >= 35) return 'inplay';
   return 'longshot';
 }
@@ -461,12 +469,13 @@ function render(){
     const q = query.toLowerCase();
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
+    const matchesTier = !selectedTier || favTierClass(p.score) === selectedTier;
     // Once a game has started (Live) or finished (Final), hide it from the
     // general list by default - it's no longer an upcoming pick. Still
     // viewable by tapping that specific game's chip.
     const hasStarted = p.gameStatus === 'Final' || p.gameStatus === 'Live';
     const hideBecauseStarted = hasStarted && !selectedGame;
-    return matchesSearch && matchesGame && !hideBecauseStarted;
+    return matchesSearch && matchesGame && matchesTier && !hideBecauseStarted;
   });
   filtered.sort((a,b) => {
     const diff = a[sortKey] - b[sortKey];
@@ -495,7 +504,7 @@ function render(){
       ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : '';
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}38 0%, ${teamColor}08 22%, transparent 45%);">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}45 0%, ${teamColor}12 35%, var(--surface2) 85%);">
       <div class="row1">
         <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
           <div class="headshot-fallback">${initials}</div>
@@ -510,13 +519,6 @@ function render(){
           <div class="scoreval">${fmtNum(p.score, 1)}%</div>
           <div class="scorelabel">favorability</div>
         </div>
-      </div>
-      <div class="segbar">
-        <div class="seg power" style="width:${p.powerPct*0.35/100*100}%"></div>
-        <div class="seg matchup" style="width:${p.matchupPct*0.30/100*100}%"></div>
-        <div class="seg recent" style="width:${p.recentPct*0.15/100*100}%"></div>
-        <div class="seg platoon" style="width:${p.platoonPct*0.10/100*100}%"></div>
-        <div class="seg opportunity" style="width:${p.opportunityPct*0.10/100*100}%"></div>
       </div>
       <div class="chips">
         ${coldBarrel ? `<div class="chip flag">cold barrel &times;${p.conf}</div>` : ''}
@@ -541,6 +543,11 @@ function render(){
 
 document.getElementById('search').addEventListener('input', (e) => {
   query = e.target.value;
+  render();
+});
+
+document.getElementById('tierselect').addEventListener('change', (e) => {
+  selectedTier = e.target.value;
   render();
 });
 
