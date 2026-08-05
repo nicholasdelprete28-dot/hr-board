@@ -77,8 +77,10 @@ def get_todays_games():
     print("MLB date requested:", TODAY)
 
     data = statsapi_get("schedule", {
-        "sportId": 1, "date": TODAY, "hydrate": "probablePitcher,linescore"
-    })
+    "sportId": 1,
+    "date": TODAY,
+    "hydrate": "probablePitcher,lineups"
+})
     games = []
     for date_block in data.get("dates", []):
         for g in date_block.get("games", []):
@@ -92,16 +94,29 @@ def get_todays_games():
     return games
 
 
-def get_lineup(game_pk, side):
-    """Confirmed batting order for 'home' or 'away' side, if posted yet."""
+lineup = get_lineup(g["game_pk"], side)
+print(team, "lineup size:", len(lineup))
+    """Gets lineup from MLB live feed if available."""
     try:
-        box = statsapi_get(f"game/{game_pk}/boxscore")
-        team_box = box["teams"][side]
-        order = team_box.get("battingOrder", [])
-        return {pid: i + 1 for i, pid in enumerate(order)}
-    except Exception:
-        return {}
+        data = statsapi_get(f"game/{game_pk}/feed/live")
 
+        team_id = data["gameData"]["teams"][side]["id"]
+        players = data["gameData"]["players"]
+
+        lineup = {}
+
+        for player_key, player in players.items():
+            if player.get("currentTeam", {}).get("id") == team_id:
+                batting_order = player.get("battingOrder")
+
+                if batting_order:
+                    lineup[player["id"]] = int(batting_order)
+
+        return lineup
+
+    except Exception as e:
+        print("Lineup error:", e)
+        return {}
 
 def get_pitcher_hand_and_id(probable_pitcher):
     return probable_pitcher.get("id"), probable_pitcher.get("pitchHand", {}).get("code", "R")
