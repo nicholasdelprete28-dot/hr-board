@@ -112,6 +112,11 @@
 
   .info{flex:1; min-width:0;}
   .name{font-family:var(--body); font-weight:600; font-size:15px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .badge-projected{
+    font-family:var(--mono); font-size:8px; font-weight:600; color:#e0763f;
+    border:1px solid rgba(224,118,63,0.5); border-radius:4px; padding:1px 4px;
+    letter-spacing:0.5px; vertical-align:middle;
+  }
   .meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .meta b{color:var(--muted); font-weight:500;}
 
@@ -203,7 +208,7 @@
 // EDIT THIS LINE: paste your GitHub raw URL for players.json here.
 // It looks like: https://raw.githubusercontent.com/YOUR-USERNAME/YOUR-REPO/main/players.json
 // ---------------------------------------------------------------------
-const DATA_URL = "https://raw.githubusercontent.com/nicholasdelprete28-dot/hr-board/main/players.json";
+const DATA_URL = "https://cdn.jsdelivr.net/gh/nicholasdelprete28-dot/hr-board@main/players.json";
 
 let players = [];
 let sortKey = 'score';
@@ -226,10 +231,6 @@ async function loadPlayers() {
 </script>
 
 <script>
-let sortKey = 'score';
-let sortDesc = true;
-let query = '';
-const sortLabels = { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' };
 
 function tierFor(i){
   if(i < 5) return 'tier-green';
@@ -266,12 +267,13 @@ function render(){
     const tier = tierFor(i);
     const coldBarrel = p.conf < 1.0;
     const platoonGood = p.crush === 1 || p.split === 1;
+    const isProjected = p.lineupConfirmed === false;
     return `
     <div class="card ${tier}" data-idx="${i}">
       <div class="row1">
         <div class="rank">${rank}</div>
         <div class="info">
-          <div class="name">${p.player}</div>
+          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''}</div>
           <div class="meta"><b>${p.game}</b> &middot; vs ${p.pitcher} (${p.hand})</div>
         </div>
         <div class="scorebox">
