@@ -33,12 +33,10 @@ import csv
 import io
 import json
 import time
-from datetime import datetime
-from zoneinfo import ZoneInfo
 import requests
 
 YEAR = 2026
-TODAY = datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+TODAY = time.strftime("%Y-%m-%d")
 
 # ---------------------------------------------------------------------------
 # Fixed park factors (rough HR-friendliness, -2 pitcher-friendly to +2 hitter-
@@ -64,16 +62,7 @@ PARKS = {
     # Add remaining parks as needed - default factor 0 is used if a team is missing.
 }
 
-def normalize_name(name):
-    if not name:
-        return ""
 
-    return (
-        name.lower()
-        .replace(".", "")
-        .replace(",", "")
-        .strip()
-    )
 def statsapi_get(path, params=None):
     url = f"https://statsapi.mlb.com/api/v1/{path}"
     resp = requests.get(url, params=params or {}, timeout=30)
@@ -84,79 +73,45 @@ def statsapi_get(path, params=None):
 def get_todays_games():
     """Today's schedule with probable starting pitchers."""
     data = statsapi_get("schedule", {
-        "sportId": 1,
-        "date": TODAY,
-        "hydrate": "probablePitcher,linescore"
+        "sportId": 1, "date": TODAY, "hydrate": "probablePitcher,linescore"
     })
-
     games = []
-
     for date_block in data.get("dates", []):
         for g in date_block.get("games", []):
             games.append({
                 "game_pk": g["gamePk"],
-                "home_team": g["teams"]["home"]["team"].get("name"),
-                "away_team": g["teams"]["away"]["team"].get("name"),
-                "home_team_id": g["teams"]["home"]["team"].get("id"),
-                "away_team_id": g["teams"]["away"]["team"].get("id"),
+                "home_team": g["teams"]["home"]["team"]["abbreviation"],
+                "away_team": g["teams"]["away"]["team"]["abbreviation"],
                 "home_pitcher": g["teams"]["home"].get("probablePitcher", {}),
                 "away_pitcher": g["teams"]["away"].get("probablePitcher", {}),
             })
-
     return games
 
 
 def get_lineup(game_pk, side):
-    """Gets batting order from MLB live feed/boxscore."""
+    """
+    Confirmed STARTING batting order for 'home' or 'away' side, if posted yet.
+    Uses each player's individual battingOrder code (e.g. '100' = leadoff starter,
+    '801' = a substitute who entered later in the 8-hole) rather than the team-level
+    list, which can include the full active roster instead of just the 9 starters.
+    Only codes ending in '00' are true starters.
+    """
     try:
-        url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
-
-        team_box = data["liveData"]["boxscore"]["teams"][side]
-
-        batters = team_box.get("batters", [])
+        box = statsapi_get(f"game/{game_pk}/boxscore")
+        team_box = box["teams"][side]
         players = team_box.get("players", {})
-
         lineup = {}
-
-        for player_id in batters:
-            player_key = f"ID{player_id}"
-            player = players.get(player_key, {})
-
-            batting_order = player.get("battingOrder")
-
-            if batting_order:
-                lineup[player_id] = int(batting_order)
-
+        for pid_key, pdata in players.items():
+            order_code = pdata.get("battingOrder")
+            if order_code and order_code.endswith("00"):
+                pid = int(pid_key.replace("ID", ""))
+                slot = int(order_code) // 100  # '300' -> 3rd in the order
+                lineup[pid] = slot
         return lineup
-
-    except Exception as e:
-        print("Lineup error:", e)
+    except Exception:
         return {}
 
-def get_team_roster(team_id):
-    """Fallback hitters when official lineup isn't posted."""
-    try:
-        data = statsapi_get(f"teams/{team_id}/roster")
 
-        hitters = {}
-
-        for player in data.get("roster", []):
-            person = player.get("person", {})
-            position = player.get("position", {}).get("code")
-
-            # exclude pitchers
-            if position != "1":
-                hitters[person["id"]] = 5
-
-        return hitters
-
-    except Exception as e:
-        print("Roster error:", e)
-        return {}
-      
 def get_pitcher_hand_and_id(probable_pitcher):
     return probable_pitcher.get("id"), probable_pitcher.get("pitchHand", {}).get("code", "R")
 
@@ -246,37 +201,27 @@ def get_wind(lat, lon):
 def fetch_batter_statcast():
     url = (f"https://baseballsavant.mlb.com/leaderboard/statcast"
            f"?type=batter&year={YEAR}&position=&team=&min=q&csv=true")
-
-    resp = requests.get(
-        url,
-        timeout=30,
-        headers={"User-Agent": "Mozilla/5.0"}
-    )
-
+    resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
     resp.raise_for_status()
-
     reader = csv.DictReader(io.StringIO(resp.text))
-
     out = {}
-
     for row in reader:
-        name = row.get("player_name") or row.get("last_name, first_name", "")
-
-        if not name:
-            continue
-
-        name = normalize_name(name)
-
+        # Savant exports names as "Last, First" - MLB's Stats API (which we use
+        # everywhere else) gives "First Last". Normalize so lookups actually match.
+        raw_name = row.get("player_name") or row.get("last_name, first_name", "")
+        if "," in raw_name:
+            last, first = [p.strip() for p in raw_name.split(",", 1)]
+            name = f"{first} {last}"
+        else:
+            name = raw_name.strip()
         try:
             out[name] = {
                 "ev": float(row.get("avg_hit_speed") or 0),
                 "barrel": float(row.get("brl_percent") or 0) / 100,
                 "hardhit": float(row.get("hard_hit_percent") or 0) / 100,
             }
-
         except (TypeError, ValueError):
             continue
-
     return out
 
 
@@ -370,7 +315,6 @@ def compute_score(p):
 def main():
     print("Fetching today's schedule and probable pitchers...")
     games = get_todays_games()
-    print(f"MLB date requested: {TODAY}")
     print(f"  {len(games)} games today")
 
     print("Fetching season pitching stats (WHIP, HR/9)...")
@@ -388,59 +332,24 @@ def main():
         for side, opp_side in [("home", "away"), ("away", "home")]:
             team = g[f"{side}_team"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
-
             if not opp_pitcher:
                 continue
-
             pitcher_id, pitcher_hand = get_pitcher_hand_and_id(opp_pitcher)
+            pitcher_stat = pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20})
 
-            pitcher_stat = pitching_stats.get(
-                pitcher_id,
-                {"whip": 1.30, "hr9": 1.20}
-            )
-
-            park = PARKS.get(
-                g["home_team"],
-                {"factor": 0, "lat": None, "lon": None}
-            )
-
-            wind_speed, wind_dir = None, None
-
+            park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None})
+            wind_speed, wind_dir = (None, None)
             if park["lat"] is not None:
-                wind_speed, wind_dir = get_wind(
-                    park["lat"],
-                    park["lon"]
-                )
+                wind_speed, wind_dir = get_wind(park["lat"], park["lon"])
+            wind_score = wind_park_factor(wind_speed, wind_dir)
 
-            wind_score = wind_park_factor(
-                wind_speed,
-                wind_dir
-            )
-
-            # Try official lineup first
             lineup = get_lineup(g["game_pk"], side)
 
-            # If lineup isn't released, use roster fallback
-            if not lineup:
-                print(team, "using roster fallback")
-
-                team_id = g[f"{side}_team_id"]
-                lineup = get_team_roster(team_id)
-
-            else:
-                print(team, "using confirmed lineup")
-
             for batter_id, order_pos in lineup.items():
-
                 bstats = batting_stats.get(batter_id, {})
                 name = bstats.get("name", "")
-
-                sc = statcast.get(normalize_name(name), {})
-
-                platoon_avg = get_platoon_split(
-                    batter_id,
-                    pitcher_hand
-                )
+                sc = statcast.get(name, {})
+                platoon_avg = get_platoon_split(batter_id, pitcher_hand)
 
                 player_row = {
                     "player": name,
@@ -448,55 +357,29 @@ def main():
                     "pitcher": opp_pitcher.get("fullName", ""),
                     "hand": pitcher_hand,
                     "game": f"{g['away_team']} @ {g['home_team']}",
-
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
-
                     "iso": bstats.get("iso"),
-
                     "phr9": pitcher_stat["hr9"],
                     "whip": pitcher_stat["whip"],
-
-                    "avgmix": platoon_avg,
-
+                    "avgmix": platoon_avg,          # our platoon-split substitute
                     "wind": wind_score,
                     "park": park["factor"],
-
                     "l15hr": get_l15_hr(batter_id),
-
-                    # confirmed lineup gets real spot
-                    # fallback roster gets neutral spot
-                    "lbonus": (
-                        max(1, 9 - order_pos)
-                        if order_pos
-                        else 3
-                    ),
-
+                    "lbonus": max(1, 9 - order_pos), # 1st = +8 ... 9th = +1 (roughly matches old scale)
                     "crush": 1 if (platoon_avg or 0) >= 0.280 else 0,
                     "split": 1 if (platoon_avg or 0) >= 0.260 else 0,
-
-                    "hrprob": None,
+                    "hrprob": None,  # no swiftprops number to reference anymore
                 }
-
-                player_row.update(
-                    compute_score(player_row)
-                )
-
+                player_row.update(compute_score(player_row))
                 players.append(player_row)
+                time.sleep(0.05)  # be polite to the free API
 
-                time.sleep(0.05)
-
-    players.sort(
-        key=lambda p: -p["score"]
-    )
+    players.sort(key=lambda p: -p["score"])
 
     with open("players.json", "w") as f:
-        json.dump(
-            players,
-            f,
-            indent=2
-        )
+        json.dump(players, f, indent=2)
 
     print(f"Wrote players.json with {len(players)} players.")
 
