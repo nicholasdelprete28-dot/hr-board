@@ -146,10 +146,18 @@
 
   .row1{display:flex; align-items:center; gap:14px;}
 
+  .headshot-outer{position:relative; flex-shrink:0;}
   .headshot-wrap{
     position:relative; width:72px; height:72px; border-radius:50%; flex-shrink:0;
     border:2px solid var(--line); overflow:hidden; background:#1a201c;
     box-shadow:0 2px 6px rgba(0,0,0,0.4);
+  }
+  .rank-badge{
+    position:absolute; bottom:-4px; right:-4px; width:24px; height:24px; border-radius:50%;
+    background:var(--gold); color:#0a0d0b; border:2px solid var(--bg);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:700; font-size:13px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.5);
   }
   .headshot-fallback{
     position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -157,8 +165,7 @@
     text-shadow:0 1px 2px rgba(0,0,0,0.5);
   }
   .headshot-img{
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-    object-position:50% 20%; transform:scale(0.8); transform-origin:50% 15%;
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 15%;
   }
 
   .info{flex:1; min-width:0;}
@@ -429,9 +436,15 @@ async function updateHrCounter(gamePks){
 
 function buildGameFilter(){
   const bar = document.getElementById('gamefilter');
-  const games = [...new Set(players.map(p => p.game))].sort();
   const statusByGame = {};
   players.forEach(p => { statusByGame[p.game] = p.gameStatus; });
+  const statusOrder = { 'Preview': 0, 'Live': 1, 'Final': 2 };
+  const games = [...new Set(players.map(p => p.game))].sort((a, b) => {
+    const orderA = statusOrder[statusByGame[a]] ?? 0;
+    const orderB = statusOrder[statusByGame[b]] ?? 0;
+    if (orderA !== orderB) return orderA - orderB;
+    return a.localeCompare(b);
+  });
   const chips = ['<div class="gamechip active" data-game="">All Games</div>']
     .concat(games.map(g => {
       const status = statusByGame[g];
@@ -523,12 +536,16 @@ function render(){
     const headshotImg = p.playerId
       ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : '';
+    const rankBadge = i < 5 ? `<div class="rank-badge">${i + 1}</div>` : '';
     return `
     <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
-        <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
-          <div class="headshot-fallback">${initials}</div>
-          ${headshotImg}
+        <div class="headshot-outer">
+          <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
+            <div class="headshot-fallback">${initials}</div>
+            ${headshotImg}
+          </div>
+          ${rankBadge}
         </div>
         <div class="info">
           <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''}</div>
