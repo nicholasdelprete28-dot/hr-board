@@ -73,6 +73,24 @@
   }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
+  /* ---- Live homer alert toasts ---- */
+  #toast-container{
+    position:fixed; top:14px; left:0; right:0; z-index:100;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    pointer-events:none; padding:0 14px;
+  }
+  .homer-toast{
+    max-width:600px; width:100%; box-sizing:border-box;
+    background:rgba(18,22,20,0.97); backdrop-filter:blur(8px);
+    border:1.5px solid var(--gold); border-radius:12px; padding:12px 16px;
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--body); font-size:14px; color:var(--text);
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+    transform:translateY(-30px); opacity:0; transition:transform .35s ease, opacity .35s ease;
+  }
+  .homer-toast.show{transform:translateY(0); opacity:1;}
+  .homer-toast b{font-weight:700;}
+
   .controls{max-width:600px; margin:12px auto 0; display:flex; gap:8px;}
   .search{
     flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:10px;
@@ -247,6 +265,8 @@
 </head>
 <body>
 
+<div id="toast-container"></div>
+
 <header>
   <div class="titlebar">
     <div>
@@ -368,6 +388,7 @@ async function applyLiveGameStatus(){
     const data = await res.json();
     const statusByMatchup = {};
     const activeGamePks = [];
+    const liveGamePks = [];
     (data.dates || []).forEach(d => {
       (d.games || []).forEach(g => {
         const home = g.teams.home.team.name;
@@ -378,6 +399,7 @@ async function applyLiveGameStatus(){
         // (e.g. "Houston Astros").
         statusByMatchup[`${away}__${home}`] = status;
         if (status === 'Live' || status === 'Final') activeGamePks.push(g.gamePk);
+        if (status === 'Live') liveGamePks.push(g.gamePk);
       });
     });
     players.forEach(p => {
@@ -391,6 +413,7 @@ async function applyLiveGameStatus(){
       if (match) p.gameStatus = statusByMatchup[match];
     });
     updateHrCounter(activeGamePks);
+    startHomerAlertPolling(liveGamePks);
   } catch (err) {
     // network hiccup or CORS block - not fatal, just keep whatever
     // players.json already had baked in.
@@ -432,6 +455,69 @@ async function updateHrCounter(gamePks){
   } catch (err) {
     el.style.display = 'none';
   }
+}
+
+// ---------------------------------------------------------------------
+// Live HR alerts. Polls each currently-Live game's play-by-play feed on an
+// interval, and pops a toast at the top of the page the moment a new home
+// run play appears. Only runs while the tab is open - there's no way to
+// send a real push notification from a static GitHub Pages site without a
+// backend, so this only alerts while someone actually has the page open.
+// ---------------------------------------------------------------------
+const seenHomerPlays = new Set();
+let homerPollInterval = null;
+
+function startHomerAlertPolling(liveGamePks){
+  if (homerPollInterval) clearInterval(homerPollInterval);
+  if (!liveGamePks.length) return;
+  checkForNewHomers(liveGamePks); // check once immediately
+  homerPollInterval = setInterval(() => checkForNewHomers(liveGamePks), 45000);
+}
+
+async function checkForNewHomers(gamePks){
+  try {
+    const feeds = await Promise.all(gamePks.map(pk =>
+      fetch(`https://statsapi.mlb.com/api/v1.1/game/${pk}/feed/live`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ));
+    feeds.forEach((g, idx) => {
+      if (!g) return;
+      const gamePk = gamePks[idx];
+      const plays = (g.liveData && g.liveData.plays && g.liveData.plays.allPlays) || [];
+      const homeAbbr = g.gameData.teams.home.abbreviation;
+      const awayAbbr = g.gameData.teams.away.abbreviation;
+      plays.forEach(play => {
+        if (!play.result || play.result.eventType !== 'home_run') return;
+        const key = `${gamePk}-${play.about.atBatIndex}`;
+        if (seenHomerPlays.has(key)) return;
+        seenHomerPlays.add(key);
+        // Only fire real toasts for plays we've actually seen appear fresh
+        // (skip the very first poll of a game already in progress, so we
+        // don't dump 5 alerts at once for HRs that already happened before
+        // the page was opened).
+        if (!checkForNewHomers.warmedUp) return;
+        const battingTeam = play.about.isTopInning ? awayAbbr : homeAbbr;
+        showHomerToast(play.matchup.batter.fullName, battingTeam);
+      });
+    });
+    checkForNewHomers.warmedUp = true;
+  } catch (err) {
+    // silent - just try again next interval
+  }
+}
+
+function showHomerToast(playerName, teamAbbr){
+  const container = document.getElementById('toast-container');
+  const teamColor = TEAM_COLORS[teamAbbr] || 'var(--gold)';
+  const toast = document.createElement('div');
+  toast.className = 'homer-toast';
+  toast.style.borderColor = teamColor;
+  toast.innerHTML = `${teamLogo(teamAbbr, 22)} <div><b>${playerName}</b> just went deep! <span style="opacity:0.7;">(${teamAbbr})</span></div>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 6000);
 }
 
 function buildGameFilter(){
