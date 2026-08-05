@@ -90,7 +90,7 @@ def team_abbr(team_obj):
 
 
 def get_todays_games():
-    """Today's schedule with probable starting pitchers."""
+    """Today's schedule with probable starting pitchers and live game status."""
     data = statsapi_get("schedule", {
         "sportId": 1, "date": TODAY, "hydrate": "probablePitcher,linescore"
     })
@@ -105,6 +105,10 @@ def get_todays_games():
                 "away_team_id": g["teams"]["away"]["team"].get("id"),
                 "home_pitcher": g["teams"]["home"].get("probablePitcher", {}),
                 "away_pitcher": g["teams"]["away"].get("probablePitcher", {}),
+                # "Preview" (not started), "Live" (in progress), or "Final"
+                # (completed) - used so the webpage can hide finished games
+                # by default while still letting you tap into them manually.
+                "status": g.get("status", {}).get("abstractGameState", "Preview"),
             })
     return games
 
@@ -285,7 +289,11 @@ def fetch_batter_statcast():
     exactly what columns actually came back instead of guessing again.
     """
     url = (f"https://baseballsavant.mlb.com/leaderboard/statcast"
-           f"?type=batter&year={YEAR}&position=&team=&min=q&csv=true")
+           # min=1 instead of min=q: "q" (qualified) only includes the ~150 top
+           # batters by plate-appearance volume league-wide, which excludes
+           # plenty of real starters (platoon players, part-timers). min=1
+           # includes anyone with at least 1 batted ball event this season.
+           f"?type=batter&year={YEAR}&position=&team=&min=1&csv=true")
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
     resp.raise_for_status()
     # decode with utf-8-sig, NOT resp.text: Savant's CSV starts with a BOM
@@ -482,6 +490,7 @@ def main():
                     "hand": pitcher_hand,
                     "game": f"{g['away_team']} @ {g['home_team']}",
                     "lineupConfirmed": lineup_confirmed,
+                    "gameStatus": g["status"],
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
