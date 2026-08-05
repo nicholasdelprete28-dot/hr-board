@@ -68,6 +68,10 @@
   .sortbtn.active{color:var(--gold); border-color:var(--gold);}
 
   /* ---- Game filter (horizontal scroll) ---- */
+  .gamefilter-label{
+    font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase;
+    letter-spacing:1px; padding:10px 2px 0; max-width:720px; margin:0 auto;
+  }
   .gamefilter{
     display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
     padding:8px 2px 2px; max-width:720px; margin:0 auto; scrollbar-width:thin;
@@ -78,6 +82,7 @@
     flex-shrink:0; background:var(--surface2); border:1px solid var(--line); border-radius:20px;
     color:var(--muted); font-family:var(--mono); font-size:11px; padding:6px 12px;
     cursor:pointer; white-space:nowrap; user-select:none;
+    display:inline-flex; align-items:center; gap:4px;
   }
   .gamechip.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
 
@@ -139,6 +144,14 @@
   .card.top .scoreval{color:var(--green);}
   .scorelabel{font-family:var(--mono); font-size:9px; color:var(--muted2); letter-spacing:1px; text-transform:uppercase;}
 
+  .favtier{
+    font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:0.5px;
+    border-radius:4px; padding:2px 6px; margin-bottom:3px; display:inline-block;
+  }
+  .favtier-prime{color:var(--green); background:rgba(79,219,154,0.12); border:1px solid rgba(79,219,154,0.35);}
+  .favtier-inplay{color:var(--gold); background:rgba(227,165,72,0.12); border:1px solid rgba(227,165,72,0.35);}
+  .favtier-longshot{color:var(--muted); background:rgba(139,148,141,0.1); border:1px solid var(--line);}
+
   /* segmented bar */
   .segbar{display:flex; height:5px; border-radius:3px; overflow:hidden; margin-top:10px; background:#1c231f;}
   .seg{height:100%;}
@@ -196,6 +209,7 @@
     <div class="sortbtn" data-key="l15hr">RECENT FORM</div>
     <div class="sortbtn" data-key="ev">EV</div>
   </div>
+  <div class="gamefilter-label">Upcoming Games</div>
   <div class="gamefilter" id="gamefilter"></div>
   <div class="legend">
     <span><i class="swatch" style="background:var(--gold)"></i>Power 35%</span>
@@ -230,6 +244,22 @@ let sortKey = 'score';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
+
+// MLB team IDs, used to build logo URLs from MLB's own public CDN
+// (mlbstatic.com/team-logos/{id}.svg). Mirrors the same table the fetch
+// script uses, so logos work with data already on hand, no re-run needed.
+const TEAM_IDS = {
+  LAA:108, AZ:109, BAL:110, BOS:111, CHC:112, CIN:113, CLE:114, COL:115,
+  DET:116, HOU:117, KC:118, LAD:119, WSH:120, NYM:121, ATH:133, PIT:134,
+  SD:135, SEA:136, SF:137, STL:138, TB:139, TEX:140, TOR:141, MIN:142,
+  PHI:143, ATL:144, CWS:145, MIA:146, NYY:147, MIL:158,
+};
+
+function teamLogo(abbr, size){
+  const id = TEAM_IDS[abbr];
+  if(!id) return '';
+  return `<img src="https://www.mlbstatic.com/team-logos/${id}.svg" alt="${abbr}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;" onerror="this.style.display='none'">`;
+}
 const sortLabels = { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' };
 
 async function loadPlayers() {
@@ -250,7 +280,11 @@ function buildGameFilter(){
   const bar = document.getElementById('gamefilter');
   const games = [...new Set(players.map(p => p.game))].sort();
   const chips = ['<div class="gamechip active" data-game="">All Games</div>']
-    .concat(games.map(g => `<div class="gamechip" data-game="${g}">${g}</div>`));
+    .concat(games.map(g => {
+      const parts = g.split(' @ ');
+      const logos = parts.length === 2 ? teamLogo(parts[0], 14) + teamLogo(parts[1], 14) : '';
+      return `<div class="gamechip" data-game="${g}">${logos} ${g}</div>`;
+    }));
   bar.innerHTML = chips.join('');
   bar.querySelectorAll('.gamechip').forEach(chip => {
     chip.addEventListener('click', () => {
@@ -273,6 +307,21 @@ function tierFor(i){
 
 function fmtPct(x){ return x == null ? 'N/A' : (x*100).toFixed(1) + '%'; }
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
+
+// Favorability bands, independent of rank position - based on the score
+// itself. >=45% = strongest read, 35-44.9% = solid, below 35% = speculative.
+function favTierName(score){
+  if(score == null) return 'N/A';
+  if(score >= 45) return 'PRIME';
+  if(score >= 35) return 'IN PLAY';
+  return 'LONG SHOT';
+}
+function favTierClass(score){
+  if(score == null) return 'unknown';
+  if(score >= 45) return 'prime';
+  if(score >= 35) return 'inplay';
+  return 'longshot';
+}
 
 function render(){
   const list = document.getElementById('list');
@@ -310,9 +359,10 @@ function render(){
         <div class="rank">${rank}</div>
         <div class="info">
           <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''}</div>
-          <div class="meta"><b>${p.game}</b> &middot; vs ${p.pitcher} (${p.hand})</div>
+          <div class="meta">${teamLogo(p.team, 14)} <b>${p.game}</b> &middot; vs ${p.pitcher} (${p.hand})</div>
         </div>
         <div class="scorebox">
+          <div class="favtier favtier-${favTierClass(p.score)}">${favTierName(p.score)}</div>
           <div class="scoreval">${fmtNum(p.score, 1)}%</div>
           <div class="scorelabel">favorability</div>
         </div>
