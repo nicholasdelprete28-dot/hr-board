@@ -435,7 +435,7 @@ def main():
                 bstats = batting_stats.get(batter_id, {})
                 name = bstats.get("name", "")
 
-               sc = statcast.get(normalize_name(name), {})
+                sc = statcast.get(normalize_name(name), {})
 
                 platoon_avg = get_platoon_split(
                     batter_id,
