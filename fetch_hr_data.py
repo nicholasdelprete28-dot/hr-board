@@ -70,6 +70,24 @@ def statsapi_get(path, params=None):
     return resp.json()
 
 
+# MLB team IDs are stable and well documented - hardcoding this avoids relying on
+# the schedule endpoint returning an "abbreviation" field, which it does not
+# include by default (that was the KeyError bug).
+TEAM_ABBR = {
+    108: "LAA", 109: "AZ", 110: "BAL", 111: "BOS", 112: "CHC", 113: "CIN",
+    114: "CLE", 115: "COL", 116: "DET", 117: "HOU", 118: "KC", 119: "LAD",
+    120: "WSH", 121: "NYM", 133: "ATH", 134: "PIT", 135: "SD", 136: "SEA",
+    137: "SF", 138: "STL", 139: "TB", 140: "TEX", 141: "TOR", 142: "MIN",
+    143: "PHI", 144: "ATL", 145: "CWS", 146: "MIA", 147: "NYY", 158: "MIL",
+}
+
+
+def team_abbr(team_obj):
+    """Look up a team's abbreviation by ID, falling back to its full name if
+    somehow not in the table (e.g. a new expansion team)."""
+    return TEAM_ABBR.get(team_obj.get("id"), team_obj.get("name", "UNK"))
+
+
 def get_todays_games():
     """Today's schedule with probable starting pitchers."""
     data = statsapi_get("schedule", {
@@ -80,8 +98,8 @@ def get_todays_games():
         for g in date_block.get("games", []):
             games.append({
                 "game_pk": g["gamePk"],
-                "home_team": g["teams"]["home"]["team"]["abbreviation"],
-                "away_team": g["teams"]["away"]["team"]["abbreviation"],
+                "home_team": team_abbr(g["teams"]["home"]["team"]),
+                "away_team": team_abbr(g["teams"]["away"]["team"]),
                 "home_pitcher": g["teams"]["home"].get("probablePitcher", {}),
                 "away_pitcher": g["teams"]["away"].get("probablePitcher", {}),
             })
