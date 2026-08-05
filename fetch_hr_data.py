@@ -80,8 +80,8 @@ def get_todays_games():
         for g in date_block.get("games", []):
             games.append({
                 "game_pk": g["gamePk"],
-                "home_team": g["teams"]["home"]["team"].get["abbreviation"],
-                "away_team": g["teams"]["away"]["team"].get["abbreviation"],
+                "home_team": g["teams"]["home"]["team"].get("abbreviation"),
+                "away_team": g["teams"]["away"]["team"].get("abbreviation"),
                 "home_pitcher": g["teams"]["home"].get("probablePitcher", {}),
                 "away_pitcher": g["teams"]["away"].get("probablePitcher", {}),
             })
