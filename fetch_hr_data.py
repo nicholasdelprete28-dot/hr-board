@@ -277,17 +277,31 @@ def fetch_batter_statcast():
     and MLB's Stats API use for the same players), NOT by name. Matching by
     name string was unreliable - accented letters, "Jr." formatting, and
     suffix punctuation don't line up character-for-character between the two
-    sources (e.g. "Garcia" from Savant vs "Garcia" with an accent from MLB's
-    API). Player ID is the correct join key.
+    sources. Player ID is the correct join key.
+
+    Tries a few possible column names for the ID field since we can't verify
+    Savant's exact current CSV schema without a live test run - and prints
+    the real header row either way, so if matching still fails we can see
+    exactly what columns actually came back instead of guessing again.
     """
     url = (f"https://baseballsavant.mlb.com/leaderboard/statcast"
            f"?type=batter&year={YEAR}&position=&team=&min=q&csv=true")
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
     resp.raise_for_status()
     reader = csv.DictReader(io.StringIO(resp.text))
+    rows = list(reader)
+    print(f"  Savant CSV columns: {reader.fieldnames}")
+    print(f"  Savant CSV row count: {len(rows)}")
+    if rows:
+        print(f"  sample row: {rows[0]}")
+
+    id_columns = ["player_id", "batter", "xba_id", "id", "mlb_id", "mlbam_id"]
+    id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
+    print(f"  using ID column: {id_col_used}")
+
     out = {}
-    for row in reader:
-        pid_raw = row.get("player_id")
+    for row in rows:
+        pid_raw = row.get(id_col_used) if id_col_used else None
         if not pid_raw:
             continue
         try:
@@ -402,6 +416,7 @@ def main():
 
     print("Fetching Statcast batter data (barrel%, EV, hard-hit%)...")
     statcast = fetch_batter_statcast()
+    print(f"  parsed {len(statcast)} batters with Statcast data")
 
     players = []
     sides_with_pitcher = 0
