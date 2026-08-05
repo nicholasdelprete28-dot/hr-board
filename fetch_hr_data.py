@@ -95,31 +95,20 @@ def get_todays_games():
 
 
 def get_lineup(game_pk, side):
-    """Gets lineup from MLB live feed if available."""
+    """Gets confirmed lineup from MLB."""
     try:
-        url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        data = statsapi_get(f"game/{game_pk}/lineups")
 
-        team_id = data["gameData"]["teams"][side]["id"]
-        players = data["gameData"]["players"]
+        team_lineup = data["teams"][side]["batters"]
 
-        lineup = {}
-
-        for player_id, player in players.items():
-            if player.get("currentTeam", {}).get("id") == team_id:
-                batting_order = player.get("battingOrder")
-
-                if batting_order:
-                    lineup[player["id"]] = int(batting_order)
-
-        return lineup
+        return {
+            batter["id"]: i + 1
+            for i, batter in enumerate(team_lineup)
+        }
 
     except Exception as e:
         print("Lineup error:", e)
         return {}
-
 def get_pitcher_hand_and_id(probable_pitcher):
     return probable_pitcher.get("id"), probable_pitcher.get("pitchHand", {}).get("code", "R")
 
