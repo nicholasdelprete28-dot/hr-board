@@ -94,8 +94,7 @@ def get_todays_games():
     return games
 
 
-lineup = get_lineup(g["game_pk"], side)
-print(team, "lineup size:", len(lineup))
+def get_lineup(game_pk, side):
     """Gets lineup from MLB live feed if available."""
     try:
         data = statsapi_get(f"game/{game_pk}/feed/live")
