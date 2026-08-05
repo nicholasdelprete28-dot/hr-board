@@ -26,10 +26,10 @@
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
   body{
     background-image:
-      radial-gradient(ellipse 900px 600px at 15% -5%, rgba(227,165,72,0.14), transparent 60%),
-      radial-gradient(ellipse 700px 500px at 90% 15%, rgba(199,125,214,0.10), transparent 60%),
-      radial-gradient(ellipse 800px 500px at 50% 100%, rgba(79,219,154,0.09), transparent 60%),
-      radial-gradient(ellipse 600px 400px at 5% 60%, rgba(106,159,216,0.07), transparent 60%),
+      radial-gradient(ellipse 900px 600px at 15% -5%, rgba(227,165,72,0.22), transparent 62%),
+      radial-gradient(ellipse 700px 500px at 90% 15%, rgba(199,125,214,0.17), transparent 62%),
+      radial-gradient(ellipse 800px 500px at 50% 100%, rgba(79,219,154,0.16), transparent 62%),
+      radial-gradient(ellipse 600px 400px at 5% 60%, rgba(106,159,216,0.13), transparent 62%),
       repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
     background-attachment:fixed;
   }
@@ -40,12 +40,11 @@
   header{
     position:sticky; top:0; z-index:20;
     background:
-      radial-gradient(ellipse 500px 200px at 15% 0%, rgba(227,165,72,0.18), transparent 70%),
-      radial-gradient(ellipse 400px 180px at 85% 20%, rgba(79,219,154,0.14), transparent 70%),
-      linear-gradient(180deg, rgba(10,13,11,0.98) 70%, rgba(10,13,11,0.92));
+      radial-gradient(ellipse 500px 200px at 15% 0%, rgba(227,165,72,0.22), transparent 75%),
+      radial-gradient(ellipse 400px 180px at 85% 20%, rgba(79,219,154,0.18), transparent 75%),
+      linear-gradient(180deg, rgba(10,13,11,0.98) 75%, rgba(10,13,11,0) 100%);
     backdrop-filter: blur(6px);
-    border-bottom:1px solid var(--line);
-    padding:18px 14px 12px;
+    padding:18px 14px 20px;
     position:relative;
   }
   .titlebar{max-width:600px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;}
@@ -158,7 +157,8 @@
     text-shadow:0 1px 2px rgba(0,0,0,0.5);
   }
   .headshot-img{
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 15%;
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    object-position:50% 20%; transform:scale(0.8); transform-origin:50% 15%;
   }
 
   .info{flex:1; min-width:0;}
@@ -524,7 +524,7 @@ function render(){
       ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : '';
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}60 0%, ${teamColor}20 45%, var(--surface2) 90%); --card-glow:${teamColor}80;">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
         <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
           <div class="headshot-fallback">${initials}</div>
