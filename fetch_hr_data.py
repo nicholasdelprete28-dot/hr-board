@@ -319,6 +319,7 @@ def compute_score(p):
 def main():
     print("Fetching today's schedule and probable pitchers...")
     games = get_todays_games()
+    print(f"MLB date requested: {TODAY}")
     print(f"  {len(games)} games today")
 
     print("Fetching season pitching stats (WHIP, HR/9)...")
@@ -332,7 +333,7 @@ def main():
 
     players = []
 
-   for g in games:
+    for g in games:
         for side, opp_side in [("home", "away"), ("away", "home")]:
             team = g[f"{side}_team"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
@@ -341,6 +342,7 @@ def main():
                 continue
 
             pitcher_id, pitcher_hand = get_pitcher_hand_and_id(opp_pitcher)
+
             pitcher_stat = pitching_stats.get(
                 pitcher_id,
                 {"whip": 1.30, "hr9": 1.20}
@@ -351,7 +353,7 @@ def main():
                 {"factor": 0, "lat": None, "lon": None}
             )
 
-            wind_speed, wind_dir = (None, None)
+            wind_speed, wind_dir = None, None
 
             if park["lat"] is not None:
                 wind_speed, wind_dir = get_wind(
@@ -367,8 +369,13 @@ def main():
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
                 name = bstats.get("name", "")
+
                 sc = statcast.get(name, {})
-                platoon_avg = get_platoon_split(batter_id, pitcher_hand)
+
+                platoon_avg = get_platoon_split(
+                    batter_id,
+                    pitcher_hand
+                )
 
                 player_row = {
                     "player": name,
@@ -382,18 +389,20 @@ def main():
                     "iso": bstats.get("iso"),
                     "phr9": pitcher_stat["hr9"],
                     "whip": pitcher_stat["whip"],
-                    "avgmix": platoon_avg,          # our platoon-split substitute
+                    "avgmix": platoon_avg,
                     "wind": wind_score,
                     "park": park["factor"],
                     "l15hr": get_l15_hr(batter_id),
-                    "lbonus": max(1, 9 - order_pos), # 1st = +8 ... 9th = +1 (roughly matches old scale)
+                    "lbonus": max(1, 9 - order_pos),
                     "crush": 1 if (platoon_avg or 0) >= 0.280 else 0,
                     "split": 1 if (platoon_avg or 0) >= 0.260 else 0,
-                    "hrprob": None,  # no swiftprops number to reference anymore
+                    "hrprob": None,
                 }
+
                 player_row.update(compute_score(player_row))
                 players.append(player_row)
-                time.sleep(0.05)  # be polite to the free API
+
+                time.sleep(0.05)
 
     players.sort(key=lambda p: -p["score"])
 
