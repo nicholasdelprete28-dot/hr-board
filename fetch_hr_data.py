@@ -348,7 +348,7 @@ def main():
             wind_score = wind_park_factor(wind_speed, wind_dir)
 
           lineup = get_lineup(g["game_pk"], side)
-print(team, "lineup size:", len(lineup))
+          print(team, "lineup size:", len(lineup))
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
