@@ -1,0 +1,38 @@
+name: Update HR Board Data
+
+# Runs twice a day:
+#   - 10:00 AM Eastern (14:00 UTC): early pull - schedule, probable pitchers, season stats
+#   - 3:00 PM Eastern (19:00 UTC): re-run - lineups are usually posted by now, so the
+#     lineup-dependent fields (batting order, platoon match) fill in properly
+# Also runnable manually anytime from the Actions tab (workflow_dispatch).
+on:
+  schedule:
+    - cron: "0 14 * * *"
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run the data-fetching script
+        run: python fetch_hr_data.py
+
+      - name: Commit and push players.json if it changed
+        run: |
+          git config user.name "hr-board-bot"
+          git config user.email "actions@github.com"
+          git add players.json
+          git diff --quiet --cached || git commit -m "Update player data ($(date -u +%Y-%m-%dT%H:%M))"
+          git push
