@@ -85,6 +85,8 @@
     display:inline-flex; align-items:center; gap:4px;
   }
   .gamechip.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
+  .gamechip-final{opacity:0.55;}
+  .gamechip-live{opacity:0.75; border-color:rgba(217,107,91,0.4);}
 
   /* ---- Legend ---- */
   .legend{
@@ -136,6 +138,12 @@
     border:1px solid rgba(224,118,63,0.5); border-radius:4px; padding:1px 4px;
     letter-spacing:0.5px; vertical-align:middle;
   }
+  .badge-live{
+    font-family:var(--mono); font-size:8px; font-weight:600; color:var(--red);
+    border:1px solid rgba(217,107,91,0.5); border-radius:4px; padding:1px 4px;
+    letter-spacing:0.5px; vertical-align:middle;
+  }
+  .card-live{opacity:0.55;}
   .meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .meta b{color:var(--muted); font-weight:500;}
 
@@ -260,6 +268,11 @@ function teamLogo(abbr, size){
   if(!id) return '';
   return `<img src="https://www.mlbstatic.com/team-logos/${id}.svg" alt="${abbr}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;" onerror="this.style.display='none'">`;
 }
+function matchupWithLogos(gameStr, size){
+  const parts = gameStr.split(' @ ');
+  if(parts.length !== 2) return gameStr;
+  return `${teamLogo(parts[0], size)} ${parts[0]} @ ${teamLogo(parts[1], size)} ${parts[1]}`;
+}
 const sortLabels = { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' };
 
 async function loadPlayers() {
@@ -279,11 +292,17 @@ async function loadPlayers() {
 function buildGameFilter(){
   const bar = document.getElementById('gamefilter');
   const games = [...new Set(players.map(p => p.game))].sort();
+  const statusByGame = {};
+  players.forEach(p => { statusByGame[p.game] = p.gameStatus; });
   const chips = ['<div class="gamechip active" data-game="">All Games</div>']
     .concat(games.map(g => {
-      const parts = g.split(' @ ');
-      const logos = parts.length === 2 ? teamLogo(parts[0], 14) + teamLogo(parts[1], 14) : '';
-      return `<div class="gamechip" data-game="${g}">${logos} ${g}</div>`;
+      const status = statusByGame[g];
+      const isFinal = status === 'Final';
+      const isLive = status === 'Live';
+      const tag = isFinal ? ' <span style="opacity:0.6">(FINAL)</span>'
+                : isLive ? ' <span style="opacity:0.7">(LIVE)</span>' : '';
+      const dimClass = isFinal ? 'gamechip-final' : (isLive ? 'gamechip-live' : '');
+      return `<div class="gamechip ${dimClass}" data-game="${g}">${matchupWithLogos(g, 14)}${tag}</div>`;
     }));
   bar.innerHTML = chips.join('');
   bar.querySelectorAll('.gamechip').forEach(chip => {
@@ -330,7 +349,12 @@ function render(){
     const q = query.toLowerCase();
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
-    return matchesSearch && matchesGame;
+    // Once a game is Final, hide it from the general list by default - it's
+    // no longer an upcoming pick. Still viewable by tapping that specific
+    // game's chip, since selectedGame overrides the auto-hide.
+    const isFinal = p.gameStatus === 'Final';
+    const hideBecauseFinal = isFinal && !selectedGame;
+    return matchesSearch && matchesGame && !hideBecauseFinal;
   });
   filtered.sort((a,b) => {
     const diff = a[sortKey] - b[sortKey];
@@ -353,13 +377,14 @@ function render(){
     const coldBarrel = p.conf < 1.0;
     const platoonGood = p.crush === 1 || p.split === 1;
     const isProjected = p.lineupConfirmed === false;
+    const isLive = p.gameStatus === 'Live';
     return `
-    <div class="card ${tier}" data-idx="${i}">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}">
       <div class="row1">
         <div class="rank">${rank}</div>
         <div class="info">
-          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''}</div>
-          <div class="meta">${teamLogo(p.team, 14)} <b>${p.game}</b> &middot; vs ${p.pitcher} (${p.hand})</div>
+          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''}</div>
+          <div class="meta">${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})</div>
         </div>
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(p.score)}">${favTierName(p.score)}</div>
