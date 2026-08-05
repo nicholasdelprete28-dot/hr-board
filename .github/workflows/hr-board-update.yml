@@ -1,14 +1,12 @@
 name: Update HR Board Data
 
-# Runs twice a day:
-#   - 10:00 AM Eastern (14:00 UTC): early pull - schedule, probable pitchers, season stats
-#   - 3:00 PM Eastern (19:00 UTC): re-run - lineups are usually posted by now, so the
-#     lineup-dependent fields (batting order, platoon match) fill in properly
+# Runs every 30 minutes, all day, every day. GitHub's scheduler treats this
+# as a target, not a to-the-minute guarantee - it can run a few minutes late
+# during high load, but in practice stays close.
 # Also runnable manually anytime from the Actions tab (workflow_dispatch).
 on:
   schedule:
-    - cron: "0 14 * * *"
-    - cron: "0 19 * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 # Explicitly grant this workflow permission to push commits. Without this,
