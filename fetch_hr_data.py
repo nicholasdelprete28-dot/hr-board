@@ -73,7 +73,7 @@ def normalize_name(name):
         .replace(".", "")
         .replace(",", "")
         .strip()
-
+    )
 def statsapi_get(path, params=None):
     url = f"https://statsapi.mlb.com/api/v1/{path}"
     resp = requests.get(url, params=params or {}, timeout=30)
