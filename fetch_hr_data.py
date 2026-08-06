@@ -253,17 +253,113 @@ def get_platoon_split(batter_id, vs_hand):
     return None
 
 
-def get_l15_hr(batter_id):
-    """Home runs over the batter's last 15 games played."""
+def get_gamelog(batter_id, season):
+    """
+    Every game this batter has played in `season`, oldest first, with the
+    per-game counting stats the player detail view needs (HR, hits, XBH,
+    plate appearances) plus the opponent and home/away flag so the frontend
+    can label each bar ("vs CLE" / "@ PIT").
+
+    Feeds BOTH the existing L15-HR "recent form" number and the new player
+    detail graphs, so this replaces the narrower get_l15_hr() that used to
+    make its own separate call for the same underlying data.
+    """
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
-            "stats": "gameLog", "group": "hitting", "season": YEAR
+            "stats": "gameLog", "group": "hitting", "season": season
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
-        last15 = splits[-15:] if len(splits) >= 15 else splits
-        return sum(int(s["stat"].get("homeRuns", 0)) for s in last15)
+        games = []
+        for s in splits:
+            stat = s.get("stat", {})
+            opp = s.get("opponent", {}) or {}
+            doubles = int(stat.get("doubles", 0) or 0)
+            triples = int(stat.get("triples", 0) or 0)
+            hr = int(stat.get("homeRuns", 0) or 0)
+            games.append({
+                "date": s.get("date"),
+                "opp": team_abbr(opp) if opp else "",
+                "home": bool(s.get("isHome")),
+                "hr": hr,
+                "hits": int(stat.get("hits", 0) or 0),
+                "xbh": doubles + triples + hr,
+                "pa": int(stat.get("plateAppearances", 0) or 0),
+            })
+        # The API normally returns these oldest-first already; sort defensively
+        # so a change on MLB's end can't silently flip chart order left-to-right.
+        games.sort(key=lambda g: g["date"] or "")
+        return games
+    except Exception:
+        return []
+
+
+def get_season_totals_hitting(batter_id, season):
+    """Aggregate hitting totals for a prior season (used for the '2025' row
+    in the player detail split box, where a full game log isn't needed -
+    just games played and counting stats)."""
+    try:
+        data = statsapi_get(f"people/{batter_id}/stats", {
+            "stats": "season", "group": "hitting", "season": season
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        if not splits:
+            return None
+        stat = splits[0].get("stat", {})
+        gp = int(stat.get("gamesPlayed", 0) or 0)
+        if gp == 0:
+            return None
+        return {
+            "gamesPlayed": gp,
+            "hits": int(stat.get("hits", 0) or 0),
+            "doubles": int(stat.get("doubles", 0) or 0),
+            "triples": int(stat.get("triples", 0) or 0),
+            "homeRuns": int(stat.get("homeRuns", 0) or 0),
+            "plateAppearances": int(stat.get("plateAppearances", 0) or 0),
+        }
     except Exception:
         return None
+
+
+def window_stats(games):
+    """HR%/hits%/XBH% (share of games with at least one), plus average
+    hits/XBH/PA, across a list of games (a window like L5/L10/L20, or a full
+    season's real game log) - these percentages are exact since they're
+    built from real per-game data, not an aggregate approximation."""
+    n = len(games)
+    if n == 0:
+        return None
+    hr_games = sum(1 for g in games if g["hr"] >= 1)
+    hits_games = sum(1 for g in games if g["hits"] >= 1)
+    xbh_games = sum(1 for g in games if g["xbh"] >= 1)
+    return {
+        "n": n,
+        "hrPct": round(100 * hr_games / n, 1),
+        "hitsPct": round(100 * hits_games / n, 1),
+        "xbhPct": round(100 * xbh_games / n, 1),
+        "hitsAvg": round(sum(g["hits"] for g in games) / n, 2),
+        "xbhAvg": round(sum(g["xbh"] for g in games) / n, 2),
+        "paAvg": round(sum(g["pa"] for g in games) / n, 2),
+    }
+
+
+def season_totals_to_window(totals):
+    """Same shape as window_stats(), but built from season-AGGREGATE totals
+    (used for a prior season, where we don't pull the full game log). There's
+    no way to recover '% of games with >=1 hit/HR/XBH' from aggregate totals
+    alone (a multi-hit game looks the same as two single-hit games), so only
+    hrPct is included, as a per-game-played approximation - hitsPct/xbhPct
+    are left out entirely rather than shown as something they're not; the
+    frontend falls back to the average-per-game figures for those instead."""
+    if not totals or not totals.get("gamesPlayed"):
+        return None
+    gp = totals["gamesPlayed"]
+    return {
+        "n": gp,
+        "hrPct": round(100 * totals["homeRuns"] / gp, 1),
+        "hitsAvg": round(totals["hits"] / gp, 2),
+        "xbhAvg": round((totals["doubles"] + totals["triples"] + totals["homeRuns"]) / gp, 2),
+        "paAvg": round(totals["plateAppearances"] / gp, 2),
+    }
 
 
 def get_wind(lat, lon):
@@ -321,17 +417,6 @@ def fetch_batter_statcast():
     id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
     print(f"  using ID column: {id_col_used}")
 
-    # This endpoint (leaderboard/statcast, i.e. the "exit_velocity_barrels"
-    # leaderboard) names its hard-hit-rate column "ev95percent" - the percent
-    # of batted balls at 95+ mph exit velocity, which IS hard-hit% by
-    # definition. "hard_hit_percent" is the column name on Savant's separate
-    # /leaderboard/custom endpoint, not this one, so looking for it here
-    # always came up empty and silently defaulted every player to 0.0%.
-    # Trying several names keeps this working even if Savant renames again.
-    hardhit_columns = ["ev95percent", "hard_hit_percent", "hardhit_percent"]
-    hardhit_col_used = next((c for c in hardhit_columns if rows and c in rows[0]), None)
-    print(f"  using hard-hit% column: {hardhit_col_used}")
-
     out = {}
     for row in rows:
         pid_raw = row.get(id_col_used) if id_col_used else None
@@ -342,7 +427,7 @@ def fetch_batter_statcast():
             out[pid] = {
                 "ev": float(row.get("avg_hit_speed") or 0),
                 "barrel": float(row.get("brl_percent") or 0) / 100,
-                "hardhit": float(row.get(hardhit_col_used) or 0) / 100 if hardhit_col_used else 0.0,
+                "hardhit": float(row.get("hard_hit_percent") or 0) / 100,
             }
         except (TypeError, ValueError):
             continue
@@ -531,11 +616,13 @@ def main():
     print(f"  sides using a PROJECTED lineup (from last game): {sides_projected_lineup}")
     print(f"  sides with no lineup available at all: {sides_no_lineup_at_all}")
 
-    # ---- PASS 2: the slow part - platoon split, L15 HR, and any missing name
+    # ---- PASS 2: the slow part - platoon split, full game log (for L15 HR
+    # and the player detail view), prior-season totals, and any missing name
     # lookups - run CONCURRENTLY across many threads instead of one at a time.
     # This is what previously made the whole run take 4-10+ minutes; with
-    # ~20 requests in flight at once instead of 1, it should drop to well
-    # under a minute for a typical ~270-player slate.
+    # ~20 requests in flight at once instead of 1, it should stay well under
+    # a couple minutes for a typical ~270-player slate even with the extra
+    # per-player calls the detail view now needs.
     print(f"Fetching per-player matchup data ({len(rows)} players, concurrently)...")
 
     def fetch_one(item):
@@ -543,11 +630,29 @@ def main():
         if not player_row["player"]:
             player_row["player"] = get_player_name(batter_id)
         platoon_avg = get_platoon_split(batter_id, pitcher_hand)
-        l15hr = get_l15_hr(batter_id)
+
+        games_this_year = get_gamelog(batter_id, YEAR)
+        totals_prev_year = get_season_totals_hitting(batter_id, YEAR - 1)
+        last20 = games_this_year[-20:]
+        l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
+
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
         player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
         player_row["split"] = 1 if (platoon_avg or 0) >= 0.260 else 0
+        # Powers the player detail view (Graph + Stats tabs): last 20 games
+        # plus L5/L10/L20/season splits, precomputed here so tapping a card
+        # on the site is instant - no extra API calls from the browser.
+        player_row["gamelog"] = {
+            "games": last20,
+            "l5": window_stats(last20[-5:]),
+            "l10": window_stats(last20[-10:]),
+            "l20": window_stats(last20[-20:]),
+            "seasonCur": window_stats(games_this_year),
+            "seasonPrev": season_totals_to_window(totals_prev_year),
+            "yearCur": YEAR,
+            "yearPrev": YEAR - 1,
+        }
         return player_row
 
     import concurrent.futures
