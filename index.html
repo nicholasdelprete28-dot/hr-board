@@ -927,9 +927,9 @@ function renderStatboxes(items){
 function favTierName(score){
   if(score == null) return 'N/A';
   if(boardMode === 'k'){
-    if(score >= 53) return '&#9670; PRIME';
-    if(score >= 47) return '&#9733; STRONG';
-    if(score >= 41) return '&#9651; IN PLAY';
+    if(score >= 51) return '&#9670; PRIME';
+    if(score >= 45) return '&#9733; STRONG';
+    if(score >= 39) return '&#9651; IN PLAY';
     return '&#9633; LONG SHOT';
   }
   if(score >= 55) return '&#9670; PRIME';
@@ -940,9 +940,9 @@ function favTierName(score){
 function favTierClass(score){
   if(score == null) return 'unknown';
   if(boardMode === 'k'){
-    if(score >= 53) return 'prime';
-    if(score >= 47) return 'strong';
-    if(score >= 41) return 'inplay';
+    if(score >= 51) return 'prime';
+    if(score >= 45) return 'strong';
+    if(score >= 39) return 'inplay';
     return 'longshot';
   }
   if(score >= 55) return 'prime';
