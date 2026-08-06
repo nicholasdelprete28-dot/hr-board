@@ -533,16 +533,23 @@ def clamp01(x):
 
 
 def barrel_confidence(barrel, ev):
+    """How much to trust a batter's barrel% as real power signal, rather
+    than taking it at face value. The idea: a high barrel rate unsupported
+    by real exit velo is a little suspect, so it gets discounted - but this
+    now ramps in smoothly instead of snapping at hard cutoffs (barrel==0.12,
+    ev==90/92), which used to create a cliff where a guy at 11.9% barrel
+    scored BETTER than a guy at 12.0% with identical EV, since crossing the
+    line used to roughly halve the effective value overnight. Same
+    endpoints and same 0.5 max-discount ceiling as before, just continuous
+    in between: no discount below ~8% barrel or at elite EV (95+), full
+    0.5 discount only at both high barrel AND weak EV (85 or below).
+    """
     if barrel is None or ev is None:
         return 1.0
-    if barrel >= 0.12:
-        if ev >= 92:
-            return 1.0
-        elif ev >= 90:
-            return 0.7
-        else:
-            return 0.5
-    return 1.0
+    barrel_intensity = clamp01((barrel - 0.08) / 0.08)   # ramps in 8% -> 16%
+    ev_support = clamp01((ev - 85) / 10)                  # ramps in 85 -> 95 mph
+    discount = barrel_intensity * (1 - ev_support) * 0.5  # 0.5 = same ceiling as before
+    return 1 - discount
 
 
 def avgmix_confidence_blend(avgmix):
