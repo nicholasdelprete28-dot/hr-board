@@ -1,12 +1,12 @@
 name: Update HR Board Data
 
-# Runs every 30 minutes, all day, every day. GitHub's scheduler treats this
-# as a target, not a to-the-minute guarantee - it can run a few minutes late
-# during high load, but in practice stays close.
+# Runs at 10:00 AM EST, 1:00 PM EST, and 5:00 PM EST each day.
 # Also runnable manually anytime from the Actions tab (workflow_dispatch).
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 15 * * *"
+    - cron: "0 18 * * *"
+    - cron: "0 22 * * *"
   workflow_dispatch:
 
 # Explicitly grant this workflow permission to push commits. Without this,
