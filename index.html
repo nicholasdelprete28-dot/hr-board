@@ -425,6 +425,7 @@
     <div class="boardtab active" data-board="hr">HR</div>
     <div class="boardtab" data-board="hrr">HRR</div>
     <div class="boardtab" data-board="tb">TB</div>
+    <div class="boardtab" data-board="k">Pitcher Ks</div>
   </div>
   <div class="hrcounter" id="hrcounter" style="display:none;">
     <span class="hrcounter-dot"></span>
@@ -480,7 +481,7 @@
       <div class="modal-proptab" data-prop="hrr">H+R+RBI</div>
       <div class="modal-proptab" data-prop="tb">Total Bases</div>
     </div>
-    <div class="modal-tabs">
+    <div class="modal-tabs" id="modalTabs">
       <div class="modal-tab active" data-view="graph">Graph</div>
       <div class="modal-tab" data-view="stats">Stats</div>
     </div>
@@ -524,6 +525,11 @@ const BOARD_CONFIG = {
     scoreField: 'tbScore',
     subtitle: 'TB = Total Bases, line 1.5 (needs 2+) &middot; contact and power blended evenly &middot; SLG-weighted',
     sorts: { tbScore: 'FAVORABILITY', l15tb: 'RECENT FORM', slg: 'SLG' },
+  },
+  k: {
+    scoreField: 'kScore',
+    subtitle: 'K = Strikeouts &middot; pitcher whiff quality vs. opposing lineup strikeout rate &middot; workload-adjusted',
+    sorts: { kScore: 'FAVORABILITY', l3k: 'RECENT FORM', k9: 'K/9' },
   },
 };
 function scoreField(){ return BOARD_CONFIG[boardMode].scoreField; }
@@ -891,6 +897,12 @@ function tipLineup(p, mode){
   }
   return `Lineup-slot bonus of +${p.lbonus} for HR favorability - higher up the order (leadoff especially) means more plate appearances, so more homer chances today.`;
 }
+function tipOppKRate(p){
+  return `${p.opponent} strikes out in ${fmtPct(p.oppKRate)} of plate appearances this season - a free-swinging lineup that gives ${p.player.split(' ').slice(-1)[0]} a real edge tonight.`;
+}
+function tipWorkhorse(p){
+  return `Averaging ${fmtNum(p.ipPerStart, 1)} innings per start this season - a longer outing means facing more batters, which raises the strikeout ceiling regardless of stuff.`;
+}
 // Renders one or more statbox divs from {label, value, display, tier} entries,
 // then stretches the last row's boxes so they never leave an empty gap:
 // 1 trailing box spans the full row (6/6 cols), 2 trailing boxes split it
@@ -904,10 +916,22 @@ function renderStatboxes(items){
   }).join('');
 }
 
-// Favorability bands, independent of rank position - based on the score
-// itself. >=45% = strongest read, 35-44.9% = solid, below 35% = speculative.
+// Favorability bands, independent of rank position. The K board uses its
+// own thresholds since its score is a real Poisson probability against a
+// self-adjusting line (see compute_k_score in fetch_hr_data.py) rather
+// than the other boards' wider 0-100 composite - its realistic range is
+// only about 33-59% for EVERY pitcher, good or bad (verified by sweeping
+// the formula across realistic projections: p10=40, p50=47, p90=54), so
+// reusing the batter boards' 55/40/35 cutoffs would mean PRIME almost
+// never triggers and STRONG/IN PLAY swallow nearly everything.
 function favTierName(score){
   if(score == null) return 'N/A';
+  if(boardMode === 'k'){
+    if(score >= 53) return '&#9670; PRIME';
+    if(score >= 47) return '&#9733; STRONG';
+    if(score >= 41) return '&#9651; IN PLAY';
+    return '&#9633; LONG SHOT';
+  }
   if(score >= 55) return '&#9670; PRIME';
   if(score >= 40) return '&#9733; STRONG';
   if(score >= 35) return '&#9651; IN PLAY';
@@ -915,6 +939,12 @@ function favTierName(score){
 }
 function favTierClass(score){
   if(score == null) return 'unknown';
+  if(boardMode === 'k'){
+    if(score >= 53) return 'prime';
+    if(score >= 47) return 'strong';
+    if(score >= 41) return 'inplay';
+    return 'longshot';
+  }
   if(score >= 55) return 'prime';
   if(score >= 40) return 'strong';
   if(score >= 35) return 'inplay';
@@ -926,9 +956,15 @@ function render(){
   const emptyEl = document.getElementById('empty');
   let filtered = players.filter(p => {
     const q = query.toLowerCase();
-    const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
+    // pitcher rows don't have a `.pitcher` field (they have `.opponent`
+    // instead, since a pitcher doesn't face an "opposing pitcher") - guard
+    // with || '' so search doesn't throw on the K board.
+    const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || (p.pitcher || p.opponent || '').toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
     const matchesTier = !selectedTier || favTierClass(p[scoreField()]) === selectedTier;
+    // K board shows pitcher rows; every other board shows batter rows -
+    // both live in the same players array, distinguished by playerType.
+    const matchesType = p.playerType === (boardMode === 'k' ? 'pitcher' : 'batter');
     let matchesStatus = true;
     if (selectedGame) {
       matchesStatus = true; // tapping a specific game always shows it regardless of status filter
@@ -936,7 +972,7 @@ function render(){
     else if (selectedStatus === 'final') matchesStatus = p.gameStatus === 'Final';
     else if (selectedStatus === 'allstatus') matchesStatus = true;
     else matchesStatus = p.gameStatus !== 'Live' && p.gameStatus !== 'Final'; // default: Upcoming Only
-    return matchesSearch && matchesGame && matchesTier && matchesStatus;
+    return matchesSearch && matchesGame && matchesTier && matchesType && matchesStatus;
   });
   filtered.sort((a,b) => {
     const diff = (a[sortKey] ?? -Infinity) - (b[sortKey] ?? -Infinity);
@@ -1008,7 +1044,7 @@ function render(){
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
         { label: 'Lineup Slot Bonus', display: p.hrrLbonus == null ? 'N/A' : '+' + p.hrrLbonus,
           tier: statTier(p.hrrLbonus, { good: 6, bad: 2 }) },
-      ]) : renderStatboxes([
+      ]) : boardMode === 'tb' ? renderStatboxes([
         { label: 'Season AVG', display: fmtNum(p.avg, 3),
           tier: statTier(p.avg, { good: 0.290, bad: 0.230, veryBad: 0.200 }) },
         { label: 'Season SLG', display: fmtNum(p.slg, 3),
@@ -1027,9 +1063,28 @@ function render(){
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
         { label: 'Lineup Slot Bonus', display: '+' + p.lbonus,
           tier: statTier(p.lbonus, { good: 6, bad: 2 }) },
+      ]) : renderStatboxes([
+        { label: 'K/9', display: fmtNum(p.k9, 1),
+          tier: statTier(p.k9, { good: 10.0, bad: 7.5, veryBad: 6.0 }) },
+        { label: 'ERA', display: fmtNum(p.era, 2),
+          tier: statTier(p.era, { dir: 'low', good: 3.20, bad: 4.50, veryBad: 5.25 }) },
+        { label: 'WHIP', display: fmtNum(p.whip, 2),
+          tier: statTier(p.whip, { dir: 'low', good: 1.05, bad: 1.35, veryBad: 1.50 }) },
+        { label: 'BB/9', display: fmtNum(p.bb9, 1),
+          tier: statTier(p.bb9, { dir: 'low', good: 2.3, bad: 3.5, veryBad: 4.2 }) },
+        { label: 'Opp K Rate', display: fmtPct(p.oppKRate),
+          tier: statTier(p.oppKRate, { good: 0.240, bad: 0.200, veryBad: 0.180 }) },
+        { label: "L3 K's", display: p.l3k == null ? 'N/A' : p.l3k,
+          tier: statTier(p.l3k, { good: 18, bad: 8, veryBad: 4 }) },
+        { label: "L5 K's", display: p.l5k == null ? 'N/A' : p.l5k,
+          tier: statTier(p.l5k, { good: 30 }) },
+        { label: 'IP / Start', display: fmtNum(p.ipPerStart, 1),
+          tier: statTier(p.ipPerStart, { good: 6.0, bad: 4.5, veryBad: 3.5 }) },
+        { label: 'Season K', display: p.seasonK == null ? 'N/A' : p.seasonK },
+        { label: "Proj K's Today", display: fmtNum(p.projK, 2) },
       ]);
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" data-player-id="${p.playerId ?? ''}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" data-player-id="${p.playerId ?? ''}" data-player-type="${p.playerType}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
         <div class="headshot-outer">
           <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
@@ -1040,18 +1095,23 @@ function render(){
         </div>
         <div class="info">
           <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''} ${homerBadge}</div>
-          <div class="meta">${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})</div>
+          <div class="meta">${p.playerType === 'pitcher' ? `${matchupWithLogos(p.game, 14)} &middot; vs ${p.opponent} (${p.hand}HP)` : `${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})`}</div>
         </div>
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
           <div class="scoreval">${fmtNum(cardScore, 1)}%</div>
-          <div class="scorelabel">${boardMode.toUpperCase()} favorability</div>
+          <div class="scorelabel">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : `${boardMode.toUpperCase()} favorability`}</div>
         </div>
       </div>
       <div class="chips">
-        ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}" data-tip="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
-        <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}" data-tip="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
-        <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
+        ${p.playerType === 'pitcher' ? `
+          ${p.oppKRate != null && p.oppKRate >= 0.240 ? `<div class="chip chip-crusher" title="${escAttr(tipOppKRate(p))}" data-tip="${escAttr(tipOppKRate(p))}">high-K opponent</div>` : ''}
+          ${p.ipPerStart != null && p.ipPerStart >= 6.0 ? `<div class="chip chip-lineup" title="${escAttr(tipWorkhorse(p))}" data-tip="${escAttr(tipWorkhorse(p))}">workhorse</div>` : ''}
+        ` : `
+          ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}" data-tip="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
+          <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}" data-tip="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
+          <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
+        `}
       </div>
       <div class="statboxwrap">${statboxes}
       </div>
@@ -1151,8 +1211,10 @@ document.getElementById('list').addEventListener('click', (e) => {
   if (!card) return;
   const pid = card.dataset.playerId;
   if (!pid) return; // no MLBAM id on this row - nothing to look up a game log by
-  const p = players.find(pp => String(pp.playerId) === pid);
-  if (p) openPlayerModal(p);
+  const p = players.find(pp => String(pp.playerId) === pid && pp.playerType === card.dataset.playerType);
+  if (!p) return;
+  if (p.playerType === 'pitcher') openPitcherModal(p);
+  else openPlayerModal(p);
 });
 
 loadPlayers();
@@ -1217,6 +1279,8 @@ function openPlayerModal(p){
   modalStatsMetric = 'pa';
   modalStatsMode = 'avg';
   modalView = 'graph';
+  document.getElementById('modalPropTabs').style.display = '';
+  document.getElementById('modalTabs').style.display = '';
   document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t.dataset.prop === modalProp));
   document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.view === modalView));
   renderModalHeader(p);
@@ -1234,6 +1298,9 @@ function renderModalHeader(p){
   const headshotImg = p.playerId
     ? `<img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
     : '';
+  const metaLine = p.playerType === 'pitcher'
+    ? `${matchupWithLogos(p.game, 12)} &middot; vs ${p.opponent} (${p.hand}HP)`
+    : `${matchupWithLogos(p.game, 12)} &middot; vs ${p.pitcher} (${p.hand})`;
   document.getElementById('modalPlayerHeader').innerHTML = `
     <div class="modal-headshot" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
       <div class="init">${initials}</div>
@@ -1241,8 +1308,82 @@ function renderModalHeader(p){
     </div>
     <div>
       <div class="modal-name">${p.player}</div>
-      <div class="modal-meta">${matchupWithLogos(p.game, 12)} &middot; vs ${p.pitcher} (${p.hand})</div>
+      <div class="modal-meta">${metaLine}</div>
     </div>`;
+}
+
+// ---------------------------------------------------------------------
+// Pitcher detail modal - a parallel, simpler path from openPlayerModal()
+// above. Reuses the same overlay/header/close-button chrome, but the
+// prop-tabs and Graph/Stats tabs are batter-specific (HR/Hits/XBH/HRR/TB
+// props against a fixed universal line) and don't apply to a pitcher, so
+// those get hidden and the body is built directly instead. The K board's
+// line is DYNAMIC per pitcher (see compute_k_score's kLine), not a fixed
+// 1.5 like the batter boards, so the chart's threshold line is drawn at
+// that pitcher's own p.kLine rather than a shared constant.
+// ---------------------------------------------------------------------
+function openPitcherModal(p){
+  modalPlayer = p;
+  document.getElementById('modalPropTabs').style.display = 'none';
+  document.getElementById('modalTabs').style.display = 'none';
+  renderModalHeader(p);
+  document.getElementById('modalBody').innerHTML = renderPitcherModalBody(p);
+  document.getElementById('playerModal').style.display = 'flex';
+}
+
+function renderPitcherModalBody(p){
+  const starts = p.starts || [];
+  if(!starts.length){
+    return `<div class="gl-empty">No start-by-start log yet for ${p.player} this season.</div>`;
+  }
+  const maxVal = Math.max(1, p.kLine, ...starts.map(s => s.k));
+  const threshPct = Math.min(92, (p.kLine / maxVal) * 100);
+
+  const chart = `
+    <div class="gl-chartwrap">
+      <div class="gl-chart">
+        <div class="gl-barsarea">
+          <div class="gl-threshline" style="bottom:${threshPct}%"></div>
+          ${starts.map(s => `
+            <div class="gl-col">
+              <div class="gl-bar ${s.k > p.kLine ? 'hit' : ''}" style="height:${Math.max(4, (s.k / maxVal) * 100)}%">
+                <span class="gl-barval">${s.k}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="gl-labelsrow">
+          ${starts.map(s => `
+            <div class="gl-labelcol">
+              <div class="gl-datelabel">${fmtShortDate(s.date)}</div>
+              <div class="gl-opplabel">@ ${s.opp}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+  const clearedCount = starts.filter(s => s.k > p.kLine).length;
+
+  return `
+    <div class="gl-splitbox">
+      <div class="gl-splitbox-title">${p.player} &ndash; Strikeouts, O/U ${fmtNum(p.kLine, 1)}</div>
+      <div class="gl-splitbox-main">
+        <div>
+          <div class="gl-splitbox-pct">${fmtNum(p.kScore, 1)}%</div>
+          <div class="gl-splitbox-sub">Over Probability (model)</div>
+        </div>
+        <div class="gl-splitbox-avgs">
+          <div>Projected K's: <b>${fmtNum(p.projK, 2)}</b></div>
+          <div>Cleared line: <b>${clearedCount} of ${starts.length}</b> recent starts</div>
+        </div>
+      </div>
+      <div class="gl-splitgrid">
+        <div><span>K/9</span><b>${fmtNum(p.k9, 1)}</b></div>
+        <div><span>ERA</span><b>${fmtNum(p.era, 2)}</b></div>
+        <div><span>Opp K Rate</span><b>${fmtPct(p.oppKRate)}</b></div>
+        <div><span>IP/Start</span><b>${fmtNum(p.ipPerStart, 1)}</b></div>
+      </div>
+    </div>
+    ${chart}`;
 }
 
 function renderModalBody(){
