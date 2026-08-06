@@ -417,6 +417,24 @@ def fetch_batter_statcast():
     id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
     print(f"  using ID column: {id_col_used}")
 
+    # Same fallback approach as the ID column above: Savant has renamed CSV
+    # columns before, and a silently-wrong name here doesn't error - it just
+    # makes row.get() return None, "or 0" swallows that, and every player's
+    # stat quietly comes out as 0.0% with no error anywhere. Trying several
+    # known names and LOGGING which one matched (or that none did) turns
+    # that into something visible in the Action's run log instead.
+    ev_columns = ["avg_hit_speed", "exit_velocity_avg", "launch_speed_avg"]
+    barrel_columns = ["brl_percent", "barrel_percent", "barrel_batted_rate"]
+    hardhit_columns = ["hard_hit_percent", "hardhit_percent", "z_hard_hit_percent"]
+    ev_col = next((c for c in ev_columns if rows and c in rows[0]), None)
+    barrel_col = next((c for c in barrel_columns if rows and c in rows[0]), None)
+    hardhit_col = next((c for c in hardhit_columns if rows and c in rows[0]), None)
+    print(f"  using EV column: {ev_col} | barrel column: {barrel_col} | hard-hit column: {hardhit_col}")
+    if rows and (ev_col is None or barrel_col is None or hardhit_col is None):
+        print(f"  WARNING: at least one stat column not found - check the "
+              f"printed CSV columns above and add the real name to the "
+              f"matching *_columns list in fetch_batter_statcast().")
+
     out = {}
     for row in rows:
         pid_raw = row.get(id_col_used) if id_col_used else None
@@ -425,9 +443,9 @@ def fetch_batter_statcast():
         try:
             pid = int(pid_raw)
             out[pid] = {
-                "ev": float(row.get("avg_hit_speed") or 0),
-                "barrel": float(row.get("brl_percent") or 0) / 100,
-                "hardhit": float(row.get("hard_hit_percent") or 0) / 100,
+                "ev": float((row.get(ev_col) if ev_col else None) or 0),
+                "barrel": float((row.get(barrel_col) if barrel_col else None) or 0) / 100,
+                "hardhit": float((row.get(hardhit_col) if hardhit_col else None) or 0) / 100,
             }
         except (TypeError, ValueError):
             continue
