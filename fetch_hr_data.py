@@ -260,7 +260,7 @@ def get_pitcher_gamelog(pitcher_id, season):
     the "as a starter" read."""
     try:
         data = statsapi_get(f"people/{pitcher_id}/stats", {
-            "stats": "gameLog", "group": "pitching", "season": season
+            "stats": "gameLog", "group": "pitching", "season": season, "sportId": 1
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         starts = []
@@ -296,7 +296,7 @@ def get_pitcher_season_stats(pitcher_id, season):
     just taking whichever split happens to come first."""
     try:
         data = statsapi_get(f"people/{pitcher_id}/stats", {
-            "stats": "season", "group": "pitching", "season": season
+            "stats": "season", "group": "pitching", "season": season, "sportId": 1
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         if not splits:
@@ -401,7 +401,7 @@ def get_platoon_split(batter_id, vs_hand):
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "statSplits", "sitCodes": sit_code,
-            "group": "hitting", "season": YEAR
+            "group": "hitting", "season": YEAR, "sportId": 1
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         if splits:
@@ -426,7 +426,7 @@ def get_risp_avg(batter_id):
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "statSplits", "sitCodes": "risp",
-            "group": "hitting", "season": YEAR
+            "group": "hitting", "season": YEAR, "sportId": 1
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         if splits:
@@ -451,7 +451,7 @@ def get_gamelog(batter_id, season):
     """
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
-            "stats": "gameLog", "group": "hitting", "season": season
+            "stats": "gameLog", "group": "hitting", "season": season, "sportId": 1
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         games = []
@@ -493,7 +493,7 @@ def get_season_totals_hitting(batter_id, season):
     just games played and counting stats)."""
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
-            "stats": "season", "group": "hitting", "season": season
+            "stats": "season", "group": "hitting", "season": season, "sportId": 1
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         if not splits:
