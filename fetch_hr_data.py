@@ -425,7 +425,7 @@ def fetch_batter_statcast():
     # that into something visible in the Action's run log instead.
     ev_columns = ["avg_hit_speed", "exit_velocity_avg", "launch_speed_avg"]
     barrel_columns = ["brl_percent", "barrel_percent", "barrel_batted_rate"]
-    hardhit_columns = ["hard_hit_percent", "hardhit_percent", "z_hard_hit_percent"]
+    hardhit_columns = ["ev95percent", "hard_hit_percent", "hardhit_percent", "z_hard_hit_percent"]
     ev_col = next((c for c in ev_columns if rows and c in rows[0]), None)
     barrel_col = next((c for c in barrel_columns if rows and c in rows[0]), None)
     hardhit_col = next((c for c in hardhit_columns if rows and c in rows[0]), None)
