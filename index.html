@@ -106,6 +106,18 @@
     flex:1; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; white-space:nowrap;
   }
   .sortbtn.active{color:var(--gold); border-color:var(--gold);}
+
+  /* ---- HR / HRR board toggle - sits right under the title, always visible ---- */
+  .boardtoggle{
+    max-width:var(--content-width); margin:12px auto 0; display:flex; gap:8px;
+    background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:4px;
+  }
+  .boardtab{
+    flex:1; text-align:center; padding:10px; border-radius:9px; cursor:pointer;
+    font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:0.3px;
+    color:var(--muted);
+  }
+  .boardtab.active{background:var(--green); color:#0a0d0b;}
   .tierselect{
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
     color:var(--muted); font-family:var(--mono); font-size:11px; padding:0 10px; height:36px;
@@ -364,9 +376,13 @@
   <div class="titlebar">
     <div>
       <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>GOING<span class="dot">·</span>YARD</div>
-      <div class="subtitle">Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted</div>
+      <div class="subtitle" id="subtitle">Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted</div>
     </div>
     <div class="count" id="count">60 players</div>
+  </div>
+  <div class="boardtoggle" id="boardToggle">
+    <div class="boardtab active" data-board="hr">HR</div>
+    <div class="boardtab" data-board="hrr">HRR (H+R+RBI, 1.5)</div>
   </div>
   <div class="hrcounter" id="hrcounter" style="display:none;">
     <span class="hrcounter-dot"></span>
@@ -439,10 +455,29 @@
 const DATA_URL = "./players.json";
 
 let players = [];
+let boardMode = 'hr';  // 'hr' | 'hrr' - which board/toggle tab is active
 let sortKey = 'score';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
+
+// Everything that differs between the two boards lives here in one place:
+// which field holds the 0-100 favorability score, the three sort options
+// offered, and the header subtitle text. Keeps render()/tier-filtering
+// generic (they just read scoreField()) instead of branching everywhere.
+const BOARD_CONFIG = {
+  hr: {
+    scoreField: 'score',
+    subtitle: 'Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted',
+    sorts: { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' },
+  },
+  hrr: {
+    scoreField: 'hrrScore',
+    subtitle: 'HRR = Hits + Runs + RBI combined, line 1.5 (needs 2+) &middot; on-base/matchup/RISP blended',
+    sorts: { hrrScore: 'FAVORABILITY', l15hrr: 'RECENT FORM', obp: 'OBP' },
+  },
+};
+function scoreField(){ return BOARD_CONFIG[boardMode].scoreField; }
 
 // Returns today's date as YYYY-MM-DD using the BROWSER'S LOCAL timezone,
 // not UTC. new Date().toISOString() always gives the UTC date, which in
@@ -490,7 +525,20 @@ function matchupWithLogos(gameStr, size){
   if(parts.length !== 2) return gameStr;
   return `${teamLogo(parts[0], size)} ${parts[0]} @ ${teamLogo(parts[1], size)} ${parts[1]}`;
 }
-const sortLabels = { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' };
+// Rewrites the 3 sort buttons' data-key + label to match the active board,
+// and resets sorting to that board's default (its favorability score, desc).
+function setSortButtonsForMode(){
+  const sorts = BOARD_CONFIG[boardMode].sorts;
+  const keys = Object.keys(sorts);
+  sortKey = keys[0];
+  sortDesc = true;
+  document.querySelectorAll('.sortbtn').forEach((btn, i) => {
+    const key = keys[i];
+    btn.dataset.key = key;
+    btn.classList.toggle('active', key === sortKey);
+    btn.textContent = sorts[key] + (key === sortKey ? ' \u2193' : '');
+  });
+}
 
 async function loadPlayers() {
   const list = document.getElementById('list');
@@ -771,7 +819,7 @@ function render(){
     const q = query.toLowerCase();
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
-    const matchesTier = !selectedTier || favTierClass(p.score) === selectedTier;
+    const matchesTier = !selectedTier || favTierClass(p[scoreField()]) === selectedTier;
     let matchesStatus = true;
     if (selectedGame) {
       matchesStatus = true; // tapping a specific game always shows it regardless of status filter
@@ -782,7 +830,7 @@ function render(){
     return matchesSearch && matchesGame && matchesTier && matchesStatus;
   });
   filtered.sort((a,b) => {
-    const diff = a[sortKey] - b[sortKey];
+    const diff = (a[sortKey] ?? -Infinity) - (b[sortKey] ?? -Infinity);
     return sortDesc ? -diff : diff;
   });
 
@@ -811,6 +859,25 @@ function render(){
     const homerBadge = (p.actualHR && p.actualHR > 0)
       ? `<span class="badge-homer">&#9917; ${p.actualHR} HR TODAY</span>`
       : '';
+    const cardScore = p[scoreField()];
+    const statboxes = boardMode === 'hr' ? `
+        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${fmtNum(p.avgmix, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">Exit Velo</span><span class="sbval">${fmtNum(p.ev, 1)}</span></div>
+        <div class="statbox ${p.phr9 != null && p.phr9 >= 1.3 ? 'hot' : (p.phr9 != null && p.phr9 <= 0.8 ? 'cold' : '')}"><span class="sblabel">Pitcher HR/9</span><span class="sbval">${fmtNum(p.phr9, 2)}</span></div>
+        <div class="statbox"><span class="sblabel">L15 HR</span><span class="sbval">${p.l15hr == null ? 'N/A' : p.l15hr}</span></div>
+        <div class="statbox ${p.wind > 0 ? 'hot' : (p.wind < 0 ? 'cold' : '')}"><span class="sblabel">Wind</span><span class="sbval">${p.wind > 0 ? '+' : ''}${p.wind}</span></div>
+        <div class="statbox"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${fmtNum(p.whip, 2)}</span></div>
+        <div class="statbox ${coldBarrel ? 'cold' : 'hot'}"><span class="sblabel">Barrel%</span><span class="sbval">${fmtPct(p.barrel)}</span></div>
+        <div class="statbox"><span class="sblabel">Hard Hit%</span><span class="sbval">${fmtPct(p.hardhit)}</span></div>
+        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${fmtNum(p.iso, 3)}</span></div>` : `
+        <div class="statbox"><span class="sblabel">Season AVG</span><span class="sbval">${fmtNum(p.avg, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">Season OBP</span><span class="sbval">${fmtNum(p.obp, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${fmtNum(p.avgmix, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">RISP AVG</span><span class="sbval">${fmtNum(p.risp, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">L15 HRR Hits (1.5)</span><span class="sbval">${p.l15hrr == null ? 'N/A' : p.l15hrr}</span></div>
+        <div class="statbox ${p.whip != null && p.whip >= 1.35 ? 'hot' : (p.whip != null && p.whip <= 1.05 ? 'cold' : '')}"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${fmtNum(p.whip, 2)}</span></div>
+        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${fmtNum(p.iso, 3)}</span></div>
+        <div class="statbox"><span class="sblabel">Lineup Slot Bonus</span><span class="sbval">+${p.lbonus}</span></div>`;
     return `
     <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" data-player-id="${p.playerId ?? ''}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
@@ -826,27 +893,18 @@ function render(){
           <div class="meta">${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})</div>
         </div>
         <div class="scorebox">
-          <div class="favtier favtier-${favTierClass(p.score)}">${favTierName(p.score)}</div>
-          <div class="scoreval">${fmtNum(p.score, 1)}%</div>
-          <div class="scorelabel">favorability</div>
+          <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
+          <div class="scoreval">${fmtNum(cardScore, 1)}%</div>
+          <div class="scorelabel">${boardMode === 'hrr' ? 'HRR' : 'HR'} favorability</div>
         </div>
       </div>
       <div class="chips">
-        ${coldBarrel ? `<div class="chip chip-flag">cold barrel &times;${p.conf}</div>` : ''}
+        ${coldBarrel && boardMode === 'hr' ? `<div class="chip chip-flag">cold barrel &times;${p.conf}</div>` : ''}
         ${platoonGood ? `<div class="chip chip-platoon">platoon edge</div>` : ''}
         <div class="chip ${p.crush ? 'chip-crusher' : ''}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
         <div class="chip chip-lineup">lineup +${p.lbonus}</div>
       </div>
-      <div class="statboxwrap">
-        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${fmtNum(p.avgmix, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">Exit Velo</span><span class="sbval">${fmtNum(p.ev, 1)}</span></div>
-        <div class="statbox ${p.phr9 != null && p.phr9 >= 1.3 ? 'hot' : (p.phr9 != null && p.phr9 <= 0.8 ? 'cold' : '')}"><span class="sblabel">Pitcher HR/9</span><span class="sbval">${fmtNum(p.phr9, 2)}</span></div>
-        <div class="statbox"><span class="sblabel">L15 HR</span><span class="sbval">${p.l15hr == null ? 'N/A' : p.l15hr}</span></div>
-        <div class="statbox ${p.wind > 0 ? 'hot' : (p.wind < 0 ? 'cold' : '')}"><span class="sblabel">Wind</span><span class="sbval">${p.wind > 0 ? '+' : ''}${p.wind}</span></div>
-        <div class="statbox"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${fmtNum(p.whip, 2)}</span></div>
-        <div class="statbox ${coldBarrel ? 'cold' : 'hot'}"><span class="sblabel">Barrel%</span><span class="sbval">${fmtPct(p.barrel)}</span></div>
-        <div class="statbox"><span class="sblabel">Hard Hit%</span><span class="sbval">${fmtPct(p.hardhit)}</span></div>
-        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${fmtNum(p.iso, 3)}</span></div>
+      <div class="statboxwrap">${statboxes}
       </div>
     </div>`;
   }).join('');
@@ -878,8 +936,20 @@ document.querySelectorAll('.sortbtn').forEach(btn => {
     }
     document.querySelectorAll('.sortbtn').forEach(b => {
       b.classList.toggle('active', b.dataset.key === sortKey);
-      b.textContent = sortLabels[b.dataset.key] + (b.dataset.key === sortKey ? (sortDesc ? ' ↓' : ' ↑') : '');
+      const sorts = BOARD_CONFIG[boardMode].sorts;
+      b.textContent = sorts[b.dataset.key] + (b.dataset.key === sortKey ? (sortDesc ? ' ↓' : ' ↑') : '');
     });
+    render();
+  });
+});
+
+document.querySelectorAll('.boardtab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    if (tab.dataset.board === boardMode) return;
+    boardMode = tab.dataset.board;
+    document.querySelectorAll('.boardtab').forEach(b => b.classList.toggle('active', b.dataset.board === boardMode));
+    document.getElementById('subtitle').innerHTML = BOARD_CONFIG[boardMode].subtitle;
+    setSortButtonsForMode();
     render();
   });
 });
