@@ -21,6 +21,7 @@
     --mono: 'JetBrains Mono', monospace;
     --display: 'Space Grotesk', sans-serif;
     --body: 'Manrope', sans-serif;
+    --content-width: 600px;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
@@ -34,7 +35,7 @@
     background-attachment:fixed;
   }
 
-  .wrap{max-width:600px; margin:0 auto; padding:0 14px 80px;}
+  .wrap{max-width:var(--content-width); margin:0 auto; padding:0 14px 80px;}
 
   /* ---- Header ---- */
   header{
@@ -47,7 +48,7 @@
     padding:18px 14px 20px;
     position:relative;
   }
-  .titlebar{max-width:600px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .titlebar{max-width:var(--content-width); margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px;}
   .title{
     font-family:var(--display); font-weight:700; letter-spacing:-0.5px;
     font-size:29px; text-transform:uppercase;
@@ -64,7 +65,7 @@
   .subtitle{font-size:12px; color:var(--muted2); margin-top:2px; font-family:var(--body);}
 
   .hrcounter{
-    max-width:600px; margin:10px auto 0; display:flex; align-items:center; gap:7px;
+    max-width:var(--content-width); margin:10px auto 0; display:flex; align-items:center; gap:7px;
     font-family:var(--mono); font-size:12px; color:var(--red); font-weight:600;
   }
   .hrcounter-dot{
@@ -80,7 +81,7 @@
     pointer-events:none; padding:0 14px;
   }
   .homer-toast{
-    max-width:600px; width:100%; box-sizing:border-box;
+    max-width:var(--content-width); width:100%; box-sizing:border-box;
     background:rgba(18,22,20,0.97); backdrop-filter:blur(8px);
     border:1.5px solid var(--gold); border-radius:12px; padding:12px 16px;
     display:flex; align-items:center; gap:10px;
@@ -91,7 +92,7 @@
   .homer-toast.show{transform:translateY(0); opacity:1;}
   .homer-toast b{font-weight:700;}
 
-  .controls{max-width:600px; margin:12px auto 0; display:flex; gap:8px;}
+  .controls{max-width:var(--content-width); margin:12px auto 0; display:flex; gap:8px;}
   .search{
     flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:10px;
     color:var(--text); font-family:var(--body); font-size:14px; padding:10px 12px;
@@ -118,11 +119,11 @@
   /* ---- Game filter (horizontal scroll) ---- */
   .gamefilter-label{
     font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase;
-    letter-spacing:1px; padding:10px 2px 0; max-width:600px; margin:0 auto;
+    letter-spacing:1px; padding:10px 2px 0; max-width:var(--content-width); margin:0 auto;
   }
   .gamefilter{
     display:flex; gap:6px; overflow-x:auto; -webkit-overflow-scrolling:touch;
-    padding:8px 2px 2px; max-width:600px; margin:0 auto; scrollbar-width:thin;
+    padding:8px 2px 2px; max-width:var(--content-width); margin:0 auto; scrollbar-width:thin;
   }
   .gamefilter::-webkit-scrollbar{height:4px;}
   .gamefilter::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
@@ -139,7 +140,7 @@
   /* ---- Legend ---- */
   .legend{
     display:flex; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:10px; color:var(--muted2);
-    padding:10px 2px 0; max-width:600px; margin:0 auto;
+    padding:10px 2px 0; max-width:var(--content-width); margin:0 auto;
   }
   .legend span{display:flex; align-items:center; gap:4px;}
   .swatch{width:8px; height:8px; border-radius:2px; display:inline-block;}
@@ -197,6 +198,12 @@
     font-family:var(--mono); font-size:8px; font-weight:600; color:var(--red);
     border:1px solid rgba(217,107,91,0.5); border-radius:4px; padding:1px 4px;
     letter-spacing:0.5px; vertical-align:middle;
+  }
+  .badge-homer{
+    font-family:var(--mono); font-size:10px; font-weight:700; color:#0a0d0b;
+    background:linear-gradient(100deg, var(--gold), #ffd27a);
+    border-radius:5px; padding:2px 7px; letter-spacing:0.3px; vertical-align:middle;
+    box-shadow:0 0 10px rgba(227,165,72,0.5);
   }
   .card-live{opacity:0.55;}
   .meta{font-family:var(--mono); font-size:12px; color:var(--muted); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -258,7 +265,7 @@
   .empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:13px; padding:40px 0;}
 
   footer{
-    max-width:600px; margin:24px auto 0; padding:0 4px;
+    max-width:var(--content-width); margin:24px auto 0; padding:0 4px;
     font-family:var(--body); font-size:11px; color:var(--muted2); line-height:1.5;
   }
 </style>
@@ -293,6 +300,12 @@
       <option value="inplay">In Play</option>
       <option value="longshot">Long Shot</option>
     </select>
+    <select class="tierselect" id="statusselect">
+      <option value="">Upcoming Only</option>
+      <option value="live">Live Now</option>
+      <option value="final">Played (Final)</option>
+      <option value="allstatus">All Statuses</option>
+    </select>
   </div>
   <div class="gamefilter-label">Upcoming Games</div>
   <div class="gamefilter" id="gamefilter"></div>
@@ -326,6 +339,7 @@ let sortDesc = true;
 let query = '';
 let selectedGame = null;
 let selectedTier = '';
+let selectedStatus = '';
 
 // MLB team IDs, used to build logo URLs from MLB's own public CDN
 // (mlbstatic.com/team-logos/{id}.svg). Mirrors the same table the fetch
@@ -370,6 +384,15 @@ async function loadPlayers() {
     await applyLiveGameStatus();
     buildGameFilter();
     render();
+    // Re-check live status every 2 minutes so a game that goes Live (or
+    // Final) after the page was first opened gets picked up without
+    // needing a manual reload - the first check on load only covers
+    // whatever the game states were at that exact moment.
+    setInterval(async () => {
+      await applyLiveGameStatus();
+      buildGameFilter();
+      render();
+    }, 120000);
   } catch (err) {
     list.innerHTML = '<div class="empty">Could not load live data (' + err.message + ').<br>Check that DATA_URL near the top of the script is set to your GitHub raw URL.</div>';
   }
@@ -384,7 +407,10 @@ async function applyLiveGameStatus(){
   try {
     const today = new Date().toISOString().slice(0, 10);
     const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
-    if (!res.ok) return; // fall back silently to whatever players.json already has
+    if (!res.ok) {
+      console.error('[Going Yard] live status fetch failed with HTTP', res.status, '- games will show stale status from the last backend run.');
+      return;
+    }
     const data = await res.json();
     const statusByMatchup = {};
     const activeGamePks = [];
@@ -402,6 +428,7 @@ async function applyLiveGameStatus(){
         if (status === 'Live') liveGamePks.push(g.gamePk);
       });
     });
+    let matchedCount = 0;
     players.forEach(p => {
       const parts = p.game.split(' @ ');
       if (parts.length !== 2) return;
@@ -410,13 +437,50 @@ async function applyLiveGameStatus(){
         const [awayName, homeName] = key.split('__');
         return awayName.includes(TEAM_FULLNAME_HINT(awayAbbr)) && homeName.includes(TEAM_FULLNAME_HINT(homeAbbr));
       });
-      if (match) p.gameStatus = statusByMatchup[match];
+      if (match) { p.gameStatus = statusByMatchup[match]; matchedCount++; }
     });
+    console.log(`[Going Yard] live status applied to ${matchedCount}/${players.length} players. Live games: ${liveGamePks.length}, active (live+final): ${activeGamePks.length}`);
     updateHrCounter(activeGamePks);
     startHomerAlertPolling(liveGamePks);
+    applyActualHomers(activeGamePks);
   } catch (err) {
-    // network hiccup or CORS block - not fatal, just keep whatever
-    // players.json already had baked in.
+    console.error('[Going Yard] applyLiveGameStatus failed:', err);
+  }
+}
+
+// For players whose game is Live or Final, pulls their REAL home run count
+// from that game specifically (not season totals) via the boxscore, and
+// attaches it as p.actualHR. Players in games that haven't started yet are
+// left untouched (actualHR stays undefined) - only shown on the card once
+// there's a real result to show, per your "if they didn't hit one, no
+// change" request.
+async function applyActualHomers(gamePks){
+  if (!gamePks.length) return;
+  try {
+    const boxscores = await Promise.all(gamePks.map(pk =>
+      fetch(`https://statsapi.mlb.com/api/v1.1/game/${pk}/feed/live`).then(r => r.ok ? r.json() : null).catch(() => null)
+    ));
+    const hrByPlayerId = {};
+    boxscores.forEach(g => {
+      if (!g) return;
+      const teams = g.liveData && g.liveData.boxscore && g.liveData.boxscore.teams;
+      if (!teams) return;
+      ['home', 'away'].forEach(side => {
+        const playersObj = (teams[side] && teams[side].players) || {};
+        Object.values(playersObj).forEach(pdata => {
+          const hr = pdata.stats && pdata.stats.batting && pdata.stats.batting.homeRuns;
+          if (hr) hrByPlayerId[pdata.person.id] = hr;
+        });
+      });
+    });
+    players.forEach(p => {
+      if (p.playerId && hrByPlayerId[p.playerId] !== undefined) {
+        p.actualHR = hrByPlayerId[p.playerId];
+      }
+    });
+    render();
+  } catch (err) {
+    console.error('[Going Yard] applyActualHomers failed:', err);
   }
 }
 
@@ -453,6 +517,7 @@ async function updateHrCounter(gamePks){
     textEl.textContent = `Today's HRs so far: ${total}`;
     el.style.display = 'flex';
   } catch (err) {
+    console.error('[Going Yard] HR counter failed:', err);
     el.style.display = 'none';
   }
 }
@@ -589,12 +654,14 @@ function render(){
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || p.pitcher.toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
     const matchesTier = !selectedTier || favTierClass(p.score) === selectedTier;
-    // Once a game has started (Live) or finished (Final), hide it from the
-    // general list by default - it's no longer an upcoming pick. Still
-    // viewable by tapping that specific game's chip.
-    const hasStarted = p.gameStatus === 'Final' || p.gameStatus === 'Live';
-    const hideBecauseStarted = hasStarted && !selectedGame;
-    return matchesSearch && matchesGame && matchesTier && !hideBecauseStarted;
+    let matchesStatus = true;
+    if (selectedGame) {
+      matchesStatus = true; // tapping a specific game always shows it regardless of status filter
+    } else if (selectedStatus === 'live') matchesStatus = p.gameStatus === 'Live';
+    else if (selectedStatus === 'final') matchesStatus = p.gameStatus === 'Final';
+    else if (selectedStatus === 'allstatus') matchesStatus = true;
+    else matchesStatus = p.gameStatus !== 'Live' && p.gameStatus !== 'Final'; // default: Upcoming Only
+    return matchesSearch && matchesGame && matchesTier && matchesStatus;
   });
   filtered.sort((a,b) => {
     const diff = a[sortKey] - b[sortKey];
@@ -623,6 +690,9 @@ function render(){
       ? `<img class="headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : '';
     const rankBadge = i < 5 ? `<div class="rank-badge">${i + 1}</div>` : '';
+    const homerBadge = (p.actualHR && p.actualHR > 0)
+      ? `<span class="badge-homer">&#9917; ${p.actualHR} HR TODAY</span>`
+      : '';
     return `
     <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
@@ -634,7 +704,7 @@ function render(){
           ${rankBadge}
         </div>
         <div class="info">
-          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''}</div>
+          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''} ${homerBadge}</div>
           <div class="meta">${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})</div>
         </div>
         <div class="scorebox">
@@ -671,6 +741,11 @@ document.getElementById('search').addEventListener('input', (e) => {
 
 document.getElementById('tierselect').addEventListener('change', (e) => {
   selectedTier = e.target.value;
+  render();
+});
+
+document.getElementById('statusselect').addEventListener('change', (e) => {
+  selectedStatus = e.target.value;
   render();
 });
 
