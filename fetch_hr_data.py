@@ -196,7 +196,9 @@ def get_season_pitching_stats():
 
 
 def get_season_batting_stats():
-    """ISO (computed from SLG-AVG) for every batter this season."""
+    """AVG, OBP, and ISO (computed from SLG-AVG) for every batter this season.
+    AVG/OBP feed the HRR (Hits+Runs+RBI) board's "on-base" component - HRR
+    cares about times on base and extra-base ability, not power alone."""
     data = statsapi_get("stats", {
         "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1, "limit": 1500
     })
@@ -206,13 +208,22 @@ def get_season_batting_stats():
         name = split.get("player", {}).get("fullName")
         stat = split.get("stat", {})
         avg = stat.get("avg")
+        obp = stat.get("obp")
         slg = stat.get("slg")
         if pid and avg is not None and slg is not None:
             try:
                 iso = float(slg) - float(avg)
             except ValueError:
                 iso = None
-            out[pid] = {"name": name, "iso": iso}
+            try:
+                avg_f = float(avg)
+            except (TypeError, ValueError):
+                avg_f = None
+            try:
+                obp_f = float(obp) if obp not in (None, "") else None
+            except (TypeError, ValueError):
+                obp_f = None
+            out[pid] = {"name": name, "iso": iso, "avg": avg_f, "obp": obp_f}
     return out
 
 
@@ -253,16 +264,43 @@ def get_platoon_split(batter_id, vs_hand):
     return None
 
 
+def get_risp_avg(batter_id):
+    """
+    Batter's AVG with Runners In Scoring Position this season - feeds the HRR
+    (Hits+Runs+RBI) board's RBI-opportunity signal, the same role
+    get_platoon_split() plays for the HR board's matchup signal.
+
+    HONESTY NOTE: "risp" is the commonly-documented MLB Stats API sitCode for
+    this split, but - like every other untested endpoint in this file (see
+    the module docstring) - it hasn't been confirmed against a live response.
+    If this silently returns None for everyone, check the run log (add a
+    print of the raw response here temporarily) and fix the sitCode string.
+    """
+    try:
+        data = statsapi_get(f"people/{batter_id}/stats", {
+            "stats": "statSplits", "sitCodes": "risp",
+            "group": "hitting", "season": YEAR
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        if splits:
+            return float(splits[0]["stat"].get("avg", 0) or 0)
+    except Exception:
+        pass
+    return None
+
+
 def get_gamelog(batter_id, season):
     """
     Every game this batter has played in `season`, oldest first, with the
     per-game counting stats the player detail view needs (HR, hits, XBH,
-    plate appearances) plus the opponent and home/away flag so the frontend
-    can label each bar ("vs CLE" / "@ PIT").
+    runs, RBI, plate appearances) plus the opponent and home/away flag so the
+    frontend can label each bar ("vs CLE" / "@ PIT").
 
-    Feeds BOTH the existing L15-HR "recent form" number and the new player
-    detail graphs, so this replaces the narrower get_l15_hr() that used to
-    make its own separate call for the same underlying data.
+    Feeds BOTH the existing L15-HR "recent form" number and the player detail
+    graphs (HR board), plus the new "hrr" field (Hits + Runs + RBI combined,
+    the standard prop-bet stat line) that powers the HRR board. Note "hrr"
+    intentionally double-counts a home run (it's already 1 hit, plus at least
+    1 run and 1 RBI) - that's how the real H+R+RBI prop line works, not a bug.
     """
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
@@ -276,14 +314,20 @@ def get_gamelog(batter_id, season):
             doubles = int(stat.get("doubles", 0) or 0)
             triples = int(stat.get("triples", 0) or 0)
             hr = int(stat.get("homeRuns", 0) or 0)
+            hits = int(stat.get("hits", 0) or 0)
+            runs = int(stat.get("runs", 0) or 0)
+            rbi = int(stat.get("rbi", 0) or 0)
             games.append({
                 "date": s.get("date"),
                 "opp": team_abbr(opp) if opp else "",
                 "home": bool(s.get("isHome")),
                 "hr": hr,
-                "hits": int(stat.get("hits", 0) or 0),
+                "hits": hits,
                 "xbh": doubles + triples + hr,
                 "pa": int(stat.get("plateAppearances", 0) or 0),
+                "runs": runs,
+                "rbi": rbi,
+                "hrr": hits + runs + rbi,
             })
         # The API normally returns these oldest-first already; sort defensively
         # so a change on MLB's end can't silently flip chart order left-to-right.
@@ -315,29 +359,36 @@ def get_season_totals_hitting(batter_id, season):
             "triples": int(stat.get("triples", 0) or 0),
             "homeRuns": int(stat.get("homeRuns", 0) or 0),
             "plateAppearances": int(stat.get("plateAppearances", 0) or 0),
+            "runs": int(stat.get("runs", 0) or 0),
+            "rbi": int(stat.get("rbi", 0) or 0),
         }
     except Exception:
         return None
 
 
 def window_stats(games):
-    """HR%/hits%/XBH% (share of games with at least one), plus average
-    hits/XBH/PA, across a list of games (a window like L5/L10/L20, or a full
-    season's real game log) - these percentages are exact since they're
-    built from real per-game data, not an aggregate approximation."""
+    """HR%/hits%/XBH%/HRR% (share of games with at least one, or - for HRR -
+    at least 2, matching the standard 1.5 Hits+Runs+RBI prop line), plus
+    average hits/XBH/HRR/PA, across a list of games (a window like
+    L5/L10/L20, or a full season's real game log) - these percentages are
+    exact since they're built from real per-game data, not an aggregate
+    approximation."""
     n = len(games)
     if n == 0:
         return None
     hr_games = sum(1 for g in games if g["hr"] >= 1)
     hits_games = sum(1 for g in games if g["hits"] >= 1)
     xbh_games = sum(1 for g in games if g["xbh"] >= 1)
+    hrr_games = sum(1 for g in games if g.get("hrr", 0) >= 2)
     return {
         "n": n,
         "hrPct": round(100 * hr_games / n, 1),
         "hitsPct": round(100 * hits_games / n, 1),
         "xbhPct": round(100 * xbh_games / n, 1),
+        "hrrPct": round(100 * hrr_games / n, 1),
         "hitsAvg": round(sum(g["hits"] for g in games) / n, 2),
         "xbhAvg": round(sum(g["xbh"] for g in games) / n, 2),
+        "hrrAvg": round(sum(g.get("hrr", 0) for g in games) / n, 2),
         "paAvg": round(sum(g["pa"] for g in games) / n, 2),
     }
 
@@ -345,11 +396,12 @@ def window_stats(games):
 def season_totals_to_window(totals):
     """Same shape as window_stats(), but built from season-AGGREGATE totals
     (used for a prior season, where we don't pull the full game log). There's
-    no way to recover '% of games with >=1 hit/HR/XBH' from aggregate totals
-    alone (a multi-hit game looks the same as two single-hit games), so only
-    hrPct is included, as a per-game-played approximation - hitsPct/xbhPct
-    are left out entirely rather than shown as something they're not; the
-    frontend falls back to the average-per-game figures for those instead."""
+    no way to recover '% of games with >=1 hit/HR/XBH/HRR-line' from
+    aggregate totals alone (a multi-hit game looks the same as two
+    single-hit games), so only hrPct is included, as a per-game-played
+    approximation - hitsPct/xbhPct/hrrPct are left out entirely rather than
+    shown as something they're not; the frontend falls back to the
+    average-per-game figures for those instead."""
     if not totals or not totals.get("gamesPlayed"):
         return None
     gp = totals["gamesPlayed"]
@@ -358,6 +410,7 @@ def season_totals_to_window(totals):
         "hrPct": round(100 * totals["homeRuns"] / gp, 1),
         "hitsAvg": round(totals["hits"] / gp, 2),
         "xbhAvg": round((totals["doubles"] + totals["triples"] + totals["homeRuns"]) / gp, 2),
+        "hrrAvg": round((totals["hits"] + totals.get("runs", 0) + totals.get("rbi", 0)) / gp, 2),
         "paAvg": round(totals["plateAppearances"] / gp, 2),
     }
 
@@ -539,6 +592,58 @@ def compute_score(p):
     }
 
 
+# ---------------------------------------------------------------------------
+# HRR (Hits+Runs+RBI, over 1.5 line - i.e. needs 2+ combined) board scoring.
+# Same 5-factor shape and 0-100 scale as compute_score() above so both boards
+# read consistently, but built from different underlying stats since HRR
+# rewards getting on base and driving in runs, not raw power:
+#   OnBase 35%     - season AVG/OBP/ISO (times on base + extra-base ability
+#                    drive both hits AND runs)
+#   Matchup 30%    - opposing pitcher WHIP (a leaky pitcher means more
+#                    baserunners AND more RBI chances) blended with the same
+#                    platoon-AVG signal the HR board uses
+#   Recent 15%     - share of the last 15 games clearing the 1.5 HRR line
+#   RISP 10%       - AVG with runners in scoring position (RBI conversion)
+#   Opportunity 10%- lineup slot, same lbonus field as the HR board. NOTE:
+#                    lbonus rewards leadoff hitters most (more PAs = more run
+#                    chances), which fits HRR reasonably well, but a 3-5 hole
+#                    hitter often has more RBI chances specifically - kept
+#                    simple here on purpose; revisit if the board's rankings
+#                    look off in practice.
+# ---------------------------------------------------------------------------
+def compute_hrr_score(p):
+    avg = p.get("avg") if p.get("avg") is not None else 0.240
+    obp = p.get("obp") if p.get("obp") is not None else 0.310
+    iso = p["iso"] or 0
+    whip = p["whip"] if p["whip"] is not None else 1.30
+    avgmix = avgmix_confidence_blend(p["avgmix"])
+    risp = p.get("risp") if p.get("risp") is not None else 0.250
+    l15hrr = p.get("l15hrr") if p.get("l15hrr") is not None else 0
+    lbonus = p["lbonus"] if p["lbonus"] is not None else 3
+
+    onbase = (clamp01((avg - 0.200) / 0.150) + clamp01((obp - 0.280) / 0.170)
+              + clamp01(iso / 0.35)) / 3
+
+    whip_s = clamp01((whip - 0.9) / 0.9)
+    avgmix_s = clamp01(avgmix / 0.5)
+    matchup = (whip_s + avgmix_s) / 2
+
+    recent = clamp01(l15hrr / 10)  # clearing the line ~10/15 games is elite
+    risp_s = clamp01((risp - 0.150) / 0.250)
+    opportunity = clamp01((lbonus - 1) / 5)
+
+    score = onbase * 35 + matchup * 30 + recent * 15 + risp_s * 10 + opportunity * 10
+
+    return {
+        "hrrScore": round(score, 1),
+        "hrrOnbasePct": round(onbase * 100, 1),
+        "hrrMatchupPct": round(matchup * 100, 1),
+        "hrrRecentPct": round(recent * 100, 1),
+        "hrrRispPct": round(risp_s * 100, 1),
+        "hrrOpportunityPct": round(opportunity * 100, 1),
+    }
+
+
 def main():
     print("Fetching today's schedule and probable pitchers...")
     games = get_todays_games()
@@ -615,12 +720,16 @@ def main():
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
                     "iso": bstats.get("iso"),
+                    "avg": bstats.get("avg"),
+                    "obp": bstats.get("obp"),
                     "phr9": pitcher_stat["hr9"],
                     "whip": pitcher_stat["whip"],
                     "avgmix": None,   # filled in pass 2
                     "wind": wind_score,
                     "park": park["factor"],
                     "l15hr": None,    # filled in pass 2
+                    "l15hrr": None,   # filled in pass 2
+                    "risp": None,     # filled in pass 2
                     "lbonus": max(1, 9 - order_pos),
                     "crush": 0,       # finalized after pass 2
                     "split": 0,
@@ -653,9 +762,16 @@ def main():
         totals_prev_year = get_season_totals_hitting(batter_id, YEAR - 1)
         last20 = games_this_year[-20:]
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
+        # Games (not total combined count) clearing the 1.5 HRR line - feeds
+        # the HRR board's "recent form" the same way l15hr feeds the HR board.
+        l15hrr = (sum(1 for g in games_this_year[-15:] if g["hrr"] >= 2)
+                  if games_this_year else None)
+        risp = get_risp_avg(batter_id)
 
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
+        player_row["l15hrr"] = l15hrr
+        player_row["risp"] = risp
         player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
         player_row["split"] = 1 if (platoon_avg or 0) >= 0.260 else 0
         # Powers the player detail view (Graph + Stats tabs): last 20 games
@@ -683,7 +799,10 @@ def main():
 
     for player_row in players:
         player_row.update(compute_score(player_row))
+        player_row.update(compute_hrr_score(player_row))
 
+    # Written sorted by the HR score for backward compatibility - the
+    # frontend re-sorts client-side by hrrScore when the HRR tab is active.
     players.sort(key=lambda p: -p["score"])
 
     # allow_nan=False makes Python raise a clear error HERE if any stat somehow
