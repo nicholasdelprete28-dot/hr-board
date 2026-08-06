@@ -321,6 +321,17 @@ def fetch_batter_statcast():
     id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
     print(f"  using ID column: {id_col_used}")
 
+    # This endpoint (leaderboard/statcast, i.e. the "exit_velocity_barrels"
+    # leaderboard) names its hard-hit-rate column "ev95percent" - the percent
+    # of batted balls at 95+ mph exit velocity, which IS hard-hit% by
+    # definition. "hard_hit_percent" is the column name on Savant's separate
+    # /leaderboard/custom endpoint, not this one, so looking for it here
+    # always came up empty and silently defaulted every player to 0.0%.
+    # Trying several names keeps this working even if Savant renames again.
+    hardhit_columns = ["ev95percent", "hard_hit_percent", "hardhit_percent"]
+    hardhit_col_used = next((c for c in hardhit_columns if rows and c in rows[0]), None)
+    print(f"  using hard-hit% column: {hardhit_col_used}")
+
     out = {}
     for row in rows:
         pid_raw = row.get(id_col_used) if id_col_used else None
@@ -331,7 +342,7 @@ def fetch_batter_statcast():
             out[pid] = {
                 "ev": float(row.get("avg_hit_speed") or 0),
                 "barrel": float(row.get("brl_percent") or 0) / 100,
-                "hardhit": float(row.get("hard_hit_percent") or 0) / 100,
+                "hardhit": float(row.get(hardhit_col_used) or 0) / 100 if hardhit_col_used else 0.0,
             }
         except (TypeError, ValueError):
             continue
