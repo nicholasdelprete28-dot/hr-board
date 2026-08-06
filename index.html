@@ -321,19 +321,24 @@
   .gl-splitgrid div{display:flex; justify-content:space-between;}
   .gl-splitgrid b{color:var(--text);}
 
+  /* gl-chartwrap no longer needs to scroll: columns below use flex:1 instead
+     of a fixed width, so 5, 10, or 20 games all stretch to fill the
+     available width exactly - the whole chart is always visible without
+     scrolling. overflow-x:auto is kept only as a safety net for extremely
+     narrow screens; it should never actually trigger in normal use. */
   .gl-chartwrap{overflow-x:auto; overflow-y:hidden; margin-top:16px; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
-  .gl-chart{display:flex; flex-direction:column; min-width:min-content;}
-  .gl-barsarea{display:flex; align-items:flex-end; gap:10px; height:110px; position:relative; padding:20px 16px 0 4px;}
+  .gl-chart{display:flex; flex-direction:column; width:100%;}
+  .gl-barsarea{display:flex; align-items:flex-end; gap:4px; height:110px; position:relative; padding:20px 10px 0 4px;}
   .gl-threshline{position:absolute; left:0; right:0; border-top:1px dashed var(--muted2); z-index:0;}
-  .gl-col{display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0; height:100%; justify-content:flex-end; position:relative; z-index:1;}
-  .gl-bar{width:20px; border-radius:4px 4px 0 0; background:#2a322c; position:relative; min-height:2px;}
+  .gl-col{display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0; height:100%; justify-content:flex-end; position:relative; z-index:1;}
+  .gl-bar{width:60%; max-width:20px; border-radius:4px 4px 0 0; background:#2a322c; position:relative; min-height:2px;}
   .gl-bar.hit{background:var(--green);}
   .gl-barval{position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-family:var(--mono); font-size:10px; color:var(--muted); white-space:nowrap;}
   .gl-bar.hit .gl-barval{color:var(--green);}
-  .gl-labelsrow{display:flex; gap:10px; padding:6px 16px 0 4px;}
-  .gl-labelcol{display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0;}
-  .gl-datelabel{font-family:var(--mono); font-size:8px; color:var(--muted2); text-align:center; white-space:nowrap;}
-  .gl-opplabel{font-family:var(--mono); font-size:8px; color:var(--muted2); white-space:nowrap;}
+  .gl-labelsrow{display:flex; gap:4px; padding:6px 10px 0 4px;}
+  .gl-labelcol{display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0;}
+  .gl-datelabel{font-family:var(--mono); font-size:8px; color:var(--muted2); text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
+  .gl-opplabel{font-family:var(--mono); font-size:8px; color:var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;}
   .gl-empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:12px; padding:24px 0;}
 
   .gl-statstabs{display:flex; gap:8px; margin-bottom:10px;}
