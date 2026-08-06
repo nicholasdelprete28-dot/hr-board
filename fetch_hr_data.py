@@ -1284,6 +1284,34 @@ def main():
         starts = get_pitcher_gamelog(pitcher_id, YEAR)
         row["l3k"] = sum(g["k"] for g in starts[-3:]) if starts else None
         row["l5k"] = sum(g["k"] for g in starts[-5:]) if starts else None
+
+        # Blend in RECENT form for the two projection inputs (ipPerStart,
+        # k9), rather than trusting the season-long average alone. A
+        # season average can be stale if workload or stuff has changed
+        # recently - a pitcher on a short leash after a rough stretch,
+        # or working back from an injury, throws fewer innings NOW than
+        # his full-season average suggests, and a real sportsbook line
+        # already prices in that kind of current-form context we
+        # otherwise can't see. 60/40 blend toward recent (last 5 starts),
+        # same recency-weighting philosophy as the batter boards' L15/L5
+        # blend - enough to actually move the projection, not so much
+        # that a single short outing whipsaws it.
+        last5 = starts[-5:]
+        if last5:
+            recent_ip_total = sum(g["ip"] or 0 for g in last5)
+            recent_ip_avg = recent_ip_total / len(last5)
+            recent_k_total = sum(g["k"] for g in last5)
+            recent_k9 = (recent_k_total * 9 / recent_ip_total) if recent_ip_total > 0 else None
+
+            season_ip = row.get("ipPerStart")
+            row["ipPerStart"] = (round(recent_ip_avg * 0.6 + season_ip * 0.4, 1)
+                                  if season_ip is not None else round(recent_ip_avg, 1))
+
+            season_k9 = row.get("k9")
+            if recent_k9 is not None:
+                row["k9"] = (round(recent_k9 * 0.6 + season_k9 * 0.4, 2)
+                              if season_k9 is not None else round(recent_k9, 2))
+
         row.update(compute_k_score(row))
         # Last 10 starts, for the player-detail bar chart on the frontend -
         # same idea as a batter's gamelog, just K's-per-start instead of
