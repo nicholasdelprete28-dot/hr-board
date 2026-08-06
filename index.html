@@ -212,7 +212,7 @@
     text-shadow:0 1px 2px rgba(0,0,0,0.5);
   }
   .headshot-img{
-    position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 15%;
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;
   }
 
   .info{flex:1; min-width:0;}
@@ -321,7 +321,7 @@
     width:56px; height:56px; border-radius:50%; overflow:hidden; position:relative;
     border:2px solid var(--line); flex-shrink:0; background:#1a201c;
   }
-  .modal-headshot img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 15%;}
+  .modal-headshot img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;}
   .modal-headshot .init{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:18px; color:#fff;}
   .modal-name{font-family:var(--display); font-weight:700; font-size:18px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .modal-meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
@@ -948,7 +948,7 @@ function render(){
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
         { label: 'Season ISO', display: fmtNum(p.iso, 3),
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
-        { label: 'Lineup Slot Bonus', display: '+' + p.hrrLbonus,
+        { label: 'Lineup Slot Bonus', display: p.hrrLbonus == null ? 'N/A' : '+' + p.hrrLbonus,
           tier: statTier(p.hrrLbonus, { good: 6, bad: 2 }) },
       ]);
     return `
