@@ -590,6 +590,7 @@ def compute_score(p):
     wind = p["wind"] or 0
     park = p["park"] or 0
     l15hr = p["l15hr"] if p["l15hr"] is not None else 0
+    l5hr = p["l5hr"] if p.get("l5hr") is not None else 0
     lbonus = p["lbonus"] if p["lbonus"] is not None else 3
     crush = p["crush"] or 0
     split = p["split"] or 0
@@ -606,9 +607,20 @@ def compute_score(p):
     avgmix_s = clamp01(avgmix / 0.5)
     wind_s = clamp01((wind + 2) / 4)
     park_s = clamp01((park + 2) / 4)
-    matchup = (pitcher_quality + avgmix_s + park_s + wind_s * 0.5) / 3.5
+    # wind_s carries a bit more weight than before (0.5 -> 0.7) per request -
+    # still clearly the smallest of the four matchup inputs (~19% of the
+    # bucket vs ~27% each for pitcher quality/avgmix/park), just no longer
+    # nearly invisible on days with real wind.
+    matchup = (pitcher_quality + avgmix_s + park_s + wind_s * 0.7) / 3.7
 
-    recent = clamp01(l15hr / 6)
+    # Recent form: blends the steadier 15-game base rate with a
+    # fast-reacting 5-game streak read, so a player who's gone cold (or
+    # caught fire) this week actually moves instead of being masked by a
+    # slow-draining 15-game window. L15 anchors it (60%) so one huge game
+    # doesn't spike the score; L5 (40%) is what makes "on a heater right
+    # now" show up day to day instead of taking two weeks to register.
+    # 2+ HR in the last 5 games is rare enough to max out that half.
+    recent = clamp01(l15hr / 6) * 0.6 + clamp01(l5hr / 2) * 0.4
     platoon = (crush + split) / 2
     opportunity = clamp01((lbonus - 1) / 5)
 
@@ -759,6 +771,7 @@ def main():
                     "wind": wind_score,
                     "park": park["factor"],
                     "l15hr": None,    # filled in pass 2
+                    "l5hr": None,     # filled in pass 2
                     "l15hrr": None,   # filled in pass 2
                     "risp": None,     # filled in pass 2
                     "lbonus": max(1, 9 - order_pos),
@@ -794,6 +807,10 @@ def main():
         totals_prev_year = get_season_totals_hitting(batter_id, YEAR - 1)
         last20 = games_this_year[-20:]
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
+        # Last-5-game HR count - a fast-reacting "is this guy hot right now"
+        # signal to sit alongside l15hr's steadier 15-game base rate. See
+        # compute_score()'s "recent" factor below for how the two blend.
+        l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
         # Games (not total combined count) clearing the 1.5 HRR line - feeds
         # the HRR board's "recent form" the same way l15hr feeds the HR board.
         l15hrr = (sum(1 for g in games_this_year[-15:] if g["hrr"] >= 2)
@@ -802,6 +819,7 @@ def main():
 
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
+        player_row["l5hr"] = l5hr
         player_row["l15hrr"] = l15hrr
         player_row["risp"] = risp
         player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
