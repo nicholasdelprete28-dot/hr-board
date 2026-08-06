@@ -213,6 +213,13 @@
   }
   .headshot-img{
     position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;
+    /* Soft vignette so the flat studio-backdrop rectangle in the source
+       photo fades into the circle's team-color gradient at the rim
+       instead of cutting off as a hard-edged box. Doesn't remove the
+       backdrop color around the shoulders/chest (that needs real
+       background removal), but it kills the harshest part of the clash. */
+    mask-image:radial-gradient(circle, black 60%, transparent 92%);
+    -webkit-mask-image:radial-gradient(circle, black 60%, transparent 92%);
   }
 
   .info{flex:1; min-width:0;}
@@ -264,7 +271,7 @@
   .chip{
     font-family:var(--body); font-weight:600; font-size:11.5px; color:var(--muted); background:#1a201c;
     border:1px solid var(--line); border-radius:20px; padding:5px 11px;
-    transition:all .15s ease; cursor:default;
+    transition:all .15s ease; cursor:help;
   }
   .chip-flag{color:#ff8a75; border-color:rgba(217,107,91,0.4); background:rgba(217,107,91,0.08);}
   .chip-flag:hover{box-shadow:0 0 12px rgba(217,107,91,0.35); border-color:#ff8a75;}
@@ -321,7 +328,11 @@
     width:56px; height:56px; border-radius:50%; overflow:hidden; position:relative;
     border:2px solid var(--line); flex-shrink:0; background:#1a201c;
   }
-  .modal-headshot img{position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;}
+  .modal-headshot img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;
+    mask-image:radial-gradient(circle, black 60%, transparent 92%);
+    -webkit-mask-image:radial-gradient(circle, black 60%, transparent 92%);
+  }
   .modal-headshot .init{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:18px; color:#fff;}
   .modal-name{font-family:var(--display); font-weight:700; font-size:18px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .modal-meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
@@ -838,14 +849,46 @@ function statTier(value, { dir = 'high', good, bad, veryBad } = {}){
   }
   return '';
 }
+
+// HTML-attribute-safe escaping for the tooltip strings below - the text is
+// built from live player data (names, hands) so it isn't hand-authored,
+// safest to escape rather than assume no player ever has a stray quote.
+function escAttr(s){ return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
+
+// Each of these builds the specific, per-player "why is this tag here
+// today" explanation shown as a hover tooltip on that chip - not a static
+// caption, the real numbers behind today's tag.
+function tipPlatoon(p){
+  const avgmixStr = p.avgmix != null ? p.avgmix.toFixed(3) : 'N/A';
+  const handWord = p.hand === 'L' ? 'lefties' : 'righties';
+  return `Hitting ${avgmixStr} vs ${handWord} this season - clears the .260 platoon-edge line for today's ${p.hand === 'L' ? 'LHP' : 'RHP'} matchup.`;
+}
+function tipCrusher(p){
+  const avgmixStr = p.avgmix != null ? p.avgmix.toFixed(3) : 'N/A';
+  const handWord = p.hand === 'L' ? 'lefties' : 'righties';
+  return p.crush
+    ? `Hitting ${avgmixStr} vs ${handWord} this season - clears the .280 "crusher" line, the top platoon tier.`
+    : `Hitting ${avgmixStr} vs ${handWord} this season - below the .280 "crusher" line for today's matchup.`;
+}
+function tipColdBarrel(p){
+  return `Barrel rate is ${fmtPct(p.barrel)} but exit velo is only ${fmtNum(p.ev, 1)} mph, so the power read is discounted &times;${p.conf} instead of taken at face value.`;
+}
+function tipLineup(p, mode){
+  if(mode === 'hrr'){
+    return `Lineup-slot bonus of +${p.hrrLbonus} for HRR - slots 1-6 plateau near the max since they get both the most plate appearances and the most RBI chances; it drops off after that.`;
+  }
+  return `Lineup-slot bonus of +${p.lbonus} for HR favorability - higher up the order (leadoff especially) means more plate appearances, so more homer chances today.`;
+}
 // Renders one or more statbox divs from {label, value, display, tier} entries,
-// then marks the last row's boxes as sb-wide when the row would otherwise
-// leave an empty gap (i.e. exactly 2 boxes trailing in a 3-per-row grid).
+// then stretches the last row's boxes so they never leave an empty gap:
+// 1 trailing box spans the full row (6/6 cols), 2 trailing boxes split it
+// evenly (3/6 cols each) - a full row of 3 (2/6 cols each) needs no change.
 function renderStatboxes(items){
   const trailing = items.length % 3;
   return items.map((it, i) => {
-    const wide = trailing === 2 && i >= items.length - 2;
-    return `<div class="statbox ${it.tier || ''} ${wide ? 'sb-wide' : ''}"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`;
+    const isTrailing = trailing !== 0 && i >= items.length - trailing;
+    const span = trailing === 1 && isTrailing ? 6 : (trailing === 2 && isTrailing ? 3 : 2);
+    return `<div class="statbox ${it.tier || ''}" style="grid-column:span ${span};"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`;
   }).join('');
 }
 
@@ -923,6 +966,8 @@ function render(){
           tier: statTier(p.phr9, { good: 1.3, bad: 0.8, veryBad: 0.5 }) },
         { label: 'L15 HR', display: p.l15hr == null ? 'N/A' : p.l15hr,
           tier: statTier(p.l15hr, { good: 3 }) },
+        { label: 'L5 HR', display: p.l5hr == null ? 'N/A' : p.l5hr,
+          tier: statTier(p.l5hr, { good: 2 }) },
         { label: 'Wind', display: (p.wind > 0 ? '+' : '') + p.wind,
           tier: statTier(p.wind, { good: 1, bad: -1, veryBad: -2 }) },
         { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
@@ -972,10 +1017,10 @@ function render(){
         </div>
       </div>
       <div class="chips">
-        ${coldBarrel && boardMode === 'hr' ? `<div class="chip chip-flag">cold barrel &times;${p.conf}</div>` : ''}
-        ${platoonGood ? `<div class="chip chip-platoon">platoon edge</div>` : ''}
-        <div class="chip ${p.crush ? 'chip-crusher' : ''}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
-        <div class="chip chip-lineup">lineup +${p.lbonus}</div>
+        ${coldBarrel && boardMode === 'hr' ? `<div class="chip chip-flag" title="${escAttr(tipColdBarrel(p))}">cold barrel &times;${p.conf}</div>` : ''}
+        ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
+        <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
+        <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
       </div>
       <div class="statboxwrap">${statboxes}
       </div>
