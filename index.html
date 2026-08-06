@@ -18,6 +18,12 @@
     --gold: #e3a548;
     --green: #4fdb9a;
     --red: #d96b5b;
+    /* Deliberately punchier than --green/--red above, used only for the
+       stat-box good/bad/very-bad reads so they pop against the rest of
+       the card's muted palette. */
+    --stat-good: #42e896;
+    --stat-bad: #ff9638;
+    --stat-verybad: #ff4242;
     --mono: 'JetBrains Mono', monospace;
     --display: 'Space Grotesk', sans-serif;
     --body: 'Manrope', sans-serif;
@@ -106,6 +112,16 @@
     flex:1; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer; white-space:nowrap;
   }
   .sortbtn.active{color:var(--gold); border-color:var(--gold);}
+
+  /* ---- Mobile: the 3 sort buttons + 2 dropdowns don't fit one row at
+     phone widths. Rather than letting the last dropdown (Upcoming Only)
+     overflow off-screen, wrap the row and drop it onto its own full-width
+     line below the others - same control, same styling, just stacked. ---- */
+  @media (max-width: 640px){
+    .controls{flex-wrap:wrap;}
+    #tierselect{flex:1 1 auto;}
+    #statusselect{flex:1 1 100%; margin-top:8px;}
+  }
 
   /* ---- HR / HRR board toggle - sits right under the title, always visible ---- */
   .boardtoggle{
@@ -262,17 +278,23 @@
 
   /* ---- Always-visible stat box grid (swiftprops-style) ---- */
   .statboxwrap{
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:1px;
+    display:grid; grid-template-columns:repeat(6, 1fr); gap:1px;
     margin-top:14px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;
   }
-  .statbox{background:var(--surface2); padding:12px 6px; text-align:center;}
+  .statbox{background:var(--surface2); padding:12px 6px; text-align:center; grid-column:span 2;}
+  .statbox.sb-wide{grid-column:span 3;}
   .statbox .sblabel{
     font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase;
     letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;
   }
   .statbox .sbval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text);}
-  .statbox.hot .sbval{color:var(--green);}
-  .statbox.cold .sbval{color:var(--red);}
+  /* Good/bad/very-bad read on each stat, kept deliberately vibrant (with a
+     faint glow) so a scan down the card immediately flags what's working
+     for or against this player - a neutral stat just keeps the default
+     off-white color instead of getting a tier class at all. */
+  .statbox.good .sbval{color:var(--stat-good); text-shadow:0 0 10px rgba(66,232,150,0.45);}
+  .statbox.bad .sbval{color:var(--stat-bad); text-shadow:0 0 10px rgba(255,150,56,0.4);}
+  .statbox.verybad .sbval{color:var(--stat-verybad); text-shadow:0 0 10px rgba(255,66,66,0.45);}
 
   .empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:13px; padding:40px 0;}
   .card{cursor:pointer;}
@@ -382,7 +404,7 @@
   </div>
   <div class="boardtoggle" id="boardToggle">
     <div class="boardtab active" data-board="hr">HR</div>
-    <div class="boardtab" data-board="hrr">HRR (H+R+RBI, 1.5)</div>
+    <div class="boardtab" data-board="hrr">HRR (H+R+RBI)</div>
   </div>
   <div class="hrcounter" id="hrcounter" style="display:none;">
     <span class="hrcounter-dot"></span>
@@ -435,6 +457,7 @@
       <div class="modal-proptab active" data-prop="hr">Home Runs</div>
       <div class="modal-proptab" data-prop="hits">Hits</div>
       <div class="modal-proptab" data-prop="xbh">Extra Base Hits</div>
+      <div class="modal-proptab" data-prop="hrr">H+R+RBI</div>
     </div>
     <div class="modal-tabs">
       <div class="modal-tab active" data-view="graph">Graph</div>
@@ -795,6 +818,37 @@ function tierFor(i){
 function fmtPct(x){ return x == null ? 'N/A' : (x*100).toFixed(1) + '%'; }
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
+// Returns 'good' | 'bad' | 'verybad' | '' for a stat value against fixed
+// benchmarks, so each statbox on a card can be colored by whether it's
+// actually working for or against the player - not just displayed as a
+// flat number. dir: 'high' means bigger is better (e.g. AVG), 'low' means
+// smaller is better (e.g. nothing currently, kept for future stats).
+// Only the 'good' and 'bad'/'verybad' cutoffs need to be supplied - a
+// value between them is left uncolored (neutral).
+function statTier(value, { dir = 'high', good, bad, veryBad } = {}){
+  if(value == null) return '';
+  if(dir === 'high'){
+    if(veryBad != null && value <= veryBad) return 'verybad';
+    if(bad != null && value <= bad) return 'bad';
+    if(good != null && value >= good) return 'good';
+  } else {
+    if(veryBad != null && value >= veryBad) return 'verybad';
+    if(bad != null && value >= bad) return 'bad';
+    if(good != null && value <= good) return 'good';
+  }
+  return '';
+}
+// Renders one or more statbox divs from {label, value, display, tier} entries,
+// then marks the last row's boxes as sb-wide when the row would otherwise
+// leave an empty gap (i.e. exactly 2 boxes trailing in a 3-per-row grid).
+function renderStatboxes(items){
+  const trailing = items.length % 3;
+  return items.map((it, i) => {
+    const wide = trailing === 2 && i >= items.length - 2;
+    return `<div class="statbox ${it.tier || ''} ${wide ? 'sb-wide' : ''}"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`;
+  }).join('');
+}
+
 // Favorability bands, independent of rank position - based on the score
 // itself. >=45% = strongest read, 35-44.9% = solid, below 35% = speculative.
 function favTierName(score){
@@ -860,24 +914,43 @@ function render(){
       ? `<span class="badge-homer">&#9917; ${p.actualHR} HR TODAY</span>`
       : '';
     const cardScore = p[scoreField()];
-    const statboxes = boardMode === 'hr' ? `
-        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${fmtNum(p.avgmix, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">Exit Velo</span><span class="sbval">${fmtNum(p.ev, 1)}</span></div>
-        <div class="statbox ${p.phr9 != null && p.phr9 >= 1.3 ? 'hot' : (p.phr9 != null && p.phr9 <= 0.8 ? 'cold' : '')}"><span class="sblabel">Pitcher HR/9</span><span class="sbval">${fmtNum(p.phr9, 2)}</span></div>
-        <div class="statbox"><span class="sblabel">L15 HR</span><span class="sbval">${p.l15hr == null ? 'N/A' : p.l15hr}</span></div>
-        <div class="statbox ${p.wind > 0 ? 'hot' : (p.wind < 0 ? 'cold' : '')}"><span class="sblabel">Wind</span><span class="sbval">${p.wind > 0 ? '+' : ''}${p.wind}</span></div>
-        <div class="statbox"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${fmtNum(p.whip, 2)}</span></div>
-        <div class="statbox ${coldBarrel ? 'cold' : 'hot'}"><span class="sblabel">Barrel%</span><span class="sbval">${fmtPct(p.barrel)}</span></div>
-        <div class="statbox"><span class="sblabel">Hard Hit%</span><span class="sbval">${fmtPct(p.hardhit)}</span></div>
-        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${fmtNum(p.iso, 3)}</span></div>` : `
-        <div class="statbox"><span class="sblabel">Season AVG</span><span class="sbval">${fmtNum(p.avg, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">Season OBP</span><span class="sbval">${fmtNum(p.obp, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">AVG vs Mix</span><span class="sbval">${fmtNum(p.avgmix, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">RISP AVG</span><span class="sbval">${fmtNum(p.risp, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">L15 HRR Hits (1.5)</span><span class="sbval">${p.l15hrr == null ? 'N/A' : p.l15hrr}</span></div>
-        <div class="statbox ${p.whip != null && p.whip >= 1.35 ? 'hot' : (p.whip != null && p.whip <= 1.05 ? 'cold' : '')}"><span class="sblabel">Pitcher WHIP</span><span class="sbval">${fmtNum(p.whip, 2)}</span></div>
-        <div class="statbox"><span class="sblabel">Season ISO</span><span class="sbval">${fmtNum(p.iso, 3)}</span></div>
-        <div class="statbox"><span class="sblabel">Lineup Slot Bonus</span><span class="sbval">+${p.lbonus}</span></div>`;
+    const statboxes = boardMode === 'hr' ? renderStatboxes([
+        { label: 'AVG vs Mix', display: fmtNum(p.avgmix, 3),
+          tier: statTier(p.avgmix, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
+        { label: 'Exit Velo', display: fmtNum(p.ev, 1),
+          tier: statTier(p.ev, { good: 91, bad: 86, veryBad: 83 }) },
+        { label: 'Pitcher HR/9', display: fmtNum(p.phr9, 2),
+          tier: statTier(p.phr9, { good: 1.3, bad: 0.8, veryBad: 0.5 }) },
+        { label: 'L15 HR', display: p.l15hr == null ? 'N/A' : p.l15hr,
+          tier: statTier(p.l15hr, { good: 3 }) },
+        { label: 'Wind', display: (p.wind > 0 ? '+' : '') + p.wind,
+          tier: statTier(p.wind, { good: 1, bad: -1, veryBad: -2 }) },
+        { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
+          tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
+        { label: 'Barrel%', display: fmtPct(p.barrel),
+          tier: statTier(p.barrel, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
+        { label: 'Hard Hit%', display: fmtPct(p.hardhit),
+          tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
+        { label: 'Season ISO', display: fmtNum(p.iso, 3),
+          tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
+      ]) : renderStatboxes([
+        { label: 'Season AVG', display: fmtNum(p.avg, 3),
+          tier: statTier(p.avg, { good: 0.290, bad: 0.230, veryBad: 0.200 }) },
+        { label: 'Season OBP', display: fmtNum(p.obp, 3),
+          tier: statTier(p.obp, { good: 0.350, bad: 0.300, veryBad: 0.270 }) },
+        { label: 'AVG vs Mix', display: fmtNum(p.avgmix, 3),
+          tier: statTier(p.avgmix, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
+        { label: 'RISP AVG', display: fmtNum(p.risp, 3),
+          tier: statTier(p.risp, { good: 0.300, bad: 0.220, veryBad: 0.180 }) },
+        { label: 'L15 HRR Hits', display: p.l15hrr == null ? 'N/A' : p.l15hrr,
+          tier: statTier(p.l15hrr, { good: 7, bad: 3, veryBad: 1 }) },
+        { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
+          tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
+        { label: 'Season ISO', display: fmtNum(p.iso, 3),
+          tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
+        { label: 'Lineup Slot Bonus', display: '+' + p.hrrLbonus,
+          tier: statTier(p.hrrLbonus, { good: 6, bad: 2 }) },
+      ]);
     return `
     <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" data-player-id="${p.playerId ?? ''}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
@@ -981,8 +1054,12 @@ let modalStatsMetric = 'pa';    // 'pa' | 'hits' | 'xbh' - drives the Stats tab
 let modalStatsMode = 'avg';     // 'avg' | 'median'
 let modalView = 'graph';        // 'graph' | 'stats'
 
-const PROP_FIELD = { hr: 'hr', hits: 'hits', xbh: 'xbh' };
-const PROP_LABEL = { hr: 'Home Runs', hits: 'Hits', xbh: 'Extra Base Hits' };
+const PROP_FIELD = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr' };
+const PROP_LABEL = { hr: 'Home Runs', hits: 'Hits', xbh: 'Extra Base Hits', hrr: 'Hits+Runs+RBI (1.5 line)' };
+// The "line" each prop needs to clear to count as a hit game. HR/Hits/XBH
+// are standard 0.5 lines (any 1+ counts). HRR is a real, commonly-offered
+// prop line of 1.5 combined Hits+Runs+RBI, so it needs 2+ to clear.
+const PROP_THRESHOLD = { hr: 0.5, hits: 0.5, xbh: 0.5, hrr: 1.5 };
 const STATS_FIELD = { pa: 'pa', hits: 'hits', xbh: 'xbh' };
 const STATS_LABEL = { pa: 'Plate Appearances', hits: 'Hits', xbh: 'Extra Base Hits' };
 
@@ -998,9 +1075,9 @@ function windowGames(bundle, key){
   if (key === 'l10') return g.slice(-10);
   return g.slice(-20);
 }
-function pctFromGames(games, field){
+function pctFromGames(games, field, threshold = 0.5){
   if (!games || !games.length) return null;
-  const made = games.filter(g => g[field] >= 1).length;
+  const made = games.filter(g => g[field] >= Math.ceil(threshold)).length;
   return { pct: Math.round(1000 * made / games.length) / 10, made, n: games.length };
 }
 function avgFromGames(games, field){
@@ -1016,7 +1093,7 @@ function medianFromGames(games, field){
 
 function openPlayerModal(p){
   modalPlayer = p;
-  modalProp = 'hr';
+  modalProp = boardMode === 'hrr' ? 'hrr' : 'hr';
   modalWindow = 'l10';
   modalStatsMetric = 'pa';
   modalStatsMode = 'avg';
@@ -1063,9 +1140,10 @@ function renderGraphView(){
   }
   const field = PROP_FIELD[modalProp];
   const label = PROP_LABEL[modalProp];
-  const l5 = pctFromGames(windowGames(bundle, 'l5'), field);
-  const l10 = pctFromGames(windowGames(bundle, 'l10'), field);
-  const l20 = pctFromGames(windowGames(bundle, 'l20'), field);
+  const threshold = PROP_THRESHOLD[modalProp];
+  const l5 = pctFromGames(windowGames(bundle, 'l5'), field, threshold);
+  const l10 = pctFromGames(windowGames(bundle, 'l10'), field, threshold);
+  const l20 = pctFromGames(windowGames(bundle, 'l20'), field, threshold);
   const winPct = { l5, l10, l20 }[modalWindow];
   const winGames = windowGames(bundle, modalWindow);
   const avg = avgFromGames(winGames, field);
@@ -1073,8 +1151,9 @@ function renderGraphView(){
 
   const seasonCur = bundle.seasonCur;
   const seasonPrev = bundle.seasonPrev;
-  const pctKey = modalProp === 'hr' ? 'hrPct' : (modalProp === 'hits' ? 'hitsPct' : 'xbhPct');
-  const avgKey = modalProp === 'hr' ? 'hrPct' : (modalProp === 'hits' ? 'hitsAvg' : 'xbhAvg');
+  const propKeyMap = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr' };
+  const pctKey = modalProp === 'hr' ? 'hrPct' : `${propKeyMap[modalProp]}Pct`;
+  const avgKey = modalProp === 'hr' ? 'hrPct' : `${propKeyMap[modalProp]}Avg`;
   const curRow = seasonCur
     ? (seasonCur[pctKey] != null ? `${seasonCur[pctKey]}%` : `avg ${seasonCur[avgKey]}`)
     : '&mdash;';
@@ -1084,7 +1163,7 @@ function renderGraphView(){
 
   const chartGames = winGames;
   const maxVal = Math.max(1, ...chartGames.map(g => g[field]));
-  const threshPct = Math.min(92, (0.5 / maxVal) * 100);
+  const threshPct = Math.min(92, (threshold / maxVal) * 100);
 
   const chart = `
     <div class="gl-chartwrap">
@@ -1093,7 +1172,7 @@ function renderGraphView(){
           <div class="gl-threshline" style="bottom:${threshPct}%"></div>
           ${chartGames.map(g => `
             <div class="gl-col">
-              <div class="gl-bar ${g[field] >= 1 ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
+              <div class="gl-bar ${g[field] >= Math.ceil(threshold) ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
                 <span class="gl-barval">${g[field]}</span>
               </div>
             </div>`).join('')}
