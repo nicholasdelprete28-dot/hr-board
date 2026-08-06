@@ -268,13 +268,13 @@
   /* ---- Player detail modal ---- */
   .modal-overlay{
     position:fixed; inset:0; background:rgba(6,8,7,0.75); backdrop-filter:blur(2px);
-    z-index:200; display:flex; align-items:flex-end; justify-content:center;
+    z-index:200; display:flex; align-items:center; justify-content:center; padding:24px 14px;
   }
   .modal-panel{
     background:var(--bg); width:100%; max-width:var(--content-width);
-    max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
-    border-radius:20px 20px 0 0; border:1px solid var(--line); border-bottom:none;
-    padding:16px 16px 30px; box-shadow:0 -10px 40px rgba(0,0,0,0.5);
+    max-height:88vh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
+    border-radius:20px; border:1px solid var(--line);
+    padding:16px 16px 30px; box-shadow:0 20px 60px rgba(0,0,0,0.6);
   }
   .modal-header{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:16px;}
   .modal-close{
@@ -321,15 +321,18 @@
   .gl-splitgrid div{display:flex; justify-content:space-between;}
   .gl-splitgrid b{color:var(--text);}
 
-  .gl-chartwrap{overflow-x:auto; margin-top:16px; padding-bottom:4px;}
-  .gl-chart{display:flex; align-items:flex-end; gap:10px; height:130px; position:relative; min-width:min-content; padding:20px 4px 0;}
+  .gl-chartwrap{overflow-x:auto; overflow-y:hidden; margin-top:16px; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
+  .gl-chart{display:flex; flex-direction:column; min-width:min-content;}
+  .gl-barsarea{display:flex; align-items:flex-end; gap:10px; height:110px; position:relative; padding:20px 16px 0 4px;}
   .gl-threshline{position:absolute; left:0; right:0; border-top:1px dashed var(--muted2); z-index:0;}
   .gl-col{display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0; height:100%; justify-content:flex-end; position:relative; z-index:1;}
   .gl-bar{width:20px; border-radius:4px 4px 0 0; background:#2a322c; position:relative; min-height:2px;}
   .gl-bar.hit{background:var(--green);}
   .gl-barval{position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-family:var(--mono); font-size:10px; color:var(--muted); white-space:nowrap;}
   .gl-bar.hit .gl-barval{color:var(--green);}
-  .gl-datelabel{font-family:var(--mono); font-size:8px; color:var(--muted2); margin-top:6px; text-align:center; white-space:nowrap;}
+  .gl-labelsrow{display:flex; gap:10px; padding:6px 16px 0 4px;}
+  .gl-labelcol{display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0;}
+  .gl-datelabel{font-family:var(--mono); font-size:8px; color:var(--muted2); text-align:center; white-space:nowrap;}
   .gl-opplabel{font-family:var(--mono); font-size:8px; color:var(--muted2); white-space:nowrap;}
   .gl-empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:12px; padding:24px 0;}
 
@@ -1004,21 +1007,29 @@ function renderGraphView(){
     ? (modalProp === 'hr' ? `${seasonPrev.hrPct}%` : `avg ${seasonPrev[avgKey]}`)
     : '&mdash;';
 
-  const maxVal = Math.max(1, ...bundle.games.map(g => g[field]));
-  const threshPct = Math.min(96, (0.5 / maxVal) * 100);
+  const chartGames = winGames;
+  const maxVal = Math.max(1, ...chartGames.map(g => g[field]));
+  const threshPct = Math.min(92, (0.5 / maxVal) * 100);
 
   const chart = `
     <div class="gl-chartwrap">
       <div class="gl-chart">
-        <div class="gl-threshline" style="bottom:${threshPct}%"></div>
-        ${bundle.games.map(g => `
-          <div class="gl-col">
-            <div class="gl-bar ${g[field] >= 1 ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
-              <span class="gl-barval">${g[field]}</span>
-            </div>
-            <div class="gl-datelabel">${fmtShortDate(g.date)}</div>
-            <div class="gl-opplabel">${g.home ? 'vs' : '@'} ${g.opp}</div>
-          </div>`).join('')}
+        <div class="gl-barsarea">
+          <div class="gl-threshline" style="bottom:${threshPct}%"></div>
+          ${chartGames.map(g => `
+            <div class="gl-col">
+              <div class="gl-bar ${g[field] >= 1 ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
+                <span class="gl-barval">${g[field]}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="gl-labelsrow">
+          ${chartGames.map(g => `
+            <div class="gl-labelcol">
+              <div class="gl-datelabel">${fmtShortDate(g.date)}</div>
+              <div class="gl-opplabel">${g.home ? 'vs' : '@'} ${g.opp}</div>
+            </div>`).join('')}
+        </div>
       </div>
     </div>`;
 
@@ -1067,14 +1078,21 @@ function renderStatsView(){
   const chart = `
     <div class="gl-chartwrap">
       <div class="gl-chart">
-        ${games.map(g => `
-          <div class="gl-col">
-            <div class="gl-bar" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
-              <span class="gl-barval">${g[field]}</span>
-            </div>
-            <div class="gl-datelabel">${fmtShortDate(g.date)}</div>
-            <div class="gl-opplabel">${g.home ? 'vs' : '@'} ${g.opp}</div>
-          </div>`).join('')}
+        <div class="gl-barsarea">
+          ${games.map(g => `
+            <div class="gl-col">
+              <div class="gl-bar" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
+                <span class="gl-barval">${g[field]}</span>
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="gl-labelsrow">
+          ${games.map(g => `
+            <div class="gl-labelcol">
+              <div class="gl-datelabel">${fmtShortDate(g.date)}</div>
+              <div class="gl-opplabel">${g.home ? 'vs' : '@'} ${g.opp}</div>
+            </div>`).join('')}
+        </div>
       </div>
     </div>`;
 
