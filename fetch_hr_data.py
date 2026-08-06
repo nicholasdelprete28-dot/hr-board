@@ -230,7 +230,11 @@ def get_season_batting_stats():
                 pa_i = int(pa) if pa not in (None, "") else None
             except (TypeError, ValueError):
                 pa_i = None
-            out[pid] = {"name": name, "iso": iso, "avg": avg_f, "obp": obp_f, "pa": pa_i}
+            try:
+                slg_f = float(slg) if slg not in (None, "") else None
+            except (TypeError, ValueError):
+                slg_f = None
+            out[pid] = {"name": name, "iso": iso, "avg": avg_f, "obp": obp_f, "pa": pa_i, "slg": slg_f}
     return out
 
 
@@ -335,6 +339,9 @@ def get_gamelog(batter_id, season):
                 "runs": runs,
                 "rbi": rbi,
                 "hrr": hits + runs + rbi,
+                # Total bases: 1*singles + 2*2B + 3*3B + 4*HR, expanded so we
+                # don't need singles stored separately - feeds the TB board.
+                "tb": hits + doubles + 2 * triples + 3 * hr,
             })
         # The API normally returns these oldest-first already; sort defensively
         # so a change on MLB's end can't silently flip chart order left-to-right.
@@ -387,15 +394,18 @@ def window_stats(games):
     hits_games = sum(1 for g in games if g["hits"] >= 1)
     xbh_games = sum(1 for g in games if g["xbh"] >= 1)
     hrr_games = sum(1 for g in games if g.get("hrr", 0) >= 2)
+    tb_games = sum(1 for g in games if g.get("tb", 0) >= 2)
     return {
         "n": n,
         "hrPct": round(100 * hr_games / n, 1),
         "hitsPct": round(100 * hits_games / n, 1),
         "xbhPct": round(100 * xbh_games / n, 1),
         "hrrPct": round(100 * hrr_games / n, 1),
+        "tbPct": round(100 * tb_games / n, 1),
         "hitsAvg": round(sum(g["hits"] for g in games) / n, 2),
         "xbhAvg": round(sum(g["xbh"] for g in games) / n, 2),
         "hrrAvg": round(sum(g.get("hrr", 0) for g in games) / n, 2),
+        "tbAvg": round(sum(g.get("tb", 0) for g in games) / n, 2),
         "paAvg": round(sum(g["pa"] for g in games) / n, 2),
     }
 
@@ -418,6 +428,8 @@ def season_totals_to_window(totals):
         "hitsAvg": round(totals["hits"] / gp, 2),
         "xbhAvg": round((totals["doubles"] + totals["triples"] + totals["homeRuns"]) / gp, 2),
         "hrrAvg": round((totals["hits"] + totals.get("runs", 0) + totals.get("rbi", 0)) / gp, 2),
+        "tbAvg": round((totals["hits"] + totals["doubles"] + 2 * totals["triples"]
+                        + 3 * totals["homeRuns"]) / gp, 2),
         "paAvg": round(totals["plateAppearances"] / gp, 2),
     }
 
@@ -731,6 +743,71 @@ def compute_hrr_score(p):
     }
 
 
+# ---------------------------------------------------------------------------
+# TB (Total Bases, line 1.5 - needs 2+) board scoring. Sits between HR and
+# HRR in spirit: TB rewards BOTH contact (any hit counts for at least 1
+# base) and power (extra-base hits count for more), so it gets a heavier
+# power weight than HRR but still credits pure contact, unlike the HR
+# board which only cares about the ball leaving the park.
+#   Contact 25%    - AVG/OBP, same on-base signal as HRR but lower weight
+#   Power 30%      - barrel/EV/ISO/hard-hit% (PA-shrunk, same as the HR
+#                    board) PLUS season SLG, which is literally TB/AB -
+#                    the most direct rate-stat proxy for this exact prop
+#   Matchup 25%    - pitcher WHIP + platoon AVG, same pattern as the other
+#                    two boards
+#   Recent 10%     - share of the last 15 games clearing the 1.5 TB line
+#   Opportunity 10%- lineup slot bonus (same field as the HR board)
+# ---------------------------------------------------------------------------
+def compute_tb_score(p):
+    avg = p.get("avg") if p.get("avg") is not None else 0.240
+    obp = p.get("obp") if p.get("obp") is not None else 0.310
+    slg = p.get("slg") if p.get("slg") is not None else 0.390
+    barrel = p["barrel"] or 0
+    ev = p["ev"] or 85
+    iso = p["iso"] or 0
+    hardhit = p["hardhit"] or 0.30
+    whip = p["whip"] if p["whip"] is not None else 1.30
+    avgmix = avgmix_confidence_blend(p["avgmix"])
+    l15tb = p.get("l15tb") if p.get("l15tb") is not None else 0
+    lbonus = p["lbonus"] if p["lbonus"] is not None else 3
+
+    # Same gentle PA-weighted shrink as the HR board - these are the same
+    # small-sample-prone inputs, so they get the same protection here.
+    pw = power_sample_weight(p.get("pa"))
+    barrel_s = barrel * pw + LEAGUE_AVG_BARREL * (1 - pw)
+    ev_s = ev * pw + LEAGUE_AVG_EV * (1 - pw)
+    iso_s = iso * pw + LEAGUE_AVG_ISO * (1 - pw)
+    hardhit_s = hardhit * pw + LEAGUE_AVG_HARDHIT * (1 - pw)
+
+    conf = barrel_confidence(barrel_s, ev_s)
+    barrel_adj = barrel_s * conf
+
+    contact = (clamp01((avg - 0.200) / 0.150) + clamp01((obp - 0.280) / 0.170)) / 2
+
+    power = (clamp01(barrel_adj / 0.25) + clamp01((ev_s - 85) / 15)
+             + clamp01(iso_s / 0.4) + clamp01((hardhit_s - 0.3) / 0.4)
+             + clamp01((slg - 0.320) / 0.280)) / 5
+
+    whip_s = clamp01((whip - 0.9) / 0.9)
+    avgmix_s = clamp01(avgmix / 0.5)
+    matchup = (whip_s + avgmix_s) / 2
+
+    recent = clamp01(l15tb / 10)  # clearing the line ~10/15 games is elite
+
+    opportunity = clamp01((lbonus - 1) / 5)
+
+    score = contact * 25 + power * 30 + matchup * 25 + recent * 10 + opportunity * 10
+
+    return {
+        "tbScore": round(score, 1),
+        "tbContactPct": round(contact * 100, 1),
+        "tbPowerPct": round(power * 100, 1),
+        "tbMatchupPct": round(matchup * 100, 1),
+        "tbRecentPct": round(recent * 100, 1),
+        "tbOpportunityPct": round(opportunity * 100, 1),
+    }
+
+
 def main():
     print("Fetching today's schedule and probable pitchers...")
     games = get_todays_games()
@@ -808,6 +885,7 @@ def main():
                     "hardhit": sc.get("hardhit"),
                     "iso": bstats.get("iso"),
                     "pa": bstats.get("pa"),
+                    "slg": bstats.get("slg"),
                     "avg": bstats.get("avg"),
                     "obp": bstats.get("obp"),
                     "phr9": pitcher_stat["hr9"],
@@ -818,6 +896,7 @@ def main():
                     "l15hr": None,    # filled in pass 2
                     "l5hr": None,     # filled in pass 2
                     "l15hrr": None,   # filled in pass 2
+                    "l15tb": None,    # filled in pass 2
                     "risp": None,     # filled in pass 2
                     "lbonus": max(1, 9 - order_pos),
                     "hrrLbonus": hrr_lineup_bonus(order_pos),
@@ -856,16 +935,28 @@ def main():
         # signal to sit alongside l15hr's steadier 15-game base rate. See
         # compute_score()'s "recent" factor below for how the two blend.
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
-        # Games (not total combined count) clearing the 1.5 HRR line - feeds
-        # the HRR board's "recent form" the same way l15hr feeds the HR board.
+        # Games clearing the 1.5 HRR line (H+R+RBI >= 2) - feeds the HRR
+        # board's "recent form" the same way l15hr feeds the HR board.
         l15hrr = (sum(1 for g in games_this_year[-15:] if g["hrr"] >= 2)
                   if games_this_year else None)
+        # Games clearing the 1.5 TB line (2+ total bases) - same pattern,
+        # feeds the new TB board's recent-form factor.
+        l15tb = (sum(1 for g in games_this_year[-15:] if g["tb"] >= 2)
+                 if games_this_year else None)
+        # Raw last-15 hits count (not a "clear the line" count like the two
+        # above) - just the actual number of hits, for the HRR board's
+        # dedicated Hits display so it's not only implied inside the
+        # combined HRR line-clearing count.
+        l15hits = (sum(g["hits"] for g in games_this_year[-15:])
+                   if games_this_year else None)
         risp = get_risp_avg(batter_id)
 
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
         player_row["l5hr"] = l5hr
         player_row["l15hrr"] = l15hrr
+        player_row["l15tb"] = l15tb
+        player_row["l15hits"] = l15hits
         player_row["risp"] = risp
         player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
         player_row["split"] = 1 if (platoon_avg or 0) >= 0.260 else 0
@@ -895,6 +986,7 @@ def main():
     for player_row in players:
         player_row.update(compute_score(player_row))
         player_row.update(compute_hrr_score(player_row))
+        player_row.update(compute_tb_score(player_row))
 
     # Written sorted by the HR score for backward compatibility - the
     # frontend re-sorts client-side by hrrScore when the HRR tab is active.
