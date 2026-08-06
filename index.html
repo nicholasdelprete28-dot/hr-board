@@ -423,7 +423,8 @@
   </div>
   <div class="boardtoggle" id="boardToggle">
     <div class="boardtab active" data-board="hr">HR</div>
-    <div class="boardtab" data-board="hrr">HRR (H+R+RBI)</div>
+    <div class="boardtab" data-board="hrr">HRR</div>
+    <div class="boardtab" data-board="tb">TB</div>
   </div>
   <div class="hrcounter" id="hrcounter" style="display:none;">
     <span class="hrcounter-dot"></span>
@@ -477,6 +478,7 @@
       <div class="modal-proptab" data-prop="hits">Hits</div>
       <div class="modal-proptab" data-prop="xbh">Extra Base Hits</div>
       <div class="modal-proptab" data-prop="hrr">H+R+RBI</div>
+      <div class="modal-proptab" data-prop="tb">Total Bases</div>
     </div>
     <div class="modal-tabs">
       <div class="modal-tab active" data-view="graph">Graph</div>
@@ -517,6 +519,11 @@ const BOARD_CONFIG = {
     scoreField: 'hrrScore',
     subtitle: 'HRR = Hits + Runs + RBI combined, line 1.5 (needs 2+) &middot; on-base/matchup/RISP blended',
     sorts: { hrrScore: 'FAVORABILITY', l15hrr: 'RECENT FORM', obp: 'OBP' },
+  },
+  tb: {
+    scoreField: 'tbScore',
+    subtitle: 'TB = Total Bases, line 1.5 (needs 2+) &middot; contact and power blended evenly &middot; SLG-weighted',
+    sorts: { tbScore: 'FAVORABILITY', l15tb: 'RECENT FORM', slg: 'SLG' },
   },
 };
 function scoreField(){ return BOARD_CONFIG[boardMode].scoreField; }
@@ -982,7 +989,7 @@ function render(){
           tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
         { label: 'Season ISO', display: fmtNum(p.iso, 3),
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
-      ]) : renderStatboxes([
+      ]) : boardMode === 'hrr' ? renderStatboxes([
         { label: 'Season AVG', display: fmtNum(p.avg, 3),
           tier: statTier(p.avg, { good: 0.290, bad: 0.230, veryBad: 0.200 }) },
         { label: 'Season OBP', display: fmtNum(p.obp, 3),
@@ -991,7 +998,9 @@ function render(){
           tier: statTier(p.avgmix, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
         { label: 'RISP AVG', display: fmtNum(p.risp, 3),
           tier: statTier(p.risp, { good: 0.300, bad: 0.220, veryBad: 0.180 }) },
-        { label: 'L15 HRR Hits', display: p.l15hrr == null ? 'N/A' : p.l15hrr,
+        { label: 'L15 Hits', display: p.l15hits == null ? 'N/A' : p.l15hits,
+          tier: statTier(p.l15hits, { good: 8 }) },
+        { label: 'L15 HRR (1.5)', display: p.l15hrr == null ? 'N/A' : p.l15hrr,
           tier: statTier(p.l15hrr, { good: 7, bad: 3, veryBad: 1 }) },
         { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
@@ -999,6 +1008,25 @@ function render(){
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
         { label: 'Lineup Slot Bonus', display: p.hrrLbonus == null ? 'N/A' : '+' + p.hrrLbonus,
           tier: statTier(p.hrrLbonus, { good: 6, bad: 2 }) },
+      ]) : renderStatboxes([
+        { label: 'Season AVG', display: fmtNum(p.avg, 3),
+          tier: statTier(p.avg, { good: 0.290, bad: 0.230, veryBad: 0.200 }) },
+        { label: 'Season SLG', display: fmtNum(p.slg, 3),
+          tier: statTier(p.slg, { good: 0.470, bad: 0.380, veryBad: 0.340 }) },
+        { label: 'AVG vs Mix', display: fmtNum(p.avgmix, 3),
+          tier: statTier(p.avgmix, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
+        { label: 'Exit Velo', display: fmtNum(p.ev, 1),
+          tier: statTier(p.ev, { good: 91, bad: 86, veryBad: 83 }) },
+        { label: 'L15 TB (2+)', display: p.l15tb == null ? 'N/A' : p.l15tb,
+          tier: statTier(p.l15tb, { good: 8, bad: 3, veryBad: 1 }) },
+        { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
+          tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
+        { label: 'Barrel%', display: fmtPct(p.barrel),
+          tier: statTier(p.barrel, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
+        { label: 'Season ISO', display: fmtNum(p.iso, 3),
+          tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
+        { label: 'Lineup Slot Bonus', display: '+' + p.lbonus,
+          tier: statTier(p.lbonus, { good: 6, bad: 2 }) },
       ]);
     return `
     <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" data-player-id="${p.playerId ?? ''}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
@@ -1017,7 +1045,7 @@ function render(){
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
           <div class="scoreval">${fmtNum(cardScore, 1)}%</div>
-          <div class="scorelabel">${boardMode === 'hrr' ? 'HRR' : 'HR'} favorability</div>
+          <div class="scorelabel">${boardMode.toUpperCase()} favorability</div>
         </div>
       </div>
       <div class="chips">
@@ -1145,12 +1173,12 @@ let modalStatsMetric = 'pa';    // 'pa' | 'hits' | 'xbh' - drives the Stats tab
 let modalStatsMode = 'avg';     // 'avg' | 'median'
 let modalView = 'graph';        // 'graph' | 'stats'
 
-const PROP_FIELD = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr' };
-const PROP_LABEL = { hr: 'Home Runs', hits: 'Hits', xbh: 'Extra Base Hits', hrr: 'Hits+Runs+RBI (1.5 line)' };
+const PROP_FIELD = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr', tb: 'tb' };
+const PROP_LABEL = { hr: 'Home Runs', hits: 'Hits', xbh: 'Extra Base Hits', hrr: 'Hits+Runs+RBI (1.5 line)', tb: 'Total Bases (1.5 line)' };
 // The "line" each prop needs to clear to count as a hit game. HR/Hits/XBH
 // are standard 0.5 lines (any 1+ counts). HRR is a real, commonly-offered
 // prop line of 1.5 combined Hits+Runs+RBI, so it needs 2+ to clear.
-const PROP_THRESHOLD = { hr: 0.5, hits: 0.5, xbh: 0.5, hrr: 1.5 };
+const PROP_THRESHOLD = { hr: 0.5, hits: 0.5, xbh: 0.5, hrr: 1.5, tb: 1.5 };
 const STATS_FIELD = { pa: 'pa', hits: 'hits', xbh: 'xbh' };
 const STATS_LABEL = { pa: 'Plate Appearances', hits: 'Hits', xbh: 'Extra Base Hits' };
 
@@ -1184,7 +1212,7 @@ function medianFromGames(games, field){
 
 function openPlayerModal(p){
   modalPlayer = p;
-  modalProp = boardMode === 'hrr' ? 'hrr' : 'hr';
+  modalProp = boardMode === 'hrr' ? 'hrr' : (boardMode === 'tb' ? 'tb' : 'hr');
   modalWindow = 'l10';
   modalStatsMetric = 'pa';
   modalStatsMode = 'avg';
@@ -1242,7 +1270,7 @@ function renderGraphView(){
 
   const seasonCur = bundle.seasonCur;
   const seasonPrev = bundle.seasonPrev;
-  const propKeyMap = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr' };
+  const propKeyMap = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr', tb: 'tb' };
   const pctKey = modalProp === 'hr' ? 'hrPct' : `${propKeyMap[modalProp]}Pct`;
   const avgKey = modalProp === 'hr' ? 'hrPct' : `${propKeyMap[modalProp]}Avg`;
   const curRow = seasonCur
