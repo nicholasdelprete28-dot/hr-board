@@ -338,6 +338,19 @@ let sortKey = 'score';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
+
+// Returns today's date as YYYY-MM-DD using the BROWSER'S LOCAL timezone,
+// not UTC. new Date().toISOString() always gives the UTC date, which in
+// the evening in US timezones has often already rolled into tomorrow -
+// that mismatch was causing the live-status check to ask MLB about the
+// wrong calendar day entirely.
+function getLocalDateString(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 let selectedTier = '';
 let selectedStatus = '';
 
@@ -405,7 +418,7 @@ async function applyLiveGameStatus(){
   // so games that have since gone Live or Final grey out/hide correctly
   // without needing the whole backend pipeline to re-run.
   try {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = getLocalDateString();
     const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
     if (!res.ok) {
       console.error('[Going Yard] live status fetch failed with HTTP', res.status, '- games will show stale status from the last backend run.');
