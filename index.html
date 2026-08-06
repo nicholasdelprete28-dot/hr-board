@@ -263,6 +263,84 @@
   .statbox.cold .sbval{color:var(--red);}
 
   .empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:13px; padding:40px 0;}
+  .card{cursor:pointer;}
+
+  /* ---- Player detail modal ---- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,8,7,0.75); backdrop-filter:blur(2px);
+    z-index:200; display:flex; align-items:flex-end; justify-content:center;
+  }
+  .modal-panel{
+    background:var(--bg); width:100%; max-width:var(--content-width);
+    max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    border-radius:20px 20px 0 0; border:1px solid var(--line); border-bottom:none;
+    padding:16px 16px 30px; box-shadow:0 -10px 40px rgba(0,0,0,0.5);
+  }
+  .modal-header{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:16px;}
+  .modal-close{
+    background:var(--surface2); border:1px solid var(--line); border-radius:50%;
+    color:var(--muted); font-size:20px; line-height:1; width:30px; height:30px;
+    cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  }
+  .modal-player{display:flex; align-items:center; gap:12px; min-width:0;}
+  .modal-headshot{
+    width:56px; height:56px; border-radius:50%; overflow:hidden; position:relative;
+    border:2px solid var(--line); flex-shrink:0; background:#1a201c;
+  }
+  .modal-headshot img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:50% 15%;}
+  .modal-headshot .init{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:18px; color:#fff;}
+  .modal-name{font-family:var(--display); font-weight:700; font-size:18px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .modal-meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
+
+  .modal-proptabs{display:flex; gap:6px; margin-bottom:10px;}
+  .modal-proptab{
+    flex:1; text-align:center; padding:8px 4px; border-radius:9px; cursor:pointer;
+    font-family:var(--body); font-weight:600; font-size:12px; color:var(--muted);
+    background:var(--surface2); border:1px solid var(--line);
+  }
+  .modal-proptab.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
+
+  .modal-tabs{display:flex; gap:4px; background:var(--surface2); border-radius:10px; padding:4px; margin-bottom:14px;}
+  .modal-tab{flex:1; text-align:center; padding:9px; border-radius:8px; cursor:pointer; font-family:var(--body); font-weight:600; font-size:13px; color:var(--muted);}
+  .modal-tab.active{background:var(--bg); color:var(--gold);}
+
+  .gl-windowrow{display:flex; gap:8px; margin-bottom:14px;}
+  .gl-winbtn{flex:1; text-align:center; background:var(--surface2); border:1px solid var(--line); border-radius:9px; padding:8px 4px; font-family:var(--mono); font-size:10px; color:var(--muted); cursor:pointer;}
+  .gl-winbtn .gl-winval{display:block; font-size:14px; font-weight:700; margin-top:3px; color:var(--text);}
+  .gl-winbtn.active{border-color:var(--green); color:var(--green);}
+  .gl-winbtn.active .gl-winval{color:var(--green);}
+
+  .gl-splitbox{background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:16px;}
+  .gl-splitbox-title{font-family:var(--body); font-weight:700; font-size:14px; margin-bottom:12px;}
+  .gl-splitbox-main{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;}
+  .gl-splitbox-pct{font-family:var(--mono); font-weight:700; font-size:26px; color:var(--green);}
+  .gl-splitbox-sub{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
+  .gl-splitbox-avgs{font-family:var(--mono); font-size:11px; color:var(--muted); text-align:right;}
+  .gl-splitbox-avgs b{color:var(--text);}
+  .gl-splitgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:7px 18px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); font-family:var(--mono); font-size:11.5px; color:var(--muted);}
+  .gl-splitgrid div{display:flex; justify-content:space-between;}
+  .gl-splitgrid b{color:var(--text);}
+
+  .gl-chartwrap{overflow-x:auto; margin-top:16px; padding-bottom:4px;}
+  .gl-chart{display:flex; align-items:flex-end; gap:10px; height:130px; position:relative; min-width:min-content; padding:20px 4px 0;}
+  .gl-threshline{position:absolute; left:0; right:0; border-top:1px dashed var(--muted2); z-index:0;}
+  .gl-col{display:flex; flex-direction:column; align-items:center; width:32px; flex-shrink:0; height:100%; justify-content:flex-end; position:relative; z-index:1;}
+  .gl-bar{width:20px; border-radius:4px 4px 0 0; background:#2a322c; position:relative; min-height:2px;}
+  .gl-bar.hit{background:var(--green);}
+  .gl-barval{position:absolute; top:-16px; left:50%; transform:translateX(-50%); font-family:var(--mono); font-size:10px; color:var(--muted); white-space:nowrap;}
+  .gl-bar.hit .gl-barval{color:var(--green);}
+  .gl-datelabel{font-family:var(--mono); font-size:8px; color:var(--muted2); margin-top:6px; text-align:center; white-space:nowrap;}
+  .gl-opplabel{font-family:var(--mono); font-size:8px; color:var(--muted2); white-space:nowrap;}
+  .gl-empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:12px; padding:24px 0;}
+
+  .gl-statstabs{display:flex; gap:8px; margin-bottom:10px;}
+  .gl-statstab{flex:1; text-align:center; padding:9px; border-radius:9px; border:1px solid var(--line); background:var(--surface2); cursor:pointer; font-family:var(--body); font-weight:600; font-size:12px; color:var(--muted);}
+  .gl-statstab.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
+  .gl-avgmedian{display:flex; gap:6px; margin:12px 0 4px; justify-content:flex-end;}
+  .gl-avgmedian button{padding:6px 12px; border-radius:8px; border:1px solid var(--line); background:var(--surface2); color:var(--muted); font-family:var(--mono); font-size:10px; cursor:pointer;}
+  .gl-avgmedian button.active{background:var(--gold); color:#0a0d0b; border-color:var(--gold);}
+  .gl-statsbig{font-family:var(--mono); font-weight:700; font-size:26px; color:var(--text); margin-top:6px;}
+  .gl-statslabel{font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.5px;}
 
   footer{
     max-width:var(--content-width); margin:24px auto 0; padding:0 4px;
@@ -323,6 +401,25 @@
   </footer>
 </div>
 
+<div class="modal-overlay" id="playerModal" style="display:none;">
+  <div class="modal-panel" id="modalPanel">
+    <div class="modal-header">
+      <div class="modal-player" id="modalPlayerHeader"></div>
+      <div class="modal-close" id="modalClose">&times;</div>
+    </div>
+    <div class="modal-proptabs" id="modalPropTabs">
+      <div class="modal-proptab active" data-prop="hr">Home Runs</div>
+      <div class="modal-proptab" data-prop="hits">Hits</div>
+      <div class="modal-proptab" data-prop="xbh">Extra Base Hits</div>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" data-view="graph">Graph</div>
+      <div class="modal-tab" data-view="stats">Stats</div>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
 <script>
 // ---------------------------------------------------------------------
 // EDIT THIS LINE: paste your GitHub raw URL for players.json here.
@@ -339,20 +436,17 @@ let sortDesc = true;
 let query = '';
 let selectedGame = null;
 
-// Returns "today"'s date as YYYY-MM-DD anchored to US EASTERN time, not the
-// viewer's own device timezone. MLB's schedule day boundary is Eastern-based
-// (same reason the backend script computes TODAY in America/New_York) - using
-// the browser's local timezone instead meant the live-status check would
-// silently start asking MLB about the WRONG calendar day the moment the
-// viewer's local clock crossed midnight (or, for non-Eastern viewers, even
-// earlier in the evening), at which point today's games no longer appear in
-// that day's schedule response and every gameStatus freezes at whatever it
-// was on the last backend run instead of updating to Live/Final.
+// Returns today's date as YYYY-MM-DD using the BROWSER'S LOCAL timezone,
+// not UTC. new Date().toISOString() always gives the UTC date, which in
+// the evening in US timezones has often already rolled into tomorrow -
+// that mismatch was causing the live-status check to ask MLB about the
+// wrong calendar day entirely.
 function getLocalDateString(){
-  // en-CA formats as YYYY-MM-DD directly, so no manual padding/reassembly needed.
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
-  }).format(new Date());
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 let selectedTier = '';
 let selectedStatus = '';
@@ -710,7 +804,7 @@ function render(){
       ? `<span class="badge-homer">&#9917; ${p.actualHR} HR TODAY</span>`
       : '';
     return `
-    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
+    <div class="card ${tier} ${isLive ? 'card-live' : ''}" data-idx="${i}" data-player-id="${p.playerId ?? ''}" style="border-left:4px solid ${teamColor}; background-image:linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%); --card-glow:${teamColor}80;">
       <div class="row1">
         <div class="headshot-outer">
           <div class="headshot-wrap" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
@@ -782,7 +876,254 @@ document.querySelectorAll('.sortbtn').forEach(btn => {
   });
 });
 
+document.getElementById('list').addEventListener('click', (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const pid = card.dataset.playerId;
+  if (!pid) return; // no MLBAM id on this row - nothing to look up a game log by
+  const p = players.find(pp => String(pp.playerId) === pid);
+  if (p) openPlayerModal(p);
+});
+
 loadPlayers();
+</script>
+
+<script>
+// ---------------------------------------------------------------------
+// Player detail modal: Graph tab (per-game HR/Hits/XBH bar chart vs a
+// binary threshold, plus L5/L10/L20/season split %s) and Stats tab
+// (PA/Hits/XBH averages with a raw-count bar chart) - built entirely from
+// the p.gamelog bundle the backend script precomputes each run, so opening
+// a card is instant with no extra network calls.
+// ---------------------------------------------------------------------
+let modalPlayer = null;
+let modalProp = 'hr';           // 'hr' | 'hits' | 'xbh' - drives the Graph tab
+let modalWindow = 'l10';        // 'l5' | 'l10' | 'l20' - which window headlines the Graph split box
+let modalStatsMetric = 'pa';    // 'pa' | 'hits' | 'xbh' - drives the Stats tab
+let modalStatsMode = 'avg';     // 'avg' | 'median'
+let modalView = 'graph';        // 'graph' | 'stats'
+
+const PROP_FIELD = { hr: 'hr', hits: 'hits', xbh: 'xbh' };
+const PROP_LABEL = { hr: 'Home Runs', hits: 'Hits', xbh: 'Extra Base Hits' };
+const STATS_FIELD = { pa: 'pa', hits: 'hits', xbh: 'xbh' };
+const STATS_LABEL = { pa: 'Plate Appearances', hits: 'Hits', xbh: 'Extra Base Hits' };
+
+function fmtShortDate(iso){
+  if (!iso) return '';
+  const parts = iso.split('-');
+  if (parts.length !== 3) return iso;
+  return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
+}
+function windowGames(bundle, key){
+  const g = bundle.games || [];
+  if (key === 'l5') return g.slice(-5);
+  if (key === 'l10') return g.slice(-10);
+  return g.slice(-20);
+}
+function pctFromGames(games, field){
+  if (!games || !games.length) return null;
+  const made = games.filter(g => g[field] >= 1).length;
+  return { pct: Math.round(1000 * made / games.length) / 10, made, n: games.length };
+}
+function avgFromGames(games, field){
+  if (!games || !games.length) return null;
+  return games.reduce((a, g) => a + g[field], 0) / games.length;
+}
+function medianFromGames(games, field){
+  if (!games || !games.length) return null;
+  const vals = games.map(g => g[field]).sort((a, b) => a - b);
+  const mid = Math.floor(vals.length / 2);
+  return vals.length % 2 ? vals[mid] : (vals[mid - 1] + vals[mid]) / 2;
+}
+
+function openPlayerModal(p){
+  modalPlayer = p;
+  modalProp = 'hr';
+  modalWindow = 'l10';
+  modalStatsMetric = 'pa';
+  modalStatsMode = 'avg';
+  modalView = 'graph';
+  document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t.dataset.prop === modalProp));
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t.dataset.view === modalView));
+  renderModalHeader(p);
+  renderModalBody();
+  document.getElementById('playerModal').style.display = 'flex';
+}
+function closePlayerModal(){
+  document.getElementById('playerModal').style.display = 'none';
+  modalPlayer = null;
+}
+
+function renderModalHeader(p){
+  const teamColor = TEAM_COLORS[p.team] || '#3a4038';
+  const initials = p.player.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const headshotImg = p.playerId
+    ? `<img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
+    : '';
+  document.getElementById('modalPlayerHeader').innerHTML = `
+    <div class="modal-headshot" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
+      <div class="init">${initials}</div>
+      ${headshotImg}
+    </div>
+    <div>
+      <div class="modal-name">${p.player}</div>
+      <div class="modal-meta">${matchupWithLogos(p.game, 12)} &middot; vs ${p.pitcher} (${p.hand})</div>
+    </div>`;
+}
+
+function renderModalBody(){
+  const body = document.getElementById('modalBody');
+  body.innerHTML = modalView === 'graph' ? renderGraphView() : renderStatsView();
+  wireModalBodyEvents();
+}
+
+function renderGraphView(){
+  const p = modalPlayer;
+  const bundle = p.gamelog;
+  if (!bundle || !bundle.games || !bundle.games.length) {
+    return `<div class="gl-empty">No game log yet for ${p.player} this season.</div>`;
+  }
+  const field = PROP_FIELD[modalProp];
+  const label = PROP_LABEL[modalProp];
+  const l5 = pctFromGames(windowGames(bundle, 'l5'), field);
+  const l10 = pctFromGames(windowGames(bundle, 'l10'), field);
+  const l20 = pctFromGames(windowGames(bundle, 'l20'), field);
+  const winPct = { l5, l10, l20 }[modalWindow];
+  const winGames = windowGames(bundle, modalWindow);
+  const avg = avgFromGames(winGames, field);
+  const med = medianFromGames(winGames, field);
+
+  const seasonCur = bundle.seasonCur;
+  const seasonPrev = bundle.seasonPrev;
+  const pctKey = modalProp === 'hr' ? 'hrPct' : (modalProp === 'hits' ? 'hitsPct' : 'xbhPct');
+  const avgKey = modalProp === 'hr' ? 'hrPct' : (modalProp === 'hits' ? 'hitsAvg' : 'xbhAvg');
+  const curRow = seasonCur
+    ? (seasonCur[pctKey] != null ? `${seasonCur[pctKey]}%` : `avg ${seasonCur[avgKey]}`)
+    : '&mdash;';
+  const prevRow = seasonPrev
+    ? (modalProp === 'hr' ? `${seasonPrev.hrPct}%` : `avg ${seasonPrev[avgKey]}`)
+    : '&mdash;';
+
+  const maxVal = Math.max(1, ...bundle.games.map(g => g[field]));
+  const threshPct = Math.min(96, (0.5 / maxVal) * 100);
+
+  const chart = `
+    <div class="gl-chartwrap">
+      <div class="gl-chart">
+        <div class="gl-threshline" style="bottom:${threshPct}%"></div>
+        ${bundle.games.map(g => `
+          <div class="gl-col">
+            <div class="gl-bar ${g[field] >= 1 ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
+              <span class="gl-barval">${g[field]}</span>
+            </div>
+            <div class="gl-datelabel">${fmtShortDate(g.date)}</div>
+            <div class="gl-opplabel">${g.home ? 'vs' : '@'} ${g.opp}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  return `
+    <div class="gl-windowrow">
+      ${['l5', 'l10', 'l20'].map(k => `
+        <div class="gl-winbtn ${modalWindow === k ? 'active' : ''}" data-window="${k}">
+          ${k.toUpperCase()}
+          <span class="gl-winval">${{ l5, l10, l20 }[k] ? { l5, l10, l20 }[k].pct + '%' : '&mdash;'}</span>
+        </div>`).join('')}
+    </div>
+    <div class="gl-splitbox">
+      <div class="gl-splitbox-title">${p.player} &ndash; ${label}</div>
+      <div class="gl-splitbox-main">
+        <div>
+          <div class="gl-splitbox-pct">${winPct ? winPct.pct + '%' : 'N/A'}</div>
+          <div class="gl-splitbox-sub">Last ${winGames.length}${winPct ? ' &middot; ' + winPct.made + ' of ' + winPct.n : ''}</div>
+        </div>
+        <div class="gl-splitbox-avgs">
+          <div>Average: <b>${avg != null ? avg.toFixed(2) : 'N/A'}</b></div>
+          <div>Median: <b>${med != null ? med.toFixed(2) : 'N/A'}</b></div>
+        </div>
+      </div>
+      <div class="gl-splitgrid">
+        <div><span>L5</span><b>${l5 ? l5.pct + '%' : '&mdash;'}</b></div>
+        <div><span>L20</span><b>${l20 ? l20.pct + '%' : '&mdash;'}</b></div>
+        <div><span>${bundle.yearCur} Season</span><b>${curRow}</b></div>
+        <div><span>${bundle.yearPrev} Season</span><b>${prevRow}</b></div>
+      </div>
+    </div>
+    ${chart}`;
+}
+
+function renderStatsView(){
+  const p = modalPlayer;
+  const bundle = p.gamelog;
+  if (!bundle || !bundle.games || !bundle.games.length) {
+    return `<div class="gl-empty">No game log yet for ${p.player} this season.</div>`;
+  }
+  const field = STATS_FIELD[modalStatsMetric];
+  const label = STATS_LABEL[modalStatsMetric];
+  const games = bundle.games;
+  const value = modalStatsMode === 'avg' ? avgFromGames(games, field) : medianFromGames(games, field);
+  const maxVal = Math.max(1, ...games.map(g => g[field]));
+
+  const chart = `
+    <div class="gl-chartwrap">
+      <div class="gl-chart">
+        ${games.map(g => `
+          <div class="gl-col">
+            <div class="gl-bar" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
+              <span class="gl-barval">${g[field]}</span>
+            </div>
+            <div class="gl-datelabel">${fmtShortDate(g.date)}</div>
+            <div class="gl-opplabel">${g.home ? 'vs' : '@'} ${g.opp}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  return `
+    <div class="gl-statstabs">
+      ${['pa', 'hits', 'xbh'].map(k => `<div class="gl-statstab ${modalStatsMetric === k ? 'active' : ''}" data-metric="${k}">${STATS_LABEL[k]}</div>`).join('')}
+    </div>
+    <div class="gl-splitbox">
+      <div class="gl-splitbox-title">${p.player} &ndash; ${label} (Last ${games.length})</div>
+      <div class="gl-avgmedian">
+        <button class="${modalStatsMode === 'avg' ? 'active' : ''}" data-mode="avg">Average</button>
+        <button class="${modalStatsMode === 'median' ? 'active' : ''}" data-mode="median">Median</button>
+      </div>
+      <div class="gl-statsbig">${value != null ? value.toFixed(2) : 'N/A'}</div>
+      <div class="gl-statslabel">${modalStatsMode}</div>
+    </div>
+    ${chart}`;
+}
+
+function wireModalBodyEvents(){
+  document.querySelectorAll('.gl-winbtn').forEach(btn => {
+    btn.addEventListener('click', () => { modalWindow = btn.dataset.window; renderModalBody(); });
+  });
+  document.querySelectorAll('.gl-statstab').forEach(btn => {
+    btn.addEventListener('click', () => { modalStatsMetric = btn.dataset.metric; renderModalBody(); });
+  });
+  document.querySelectorAll('.gl-avgmedian button').forEach(btn => {
+    btn.addEventListener('click', () => { modalStatsMode = btn.dataset.mode; renderModalBody(); });
+  });
+}
+
+document.querySelectorAll('.modal-proptab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    modalProp = tab.dataset.prop;
+    document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t === tab));
+    renderModalBody();
+  });
+});
+document.querySelectorAll('.modal-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    modalView = tab.dataset.view;
+    document.querySelectorAll('.modal-tab').forEach(t => t.classList.toggle('active', t === tab));
+    renderModalBody();
+  });
+});
+document.getElementById('modalClose').addEventListener('click', closePlayerModal);
+document.getElementById('playerModal').addEventListener('click', (e) => {
+  if (e.target.id === 'playerModal') closePlayerModal();
+});
 </script>
 
 </body>
