@@ -339,17 +339,20 @@ let sortDesc = true;
 let query = '';
 let selectedGame = null;
 
-// Returns today's date as YYYY-MM-DD using the BROWSER'S LOCAL timezone,
-// not UTC. new Date().toISOString() always gives the UTC date, which in
-// the evening in US timezones has often already rolled into tomorrow -
-// that mismatch was causing the live-status check to ask MLB about the
-// wrong calendar day entirely.
+// Returns "today"'s date as YYYY-MM-DD anchored to US EASTERN time, not the
+// viewer's own device timezone. MLB's schedule day boundary is Eastern-based
+// (same reason the backend script computes TODAY in America/New_York) - using
+// the browser's local timezone instead meant the live-status check would
+// silently start asking MLB about the WRONG calendar day the moment the
+// viewer's local clock crossed midnight (or, for non-Eastern viewers, even
+// earlier in the evening), at which point today's games no longer appear in
+// that day's schedule response and every gameStatus freezes at whatever it
+// was on the last backend run instead of updating to Live/Final.
 function getLocalDateString(){
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  // en-CA formats as YYYY-MM-DD directly, so no manual padding/reassembly needed.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
 }
 let selectedTier = '';
 let selectedStatus = '';
