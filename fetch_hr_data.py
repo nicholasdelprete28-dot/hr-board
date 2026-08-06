@@ -32,6 +32,7 @@ trusting the automated schedule.
 import csv
 import io
 import json
+import math
 import time
 import datetime
 from zoneinfo import ZoneInfo
@@ -178,8 +179,27 @@ def get_pitcher_hand_and_id(probable_pitcher):
     return probable_pitcher.get("id"), probable_pitcher.get("pitchHand", {}).get("code", "R")
 
 
+def _parse_innings(ip_str):
+    """MLB reports innings pitched as a string like '142.1' where the part
+    after the decimal is OUTS recorded (0, 1, or 2) in that partial inning,
+    NOT tenths of an inning - '142.1' means 142 and 1/3 innings, not
+    142.1 innings. This converts it to a true decimal value."""
+    if ip_str in (None, ""):
+        return None
+    whole_str, _, frac_str = str(ip_str).partition(".")
+    try:
+        whole = int(whole_str)
+        thirds = int(frac_str) if frac_str else 0
+    except ValueError:
+        return None
+    return whole + thirds / 3
+
+
 def get_season_pitching_stats():
-    """WHIP and HR/9 for every pitcher with a decision this season."""
+    """WHIP, HR/9, K/9, BB/9, ERA, and season K/IP/starts totals for every
+    pitcher with a decision this season. WHIP/HR9 feed the HR/HRR/TB
+    boards' pitcher-matchup factor (unchanged from before); K9/ERA/season
+    totals feed the new K (strikeouts) board."""
     data = statsapi_get("stats", {
         "stats": "season", "group": "pitching", "season": YEAR, "sportId": 1, "limit": 500
     })
@@ -188,11 +208,77 @@ def get_season_pitching_stats():
         pid = split.get("player", {}).get("id")
         stat = split.get("stat", {})
         if pid and stat.get("whip") is not None:
+            ip = _parse_innings(stat.get("inningsPitched"))
+            gs = int(stat.get("gamesStarted", 0) or 0)
+            era_raw = stat.get("era")
+            try:
+                era = float(era_raw) if era_raw not in (None, "", "-", "inf") else 4.20
+            except (TypeError, ValueError):
+                era = 4.20
             out[pid] = {
                 "whip": float(stat["whip"]),
                 "hr9": float(stat.get("homeRunsPer9", 1.2) or 1.2),
+                "k9": float(stat.get("strikeoutsPer9Inn", 8.0) or 8.0),
+                "bb9": float(stat.get("walksPer9Inn", 3.2) or 3.2),
+                "era": era,
+                "seasonK": int(stat.get("strikeOuts", 0) or 0),
+                "ip": ip,
+                "gamesStarted": gs,
+                "ipPerStart": round(ip / gs, 1) if ip and gs else None,
             }
     return out
+
+
+def get_team_k_rate():
+    """Season strikeout rate (K% of plate appearances) for every team's
+    LINEUP - not the team's own pitching staff. This is the K board's
+    matchup signal: a pitcher facing a free-swinging, high-strikeout-rate
+    lineup has a real edge, same idea as a batter facing a hittable
+    pitcher on the other boards."""
+    try:
+        data = statsapi_get("teams/stats", {
+            "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1
+        })
+        out = {}
+        for split in data.get("stats", [{}])[0].get("splits", []):
+            team_id = split.get("team", {}).get("id")
+            stat = split.get("stat", {})
+            so = stat.get("strikeOuts")
+            pa = stat.get("plateAppearances")
+            if team_id and so is not None and pa:
+                out[team_id] = round(int(so) / int(pa), 3)
+        return out
+    except Exception:
+        return {}
+
+
+def get_pitcher_gamelog(pitcher_id, season):
+    """Every start this pitcher has made in `season`, oldest first, with
+    strikeouts and innings pitched per start - feeds the K board's
+    recent-form (last-3-starts) number. Relief appearances (if any) are
+    skipped so a spot-start reliever's low-inning outing doesn't dilute
+    the "as a starter" read."""
+    try:
+        data = statsapi_get(f"people/{pitcher_id}/stats", {
+            "stats": "gameLog", "group": "pitching", "season": season
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        starts = []
+        for s in splits:
+            stat = s.get("stat", {})
+            opp = s.get("opponent", {}) or {}
+            if not stat.get("gamesStarted"):
+                continue
+            starts.append({
+                "date": s.get("date"),
+                "opp": team_abbr(opp) if opp else "",
+                "k": int(stat.get("strikeOuts", 0) or 0),
+                "ip": _parse_innings(stat.get("inningsPitched")),
+            })
+        starts.sort(key=lambda g: g["date"] or "")
+        return starts
+    except Exception:
+        return []
 
 
 def get_season_batting_stats():
@@ -808,6 +894,101 @@ def compute_tb_score(p):
     }
 
 
+# ---------------------------------------------------------------------------
+# K (Strikeouts) board scoring, v2 - the first PITCHER-side board. Unlike
+# the three batter boards, which all share one fixed universal line (1.5),
+# a real strikeout prop line varies enormously by pitcher - an ace's line
+# might be 7.5, a backend starter's might be 3.5. So instead of scoring
+# against a fixed threshold, this computes an actual per-pitcher projection
+# and derives THAT pitcher's own line from it, then uses a Poisson model
+# (the standard statistical model for a bounded count stat like strikeouts
+# in a start) to get a genuine probability of clearing it - that
+# probability IS the headline "favorability" number, not an arbitrary
+# weighted composite like the other boards use.
+#
+# Projection = today's expected innings x this pitcher's own K rate per
+# inning x a matchup multiplier from the opposing lineup's strikeout rate
+# (dampened 40% so one extreme opponent number doesn't swing it too hard),
+# with a small, capped nudge from recent form.
+# ---------------------------------------------------------------------------
+LEAGUE_AVG_TEAM_K_RATE = 0.220
+
+
+def poisson_over_prob(mean, line):
+    """P(X > line) for X ~ Poisson(mean). `line` is a half-integer (e.g.
+    4.5) so "over" is unambiguous: it means X >= the next whole number up
+    (5, 6, 7...), with no possibility of a push. Built as an iterative
+    running product rather than computing factorials directly, since a
+    season's worth of strikeouts can make factorial(n) astronomically
+    large - this way is numerically stable for any realistic mean."""
+    if mean is None or mean <= 0:
+        return None
+    threshold = math.floor(line) + 1  # smallest whole count that clears the line
+    cdf = math.exp(-mean)  # P(X=0)
+    term = cdf
+    for k in range(1, threshold):
+        term *= mean / k
+        cdf += term
+    return max(0.0, min(1.0, 1 - cdf))
+
+
+def compute_k_score(p):
+    k9 = p.get("k9") if p.get("k9") is not None else 8.0
+    era = p.get("era") if p.get("era") is not None else 4.20
+    opp_k_rate = p.get("oppKRate") if p.get("oppKRate") is not None else LEAGUE_AVG_TEAM_K_RATE
+    l3k = p.get("l3k") if p.get("l3k") is not None else 0
+    ip_per_start = p.get("ipPerStart") if p.get("ipPerStart") is not None else 5.0
+
+    # Matchup multiplier, dampened to 40% of the raw ratio so a lineup
+    # that's wildly above/below league-average K rate doesn't swing the
+    # projection further than a real matchup edge should.
+    matchup_mult = 1 + ((opp_k_rate / LEAGUE_AVG_TEAM_K_RATE) - 1) * 0.4
+    proj_k = ip_per_start * (k9 / 9) * matchup_mult
+
+    # Small, capped recent-form nudge: if the last 3 starts ran meaningfully
+    # hotter or colder than what the season rate alone would predict for 3
+    # starts, shade the projection toward that - capped at +/-15% so a
+    # single monster or disaster start can't dominate the projection.
+    expected_l3 = proj_k * 3
+    if expected_l3 > 0:
+        nudge = clamp01((l3k - expected_l3) / (expected_l3 * 1.5) + 0.5) - 0.5
+        proj_k *= (1 + nudge * 0.3)  # nudge in [-0.5,0.5] -> swing in [-15%,+15%]
+
+    proj_k = max(0.5, round(proj_k, 2))
+
+    # Model line: nearest half-integer AT OR BELOW the projection - the
+    # standard prop-betting convention (half-lines can't push), and it
+    # deliberately sits at/under the projected mean so the "over"
+    # probability comes out meaningfully above a flat coinflip rather than
+    # exactly 50/50 for every single pitcher, same way a real sportsbook's
+    # opening number tends to sit slightly favorable-to-the-over on a
+    # model projection.
+    model_line = math.floor(proj_k * 2) / 2
+    if model_line < 0.5:
+        model_line = 0.5
+
+    over_prob = poisson_over_prob(proj_k, model_line)
+    score = round((over_prob if over_prob is not None else 0.5) * 100, 1)
+
+    # Sub-factor percentages, kept as supplementary "why" context shown on
+    # the card - they no longer drive the headline score directly, the
+    # Poisson probability above does.
+    whiff = (clamp01((k9 - 6.5) / 5.0) + clamp01((5.20 - era) / 2.50)) / 2
+    matchup = clamp01((opp_k_rate - 0.170) / 0.110)
+    recent = clamp01(l3k / 24)
+    workload = clamp01((ip_per_start - 4.0) / 3.0)
+
+    return {
+        "kScore": score,
+        "projK": proj_k,
+        "kLine": model_line,
+        "kWhiffPct": round(whiff * 100, 1),
+        "kMatchupPct": round(matchup * 100, 1),
+        "kRecentPct": round(recent * 100, 1),
+        "kWorkloadPct": round(workload * 100, 1),
+    }
+
+
 def main():
     print("Fetching today's schedule and probable pitchers...")
     games = get_todays_games()
@@ -872,6 +1053,7 @@ def main():
                 sc = statcast.get(batter_id, {})
 
                 player_row = {
+                    "playerType": "batter",
                     "player": name,
                     "team": team,
                     "pitcher": opp_pitcher.get("fullName", ""),
@@ -988,9 +1170,69 @@ def main():
         player_row.update(compute_hrr_score(player_row))
         player_row.update(compute_tb_score(player_row))
 
+    # ---- PITCHERS: the K (strikeouts) board. Built as its own pass since
+    # pitchers aren't part of the batter/lineup pipeline above at all - one
+    # row per team per game (today's probable starter), deduped by pitcher
+    # ID in case of a doubleheader. Reuses the same `games` schedule and
+    # `pitching_stats` already fetched above.
+    print("Fetching team strikeout rates (opposing-lineup matchup signal)...")
+    team_k_rate = get_team_k_rate()
+
+    pitcher_rows = {}  # keyed by pitcher_id, dedupes doubleheader duplicates
+    for g in games:
+        for side, opp_side in [("home", "away"), ("away", "home")]:
+            pitcher = g[f"{side}_pitcher"]
+            if not pitcher or not pitcher.get("id"):
+                continue
+            pitcher_id = pitcher["id"]
+            if pitcher_id in pitcher_rows:
+                continue
+            opp_team_id = g[f"{opp_side}_team_id"]
+            pstat = pitching_stats.get(pitcher_id, {})
+            pitcher_rows[pitcher_id] = {
+                "playerType": "pitcher",
+                "player": pitcher.get("fullName", ""),
+                "playerId": pitcher_id,
+                "team": g[f"{side}_team"],
+                "opponent": g[f"{opp_side}_team"],
+                "game": f"{g['away_team']} @ {g['home_team']}",
+                "gameStatus": g["status"],
+                "hand": pitcher.get("pitchHand", {}).get("code", "R"),
+                "k9": pstat.get("k9"),
+                "bb9": pstat.get("bb9"),
+                "era": pstat.get("era"),
+                "whip": pstat.get("whip"),
+                "seasonK": pstat.get("seasonK"),
+                "ipPerStart": pstat.get("ipPerStart"),
+                "oppKRate": team_k_rate.get(opp_team_id),
+                "l3k": None,   # filled below
+                "l5k": None,   # filled below
+            }
+
+    print(f"Fetching per-pitcher recent form ({len(pitcher_rows)} starters, concurrently)...")
+
+    def fetch_pitcher(item):
+        pitcher_id, row = item
+        starts = get_pitcher_gamelog(pitcher_id, YEAR)
+        row["l3k"] = sum(g["k"] for g in starts[-3:]) if starts else None
+        row["l5k"] = sum(g["k"] for g in starts[-5:]) if starts else None
+        row.update(compute_k_score(row))
+        # Last 10 starts, for the player-detail bar chart on the frontend -
+        # same idea as a batter's gamelog, just K's-per-start instead of
+        # HR/hits-per-game.
+        row["starts"] = starts[-10:]
+        return row
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        pitchers = list(executor.map(fetch_pitcher, pitcher_rows.items()))
+
+    print(f"  {len(pitchers)} probable starters found")
+    players.extend(pitchers)
+
     # Written sorted by the HR score for backward compatibility - the
-    # frontend re-sorts client-side by hrrScore when the HRR tab is active.
-    players.sort(key=lambda p: -p["score"])
+    # frontend re-sorts client-side by whichever score field the active
+    # board uses. .get(..., 0) since pitcher rows have kScore, not score.
+    players.sort(key=lambda p: -p.get("score", 0))
 
     # allow_nan=False makes Python raise a clear error HERE if any stat somehow
     # came out as NaN/Infinity, instead of silently writing invalid JSON that
