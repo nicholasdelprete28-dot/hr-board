@@ -546,6 +546,39 @@ def avgmix_confidence_blend(avgmix):
     return avgmix
 
 
+def risp_confidence_blend(risp):
+    """Same shrink-toward-league-average treatment as avgmix_confidence_blend()
+    above, applied to RISP AVG. RISP splits are usually an even smaller
+    sample than the vs-hand platoon split - early in the season a batter
+    can go 3-for-6 with runners in scoring position and look like an RBI
+    lock off a tiny sample. Anchored to ~.255 (RISP AVG's typical league
+    mean) rather than .24 since RISP average runs a little higher than
+    the platoon-average anchor."""
+    if risp is None:
+        return 0.255
+    if risp <= 0.15 or risp >= 0.35:
+        return risp * 0.5 + 0.255 * 0.5
+    return risp
+
+
+# Lineup-slot bonus tuned for HRR (Hits+Runs+RBI) rather than the HR board's
+# straight top-of-order-favoring formula (max(1, 9 - order_pos)). Runs favor
+# the top of the order (most plate appearances, most times up with the
+# bottom of the order on base ahead of them); RBI favors the heart of the
+# order (3-6, batting with the most traffic already on base). A straight
+# line down from leadoff shortchanges the 3-6 hole hitters who drive in the
+# most runs, so this plateaus across slots 1-6 instead and only drops off
+# for the bottom of the order - this is the fix the compute_hrr_score()
+# docstring below used to flag as a known gap.
+HRR_LINEUP_BONUS = {1: 7, 2: 8, 3: 8, 4: 8, 5: 7, 6: 5, 7: 3, 8: 2, 9: 1}
+
+
+def hrr_lineup_bonus(order_pos):
+    if order_pos is None:
+        return 4
+    return HRR_LINEUP_BONUS.get(order_pos, 1)
+
+
 def compute_score(p):
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
@@ -603,13 +636,11 @@ def compute_score(p):
 #                    baserunners AND more RBI chances) blended with the same
 #                    platoon-AVG signal the HR board uses
 #   Recent 15%     - share of the last 15 games clearing the 1.5 HRR line
-#   RISP 10%       - AVG with runners in scoring position (RBI conversion)
-#   Opportunity 10%- lineup slot, same lbonus field as the HR board. NOTE:
-#                    lbonus rewards leadoff hitters most (more PAs = more run
-#                    chances), which fits HRR reasonably well, but a 3-5 hole
-#                    hitter often has more RBI chances specifically - kept
-#                    simple here on purpose; revisit if the board's rankings
-#                    look off in practice.
+#   RISP 10%       - confidence-blended AVG with runners in scoring position
+#                    (RBI conversion) - see risp_confidence_blend() above
+#   Opportunity 10%- lineup slot, via hrr_lineup_bonus() above rather than
+#                    the HR board's lbonus - tuned to plateau across the
+#                    1-6 holes instead of favoring leadoff hitters only.
 # ---------------------------------------------------------------------------
 def compute_hrr_score(p):
     avg = p.get("avg") if p.get("avg") is not None else 0.240
@@ -617,9 +648,9 @@ def compute_hrr_score(p):
     iso = p["iso"] or 0
     whip = p["whip"] if p["whip"] is not None else 1.30
     avgmix = avgmix_confidence_blend(p["avgmix"])
-    risp = p.get("risp") if p.get("risp") is not None else 0.250
+    risp = risp_confidence_blend(p.get("risp"))
     l15hrr = p.get("l15hrr") if p.get("l15hrr") is not None else 0
-    lbonus = p["lbonus"] if p["lbonus"] is not None else 3
+    hrr_lbonus = p["hrrLbonus"] if p.get("hrrLbonus") is not None else 4
 
     onbase = (clamp01((avg - 0.200) / 0.150) + clamp01((obp - 0.280) / 0.170)
               + clamp01(iso / 0.35)) / 3
@@ -630,7 +661,7 @@ def compute_hrr_score(p):
 
     recent = clamp01(l15hrr / 10)  # clearing the line ~10/15 games is elite
     risp_s = clamp01((risp - 0.150) / 0.250)
-    opportunity = clamp01((lbonus - 1) / 5)
+    opportunity = clamp01((hrr_lbonus - 1) / 5)
 
     score = onbase * 35 + matchup * 30 + recent * 15 + risp_s * 10 + opportunity * 10
 
@@ -731,6 +762,7 @@ def main():
                     "l15hrr": None,   # filled in pass 2
                     "risp": None,     # filled in pass 2
                     "lbonus": max(1, 9 - order_pos),
+                    "hrrLbonus": hrr_lineup_bonus(order_pos),
                     "crush": 0,       # finalized after pass 2
                     "split": 0,
                     "hrprob": None,
