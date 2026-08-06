@@ -196,9 +196,11 @@ def get_season_pitching_stats():
 
 
 def get_season_batting_stats():
-    """AVG, OBP, and ISO (computed from SLG-AVG) for every batter this season.
-    AVG/OBP feed the HRR (Hits+Runs+RBI) board's "on-base" component - HRR
-    cares about times on base and extra-base ability, not power alone."""
+    """AVG, OBP, ISO (computed from SLG-AVG), and plate appearances for every
+    batter this season. AVG/OBP feed the HRR (Hits+Runs+RBI) board's
+    "on-base" component. PA feeds compute_score()'s sample-size shrink on
+    the power inputs (ISO/barrel%/EV/hard-hit%) - see power_sample_weight()
+    below."""
     data = statsapi_get("stats", {
         "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1, "limit": 1500
     })
@@ -210,6 +212,7 @@ def get_season_batting_stats():
         avg = stat.get("avg")
         obp = stat.get("obp")
         slg = stat.get("slg")
+        pa = stat.get("plateAppearances")
         if pid and avg is not None and slg is not None:
             try:
                 iso = float(slg) - float(avg)
@@ -223,7 +226,11 @@ def get_season_batting_stats():
                 obp_f = float(obp) if obp not in (None, "") else None
             except (TypeError, ValueError):
                 obp_f = None
-            out[pid] = {"name": name, "iso": iso, "avg": avg_f, "obp": obp_f}
+            try:
+                pa_i = int(pa) if pa not in (None, "") else None
+            except (TypeError, ValueError):
+                pa_i = None
+            out[pid] = {"name": name, "iso": iso, "avg": avg_f, "obp": obp_f, "pa": pa_i}
     return out
 
 
@@ -579,11 +586,41 @@ def hrr_lineup_bonus(order_pos):
     return HRR_LINEUP_BONUS.get(order_pos, 1)
 
 
+# Gentle sample-size confidence shrink for the power inputs (ISO/barrel%/
+# EV/hard-hit%), all of which come straight from this season's aggregate
+# stats with zero protection against small samples. A part-time player who
+# gets hot over a short stretch can otherwise look like a proven elite
+# power bat off a handful of at-bats. This is deliberately soft, not a
+# hard cutoff - POWER_SHRINK_K is "how many PA of league-average we mix in
+# as a prior," so even a thin-but-real sample keeps most of its own signal
+# instead of getting flattened toward average. Tuned gentle on purpose: the
+# goal is to take the edge off a lucky 20-PA flash, not punish a guy who's
+# genuinely 60-80 PA into a real hot stretch.
+POWER_SHRINK_K = 40
+LEAGUE_AVG_ISO = 0.150
+LEAGUE_AVG_BARREL = 0.075
+LEAGUE_AVG_EV = 88.5
+LEAGUE_AVG_HARDHIT = 0.36
+
+
+def power_sample_weight(pa):
+    if pa is None or pa <= 0:
+        return 0.3  # unknown PA - treat like a modest partial sample, not zero trust
+    return pa / (pa + POWER_SHRINK_K)
+
+
 def compute_score(p):
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
     iso = p["iso"] or 0
     hardhit = p["hardhit"] or 0.30
+    # Gentle PA-weighted shrink toward league average before these feed the
+    # power score - see power_sample_weight() above for the reasoning.
+    pw = power_sample_weight(p.get("pa"))
+    barrel = barrel * pw + LEAGUE_AVG_BARREL * (1 - pw)
+    ev = ev * pw + LEAGUE_AVG_EV * (1 - pw)
+    iso = iso * pw + LEAGUE_AVG_ISO * (1 - pw)
+    hardhit = hardhit * pw + LEAGUE_AVG_HARDHIT * (1 - pw)
     phr9 = p["phr9"] if p["phr9"] is not None else 1.2
     whip = p["whip"] if p["whip"] is not None else 1.30
     avgmix = avgmix_confidence_blend(p["avgmix"])
@@ -763,6 +800,7 @@ def main():
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
                     "iso": bstats.get("iso"),
+                    "pa": bstats.get("pa"),
                     "avg": bstats.get("avg"),
                     "obp": bstats.get("obp"),
                     "phr9": pitcher_stat["hr9"],
