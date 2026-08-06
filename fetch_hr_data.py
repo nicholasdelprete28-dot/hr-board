@@ -201,7 +201,7 @@ def get_season_pitching_stats():
     boards' pitcher-matchup factor (unchanged from before); K9/ERA/season
     totals feed the new K (strikeouts) board."""
     data = statsapi_get("stats", {
-        "stats": "season", "group": "pitching", "season": YEAR, "sportId": 1, "limit": 500
+        "stats": "season", "group": "pitching", "season": YEAR, "sportId": 1, "limit": 1500
     })
     out = {}
     for split in data.get("stats", [{}])[0].get("splits", []):
@@ -279,6 +279,56 @@ def get_pitcher_gamelog(pitcher_id, season):
         return starts
     except Exception:
         return []
+
+
+def get_pitcher_season_stats(pitcher_id, season):
+    """This one pitcher's own season pitching line, fetched directly
+    rather than pulled from the bulk league-wide stats/season/pitching
+    leaderboard. The K board only needs this for today's ~15-16 probable
+    starters - a small enough set that a reliable per-pitcher call beats
+    depending on whatever sort/pagination quirk was silently dropping
+    real starters from the bulk list even at a generous limit (confirmed
+    happening in practice - a real starter's season stats came back
+    completely blank despite his per-start game log fetching fine, which
+    only makes sense if he simply wasn't present in that bulk response).
+    If a pitcher was traded mid-season, MLB's API can return one split per
+    team - this combines them into one real season-total line instead of
+    just taking whichever split happens to come first."""
+    try:
+        data = statsapi_get(f"people/{pitcher_id}/stats", {
+            "stats": "season", "group": "pitching", "season": season
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        if not splits:
+            return {}
+        total_outs = 0
+        total_k = total_bb = total_gs = 0
+        total_er = 0.0
+        hits_plus_walks = 0.0
+        for s in splits:
+            stat = s.get("stat", {})
+            ip = _parse_innings(stat.get("inningsPitched")) or 0
+            total_outs += round(ip * 3)
+            total_k += int(stat.get("strikeOuts", 0) or 0)
+            total_bb += int(stat.get("baseOnBalls", 0) or 0)
+            total_er += float(stat.get("earnedRuns", 0) or 0)
+            total_gs += int(stat.get("gamesStarted", 0) or 0)
+            hits_plus_walks += float(stat.get("hits", 0) or 0) + float(stat.get("baseOnBalls", 0) or 0)
+        ip_total = total_outs / 3
+        if ip_total <= 0:
+            return {}
+        return {
+            "whip": round(hits_plus_walks / ip_total, 2),
+            "k9": round(total_k * 9 / ip_total, 2),
+            "bb9": round(total_bb * 9 / ip_total, 2),
+            "era": round(total_er * 9 / ip_total, 2),
+            "seasonK": total_k,
+            "ip": round(ip_total, 1),
+            "gamesStarted": total_gs,
+            "ipPerStart": round(ip_total / total_gs, 1) if total_gs else None,
+        }
+    except Exception:
+        return {}
 
 
 def get_season_batting_stats():
@@ -1213,6 +1263,13 @@ def main():
 
     def fetch_pitcher(item):
         pitcher_id, row = item
+        # Reliable per-pitcher season stats, overriding whatever the bulk
+        # league-wide list provided (or didn't) - see
+        # get_pitcher_season_stats()'s docstring for why the bulk list
+        # can't be trusted to include every real starter.
+        own_season = get_pitcher_season_stats(pitcher_id, YEAR)
+        if own_season:
+            row.update(own_season)
         starts = get_pitcher_gamelog(pitcher_id, YEAR)
         row["l3k"] = sum(g["k"] for g in starts[-3:]) if starts else None
         row["l5k"] = sum(g["k"] for g in starts[-5:]) if starts else None
