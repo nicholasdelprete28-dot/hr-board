@@ -317,6 +317,17 @@ def get_pitcher_season_stats(pitcher_id, season):
         ip_total = total_outs / 3
         if ip_total <= 0:
             return {}
+        # Hard sanity clamp: innings-per-start can never realistically
+        # exceed a complete game (9), and average IP/start above ~8 is
+        # already essentially impossible for a modern starter. Without
+        # this, a pitcher who had even one relief outing mixed into his
+        # season (his innings from that outing count toward total_outs,
+        # but gamesStarted doesn't increment) can produce a nonsensical
+        # inflated ratio - this catches that regardless of the exact
+        # cause rather than trusting the raw division blindly.
+        ip_per_start = round(ip_total / total_gs, 1) if total_gs else None
+        if ip_per_start is not None:
+            ip_per_start = min(ip_per_start, 8.0)
         return {
             "whip": round(hits_plus_walks / ip_total, 2),
             "k9": round(total_k * 9 / ip_total, 2),
@@ -325,7 +336,7 @@ def get_pitcher_season_stats(pitcher_id, season):
             "seasonK": total_k,
             "ip": round(ip_total, 1),
             "gamesStarted": total_gs,
-            "ipPerStart": round(ip_total / total_gs, 1) if total_gs else None,
+            "ipPerStart": ip_per_start,
         }
     except Exception:
         return {}
