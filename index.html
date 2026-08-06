@@ -278,6 +278,12 @@
   .chip-crusher{color:#6a9fd8; border-color:rgba(106,159,216,0.4); background:rgba(106,159,216,0.08);}
   .chip-crusher:hover{box-shadow:0 0 12px rgba(106,159,216,0.4); border-color:#6a9fd8;}
   .chip-lineup{color:var(--gold); border-color:rgba(227,165,72,0.35); background:rgba(227,165,72,0.08);}
+  .chip-sample-good{color:var(--stat-good); border-color:rgba(66,232,150,0.35); background:rgba(66,232,150,0.08);}
+  .chip-sample-good:hover{box-shadow:0 0 12px rgba(66,232,150,0.35); border-color:var(--stat-good);}
+  .chip-sample-bad{color:var(--stat-bad); border-color:rgba(255,150,56,0.35); background:rgba(255,150,56,0.08);}
+  .chip-sample-bad:hover{box-shadow:0 0 12px rgba(255,150,56,0.35); border-color:var(--stat-bad);}
+  .chip-sample-verybad{color:var(--stat-verybad); border-color:rgba(255,66,66,0.35); background:rgba(255,66,66,0.08);}
+  .chip-sample-verybad:hover{box-shadow:0 0 12px rgba(255,66,66,0.35); border-color:var(--stat-verybad);}
   .chip-lineup:hover{box-shadow:0 0 12px rgba(227,165,72,0.35); border-color:var(--gold);}
   .chip:not(.chip-platoon):not(.chip-crusher):not(.chip-lineup):hover{border-color:var(--muted);}
 
@@ -903,6 +909,28 @@ function tipOppKRate(p){
 function tipWorkhorse(p){
   return `Averaging ${fmtNum(p.ipPerStart, 1)} innings per start this season - a longer outing means facing more batters, which raises the strikeout ceiling regardless of stuff.`;
 }
+// Sample-size confidence chip - not a new metric, just surfacing the exact
+// PA-weighted shrink already driving compute_score()'s power inputs (see
+// power_sample_weight() in fetch_hr_data.py), so a thin-sample reader can
+// actually see when a stat line hasn't accumulated enough real innings/
+// at-bats to fully trust yet, instead of only finding out the hard way.
+function sampleChipClass(n, good, bad){
+  if(n == null) return '';
+  if(n >= good) return 'chip-sample-good';
+  if(n < bad) return 'chip-sample-verybad';
+  return 'chip-sample-bad';
+}
+function tipSampleBatter(p){
+  if(p.pa == null) return 'Plate-appearance count unavailable this run.';
+  const conf = Math.round(Math.min(1, p.pa / (p.pa + 40)) * 100);
+  return `${p.pa} plate appearances this season - the power stats above (ISO/barrel%/EV/hard-hit%) are trusted at roughly ${conf}% weight; the rest gets pulled toward league average to soften small-sample noise.`;
+}
+function tipSamplePitcher(p){
+  if(p.gamesStarted == null) return 'Starts count unavailable this run.';
+  const gs = p.gamesStarted;
+  const read = gs >= 12 ? 'a well-established sample' : gs >= 5 ? 'a moderate sample, still settling in' : 'a thin sample - early numbers can swing a lot start to start';
+  return `${gs} starts this season - ${read}.`;
+}
 // Renders one or more statbox divs from {label, value, display, tier} entries,
 // then stretches the last row's boxes so they never leave an empty gap:
 // 1 trailing box spans the full row (6/6 cols), 2 trailing boxes split it
@@ -1107,10 +1135,12 @@ function render(){
         ${p.playerType === 'pitcher' ? `
           ${p.oppKRate != null && p.oppKRate >= 0.240 ? `<div class="chip chip-crusher" title="${escAttr(tipOppKRate(p))}" data-tip="${escAttr(tipOppKRate(p))}">high-K opponent</div>` : ''}
           ${p.ipPerStart != null && p.ipPerStart >= 6.0 ? `<div class="chip chip-lineup" title="${escAttr(tipWorkhorse(p))}" data-tip="${escAttr(tipWorkhorse(p))}">workhorse</div>` : ''}
+          <div class="chip ${sampleChipClass(p.gamesStarted, 12, 5)}" title="${escAttr(tipSamplePitcher(p))}" data-tip="${escAttr(tipSamplePitcher(p))}">${p.gamesStarted == null ? 'GS N/A' : p.gamesStarted + ' GS'}</div>
         ` : `
           ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}" data-tip="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
           <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}" data-tip="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
           <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
+          <div class="chip ${sampleChipClass(p.pa, 200, 80)}" title="${escAttr(tipSampleBatter(p))}" data-tip="${escAttr(tipSampleBatter(p))}">${p.pa == null ? 'PA N/A' : p.pa + ' PA'}</div>
         `}
       </div>
       <div class="statboxwrap">${statboxes}
