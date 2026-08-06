@@ -34,10 +34,16 @@ import io
 import json
 import time
 import datetime
+from zoneinfo import ZoneInfo
 import requests
 
 YEAR = 2026
-TODAY = time.strftime("%Y-%m-%d")
+# GitHub Actions runners use UTC system time. Using that directly would mean
+# every run after ~7-8pm Eastern starts asking about TOMORROW's schedule
+# (barely populated - no pitchers or lineups posted yet) instead of finishing
+# out today's real slate. MLB's own scheduling is anchored to US Eastern
+# time, so that's what "today" should mean here too.
+TODAY = datetime.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
 
 # ---------------------------------------------------------------------------
 # Fixed park factors (rough HR-friendliness, -2 pitcher-friendly to +2 hitter-
