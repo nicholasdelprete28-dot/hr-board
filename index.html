@@ -273,15 +273,13 @@
     border:1px solid var(--line); border-radius:20px; padding:5px 11px;
     transition:all .15s ease; cursor:help;
   }
-  .chip-flag{color:#ff8a75; border-color:rgba(217,107,91,0.4); background:rgba(217,107,91,0.08);}
-  .chip-flag:hover{box-shadow:0 0 12px rgba(217,107,91,0.35); border-color:#ff8a75;}
   .chip-platoon{color:#d99bea; border-color:rgba(199,125,214,0.4); background:rgba(199,125,214,0.08);}
   .chip-platoon:hover{box-shadow:0 0 12px rgba(199,125,214,0.4); border-color:#d99bea;}
   .chip-crusher{color:#6a9fd8; border-color:rgba(106,159,216,0.4); background:rgba(106,159,216,0.08);}
   .chip-crusher:hover{box-shadow:0 0 12px rgba(106,159,216,0.4); border-color:#6a9fd8;}
   .chip-lineup{color:var(--gold); border-color:rgba(227,165,72,0.35); background:rgba(227,165,72,0.08);}
   .chip-lineup:hover{box-shadow:0 0 12px rgba(227,165,72,0.35); border-color:var(--gold);}
-  .chip:not(.chip-flag):not(.chip-platoon):not(.chip-crusher):not(.chip-lineup):hover{border-color:var(--muted);}
+  .chip:not(.chip-platoon):not(.chip-crusher):not(.chip-lineup):hover{border-color:var(--muted);}
 
   /* ---- Tap-to-open chip tooltip - native `title` hover tooltips barely
      work on mobile Safari, so this is the real cross-device mechanism;
@@ -880,9 +878,6 @@ function tipCrusher(p){
     ? `Hitting ${avgmixStr} vs ${handWord} this season - clears the .280 "crusher" line, the top platoon tier.`
     : `Hitting ${avgmixStr} vs ${handWord} this season - below the .280 "crusher" line for today's matchup.`;
 }
-function tipColdBarrel(p){
-  return `Barrel rate is ${fmtPct(p.barrel)} but exit velo is only ${fmtNum(p.ev, 1)} mph, so the power read is discounted \u00d7${p.conf} instead of taken at face value.`;
-}
 function tipLineup(p, mode){
   if(mode === 'hrr'){
     return `Lineup-slot bonus of +${p.hrrLbonus} for HRR - slots 1-6 plateau near the max since they get both the most plate appearances and the most RBI chances; it drops off after that.`;
@@ -953,7 +948,6 @@ function render(){
 
   list.innerHTML = filtered.map((p, i) => {
     const tier = tierFor(i);
-    const coldBarrel = p.conf < 1.0;
     const platoonGood = p.crush === 1 || p.split === 1;
     const isProjected = p.lineupConfirmed === false;
     const isLive = p.gameStatus === 'Live';
@@ -1027,7 +1021,6 @@ function render(){
         </div>
       </div>
       <div class="chips">
-        ${coldBarrel && boardMode === 'hr' ? `<div class="chip chip-flag" title="${escAttr(tipColdBarrel(p))}" data-tip="${escAttr(tipColdBarrel(p))}">cold barrel &times;${p.conf}</div>` : ''}
         ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}" data-tip="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
         <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}" data-tip="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
         <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
