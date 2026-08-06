@@ -283,6 +283,16 @@
   .chip-lineup:hover{box-shadow:0 0 12px rgba(227,165,72,0.35); border-color:var(--gold);}
   .chip:not(.chip-flag):not(.chip-platoon):not(.chip-crusher):not(.chip-lineup):hover{border-color:var(--muted);}
 
+  /* ---- Tap-to-open chip tooltip - native `title` hover tooltips barely
+     work on mobile Safari, so this is the real cross-device mechanism;
+     `title` stays on as a free bonus for desktop hover. ---- */
+  .chip-tooltip{
+    position:fixed; z-index:200; max-width:240px; background:#1c231f; color:var(--text);
+    border:1px solid var(--gold); border-radius:10px; padding:10px 12px;
+    font-family:var(--body); font-size:12.5px; line-height:1.4;
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  }
+
   /* ---- Always-visible stat box grid (swiftprops-style) ---- */
   .statboxwrap{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:1px;
@@ -871,7 +881,7 @@ function tipCrusher(p){
     : `Hitting ${avgmixStr} vs ${handWord} this season - below the .280 "crusher" line for today's matchup.`;
 }
 function tipColdBarrel(p){
-  return `Barrel rate is ${fmtPct(p.barrel)} but exit velo is only ${fmtNum(p.ev, 1)} mph, so the power read is discounted &times;${p.conf} instead of taken at face value.`;
+  return `Barrel rate is ${fmtPct(p.barrel)} but exit velo is only ${fmtNum(p.ev, 1)} mph, so the power read is discounted \u00d7${p.conf} instead of taken at face value.`;
 }
 function tipLineup(p, mode){
   if(mode === 'hrr'){
@@ -1017,10 +1027,10 @@ function render(){
         </div>
       </div>
       <div class="chips">
-        ${coldBarrel && boardMode === 'hr' ? `<div class="chip chip-flag" title="${escAttr(tipColdBarrel(p))}">cold barrel &times;${p.conf}</div>` : ''}
-        ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
-        <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
-        <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
+        ${coldBarrel && boardMode === 'hr' ? `<div class="chip chip-flag" title="${escAttr(tipColdBarrel(p))}" data-tip="${escAttr(tipColdBarrel(p))}">cold barrel &times;${p.conf}</div>` : ''}
+        ${platoonGood ? `<div class="chip chip-platoon" title="${escAttr(tipPlatoon(p))}" data-tip="${escAttr(tipPlatoon(p))}">platoon edge</div>` : ''}
+        <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}" data-tip="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
+        <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
       </div>
       <div class="statboxwrap">${statboxes}
       </div>
@@ -1072,7 +1082,50 @@ document.querySelectorAll('.boardtab').forEach(tab => {
   });
 });
 
+// Tap-to-open chip tooltip (see .chip-tooltip CSS above for why this
+// exists instead of relying on the native `title` hover tooltip).
+let openChipTipEl = null;
+function hideChipTip(){
+  const existing = document.querySelector('.chip-tooltip');
+  if(existing) existing.remove();
+  openChipTipEl = null;
+}
+function showChipTip(chipEl){
+  hideChipTip();
+  const text = chipEl.dataset.tip;
+  if(!text) return;
+  const tip = document.createElement('div');
+  tip.className = 'chip-tooltip';
+  tip.textContent = text;
+  document.body.appendChild(tip);
+  const r = chipEl.getBoundingClientRect();
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  let left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  let top = r.bottom + 8;
+  if(top + th > window.innerHeight - 8){
+    top = r.top - th - 8;  // flip above the chip if it'd overflow the bottom
+  }
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+  openChipTipEl = chipEl;
+}
+function toggleChipTip(chipEl){
+  if(openChipTipEl === chipEl) hideChipTip();
+  else showChipTip(chipEl);
+}
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.chip[data-tip]') && !e.target.closest('.chip-tooltip')) hideChipTip();
+});
+
 document.getElementById('list').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip[data-tip]');
+  if(chip){
+    e.stopPropagation();
+    toggleChipTip(chip);
+    return;
+  }
+  hideChipTip();
   const card = e.target.closest('.card');
   if (!card) return;
   const pid = card.dataset.playerId;
