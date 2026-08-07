@@ -854,6 +854,24 @@ function tierFor(i){
 }
 
 function fmtPct(x){ return x == null ? 'N/A' : (x*100).toFixed(1) + '%'; }
+// The internal composite favorability score (0-100) was never meant to BE
+// a real probability - it's a weighted comparison scale so the formula's
+// factors can be weighed against each other. Real single-game MLB HR odds
+// run roughly 2-3% for a weak matchup up to ~28-30% for an elite slugger
+// in a great spot, nowhere close to the composite's raw range - which is
+// exactly why a 60-70% "favorability" reads as confusingly high. This
+// maps the composite onto a realistic-looking range for DISPLAY ONLY.
+// Sorting, tiers (PRIME/STRONG/IN PLAY/LONG SHOT), and every other use of
+// the raw score are completely untouched by this - only the number shown
+// on the card changes, so no tier recalibration is needed. The K board's
+// score is already a genuine calibrated Poisson probability (see
+// compute_k_score in fetch_hr_data.py), so it's left alone here.
+const DISPLAY_PCT_FLOOR = 3;     // even a 0-composite matchup isn't truly 0% in real life
+const DISPLAY_PCT_CEILING = 32;  // roughly the real-world ceiling for an elite slugger, great spot
+function displayPct(rawScore, mode){
+  if(mode === 'k' || rawScore == null) return rawScore;
+  return DISPLAY_PCT_FLOOR + (rawScore / 100) * (DISPLAY_PCT_CEILING - DISPLAY_PCT_FLOOR);
+}
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
 // Returns 'good' | 'bad' | 'verybad' | '' for a stat value against fixed
@@ -1127,7 +1145,7 @@ function render(){
         </div>
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
-          <div class="scoreval">${fmtNum(cardScore, 1)}%</div>
+          <div class="scoreval">${fmtNum(displayPct(cardScore, boardMode), 1)}%</div>
           <div class="scorelabel">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : `${boardMode.toUpperCase()} favorability`}</div>
         </div>
       </div>
