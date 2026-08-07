@@ -36,6 +36,7 @@ import math
 import os
 import time
 import datetime
+import concurrent.futures
 from zoneinfo import ZoneInfo
 import requests
 
@@ -345,7 +346,7 @@ def get_pitcher_season_stats(pitcher_id, season):
         if not splits:
             return {}
         total_outs = 0
-        total_k = total_bb = total_gs = 0
+        total_k = total_bb = total_gs = total_hr = 0
         total_er = 0.0
         hits_plus_walks = 0.0
         for s in splits:
@@ -356,6 +357,7 @@ def get_pitcher_season_stats(pitcher_id, season):
             total_bb += int(stat.get("baseOnBalls", 0) or 0)
             total_er += float(stat.get("earnedRuns", 0) or 0)
             total_gs += int(stat.get("gamesStarted", 0) or 0)
+            total_hr += int(stat.get("homeRuns", 0) or 0)
             hits_plus_walks += float(stat.get("hits", 0) or 0) + float(stat.get("baseOnBalls", 0) or 0)
         ip_total = total_outs / 3
         if ip_total <= 0:
@@ -373,6 +375,7 @@ def get_pitcher_season_stats(pitcher_id, season):
             ip_per_start = min(ip_per_start, 8.0)
         return {
             "whip": round(hits_plus_walks / ip_total, 2),
+            "hr9": round(total_hr * 9 / ip_total, 2),
             "k9": round(total_k * 9 / ip_total, 2),
             "bb9": round(total_bb * 9 / ip_total, 2),
             "era": round(total_er * 9 / ip_total, 2),
@@ -1224,6 +1227,40 @@ def main():
     print("Fetching season pitching stats (WHIP, HR/9)...")
     pitching_stats = get_season_pitching_stats()
 
+    # The bulk stats/season/pitching list above is the SAME unreliable
+    # source that turned out to silently drop real starters for the K
+    # board (confirmed live - a real pitcher's season line came back
+    # completely blank despite him definitely having pitched this
+    # season). That fix (get_pitcher_season_stats, a reliable per-pitcher
+    # call) only ever got wired into the K board's own pitcher pass - the
+    # HR/HRR/TB boards' "opposing pitcher" WHIP/HR9 was still trusting the
+    # same flaky bulk list, silently falling back to a hardcoded league-
+    # average-ish default ({"whip": 1.30, "hr9": 1.20}) for any pitcher it
+    # dropped, with nothing on the card distinguishing a real 1.30/1.20
+    # from a missing one. Since today's probable starters are a small,
+    # known set (the same ~30 pitchers the K board already fetches
+    # individually), just fetch all of them reliably up front here too,
+    # rather than trusting the bulk list for anyone.
+    print("Fetching reliable per-pitcher season stats for today's probable starters...")
+    todays_pitcher_ids = set()
+    for g in games:
+        for key in ("home_pitcher", "away_pitcher"):
+            pp = g.get(key)
+            if pp and pp.get("id"):
+                todays_pitcher_ids.add(pp["id"])
+
+    def fetch_one_pitcher_stat(pid):
+        return pid, get_pitcher_season_stats(pid, YEAR)
+
+    reliable_pitcher_stats = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        for pid, stats in executor.map(fetch_one_pitcher_stat, todays_pitcher_ids):
+            if stats:
+                reliable_pitcher_stats[pid] = stats
+    print(f"  got reliable season stats for {len(reliable_pitcher_stats)} of "
+          f"{len(todays_pitcher_ids)} probable starters "
+          f"({len(todays_pitcher_ids) - len(reliable_pitcher_stats)} still falling back to the bulk list/default)")
+
     print("Fetching season batting stats (ISO)...")
     batting_stats = get_season_batting_stats()
 
@@ -1267,7 +1304,8 @@ def main():
                     continue
             sides_with_pitcher += 1
             pitcher_id, pitcher_hand = get_pitcher_hand_and_id(opp_pitcher)
-            pitcher_stat = pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20})
+            pitcher_stat = reliable_pitcher_stats.get(
+                pitcher_id, pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20}))
 
             park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None})
             wind_speed, wind_dir = (None, None)
@@ -1405,7 +1443,6 @@ def main():
         }
         return player_row
 
-    import concurrent.futures
     players = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         for i, result in enumerate(executor.map(fetch_one, rows)):
@@ -1461,11 +1498,10 @@ def main():
 
     def fetch_pitcher(item):
         pitcher_id, row = item
-        # Reliable per-pitcher season stats, overriding whatever the bulk
-        # league-wide list provided (or didn't) - see
-        # get_pitcher_season_stats()'s docstring for why the bulk list
-        # can't be trusted to include every real starter.
-        own_season = get_pitcher_season_stats(pitcher_id, YEAR)
+        # Reuse the reliable per-pitcher season stats already fetched
+        # earlier in main() for the batter boards' matchup data - same
+        # pitchers (today's probable starters), no need to fetch twice.
+        own_season = reliable_pitcher_stats.get(pitcher_id) or get_pitcher_season_stats(pitcher_id, YEAR)
         if own_season:
             row.update(own_season)
         starts = get_pitcher_gamelog(pitcher_id, YEAR)
