@@ -714,6 +714,114 @@ def fetch_batter_statcast():
     return out
 
 
+def fetch_pitch_mix_data():
+    """Pulls TWO things in one bulk call each from Baseball Savant's
+    pitch-arsenal-stats leaderboard: (1) every BATTER's performance
+    (hard-hit%) against each individual pitch type this season, and (2)
+    every PITCHER's own pitch-type usage mix (what % of their pitches are
+    fastballs vs sliders vs curves etc). Blended together in
+    compute_pitch_mix_match() below, this answers a sharper question than
+    the existing handedness-only platoon split: not just "does he hit
+    lefties/righties well" but "does his swing profile match what THIS
+    specific pitcher actually throws."
+
+    Like fetch_batter_statcast() above, the exact column names AND
+    whether this endpoint returns all pitch types unfiltered in one call
+    are both best-effort assumptions - can't be verified without a live
+    run. Prints the raw columns/row count/sample either way, same as
+    that function, so a wrong assumption is immediately diagnosable from
+    the Action log instead of silently producing nothing.
+
+    Returns (batter_pitch_data, pitcher_pitch_mix):
+      batter_pitch_data: {batter_id: {pitch_type: hard_hit_pct_0_to_1}}
+      pitcher_pitch_mix: {pitcher_id: {pitch_type: usage_fraction_0_to_1}}
+    """
+    batter_pitch_data = {}
+    pitcher_pitch_mix = {}
+
+    for kind, out_dict in [("batter", batter_pitch_data), ("pitcher", pitcher_pitch_mix)]:
+        url = (f"https://baseballsavant.mlb.com/leaderboard/pitch-arsenal-stats"
+               f"?type={kind}&year={YEAR}&min=1&csv=true")
+        try:
+            resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+            text = resp.content.decode("utf-8-sig")
+            reader = csv.DictReader(io.StringIO(text))
+            rows = list(reader)
+            print(f"  Pitch-arsenal ({kind}) CSV columns: {reader.fieldnames}")
+            print(f"  Pitch-arsenal ({kind}) CSV row count: {len(rows)}")
+            if rows:
+                print(f"  sample row: {rows[0]}")
+        except Exception as e:
+            print(f"  WARNING: pitch-arsenal ({kind}) fetch failed ({e}) - pitch-mix "
+                  f"matching will fall back to handedness-only for everyone.")
+            continue
+
+        id_columns = ["player_id", "batter", "pitcher", "id", "mlb_id", "mlbam_id"]
+        id_col = next((c for c in id_columns if rows and c in rows[0]), None)
+        pitch_type_columns = ["pitch_type", "pitch_name"]
+        pitch_col = next((c for c in pitch_type_columns if rows and c in rows[0]), None)
+        usage_columns = ["pitch_usage", "usage", "pitch_percent"]
+        usage_col = next((c for c in usage_columns if rows and c in rows[0]), None)
+        metric_columns = ["hard_hit_percent", "ev95percent", "whiff_percent"]
+        metric_col = next((c for c in metric_columns if rows and c in rows[0]), None)
+        print(f"  ({kind}) using id={id_col} pitch_type={pitch_col} "
+              f"usage={usage_col} metric={metric_col}")
+
+        if not (id_col and pitch_col):
+            print(f"  WARNING: couldn't identify required columns for {kind} "
+                  f"pitch-arsenal data - skipping, will fall back to handedness-only.")
+            continue
+
+        for row in rows:
+            try:
+                pid = int(row[id_col])
+                pitch_type = row[pitch_col]
+            except (ValueError, KeyError, TypeError):
+                continue
+            out_dict.setdefault(pid, {})
+            if kind == "pitcher" and usage_col:
+                try:
+                    usage_raw = float(row[usage_col])
+                    # Usage might come back as a percent (45.2) or already
+                    # a fraction (0.452) - normalize to a 0-1 fraction.
+                    out_dict[pid][pitch_type] = usage_raw / 100 if usage_raw > 1 else usage_raw
+                except (ValueError, TypeError):
+                    pass
+            elif kind == "batter" and metric_col:
+                try:
+                    metric_raw = float(row[metric_col])
+                    out_dict[pid][pitch_type] = metric_raw / 100 if metric_raw > 1 else metric_raw
+                except (ValueError, TypeError):
+                    pass
+
+    print(f"  parsed pitch-mix data for {len(batter_pitch_data)} batters, "
+          f"{len(pitcher_pitch_mix)} pitchers")
+    return batter_pitch_data, pitcher_pitch_mix
+
+
+def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix):
+    """0-1 score: this batter's hard-hit% weighted by how often the
+    OPPOSING PITCHER actually throws each pitch type - a sharper question
+    than plain handedness. Returns None (not 0) when there isn't enough
+    real data to trust, so compute_score's blend can cleanly fall back to
+    handedness-only instead of treating "no data" the same as "bad
+    matchup" - a None here should never quietly drag a score down."""
+    batter_data = batter_pitch_data.get(batter_id)
+    mix = pitcher_pitch_mix.get(pitcher_id)
+    if not batter_data or not mix:
+        return None
+    weighted_sum = 0.0
+    weight_total = 0.0
+    for pitch_type, usage in mix.items():
+        if pitch_type in batter_data:
+            weighted_sum += usage * batter_data[pitch_type]
+            weight_total += usage
+    if weight_total < 0.3:  # too little real overlap to trust the result
+        return None
+    return weighted_sum / weight_total
+
+
 def wind_park_factor(speed, direction):
     """Rough wind-effect scoring: strong wind matters more than light wind."""
     if speed is None or speed < 5:
@@ -867,7 +975,22 @@ def compute_score(p):
     # now" show up day to day instead of taking two weeks to register.
     # 2+ HR in the last 5 games is rare enough to max out that half.
     recent = clamp01(l15hr / 6) * 0.6 + clamp01(l5hr / 2) * 0.4
-    platoon = (crush + split) / 2
+    # Platoon: blends the sharper pitch-mix match (how well this batter's
+    # actual performance profile lines up against what THIS pitcher
+    # specifically throws, weighted by his real usage rates) with the
+    # original handedness-only read, rather than replacing it outright -
+    # pitch-mix data isn't always available (thin sample, fetch failure),
+    # and handedness alone is still a real, working signal on its own.
+    # 70/30 favoring the sharper signal when it's there; falls back to
+    # 100% handedness when it isn't, rather than treating missing data
+    # as a bad matchup.
+    handedness_platoon = (crush + split) / 2
+    pitch_mix_raw = p.get("pitchMixMatch")  # this batter's weighted hard-hit% vs the arsenal, or None
+    if pitch_mix_raw is not None:
+        pitch_mix_norm = clamp01(pitch_mix_raw / 0.45)  # ~45% hard-hit vs arsenal = elite
+        platoon = pitch_mix_norm * 0.7 + handedness_platoon * 0.3
+    else:
+        platoon = handedness_platoon
     opportunity = clamp01((lbonus - 1) / 5)
 
     score = power * 35 + matchup * 30 + recent * 15 + platoon * 10 + opportunity * 10
@@ -1108,6 +1231,9 @@ def main():
     statcast = fetch_batter_statcast()
     print(f"  parsed {len(statcast)} batters with Statcast data")
 
+    print("Fetching pitch-mix data (batter vs pitch type, pitcher usage)...")
+    batter_pitch_data, pitcher_pitch_mix = fetch_pitch_mix_data()
+
     # ---- PASS 1: build every player row using only data we already have in
     # memory (no network calls in this loop) - fast, a few seconds at most.
     rows = []  # each entry: (player_row_dict, batter_id, pitcher_hand)
@@ -1181,6 +1307,8 @@ def main():
                     "pitcherConfirmed": pitcher_confirmed,
                     "gameStatus": g["status"],
                     "playerId": batter_id,
+                    "pitchMixMatch": compute_pitch_mix_match(
+                        batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix),
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
