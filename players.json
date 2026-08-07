@@ -53778,7 +53778,7 @@
           "hr": 0,
           "hits": 0,
           "xbh": 0,
-          "pa": 3,
+          "pa": 4,
           "runs": 0,
           "rbi": 0,
           "hrr": 0,
@@ -53796,7 +53796,7 @@
         "xbhAvg": 0.0,
         "hrrAvg": 1.4,
         "tbAvg": 1.2,
-        "paAvg": 4.0
+        "paAvg": 4.2
       },
       "l10": {
         "n": 10,
@@ -53809,7 +53809,7 @@
         "xbhAvg": 0.2,
         "hrrAvg": 2.3,
         "tbAvg": 1.9,
-        "paAvg": 4.6
+        "paAvg": 4.7
       },
       "l20": {
         "n": 20,
@@ -53822,7 +53822,7 @@
         "xbhAvg": 0.25,
         "hrrAvg": 1.75,
         "tbAvg": 1.55,
-        "paAvg": 4.65
+        "paAvg": 4.7
       },
       "seasonCur": {
         "n": 112,
@@ -53835,7 +53835,7 @@
         "xbhAvg": 0.24,
         "hrrAvg": 1.72,
         "tbAvg": 1.3,
-        "paAvg": 4.32
+        "paAvg": 4.33
       },
       "seasonPrev": {
         "n": 161,
