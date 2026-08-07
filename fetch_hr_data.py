@@ -33,6 +33,7 @@ import csv
 import io
 import json
 import math
+import os
 import time
 import datetime
 from zoneinfo import ZoneInfo
@@ -173,6 +174,48 @@ def get_recent_lineup(team_id):
         return get_lineup(most_recent["gamePk"], side)
     except Exception:
         return {}
+
+
+def get_recent_starter(team_id):
+    """FALLBACK for when a team hasn't officially announced today's probable
+    pitcher yet (this can lag behind lineup confirmation, and some teams
+    announce later than others). Without this, a batter facing that team
+    gets skipped ENTIRELY, not just marked unconfirmed - the whole
+    opposing lineup silently disappears from the board rather than
+    showing a projected read. Falls back to whoever started this team's
+    most recently completed game, same "recent form as a stand-in for
+    today" philosophy as get_recent_lineup() above. Returns a probable-
+    pitcher-shaped dict ({"id", "fullName", "pitchHand"}) or None."""
+    try:
+        end = datetime.date.today() - datetime.timedelta(days=1)
+        start = end - datetime.timedelta(days=10)
+        data = statsapi_get("schedule", {
+            "sportId": 1, "teamId": team_id,
+            "startDate": start.isoformat(), "endDate": end.isoformat(),
+        })
+        games = []
+        for d in data.get("dates", []):
+            games.extend(d.get("games", []))
+        finished = [g for g in games
+                    if g.get("status", {}).get("abstractGameState") == "Final"]
+        finished.sort(key=lambda g: g["gameDate"], reverse=True)
+        for g in finished:
+            side = "home" if g["teams"]["home"]["team"]["id"] == team_id else "away"
+            box = statsapi_get(f"game/{g['gamePk']}/boxscore")
+            team_box = box.get("teams", {}).get(side, {})
+            pitcher_ids = team_box.get("pitchers", [])
+            if not pitcher_ids:
+                continue
+            starter_id = pitcher_ids[0]  # first pitcher listed for the game = the starter
+            person = team_box.get("players", {}).get(f"ID{starter_id}", {}).get("person", {})
+            if not person:
+                continue
+            hand = person.get("pitchHand", {}).get("code", "R")
+            return {"id": starter_id, "fullName": person.get("fullName", ""),
+                    "pitchHand": {"code": hand}}
+        return None
+    except Exception:
+        return None
 
 
 def get_pitcher_hand_and_id(probable_pitcher):
@@ -1073,15 +1116,29 @@ def main():
     sides_projected_lineup = 0
     sides_missing_pitcher = 0
     sides_no_lineup_at_all = 0
+    sides_projected_pitcher = 0
+    sides_no_pitcher_at_all = 0
 
     for g in games:
         for side, opp_side in [("home", "away"), ("away", "home")]:
             team = g[f"{side}_team"]
             team_id = g[f"{side}_team_id"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
+            pitcher_confirmed = True
             if not opp_pitcher:
-                sides_missing_pitcher += 1
-                continue
+                opp_team_id = g[f"{opp_side}_team_id"]
+                opp_pitcher = get_recent_starter(opp_team_id)
+                pitcher_confirmed = False
+                if opp_pitcher:
+                    sides_projected_pitcher += 1
+                    print(f"  using PROJECTED opposing pitcher ({opp_pitcher.get('fullName')}) "
+                          f"for {team}'s batters - {g['away_team']} @ {g['home_team']}")
+                else:
+                    sides_no_pitcher_at_all += 1
+                    sides_missing_pitcher += 1
+                    print(f"  no opposing pitcher available (confirmed OR recent) for {team}'s "
+                          f"batters - {g['away_team']} @ {g['home_team']}")
+                    continue
             sides_with_pitcher += 1
             pitcher_id, pitcher_hand = get_pitcher_hand_and_id(opp_pitcher)
             pitcher_stat = pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20})
@@ -1121,6 +1178,7 @@ def main():
                     "hand": pitcher_hand,
                     "game": f"{g['away_team']} @ {g['home_team']}",
                     "lineupConfirmed": lineup_confirmed,
+                    "pitcherConfirmed": pitcher_confirmed,
                     "gameStatus": g["status"],
                     "playerId": batter_id,
                     "barrel": sc.get("barrel"),
@@ -1150,7 +1208,8 @@ def main():
                 rows.append((player_row, batter_id, pitcher_hand))
 
     print(f"  sides with a probable pitcher: {sides_with_pitcher} "
-          f"(missing: {sides_missing_pitcher})")
+          f"(fully missing: {sides_no_pitcher_at_all})")
+    print(f"  sides using a PROJECTED opposing pitcher (from last start): {sides_projected_pitcher}")
     print(f"  sides with a CONFIRMED lineup: {sides_confirmed_lineup}")
     print(f"  sides using a PROJECTED lineup (from last game): {sides_projected_lineup}")
     print(f"  sides with no lineup available at all: {sides_no_lineup_at_all}")
@@ -1337,6 +1396,40 @@ def main():
         json.dump(players, f, indent=2, allow_nan=False)
 
     print(f"Wrote players.json with {len(players)} players.")
+
+    write_daily_snapshot(players)
+
+
+def write_daily_snapshot(players):
+    """A small daily snapshot for the historical accuracy tracker - just
+    each player's projected score/line, not the full row (that would bloat
+    the repo fast at 3 runs/day, every day, forever). Overwritten on every
+    run of the day, so the snapshot that survives is from the LAST run
+    before games start - the most-confirmed lineup/matchup data of the
+    day, which is what we actually want to grade against final results.
+    check_results.py reads this the next day and compares it against
+    actual box scores to build a real track record instead of just
+    trusting the model blindly."""
+    os.makedirs("history", exist_ok=True)
+    date_str = datetime.date.today().isoformat()
+    snapshot = []
+    for p in players:
+        if p.get("playerType") == "pitcher":
+            snapshot.append({
+                "playerId": p.get("playerId"), "player": p.get("player"),
+                "playerType": "pitcher", "team": p.get("team"), "opponent": p.get("opponent"),
+                "kScore": p.get("kScore"), "kLine": p.get("kLine"),
+            })
+        else:
+            snapshot.append({
+                "playerId": p.get("playerId"), "player": p.get("player"),
+                "playerType": "batter", "team": p.get("team"),
+                "score": p.get("score"), "hrrScore": p.get("hrrScore"), "tbScore": p.get("tbScore"),
+            })
+    path = f"history/{date_str}.json"
+    with open(path, "w") as f:
+        json.dump(snapshot, f)
+    print(f"Wrote daily snapshot to {path} ({len(snapshot)} players)")
 
 
 if __name__ == "__main__":
