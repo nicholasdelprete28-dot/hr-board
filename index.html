@@ -248,6 +248,7 @@
   .scoreval{font-family:var(--mono); font-weight:700; font-size:24px; color:var(--gold);}
   .card.top .scoreval{color:var(--green);}
   .scorelabel{font-family:var(--mono); font-size:9px; color:var(--muted2); letter-spacing:1px; text-transform:uppercase;}
+  .scorelabel-pitcher{font-size:13px; font-weight:700; color:var(--gold); letter-spacing:0.5px; margin-top:1px;}
 
   .favtier{
     font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.5px;
@@ -1325,7 +1326,7 @@ function render(){
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
           <div class="scoreval">${fmtNum(displayPct(cardScore, boardMode), 1)}%</div>
-          <div class="scorelabel">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : `${boardMode.toUpperCase()} favorability`}</div>
+          <div class="scorelabel ${p.playerType === 'pitcher' ? 'scorelabel-pitcher' : ''}">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : `${boardMode.toUpperCase()} favorability`}</div>
         </div>
       </div>
       <div class="chips">
