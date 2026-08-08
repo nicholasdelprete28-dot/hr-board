@@ -380,7 +380,35 @@
     "tbPowerPct": 60.3,
     "tbMatchupPct": 38.0,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -170,
+          "displayName": "Matt Olson"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -165,
+          "displayName": "Matt Olson"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 300,
+          "displayName": "Matt Olson"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Matt Olson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -763,7 +791,8 @@
     "tbPowerPct": 62.2,
     "tbMatchupPct": 49.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -1146,7 +1175,16 @@
     "tbPowerPct": 46.9,
     "tbMatchupPct": 65.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 115,
+          "displayName": "Alec Burleson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -1529,7 +1567,8 @@
     "tbPowerPct": 60.0,
     "tbMatchupPct": 48.8,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -1912,7 +1951,40 @@
     "tbPowerPct": 53.7,
     "tbMatchupPct": 55.1,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 149,
+          "displayName": "Pete Crow-Armstrong"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 145,
+          "displayName": "Pete Crow-Armstrong"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -138,
+          "displayName": "Pete Crow-Armstrong"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -135,
+          "displayName": "Pete Crow-Armstrong"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 375,
+          "displayName": "Pete Crow-Armstrong"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -2295,7 +2367,33 @@
     "tbPowerPct": 46.6,
     "tbMatchupPct": 69.7,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Bryce Harper"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Bryce Harper"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -115,
+          "displayName": "Bryce Harper"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -115,
+          "displayName": "Bryce Harper"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -2678,7 +2776,8 @@
     "tbPowerPct": 53.9,
     "tbMatchupPct": 56.9,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -3061,7 +3160,8 @@
     "tbPowerPct": 54.2,
     "tbMatchupPct": 44.2,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -3444,7 +3544,8 @@
     "tbPowerPct": 53.8,
     "tbMatchupPct": 46.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -3827,7 +3928,8 @@
     "tbPowerPct": 47.7,
     "tbMatchupPct": 45.6,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -4210,7 +4312,40 @@
     "tbPowerPct": 41.6,
     "tbMatchupPct": 54.2,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -274,
+          "displayName": "Wilyer Abreu"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -275,
+          "displayName": "Wilyer Abreu"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "Wilyer Abreu"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 105,
+          "displayName": "Wilyer Abreu"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 550,
+          "displayName": "Wilyer Abreu"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -4593,7 +4728,40 @@
     "tbPowerPct": 48.3,
     "tbMatchupPct": 50.8,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 220,
+          "displayName": "Dillon Dingler"
+        },
+        "draftkings": {
+          "line": 0.5,
+          "price": -229,
+          "displayName": "Dillon Dingler"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1750,
+          "displayName": "Dillon Dingler"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Dillon Dingler"
+        },
+        "draftkings": {
+          "line": 1.5,
+          "price": 121,
+          "displayName": "Dillon Dingler"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -4976,7 +5144,8 @@
     "tbPowerPct": 56.9,
     "tbMatchupPct": 56.0,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -5359,7 +5528,40 @@
     "tbPowerPct": 27.4,
     "tbMatchupPct": 38.7,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -241,
+          "displayName": "Ronald Acuna Jr."
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "Ronald Acuna Jr."
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 114,
+          "displayName": "Ronald Acuna Jr."
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "Ronald Acuna Jr."
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 350,
+          "displayName": "Ronald Acuna Jr."
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -5742,7 +5944,40 @@
     "tbPowerPct": 71.5,
     "tbMatchupPct": 51.8,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 275,
+          "displayName": "Yordan Alvarez"
+        },
+        "draftkings": {
+          "line": 1.5,
+          "price": 285,
+          "displayName": "Yordan Alvarez"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1200,
+          "displayName": "Yordan Alvarez"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 275,
+          "displayName": "Yordan Alvarez"
+        },
+        "draftkings": {
+          "line": 1.5,
+          "price": 285,
+          "displayName": "Yordan Alvarez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -6125,7 +6360,40 @@
     "tbPowerPct": 47.2,
     "tbMatchupPct": 40.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -206,
+          "displayName": "Drake Baldwin"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -200,
+          "displayName": "Drake Baldwin"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 128,
+          "displayName": "Drake Baldwin"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Drake Baldwin"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 375,
+          "displayName": "Drake Baldwin"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -6508,7 +6776,33 @@
     "tbPowerPct": 60.4,
     "tbMatchupPct": 62.6,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -218,
+          "displayName": "Kyle Schwarber"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -220,
+          "displayName": "Kyle Schwarber"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -109,
+          "displayName": "Kyle Schwarber"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -105,
+          "displayName": "Kyle Schwarber"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -6891,7 +7185,8 @@
     "tbPowerPct": 43.5,
     "tbMatchupPct": 55.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -7274,7 +7569,8 @@
     "tbPowerPct": 25.9,
     "tbMatchupPct": 62.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -7657,7 +7953,40 @@
     "tbPowerPct": 50.1,
     "tbMatchupPct": 49.8,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -200,
+          "displayName": "Rafael Devers"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -195,
+          "displayName": "Rafael Devers"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 1500,
+          "displayName": "Rafael Devers"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Rafael Devers"
+        },
+        "draftkings": {
+          "line": 1.5,
+          "price": 132,
+          "displayName": "Rafael Devers"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -8040,7 +8369,40 @@
     "tbPowerPct": 47.9,
     "tbMatchupPct": 40.8,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -218,
+          "displayName": "Michael Harris II"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -220,
+          "displayName": "Michael Harris II"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Michael Harris II"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Michael Harris II"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 425,
+          "displayName": "Michael Harris II"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -8423,7 +8785,8 @@
     "tbPowerPct": 49.4,
     "tbMatchupPct": 45.6,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -8806,7 +9169,40 @@
     "tbPowerPct": 28.3,
     "tbMatchupPct": 60.8,
     "tbRecentPct": 100.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -263,
+          "displayName": "Ceddanne Rafaela"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -275,
+          "displayName": "Ceddanne Rafaela"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 111,
+          "displayName": "Ceddanne Rafaela"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "Ceddanne Rafaela"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 600,
+          "displayName": "Ceddanne Rafaela"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -9189,7 +9585,35 @@
     "tbPowerPct": 57.5,
     "tbMatchupPct": 33.4,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -166,
+          "displayName": "Ben Rice"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -165,
+          "displayName": "Ben Rice"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 475,
+          "displayName": "Ben Rice"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 145,
+          "displayName": "Ben Rice"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -9572,7 +9996,8 @@
     "tbPowerPct": 48.8,
     "tbMatchupPct": 41.3,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -9955,7 +10380,30 @@
     "tbPowerPct": 41.0,
     "tbMatchupPct": 40.6,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 2.5,
+          "price": 350,
+          "displayName": "Fernando Tatis Jr."
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 1500,
+          "displayName": "Fernando Tatis Jr."
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 5.5,
+          "price": 350,
+          "displayName": "Fernando Tatis Jr."
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -10338,7 +10786,40 @@
     "tbPowerPct": 46.8,
     "tbMatchupPct": 27.7,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -243,
+          "displayName": "Brandon Lowe"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -260,
+          "displayName": "Brandon Lowe"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 105,
+          "displayName": "Brandon Lowe"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 105,
+          "displayName": "Brandon Lowe"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 325,
+          "displayName": "Brandon Lowe"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -10721,7 +11202,16 @@
     "tbPowerPct": 50.4,
     "tbMatchupPct": 60.8,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -125,
+          "displayName": "Jordan Walker"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -11104,7 +11594,28 @@
     "tbPowerPct": 27.1,
     "tbMatchupPct": 58.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -168,
+          "displayName": "Jesus Sanchez"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -175,
+          "displayName": "Jesus Sanchez"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Jesus Sanchez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -11487,7 +11998,8 @@
     "tbPowerPct": 26.8,
     "tbMatchupPct": 38.4,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -11870,7 +12382,33 @@
     "tbPowerPct": 46.4,
     "tbMatchupPct": 30.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -200,
+          "displayName": "Miguel Vargas"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -200,
+          "displayName": "Miguel Vargas"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 123,
+          "displayName": "Miguel Vargas"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Miguel Vargas"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -12253,7 +12791,8 @@
     "tbPowerPct": 24.2,
     "tbMatchupPct": 48.9,
     "tbRecentPct": 100.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -12628,7 +13167,21 @@
     "tbPowerPct": 31.5,
     "tbMatchupPct": 33.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -161,
+          "displayName": "Munetaka Murakami"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Munetaka Murakami"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -13011,7 +13564,8 @@
     "tbPowerPct": 38.9,
     "tbMatchupPct": 50.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -13394,7 +13948,8 @@
     "tbPowerPct": 38.2,
     "tbMatchupPct": 48.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -13777,7 +14332,8 @@
     "tbPowerPct": 36.1,
     "tbMatchupPct": 39.5,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -13996,7 +14552,33 @@
     "tbPowerPct": 27.1,
     "tbMatchupPct": 59.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -162,
+          "displayName": "Osleivis Basabe"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -175,
+          "displayName": "Osleivis Basabe"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 2.5,
+          "price": 380,
+          "displayName": "Osleivis Basabe"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 165,
+          "displayName": "Osleivis Basabe"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -14379,7 +14961,40 @@
     "tbPowerPct": 51.5,
     "tbMatchupPct": 37.2,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -244,
+          "displayName": "Jac Caglianone"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "Jac Caglianone"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 118,
+          "displayName": "Jac Caglianone"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Jac Caglianone"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 500,
+          "displayName": "Jac Caglianone"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -14762,7 +15377,8 @@
     "tbPowerPct": 40.1,
     "tbMatchupPct": 54.5,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -15145,7 +15761,16 @@
     "tbPowerPct": 44.5,
     "tbMatchupPct": 50.5,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Brandon Nimmo"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -15528,7 +16153,16 @@
     "tbPowerPct": 27.9,
     "tbMatchupPct": 51.8,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Joc Pederson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -15911,7 +16545,8 @@
     "tbPowerPct": 38.2,
     "tbMatchupPct": 45.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -16294,7 +16929,28 @@
     "tbPowerPct": 44.7,
     "tbMatchupPct": 51.8,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -189,
+          "displayName": "Riley Greene"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Riley Greene"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Riley Greene"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -16677,7 +17333,8 @@
     "tbPowerPct": 27.3,
     "tbMatchupPct": 56.9,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -17060,7 +17717,16 @@
     "tbPowerPct": 52.7,
     "tbMatchupPct": 38.8,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Pete Alonso"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -17443,7 +18109,33 @@
     "tbPowerPct": 21.4,
     "tbMatchupPct": 53.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 156,
+          "displayName": "Jung Hoo Lee"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Jung Hoo Lee"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -103,
+          "displayName": "Jung Hoo Lee"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "Jung Hoo Lee"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -17826,7 +18518,40 @@
     "tbPowerPct": 43.2,
     "tbMatchupPct": 32.2,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -238,
+          "displayName": "Tyler Soderstrom"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Tyler Soderstrom"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 129,
+          "displayName": "Tyler Soderstrom"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Tyler Soderstrom"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 800,
+          "displayName": "Tyler Soderstrom"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -18209,7 +18934,8 @@
     "tbPowerPct": 44.2,
     "tbMatchupPct": 38.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -18592,7 +19318,40 @@
     "tbPowerPct": 38.0,
     "tbMatchupPct": 52.9,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 165,
+          "displayName": "Seiya Suzuki"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Seiya Suzuki"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -117,
+          "displayName": "Seiya Suzuki"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -115,
+          "displayName": "Seiya Suzuki"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 450,
+          "displayName": "Seiya Suzuki"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -18975,7 +19734,33 @@
     "tbPowerPct": 28.6,
     "tbMatchupPct": 67.2,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Trea Turner"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Trea Turner"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 105,
+          "displayName": "Trea Turner"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 100,
+          "displayName": "Trea Turner"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -19358,7 +20143,8 @@
     "tbPowerPct": 36.5,
     "tbMatchupPct": 46.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -19741,7 +20527,16 @@
     "tbPowerPct": 30.8,
     "tbMatchupPct": 58.2,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 150,
+          "displayName": "Willi Castro"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -20124,7 +20919,40 @@
     "tbPowerPct": 47.6,
     "tbMatchupPct": 38.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 184,
+          "displayName": "Bobby Witt Jr."
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Bobby Witt Jr."
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -108,
+          "displayName": "Bobby Witt Jr."
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -110,
+          "displayName": "Bobby Witt Jr."
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 450,
+          "displayName": "Bobby Witt Jr."
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -20507,7 +21335,33 @@
     "tbPowerPct": 22.9,
     "tbMatchupPct": 53.8,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -239,
+          "displayName": "Alejandro Kirk"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "Alejandro Kirk"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Alejandro Kirk"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Alejandro Kirk"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -20890,7 +21744,35 @@
     "tbPowerPct": 33.0,
     "tbMatchupPct": 26.4,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -145,
+          "displayName": "Trent Grisham"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -150,
+          "displayName": "Trent Grisham"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 575,
+          "displayName": "Trent Grisham"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 200,
+          "displayName": "Trent Grisham"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -21273,7 +22155,30 @@
     "tbPowerPct": 34.1,
     "tbMatchupPct": 43.3,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 350,
+          "displayName": "Julio Rodriguez"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1500,
+          "displayName": "Julio Rodriguez"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 325,
+          "displayName": "Julio Rodriguez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -21656,7 +22561,8 @@
     "tbPowerPct": 29.5,
     "tbMatchupPct": 36.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -22031,7 +22937,40 @@
     "tbPowerPct": 28.4,
     "tbMatchupPct": 51.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 122,
+          "displayName": "Kevin McGonigle"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Kevin McGonigle"
+        }
+      },
+      "hits": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -260,
+          "displayName": "Kevin McGonigle"
+        },
+        "draftkings": {
+          "line": 0.5,
+          "price": -257,
+          "displayName": "Kevin McGonigle"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1750,
+          "displayName": "Kevin McGonigle"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -22414,7 +23353,8 @@
     "tbPowerPct": 30.0,
     "tbMatchupPct": 46.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -22797,7 +23737,16 @@
     "tbPowerPct": 35.0,
     "tbMatchupPct": 28.5,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 240,
+          "displayName": "Jazz Chisholm Jr."
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -23172,7 +24121,8 @@
     "tbPowerPct": 30.7,
     "tbMatchupPct": 55.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -23555,7 +24505,40 @@
     "tbPowerPct": 37.6,
     "tbMatchupPct": 33.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Carter Jensen"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Carter Jensen"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 131,
+          "displayName": "Carter Jensen"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Carter Jensen"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 475,
+          "displayName": "Carter Jensen"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -23930,7 +24913,16 @@
     "tbPowerPct": 30.3,
     "tbMatchupPct": 58.0,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "JJ Wetherholt"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -24305,7 +25297,33 @@
     "tbPowerPct": 41.0,
     "tbMatchupPct": 52.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -208,
+          "displayName": "Kazuma Okamoto"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Kazuma Okamoto"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 122,
+          "displayName": "Kazuma Okamoto"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Kazuma Okamoto"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -24688,7 +25706,40 @@
     "tbPowerPct": 27.5,
     "tbMatchupPct": 51.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -229,
+          "displayName": "Francisco Lindor"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Francisco Lindor"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 113,
+          "displayName": "Francisco Lindor"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 115,
+          "displayName": "Francisco Lindor"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 450,
+          "displayName": "Francisco Lindor"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -25071,7 +26122,21 @@
     "tbPowerPct": 23.5,
     "tbMatchupPct": 33.0,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -146,
+          "displayName": "Chase Meidroth"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -145,
+          "displayName": "Chase Meidroth"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -25454,7 +26519,16 @@
     "tbPowerPct": 40.1,
     "tbMatchupPct": 53.1,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -110,
+          "displayName": "Freddie Freeman"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -25837,7 +26911,8 @@
     "tbPowerPct": 25.8,
     "tbMatchupPct": 41.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -26220,7 +27295,8 @@
     "tbPowerPct": 47.2,
     "tbMatchupPct": 45.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -26603,7 +27679,8 @@
     "tbPowerPct": 29.3,
     "tbMatchupPct": 45.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -26986,7 +28063,8 @@
     "tbPowerPct": 33.5,
     "tbMatchupPct": 31.0,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -27369,7 +28447,8 @@
     "tbPowerPct": 47.9,
     "tbMatchupPct": 20.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -27752,7 +28831,35 @@
     "tbPowerPct": 33.2,
     "tbMatchupPct": 32.7,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -139,
+          "displayName": "Austin Riley"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -135,
+          "displayName": "Austin Riley"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 450,
+          "displayName": "Austin Riley"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Austin Riley"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -28135,7 +29242,8 @@
     "tbPowerPct": 47.0,
     "tbMatchupPct": 38.2,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -28518,7 +29626,33 @@
     "tbPowerPct": 37.0,
     "tbMatchupPct": 70.1,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -231,
+          "displayName": "Brandon Marsh"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Brandon Marsh"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 113,
+          "displayName": "Brandon Marsh"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Brandon Marsh"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -28901,7 +30035,16 @@
     "tbPowerPct": 26.2,
     "tbMatchupPct": 56.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": -105,
+          "displayName": "Ivan Herrera"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -29284,7 +30427,33 @@
     "tbPowerPct": 28.3,
     "tbMatchupPct": 52.9,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -239,
+          "displayName": "George Springer"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 240,
+          "displayName": "George Springer"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 121,
+          "displayName": "George Springer"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "George Springer"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -29667,7 +30836,8 @@
     "tbPowerPct": 44.1,
     "tbMatchupPct": 44.6,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -30050,7 +31220,40 @@
     "tbPowerPct": 22.7,
     "tbMatchupPct": 53.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -226,
+          "displayName": "Gleyber Torres"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -225,
+          "displayName": "Gleyber Torres"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 144,
+          "displayName": "Gleyber Torres"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Gleyber Torres"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 2000,
+          "displayName": "Gleyber Torres"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -30433,7 +31636,8 @@
     "tbPowerPct": 28.0,
     "tbMatchupPct": 42.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -30808,7 +32012,33 @@
     "tbPowerPct": 37.3,
     "tbMatchupPct": 49.9,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -219,
+          "displayName": "Chase DeLauter"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -225,
+          "displayName": "Chase DeLauter"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 137,
+          "displayName": "Chase DeLauter"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Chase DeLauter"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -31191,7 +32421,8 @@
     "tbPowerPct": 24.4,
     "tbMatchupPct": 51.0,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -31574,7 +32805,8 @@
     "tbPowerPct": 26.1,
     "tbMatchupPct": 33.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -31957,7 +33189,8 @@
     "tbPowerPct": 28.9,
     "tbMatchupPct": 52.1,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -32340,7 +33573,33 @@
     "tbPowerPct": 19.3,
     "tbMatchupPct": 73.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 166,
+          "displayName": "Luis Arraez"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 175,
+          "displayName": "Luis Arraez"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "Luis Arraez"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 115,
+          "displayName": "Luis Arraez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -32723,7 +33982,8 @@
     "tbPowerPct": 28.3,
     "tbMatchupPct": 51.6,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -33106,7 +34366,40 @@
     "tbPowerPct": 41.0,
     "tbMatchupPct": 25.9,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -205,
+          "displayName": "Bryan Reynolds"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -220,
+          "displayName": "Bryan Reynolds"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 131,
+          "displayName": "Bryan Reynolds"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Bryan Reynolds"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 500,
+          "displayName": "Bryan Reynolds"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -33489,7 +34782,8 @@
     "tbPowerPct": 26.5,
     "tbMatchupPct": 61.6,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -33872,7 +35166,33 @@
     "tbPowerPct": 20.2,
     "tbMatchupPct": 59.1,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 187,
+          "displayName": "Nathan Lukes"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Nathan Lukes"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 115,
+          "displayName": "Nathan Lukes"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Nathan Lukes"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -34255,7 +35575,8 @@
     "tbPowerPct": 26.9,
     "tbMatchupPct": 28.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -34638,7 +35959,8 @@
     "tbPowerPct": 36.1,
     "tbMatchupPct": 38.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -35013,7 +36335,35 @@
     "tbPowerPct": 30.8,
     "tbMatchupPct": 26.5,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -107,
+          "displayName": "Spencer Jones"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -110,
+          "displayName": "Spencer Jones"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 750,
+          "displayName": "Spencer Jones"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 260,
+          "displayName": "Spencer Jones"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -35396,7 +36746,40 @@
     "tbPowerPct": 23.0,
     "tbMatchupPct": 51.2,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 183,
+          "displayName": "Alex Bregman"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Alex Bregman"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -103,
+          "displayName": "Alex Bregman"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 100,
+          "displayName": "Alex Bregman"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 575,
+          "displayName": "Alex Bregman"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -35779,7 +37162,33 @@
     "tbPowerPct": 32.7,
     "tbMatchupPct": 46.4,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -208,
+          "displayName": "Jo Adell"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Jo Adell"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 134,
+          "displayName": "Jo Adell"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 135,
+          "displayName": "Jo Adell"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -36162,7 +37571,35 @@
     "tbPowerPct": 25.8,
     "tbMatchupPct": 34.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -103,
+          "displayName": "Mike Yastrzemski"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 100,
+          "displayName": "Mike Yastrzemski"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 500,
+          "displayName": "Mike Yastrzemski"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 200,
+          "displayName": "Mike Yastrzemski"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -36545,7 +37982,40 @@
     "tbPowerPct": 28.7,
     "tbMatchupPct": 51.6,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 188,
+          "displayName": "Michael Busch"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Michael Busch"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": -101,
+          "displayName": "Michael Busch"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 105,
+          "displayName": "Michael Busch"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 550,
+          "displayName": "Michael Busch"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -36920,7 +38390,8 @@
     "tbPowerPct": 21.2,
     "tbMatchupPct": 48.2,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -37303,7 +38774,8 @@
     "tbPowerPct": 25.7,
     "tbMatchupPct": 41.7,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -37496,7 +38968,8 @@
     "tbPowerPct": 25.7,
     "tbMatchupPct": 34.2,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -37879,7 +39352,8 @@
     "tbPowerPct": 34.8,
     "tbMatchupPct": 49.0,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -38262,7 +39736,8 @@
     "tbPowerPct": 40.0,
     "tbMatchupPct": 33.6,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -38645,7 +40120,16 @@
     "tbPowerPct": 28.1,
     "tbMatchupPct": 46.2,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Corey Seager"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -39028,7 +40512,35 @@
     "tbPowerPct": 21.9,
     "tbMatchupPct": 48.4,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -158,
+          "displayName": "Marcus Semien"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Marcus Semien"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 800,
+          "displayName": "Marcus Semien"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Marcus Semien"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -39411,7 +40923,8 @@
     "tbPowerPct": 22.9,
     "tbMatchupPct": 39.3,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -39794,7 +41307,40 @@
     "tbPowerPct": 25.2,
     "tbMatchupPct": 53.7,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 199,
+          "displayName": "Bo Bichette"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Bo Bichette"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 127,
+          "displayName": "Bo Bichette"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Bo Bichette"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 850,
+          "displayName": "Bo Bichette"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -40177,7 +41723,16 @@
     "tbPowerPct": 25.2,
     "tbMatchupPct": 52.9,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Wyatt Langford"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -40560,7 +42115,33 @@
     "tbPowerPct": 26.7,
     "tbMatchupPct": 62.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -270,
+          "displayName": "Alec Bohm"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 210,
+          "displayName": "Alec Bohm"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 121,
+          "displayName": "Alec Bohm"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Alec Bohm"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -40943,7 +42524,16 @@
     "tbPowerPct": 31.9,
     "tbMatchupPct": 53.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Ezequiel Duran"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -41326,7 +42916,8 @@
     "tbPowerPct": 18.2,
     "tbMatchupPct": 45.8,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -41709,7 +43300,8 @@
     "tbPowerPct": 25.7,
     "tbMatchupPct": 43.5,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -42092,7 +43684,8 @@
     "tbPowerPct": 23.2,
     "tbMatchupPct": 58.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -42475,7 +44068,40 @@
     "tbPowerPct": 29.9,
     "tbMatchupPct": 30.8,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -228,
+          "displayName": "Salvador Perez"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Salvador Perez"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Salvador Perez"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Salvador Perez"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 550,
+          "displayName": "Salvador Perez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -42858,7 +44484,16 @@
     "tbPowerPct": 32.6,
     "tbMatchupPct": 34.5,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Gunnar Henderson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -43241,7 +44876,21 @@
     "tbPowerPct": 25.9,
     "tbMatchupPct": 44.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -136,
+          "displayName": "Rhys Hoskins"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -135,
+          "displayName": "Rhys Hoskins"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -43616,7 +45265,40 @@
     "tbPowerPct": 26.6,
     "tbMatchupPct": 31.5,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -242,
+          "displayName": "Henry Bolte"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "Henry Bolte"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 134,
+          "displayName": "Henry Bolte"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 135,
+          "displayName": "Henry Bolte"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 750,
+          "displayName": "Henry Bolte"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -43999,7 +45681,8 @@
     "tbPowerPct": 38.1,
     "tbMatchupPct": 23.4,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -44382,7 +46065,35 @@
     "tbPowerPct": 28.2,
     "tbMatchupPct": 32.3,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -167,
+          "displayName": "Heliot Ramos"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -165,
+          "displayName": "Heliot Ramos"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 450,
+          "displayName": "Heliot Ramos"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Heliot Ramos"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -44614,7 +46325,8 @@
     "tbPowerPct": 29.8,
     "tbMatchupPct": 31.1,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -44997,7 +46709,8 @@
     "tbPowerPct": 24.5,
     "tbMatchupPct": 51.1,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -45380,7 +47093,8 @@
     "tbPowerPct": 28.0,
     "tbMatchupPct": 41.3,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -45763,7 +47477,8 @@
     "tbPowerPct": 25.2,
     "tbMatchupPct": 23.7,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -46138,7 +47853,16 @@
     "tbPowerPct": 22.1,
     "tbMatchupPct": 60.2,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Cole Carrigg"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -46521,7 +48245,33 @@
     "tbPowerPct": 27.9,
     "tbMatchupPct": 45.7,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 193,
+          "displayName": "Jose Ramirez"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Jose Ramirez"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 106,
+          "displayName": "Jose Ramirez"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 100,
+          "displayName": "Jose Ramirez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -46904,7 +48654,40 @@
     "tbPowerPct": 19.8,
     "tbMatchupPct": 34.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 181,
+          "displayName": "Jacob Wilson"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Jacob Wilson"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 119,
+          "displayName": "Jacob Wilson"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 115,
+          "displayName": "Jacob Wilson"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1000,
+          "displayName": "Jacob Wilson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -47287,7 +49070,8 @@
     "tbPowerPct": 21.7,
     "tbMatchupPct": 63.3,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -47441,7 +49225,35 @@
     "tbPowerPct": 24.9,
     "tbMatchupPct": 40.0,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -125,
+          "displayName": "George Lombard Jr."
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -125,
+          "displayName": "George Lombard Jr."
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 750,
+          "displayName": "George Lombard Jr."
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 210,
+          "displayName": "George Lombard Jr."
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -47824,7 +49636,8 @@
     "tbPowerPct": 23.0,
     "tbMatchupPct": 47.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -47978,7 +49791,16 @@
     "tbPowerPct": 36.1,
     "tbMatchupPct": 61.4,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -177,
+          "displayName": "Angel Genao"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -48361,7 +50183,8 @@
     "tbPowerPct": 20.3,
     "tbMatchupPct": 51.8,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -48744,7 +50567,33 @@
     "tbPowerPct": 23.6,
     "tbMatchupPct": 47.4,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -234,
+          "displayName": "Angel Martinez"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "Angel Martinez"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 137,
+          "displayName": "Angel Martinez"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Angel Martinez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -49127,7 +50976,8 @@
     "tbPowerPct": 24.0,
     "tbMatchupPct": 77.0,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -49510,7 +51360,40 @@
     "tbPowerPct": 22.8,
     "tbMatchupPct": 26.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -238,
+          "displayName": "Jonah Heim"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Jonah Heim"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 128,
+          "displayName": "Jonah Heim"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 125,
+          "displayName": "Jonah Heim"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 600,
+          "displayName": "Jonah Heim"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -49893,7 +51776,8 @@
     "tbPowerPct": 10.8,
     "tbMatchupPct": 41.8,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -50276,7 +52160,28 @@
     "tbPowerPct": 38.1,
     "tbMatchupPct": 26.9,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -142,
+          "displayName": "Colson Montgomery"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -150,
+          "displayName": "Colson Montgomery"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 175,
+          "displayName": "Colson Montgomery"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -50659,7 +52564,8 @@
     "tbPowerPct": 35.6,
     "tbMatchupPct": 34.5,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -51034,7 +52940,35 @@
     "tbPowerPct": 30.2,
     "tbMatchupPct": 22.3,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -179,
+          "displayName": "Esmerlyn Valdez"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -175,
+          "displayName": "Esmerlyn Valdez"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 425,
+          "displayName": "Esmerlyn Valdez"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 145,
+          "displayName": "Esmerlyn Valdez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -51417,7 +53351,8 @@
     "tbPowerPct": 27.8,
     "tbMatchupPct": 28.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -51800,7 +53735,33 @@
     "tbPowerPct": 31.1,
     "tbMatchupPct": 64.9,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -232,
+          "displayName": "Bryson Stott"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Bryson Stott"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Bryson Stott"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Bryson Stott"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -52175,7 +54136,40 @@
     "tbPowerPct": 25.5,
     "tbMatchupPct": 54.9,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -238,
+          "displayName": "A.J. Ewing"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "A.J. Ewing"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 126,
+          "displayName": "A.J. Ewing"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "A.J. Ewing"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 800,
+          "displayName": "A.J. Ewing"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -52558,7 +54552,35 @@
     "tbPowerPct": 19.8,
     "tbMatchupPct": 39.6,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -201,
+          "displayName": "Mauricio Dubon"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -200,
+          "displayName": "Mauricio Dubon"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 750,
+          "displayName": "Mauricio Dubon"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Mauricio Dubon"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -52941,7 +54963,8 @@
     "tbPowerPct": 24.8,
     "tbMatchupPct": 63.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -53324,7 +55347,8 @@
     "tbPowerPct": 20.5,
     "tbMatchupPct": 41.0,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -53707,7 +55731,8 @@
     "tbPowerPct": 24.5,
     "tbMatchupPct": 42.3,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -54090,7 +56115,28 @@
     "tbPowerPct": 30.5,
     "tbMatchupPct": 45.5,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -181,
+          "displayName": "Willy Adames"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Willy Adames"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 145,
+          "displayName": "Willy Adames"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -54473,7 +56519,8 @@
     "tbPowerPct": 28.2,
     "tbMatchupPct": 42.0,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -54856,7 +56903,8 @@
     "tbPowerPct": 27.5,
     "tbMatchupPct": 44.0,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -55239,7 +57287,40 @@
     "tbPowerPct": 19.9,
     "tbMatchupPct": 29.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 158,
+          "displayName": "Jake Mangum"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 155,
+          "displayName": "Jake Mangum"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 113,
+          "displayName": "Jake Mangum"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 110,
+          "displayName": "Jake Mangum"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1400,
+          "displayName": "Jake Mangum"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -55622,7 +57703,8 @@
     "tbPowerPct": 39.8,
     "tbMatchupPct": 41.0,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -56005,7 +58087,8 @@
     "tbPowerPct": 27.3,
     "tbMatchupPct": 30.7,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -56388,7 +58471,16 @@
     "tbPowerPct": 24.0,
     "tbMatchupPct": 51.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -143,
+          "displayName": "Brett Baty"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -56771,7 +58863,35 @@
     "tbPowerPct": 27.0,
     "tbMatchupPct": 54.4,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -162,
+          "displayName": "Jared Young"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Jared Young"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 575,
+          "displayName": "Jared Young"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Jared Young"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -57154,7 +59274,8 @@
     "tbPowerPct": 20.9,
     "tbMatchupPct": 37.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -57537,7 +59658,40 @@
     "tbPowerPct": 24.8,
     "tbMatchupPct": 58.6,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -192,
+          "displayName": "Andruw Monasterio"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Andruw Monasterio"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 142,
+          "displayName": "Andruw Monasterio"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Andruw Monasterio"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 600,
+          "displayName": "Andruw Monasterio"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -57920,7 +60074,8 @@
     "tbPowerPct": 38.7,
     "tbMatchupPct": 48.6,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -58303,7 +60458,40 @@
     "tbPowerPct": 33.9,
     "tbMatchupPct": 50.3,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -220,
+          "displayName": "Ian Happ"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -225,
+          "displayName": "Ian Happ"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 118,
+          "displayName": "Ian Happ"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Ian Happ"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 575,
+          "displayName": "Ian Happ"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -58678,7 +60866,8 @@
     "tbPowerPct": 24.4,
     "tbMatchupPct": 41.8,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -58806,7 +60995,8 @@
     "tbPowerPct": 19.8,
     "tbMatchupPct": 67.0,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -59189,7 +61379,35 @@
     "tbPowerPct": 37.5,
     "tbMatchupPct": 41.8,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -146,
+          "displayName": "Spencer Torkelson"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -155,
+          "displayName": "Spencer Torkelson"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1100,
+          "displayName": "Spencer Torkelson"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Spencer Torkelson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -59572,7 +61790,16 @@
     "tbPowerPct": 28.5,
     "tbMatchupPct": 30.3,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Coby Mayo"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -59955,7 +62182,8 @@
     "tbPowerPct": 26.5,
     "tbMatchupPct": 28.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -60338,7 +62566,8 @@
     "tbPowerPct": 25.7,
     "tbMatchupPct": 26.6,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -60721,7 +62950,40 @@
     "tbPowerPct": 16.7,
     "tbMatchupPct": 55.9,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -267,
+          "displayName": "Caleb Durbin"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -275,
+          "displayName": "Caleb Durbin"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 126,
+          "displayName": "Caleb Durbin"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Caleb Durbin"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 800,
+          "displayName": "Caleb Durbin"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -61096,7 +63358,8 @@
     "tbPowerPct": 24.3,
     "tbMatchupPct": 56.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -61479,7 +63742,21 @@
     "tbPowerPct": 24.7,
     "tbMatchupPct": 50.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -178,
+          "displayName": "Colt Keith"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Colt Keith"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -61862,7 +64139,8 @@
     "tbPowerPct": 25.1,
     "tbMatchupPct": 43.6,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -62237,7 +64515,8 @@
     "tbPowerPct": 25.3,
     "tbMatchupPct": 44.6,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -62620,7 +64899,33 @@
     "tbPowerPct": 15.5,
     "tbMatchupPct": 58.8,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -269,
+          "displayName": "Ernie Clement"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 200,
+          "displayName": "Ernie Clement"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 129,
+          "displayName": "Ernie Clement"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Ernie Clement"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -63003,7 +65308,30 @@
     "tbPowerPct": 20.5,
     "tbMatchupPct": 40.4,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 275,
+          "displayName": "Jose Altuve"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1750,
+          "displayName": "Jose Altuve"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 2.5,
+          "price": 275,
+          "displayName": "Jose Altuve"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -63386,7 +65714,35 @@
     "tbPowerPct": 25.5,
     "tbMatchupPct": 27.0,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -188,
+          "displayName": "Lawrence Butler"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -180,
+          "displayName": "Lawrence Butler"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 900,
+          "displayName": "Lawrence Butler"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 165,
+          "displayName": "Lawrence Butler"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -63769,7 +66125,8 @@
     "tbPowerPct": 25.2,
     "tbMatchupPct": 41.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -64152,7 +66509,30 @@
     "tbPowerPct": 25.6,
     "tbMatchupPct": 25.0,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 350,
+          "displayName": "Tim Tawa"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1500,
+          "displayName": "Tim Tawa"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 350,
+          "displayName": "Tim Tawa"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -64535,7 +66915,8 @@
     "tbPowerPct": 23.4,
     "tbMatchupPct": 44.8,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -64918,7 +67299,8 @@
     "tbPowerPct": 24.0,
     "tbMatchupPct": 49.5,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -65301,7 +67683,33 @@
     "tbPowerPct": 28.9,
     "tbMatchupPct": 47.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -194,
+          "displayName": "Bryce Eldridge"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -195,
+          "displayName": "Bryce Eldridge"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 139,
+          "displayName": "Bryce Eldridge"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 135,
+          "displayName": "Bryce Eldridge"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -65684,7 +68092,33 @@
     "tbPowerPct": 5.1,
     "tbMatchupPct": 53.0,
     "tbRecentPct": 80.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -244,
+          "displayName": "Steven Kwan"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -250,
+          "displayName": "Steven Kwan"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 142,
+          "displayName": "Steven Kwan"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Steven Kwan"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -66067,7 +68501,40 @@
     "tbPowerPct": 17.0,
     "tbMatchupPct": 58.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -207,
+          "displayName": "Nick Sogard"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Nick Sogard"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 147,
+          "displayName": "Nick Sogard"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 145,
+          "displayName": "Nick Sogard"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 900,
+          "displayName": "Nick Sogard"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -66450,7 +68917,35 @@
     "tbPowerPct": 23.0,
     "tbMatchupPct": 28.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -197,
+          "displayName": "Spencer Horwitz"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Spencer Horwitz"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 600,
+          "displayName": "Spencer Horwitz"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Spencer Horwitz"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -66833,7 +69328,8 @@
     "tbPowerPct": 22.3,
     "tbMatchupPct": 56.1,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -67216,7 +69712,40 @@
     "tbPowerPct": 32.3,
     "tbMatchupPct": 47.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -232,
+          "displayName": "Dansby Swanson"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -230,
+          "displayName": "Dansby Swanson"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Dansby Swanson"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 120,
+          "displayName": "Dansby Swanson"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 500,
+          "displayName": "Dansby Swanson"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -67599,7 +70128,40 @@
     "tbPowerPct": 11.0,
     "tbMatchupPct": 51.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 163,
+          "displayName": "Nico Hoerner"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 160,
+          "displayName": "Nico Hoerner"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 100,
+          "displayName": "Nico Hoerner"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 105,
+          "displayName": "Nico Hoerner"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1200,
+          "displayName": "Nico Hoerner"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -67974,7 +70536,8 @@
     "tbPowerPct": 22.5,
     "tbMatchupPct": 64.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -68357,7 +70920,35 @@
     "tbPowerPct": 24.8,
     "tbMatchupPct": 36.1,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -187,
+          "displayName": "Michael Massey"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Michael Massey"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 800,
+          "displayName": "Michael Massey"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 150,
+          "displayName": "Michael Massey"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -68740,7 +71331,16 @@
     "tbPowerPct": 23.5,
     "tbMatchupPct": 37.6,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Jackson Holliday"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -69123,7 +71723,8 @@
     "tbPowerPct": 27.4,
     "tbMatchupPct": 25.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -69506,7 +72107,8 @@
     "tbPowerPct": 23.5,
     "tbMatchupPct": 50.4,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -69889,7 +72491,28 @@
     "tbPowerPct": 13.9,
     "tbMatchupPct": 54.5,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -165,
+          "displayName": "Andres Gimenez"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -165,
+          "displayName": "Andres Gimenez"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Andres Gimenez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -70272,7 +72895,8 @@
     "tbPowerPct": 21.9,
     "tbMatchupPct": 63.0,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -70655,7 +73279,33 @@
     "tbPowerPct": 23.4,
     "tbMatchupPct": 49.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -203,
+          "displayName": "Carson Kelly"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -210,
+          "displayName": "Carson Kelly"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 150,
+          "displayName": "Carson Kelly"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 150,
+          "displayName": "Carson Kelly"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -71038,7 +73688,16 @@
     "tbPowerPct": 18.3,
     "tbMatchupPct": 53.2,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 190,
+          "displayName": "Ezequiel Tovar"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -71413,7 +74072,8 @@
     "tbPowerPct": 22.0,
     "tbMatchupPct": 50.9,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -71788,7 +74448,8 @@
     "tbPowerPct": 23.2,
     "tbMatchupPct": 45.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -72171,7 +74832,23 @@
     "tbPowerPct": 22.0,
     "tbMatchupPct": 37.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -135,
+          "displayName": "Leody Taveras"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 195,
+          "displayName": "Leody Taveras"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -72546,7 +75223,21 @@
     "tbPowerPct": 23.5,
     "tbMatchupPct": 33.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -163,
+          "displayName": "Braden Montgomery"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Braden Montgomery"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -72929,7 +75620,35 @@
     "tbPowerPct": 24.1,
     "tbMatchupPct": 36.5,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Isaac Collins"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Isaac Collins"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 900,
+          "displayName": "Isaac Collins"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Isaac Collins"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -73312,7 +76031,8 @@
     "tbPowerPct": 16.5,
     "tbMatchupPct": 24.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 100.0
+    "tbOpportunityPct": 100.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -73695,7 +76415,8 @@
     "tbPowerPct": 25.4,
     "tbMatchupPct": 44.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -74070,7 +76791,21 @@
     "tbPowerPct": 21.3,
     "tbMatchupPct": 67.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -191,
+          "displayName": "Justin Crawford"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Justin Crawford"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -74453,7 +77188,8 @@
     "tbPowerPct": 26.9,
     "tbMatchupPct": 54.2,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -74836,7 +77572,8 @@
     "tbPowerPct": 16.7,
     "tbMatchupPct": 48.3,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -75219,7 +77956,8 @@
     "tbPowerPct": 26.3,
     "tbMatchupPct": 40.2,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -75602,7 +78340,8 @@
     "tbPowerPct": 24.1,
     "tbMatchupPct": 42.0,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -75985,7 +78724,8 @@
     "tbPowerPct": 23.0,
     "tbMatchupPct": 59.4,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -76368,7 +79108,35 @@
     "tbPowerPct": 22.0,
     "tbMatchupPct": 53.0,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -124,
+          "displayName": "Austin Hedges"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -125,
+          "displayName": "Austin Hedges"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1100,
+          "displayName": "Austin Hedges"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 260,
+          "displayName": "Austin Hedges"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -76751,7 +79519,8 @@
     "tbPowerPct": 21.6,
     "tbMatchupPct": 49.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -77134,7 +79903,8 @@
     "tbPowerPct": 25.1,
     "tbMatchupPct": 45.0,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -77517,7 +80287,8 @@
     "tbPowerPct": 20.8,
     "tbMatchupPct": 37.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -77900,7 +80671,8 @@
     "tbPowerPct": 18.5,
     "tbMatchupPct": 42.0,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -78283,7 +81055,8 @@
     "tbPowerPct": 24.6,
     "tbMatchupPct": 38.6,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -78666,7 +81439,8 @@
     "tbPowerPct": 20.3,
     "tbMatchupPct": 40.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 80.0
+    "tbOpportunityPct": 80.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -79049,7 +81823,8 @@
     "tbPowerPct": 20.8,
     "tbMatchupPct": 44.2,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -79432,7 +82207,8 @@
     "tbPowerPct": 25.4,
     "tbMatchupPct": 42.9,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -79815,7 +82591,23 @@
     "tbPowerPct": 23.9,
     "tbMatchupPct": 37.8,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -135,
+          "displayName": "Dylan Beavers"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Dylan Beavers"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -80177,7 +82969,35 @@
     "tbPowerPct": 21.9,
     "tbMatchupPct": 29.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -190,
+          "displayName": "Tommy White"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -185,
+          "displayName": "Tommy White"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 850,
+          "displayName": "Tommy White"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 145,
+          "displayName": "Tommy White"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -80560,7 +83380,16 @@
     "tbPowerPct": 13.5,
     "tbMatchupPct": 54.9,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 130,
+          "displayName": "Masyn Winn"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -80935,7 +83764,8 @@
     "tbPowerPct": 23.2,
     "tbMatchupPct": 37.6,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -81318,7 +84148,8 @@
     "tbPowerPct": 27.3,
     "tbMatchupPct": 28.9,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -81701,7 +84532,40 @@
     "tbPowerPct": 18.0,
     "tbMatchupPct": 32.4,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -246,
+          "displayName": "Nick Gonzales"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -260,
+          "displayName": "Nick Gonzales"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 144,
+          "displayName": "Nick Gonzales"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Nick Gonzales"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1100,
+          "displayName": "Nick Gonzales"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -82084,7 +84948,8 @@
     "tbPowerPct": 25.5,
     "tbMatchupPct": 20.7,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -82376,7 +85241,8 @@
     "tbPowerPct": 20.3,
     "tbMatchupPct": 25.4,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -82751,7 +85617,8 @@
     "tbPowerPct": 21.7,
     "tbMatchupPct": 36.8,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -82978,7 +85845,8 @@
     "tbPowerPct": 25.5,
     "tbMatchupPct": 44.8,
     "tbRecentPct": 0.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -83361,7 +86229,8 @@
     "tbPowerPct": 23.0,
     "tbMatchupPct": 42.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -83736,7 +86605,8 @@
     "tbPowerPct": 22.2,
     "tbMatchupPct": 58.1,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -84119,7 +86989,23 @@
     "tbPowerPct": 23.3,
     "tbMatchupPct": 46.8,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -135,
+          "displayName": "Evan Carter"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 195,
+          "displayName": "Evan Carter"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -84502,7 +87388,8 @@
     "tbPowerPct": 23.8,
     "tbMatchupPct": 38.7,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -84885,7 +87772,8 @@
     "tbPowerPct": 27.0,
     "tbMatchupPct": 34.0,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -85268,7 +88156,8 @@
     "tbPowerPct": 25.8,
     "tbMatchupPct": 44.6,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -85651,7 +88540,8 @@
     "tbPowerPct": 21.2,
     "tbMatchupPct": 46.1,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -86026,7 +88916,8 @@
     "tbPowerPct": 23.7,
     "tbMatchupPct": 27.3,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -86232,7 +89123,40 @@
     "tbPowerPct": 22.3,
     "tbMatchupPct": 55.0,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Max Clark"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -165,
+          "displayName": "Max Clark"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 320,
+          "displayName": "Max Clark"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 275,
+          "displayName": "Max Clark"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 2000,
+          "displayName": "Max Clark"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -86615,7 +89539,30 @@
     "tbPowerPct": 19.2,
     "tbMatchupPct": 35.1,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 350,
+          "displayName": "Xander Bogaerts"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1750,
+          "displayName": "Xander Bogaerts"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 1000,
+          "displayName": "Xander Bogaerts"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -86998,7 +89945,8 @@
     "tbPowerPct": 25.0,
     "tbMatchupPct": 37.9,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -87381,7 +90329,8 @@
     "tbPowerPct": 23.3,
     "tbMatchupPct": 33.8,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -87764,7 +90713,8 @@
     "tbPowerPct": 27.6,
     "tbMatchupPct": 35.1,
     "tbRecentPct": 0.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -88147,7 +91097,8 @@
     "tbPowerPct": 13.4,
     "tbMatchupPct": 40.6,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -88530,7 +91481,23 @@
     "tbPowerPct": 22.8,
     "tbMatchupPct": 48.3,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -120,
+          "displayName": "Elias Diaz"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 240,
+          "displayName": "Elias Diaz"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -88913,7 +91880,8 @@
     "tbPowerPct": 23.5,
     "tbMatchupPct": 33.1,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -89296,7 +92264,35 @@
     "tbPowerPct": 21.6,
     "tbMatchupPct": 32.9,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -190,
+          "displayName": "Nick Loftin"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -195,
+          "displayName": "Nick Loftin"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 900,
+          "displayName": "Nick Loftin"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 175,
+          "displayName": "Nick Loftin"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -89679,7 +92675,8 @@
     "tbPowerPct": 21.1,
     "tbMatchupPct": 42.9,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -90062,7 +93059,35 @@
     "tbPowerPct": 20.2,
     "tbMatchupPct": 49.5,
     "tbRecentPct": 60.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -169,
+          "displayName": "Javier Baez"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -175,
+          "displayName": "Javier Baez"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 2000,
+          "displayName": "Javier Baez"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 900,
+          "displayName": "Javier Baez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -90445,7 +93470,8 @@
     "tbPowerPct": 23.1,
     "tbMatchupPct": 42.4,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -90573,7 +93599,8 @@
     "tbPowerPct": 19.8,
     "tbMatchupPct": 27.0,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -90956,7 +93983,8 @@
     "tbPowerPct": 6.1,
     "tbMatchupPct": 52.8,
     "tbRecentPct": 70.0,
-    "tbOpportunityPct": 60.0
+    "tbOpportunityPct": 60.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -91339,7 +94367,8 @@
     "tbPowerPct": 22.5,
     "tbMatchupPct": 52.0,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -91722,7 +94751,33 @@
     "tbPowerPct": 15.5,
     "tbMatchupPct": 51.3,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -219,
+          "displayName": "Brayan Rocchio"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -225,
+          "displayName": "Brayan Rocchio"
+        }
+      },
+      "tb": {
+        "draftkings": {
+          "line": 1.5,
+          "price": 142,
+          "displayName": "Brayan Rocchio"
+        },
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 140,
+          "displayName": "Brayan Rocchio"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -91876,7 +94931,8 @@
     "tbPowerPct": 18.4,
     "tbMatchupPct": 43.1,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -92259,7 +95315,35 @@
     "tbPowerPct": 21.0,
     "tbMatchupPct": 43.9,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -151,
+          "displayName": "Jorge Polanco"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -155,
+          "displayName": "Jorge Polanco"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 600,
+          "displayName": "Jorge Polanco"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 175,
+          "displayName": "Jorge Polanco"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -92642,7 +95726,8 @@
     "tbPowerPct": 24.7,
     "tbMatchupPct": 31.6,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -93025,7 +96110,8 @@
     "tbPowerPct": 22.0,
     "tbMatchupPct": 46.0,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -93408,7 +96494,16 @@
     "tbPowerPct": 24.0,
     "tbMatchupPct": 34.6,
     "tbRecentPct": 0.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 240,
+          "displayName": "Colton Cowser"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -93791,7 +96886,16 @@
     "tbPowerPct": 25.1,
     "tbMatchupPct": 33.3,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 260,
+          "displayName": "Carlos Narvaez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -94174,7 +97278,8 @@
     "tbPowerPct": 23.4,
     "tbMatchupPct": 30.9,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -94557,7 +97662,8 @@
     "tbPowerPct": 21.3,
     "tbMatchupPct": 38.9,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -94932,7 +98038,8 @@
     "tbPowerPct": 19.6,
     "tbMatchupPct": 48.7,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -95315,7 +98422,16 @@
     "tbPowerPct": 18.6,
     "tbMatchupPct": 54.1,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 300,
+          "displayName": "Nicky Lopez"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -95477,7 +98593,16 @@
     "tbPowerPct": 20.3,
     "tbMatchupPct": 33.3,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Ronny Simon"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -95860,7 +98985,8 @@
     "tbPowerPct": 21.6,
     "tbMatchupPct": 30.2,
     "tbRecentPct": 40.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -96243,7 +99369,8 @@
     "tbPowerPct": 22.0,
     "tbMatchupPct": 22.7,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -96509,7 +99636,8 @@
     "tbPowerPct": 24.1,
     "tbMatchupPct": 16.7,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -96814,7 +99942,8 @@
     "tbPowerPct": 19.2,
     "tbMatchupPct": 38.9,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 40.0
+    "tbOpportunityPct": 40.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -97002,7 +100131,35 @@
     "tbPowerPct": 19.5,
     "tbMatchupPct": 30.1,
     "tbRecentPct": 0.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -107,
+          "displayName": "Jonathan Ornelas"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -110,
+          "displayName": "Jonathan Ornelas"
+        }
+      },
+      "hr": {
+        "hardrockbet": {
+          "line": 0.5,
+          "price": 1200,
+          "displayName": "Jonathan Ornelas"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 260,
+          "displayName": "Jonathan Ornelas"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -97385,7 +100542,8 @@
     "tbPowerPct": 19.3,
     "tbMatchupPct": 44.7,
     "tbRecentPct": 30.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -97768,7 +100926,8 @@
     "tbPowerPct": 16.5,
     "tbMatchupPct": 43.2,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -98138,7 +101297,28 @@
     "tbPowerPct": 18.6,
     "tbMatchupPct": 39.0,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -126,
+          "displayName": "Grant McCray"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -120,
+          "displayName": "Grant McCray"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 240,
+          "displayName": "Grant McCray"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -98521,7 +101701,28 @@
     "tbPowerPct": 19.7,
     "tbMatchupPct": 44.9,
     "tbRecentPct": 90.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": {
+      "hits": {
+        "draftkings": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Zach McKinstry"
+        },
+        "hardrockbet": {
+          "line": 0.5,
+          "price": -160,
+          "displayName": "Zach McKinstry"
+        }
+      },
+      "tb": {
+        "hardrockbet": {
+          "line": 1.5,
+          "price": 180,
+          "displayName": "Zach McKinstry"
+        }
+      }
+    }
   },
   {
     "playerType": "batter",
@@ -98904,7 +102105,8 @@
     "tbPowerPct": 21.9,
     "tbMatchupPct": 34.6,
     "tbRecentPct": 50.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -99045,7 +102247,8 @@
     "tbPowerPct": 22.5,
     "tbMatchupPct": 46.2,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -99428,7 +102631,8 @@
     "tbPowerPct": 18.6,
     "tbMatchupPct": 34.1,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -99811,7 +103015,8 @@
     "tbPowerPct": 19.4,
     "tbMatchupPct": 39.8,
     "tbRecentPct": 10.0,
-    "tbOpportunityPct": 0.0
+    "tbOpportunityPct": 0.0,
+    "bookOdds": null
   },
   {
     "playerType": "batter",
@@ -100194,7 +103399,8 @@
     "tbPowerPct": 3.3,
     "tbMatchupPct": 34.3,
     "tbRecentPct": 20.0,
-    "tbOpportunityPct": 20.0
+    "tbOpportunityPct": 20.0,
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -100285,7 +103491,26 @@
         "k": 5,
         "ip": 5.666666666666667
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": -128,
+          "displayName": "Gerrit Cole"
+        },
+        "draftkings": {
+          "line": 5.5,
+          "price": -115,
+          "displayName": "Gerrit Cole"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": -125,
+          "displayName": "Gerrit Cole"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -100376,7 +103601,26 @@
         "k": 9,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 7.5,
+          "price": -125,
+          "displayName": "Chris Sale"
+        },
+        "draftkings": {
+          "line": 7.5,
+          "price": -145,
+          "displayName": "Chris Sale"
+        },
+        "hardrockbet": {
+          "line": 7.5,
+          "price": -130,
+          "displayName": "Chris Sale"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -100467,7 +103711,26 @@
         "k": 4,
         "ip": 5.666666666666667
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": -138,
+          "displayName": "Jake Bennett"
+        },
+        "draftkings": {
+          "line": 4.5,
+          "price": -119,
+          "displayName": "Jake Bennett"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": -130,
+          "displayName": "Jake Bennett"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -100558,7 +103821,26 @@
         "k": 5,
         "ip": 3.6666666666666665
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": -111,
+          "displayName": "Gage Jump"
+        },
+        "draftkings": {
+          "line": 5.5,
+          "price": -108,
+          "displayName": "Gage Jump"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": -110,
+          "displayName": "Gage Jump"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -100649,7 +103931,8 @@
         "k": 5,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -100740,7 +104023,8 @@
         "k": 7,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -100831,7 +104115,26 @@
         "k": 5,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": 100,
+          "displayName": "Aaron Nola"
+        },
+        "draftkings": {
+          "line": 4.5,
+          "price": 100,
+          "displayName": "Aaron Nola"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": 100,
+          "displayName": "Aaron Nola"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -100910,7 +104213,26 @@
         "k": 5,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": 128,
+          "displayName": "Max Scherzer"
+        },
+        "draftkings": {
+          "line": 3.5,
+          "price": -168,
+          "displayName": "Max Scherzer"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": 125,
+          "displayName": "Max Scherzer"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101001,7 +104323,26 @@
         "k": 5,
         "ip": 5.666666666666667
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": -108,
+          "displayName": "Bubba Chandler"
+        },
+        "draftkings": {
+          "line": 4.5,
+          "price": -114,
+          "displayName": "Bubba Chandler"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": -115,
+          "displayName": "Bubba Chandler"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101038,7 +104379,26 @@
         "k": 4,
         "ip": 5.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": 128,
+          "displayName": "Robert Stock"
+        },
+        "draftkings": {
+          "line": 4.5,
+          "price": 116,
+          "displayName": "Robert Stock"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": 125,
+          "displayName": "Robert Stock"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101117,7 +104477,21 @@
         "k": 5,
         "ip": 6.333333333333333
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": -142,
+          "displayName": "Andrew Alvarez"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": -145,
+          "displayName": "Andrew Alvarez"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101208,7 +104582,21 @@
         "k": 9,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": 102,
+          "displayName": "Chase Burns"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": -105,
+          "displayName": "Chase Burns"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101299,7 +104687,26 @@
         "k": 3,
         "ip": 5.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "draftkings": {
+          "line": 3.5,
+          "price": -156,
+          "displayName": "Seth Lugo"
+        },
+        "fanduel": {
+          "line": 3.5,
+          "price": -150,
+          "displayName": "Seth Lugo"
+        },
+        "hardrockbet": {
+          "line": 3.5,
+          "price": -155,
+          "displayName": "Seth Lugo"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101384,7 +104791,8 @@
         "k": 8,
         "ip": 4.333333333333333
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -101475,7 +104883,8 @@
         "k": 6,
         "ip": 5.0
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -101566,7 +104975,8 @@
         "k": 2,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -101657,7 +105067,8 @@
         "k": 5,
         "ip": 5.0
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -101748,7 +105159,8 @@
         "k": 8,
         "ip": 5.666666666666667
       }
-    ]
+    ],
+    "bookOdds": null
   },
   {
     "playerType": "pitcher",
@@ -101839,7 +105251,26 @@
         "k": 6,
         "ip": 4.666666666666667
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": -142,
+          "displayName": "Landen Roupp"
+        },
+        "draftkings": {
+          "line": 4.5,
+          "price": -136,
+          "displayName": "Landen Roupp"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": -145,
+          "displayName": "Landen Roupp"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101866,7 +105297,26 @@
     "kMatchupPct": 35.5,
     "kRecentPct": 0.0,
     "kWorkloadPct": 33.3,
-    "starts": []
+    "starts": [],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": 130,
+          "displayName": "Jackson Jobe"
+        },
+        "draftkings": {
+          "line": 4.5,
+          "price": 131,
+          "displayName": "Jackson Jobe"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": 130,
+          "displayName": "Jackson Jobe"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -101957,7 +105407,21 @@
         "k": 7,
         "ip": 6.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": 116,
+          "displayName": "Matthew Liberatore"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": 115,
+          "displayName": "Matthew Liberatore"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102048,7 +105512,21 @@
         "k": 8,
         "ip": 9.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 3.5,
+          "price": -113,
+          "displayName": "Kyle Freeland"
+        },
+        "hardrockbet": {
+          "line": 3.5,
+          "price": -115,
+          "displayName": "Kyle Freeland"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102139,7 +105617,16 @@
         "k": 3,
         "ip": 3.3333333333333335
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 7.5,
+          "price": 130,
+          "displayName": "Jacob deGrom"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102230,7 +105717,21 @@
         "k": 3,
         "ip": 3.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": 102,
+          "displayName": "Kyle Bradish"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": 100,
+          "displayName": "Kyle Bradish"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102321,7 +105822,26 @@
         "k": 3,
         "ip": 6.333333333333333
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 3.5,
+          "price": -156,
+          "displayName": "Anthony Kay"
+        },
+        "draftkings": {
+          "line": 3.5,
+          "price": -136,
+          "displayName": "Anthony Kay"
+        },
+        "hardrockbet": {
+          "line": 3.5,
+          "price": -150,
+          "displayName": "Anthony Kay"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102412,7 +105932,26 @@
         "k": 10,
         "ip": 5.666666666666667
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 7.5,
+          "price": -104,
+          "displayName": "Gavin Williams"
+        },
+        "draftkings": {
+          "line": 7.5,
+          "price": -104,
+          "displayName": "Gavin Williams"
+        },
+        "hardrockbet": {
+          "line": 6.5,
+          "price": -195,
+          "displayName": "Gavin Williams"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102503,7 +106042,21 @@
         "k": 3,
         "ip": 6.666666666666667
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 3.5,
+          "price": -130,
+          "displayName": "Brandon Pfaadt"
+        },
+        "hardrockbet": {
+          "line": 3.5,
+          "price": -130,
+          "displayName": "Brandon Pfaadt"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102594,7 +106147,21 @@
         "k": 3,
         "ip": 8.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": 102,
+          "displayName": "Yoshinobu Yamamoto"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": 100,
+          "displayName": "Yoshinobu Yamamoto"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102685,7 +106252,21 @@
         "k": 3,
         "ip": 7.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 4.5,
+          "price": -140,
+          "displayName": "George Kirby"
+        },
+        "hardrockbet": {
+          "line": 4.5,
+          "price": -135,
+          "displayName": "George Kirby"
+        }
+      }
+    }
   },
   {
     "playerType": "pitcher",
@@ -102776,6 +106357,20 @@
         "k": 8,
         "ip": 5.0
       }
-    ]
+    ],
+    "bookOdds": {
+      "k": {
+        "fanduel": {
+          "line": 5.5,
+          "price": 108,
+          "displayName": "Griffin Jax"
+        },
+        "hardrockbet": {
+          "line": 5.5,
+          "price": 105,
+          "displayName": "Griffin Jax"
+        }
+      }
+    }
   }
 ]
