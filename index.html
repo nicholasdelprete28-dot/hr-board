@@ -1456,6 +1456,7 @@ function openPlayerModal(p){
   modalStatsMetric = 'pa';
   modalStatsMode = 'avg';
   modalView = 'graph';
+  modalSelectedLine = null;
   document.getElementById('modalPropTabs').style.display = '';
   document.getElementById('modalTabs').style.display = '';
   document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t.dataset.prop === modalProp));
@@ -1664,9 +1665,39 @@ function renderGraphView(){
   const field = PROP_FIELD[modalProp];
   const label = PROP_LABEL[modalProp];
   const threshold = PROP_THRESHOLD[modalProp];
-  const l5 = pctFromGames(windowGames(bundle, 'l5'), field, threshold);
-  const l10 = pctFromGames(windowGames(bundle, 'l10'), field, threshold);
-  const l20 = pctFromGames(windowGames(bundle, 'l20'), field, threshold);
+
+  // Every distinct real line offered across the books we have for THIS
+  // prop, deduped - same line-switcher pattern as the pitcher K board.
+  // Only HR/Hits/TB/HRR have a real market at any book; XBH has none,
+  // so its dropdown will just be empty and it silently falls back to
+  // our own fixed threshold, same as before.
+  const propBooks = (p.bookOdds && p.bookOdds[field]) || {};
+  const lineToBooks = {};
+  Object.entries(propBooks).forEach(([bookKey, d]) => {
+    if(d.line == null) return;
+    lineToBooks[d.line] = lineToBooks[d.line] || [];
+    lineToBooks[d.line].push({ book: BOOK_LABELS[bookKey] || bookKey, price: d.price });
+  });
+  const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
+  const activeThreshold = modalSelectedLine != null ? modalSelectedLine : threshold;
+  const matchingBooks = lineToBooks[activeThreshold] || [];
+
+  const dropdownOptions = [
+    `<option value="model" ${modalSelectedLine == null ? 'selected' : ''}>Our line (${fmtNum(threshold, 1)})</option>`,
+    ...distinctLines.map(line => {
+      const books = lineToBooks[line].map(b => b.book).join('/');
+      return `<option value="${line}" ${modalSelectedLine === line ? 'selected' : ''}>${fmtNum(line, 1)} (${books})</option>`;
+    }),
+  ].join('');
+  const lineSelectorHtml = distinctLines.length ? `
+    <div class="lineselector-wrap">
+      <label for="lineSelector" class="lineselector-label">Line:</label>
+      <select id="lineSelector" class="lineselector">${dropdownOptions}</select>
+    </div>` : '';
+
+  const l5 = pctFromGames(windowGames(bundle, 'l5'), field, activeThreshold);
+  const l10 = pctFromGames(windowGames(bundle, 'l10'), field, activeThreshold);
+  const l20 = pctFromGames(windowGames(bundle, 'l20'), field, activeThreshold);
   const winPct = { l5, l10, l20 }[modalWindow];
   const winGames = windowGames(bundle, modalWindow);
   const avg = avgFromGames(winGames, field);
@@ -1686,16 +1717,21 @@ function renderGraphView(){
 
   const chartGames = winGames;
   const maxVal = Math.max(1, ...chartGames.map(g => g[field]));
-  const threshPct = Math.min(92, (threshold / maxVal) * 100);
+  const threshPct = Math.min(92, (activeThreshold / maxVal) * 100);
+  const threshLabelText = matchingBooks.length
+    ? matchingBooks.map(b => `${b.book} ${b.price > 0 ? '+' : ''}${b.price}`).join(' &middot; ')
+    : `O/U ${fmtNum(activeThreshold, 1)} (our line)`;
 
   const chart = `
     <div class="gl-chartwrap">
       <div class="gl-chart">
         <div class="gl-barsarea">
-          <div class="gl-threshline" style="bottom:${threshPct}%"></div>
+          <div class="gl-threshline" style="bottom:${threshPct}%">
+            <span class="gl-threshline-label">${threshLabelText}</span>
+          </div>
           ${chartGames.map(g => `
             <div class="gl-col">
-              <div class="gl-bar ${g[field] >= Math.ceil(threshold) ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
+              <div class="gl-bar ${g[field] >= Math.ceil(activeThreshold) ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
                 <span class="gl-barval">${g[field]}</span>
               </div>
             </div>`).join('')}
@@ -1711,6 +1747,7 @@ function renderGraphView(){
     </div>`;
 
   return `
+    ${lineSelectorHtml}
     <div class="gl-windowrow">
       ${['l5', 'l10', 'l20'].map(k => `
         <div class="gl-winbtn ${modalWindow === k ? 'active' : ''}" data-window="${k}">
@@ -1799,11 +1836,19 @@ function wireModalBodyEvents(){
   document.querySelectorAll('.gl-avgmedian button').forEach(btn => {
     btn.addEventListener('click', () => { modalStatsMode = btn.dataset.mode; renderModalBody(); });
   });
+  const lineSelectorEl = document.getElementById('lineSelector');
+  if(lineSelectorEl){
+    lineSelectorEl.addEventListener('change', (e) => {
+      modalSelectedLine = e.target.value === 'model' ? null : Number(e.target.value);
+      renderModalBody();
+    });
+  }
 }
 
 document.querySelectorAll('.modal-proptab').forEach(tab => {
   tab.addEventListener('click', () => {
     modalProp = tab.dataset.prop;
+    modalSelectedLine = null;
     document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t === tab));
     renderModalBody();
   });
