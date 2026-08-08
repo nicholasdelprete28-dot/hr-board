@@ -1,0 +1,44 @@
+name: Update Sportsbook Odds
+
+# Runs once daily at 10:15 AM EST - deliberately just AFTER the 10:00 AM
+# hr-board-update.yml run, so players.json already exists with today's
+# fresh player rows for this script to merge odds onto. Kept to once a
+# day (not 3x like the main workflow) since each run costs real API
+# credits against the-odds-api.com's free-tier quota - one MLB event =
+# one API call, so a full ~15-game slate adds up fast if run repeatedly.
+on:
+  schedule:
+    - cron: "15 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-odds:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run the odds-fetching script
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python fetch_odds.py
+
+      - name: Commit and push players.json if it changed
+        run: |
+          git config user.name "hr-board-bot"
+          git config user.email "actions@github.com"
+          git add players.json
+          git diff --quiet --cached || git commit -m "Update sportsbook odds ($(date -u +%Y-%m-%dT%H:%M))"
+          git pull --rebase origin main
+          git push
