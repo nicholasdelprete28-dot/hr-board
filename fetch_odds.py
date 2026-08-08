@@ -12,9 +12,10 @@ budget.
 Requires an ODDS_API_KEY environment variable (from the-odds-api.com's
 free tier - see the setup notes in the conversation this was built in).
 
-Note: there's no real "Hits+Runs+RBI combined" market at any sportsbook -
-that's our own custom stat - so HRR has no real-odds comparison, only
-HR/Hits/TB/K do.
+Note: HRR (Hits+Runs+RBI combined, standard line 1.5) IS a real, commonly-
+offered prop at every major book - see MARKET_TO_FIELD below for the caveat
+on its exact API market key, which hasn't been verified against a live
+response yet.
 """
 import json
 import os
@@ -30,14 +31,22 @@ BASE_URL = "https://api.the-odds-api.com/v4/sports/baseball_mlb"
 # the response smaller and matches exactly what should show on the card.
 BOOKMAKERS = "draftkings,fanduel,betmgm,hardrockbet"
 
-MARKETS = "batter_home_runs,batter_hits,batter_total_bases,pitcher_strikeouts"
+MARKETS = "batter_home_runs,batter_hits,batter_total_bases,batter_hits_runs_rbis,pitcher_strikeouts"
 
 # Maps our board's field names to the API's market keys, so the merge
 # step below can write odds onto the right spot on each player row.
+# NOTE: "batter_hits_runs_rbis" for HRR is a best-guess key based on The
+# Odds API's naming pattern (batter_{stat}) - multiple sources confirm
+# H+R+R is a real, commonly-offered prop at every major book, but I
+# haven't been able to verify this exact key against a live response.
+# If it comes back empty, check the response for the real key name (the
+# API typically just omits an unrecognized market rather than erroring,
+# so this is safe to try) and swap it in.
 MARKET_TO_FIELD = {
     "batter_home_runs": "hr",
     "batter_hits": "hits",
     "batter_total_bases": "tb",
+    "batter_hits_runs_rbis": "hrr",
     "pitcher_strikeouts": "k",
 }
 
