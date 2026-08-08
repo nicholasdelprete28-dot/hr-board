@@ -31,23 +31,26 @@ BASE_URL = "https://api.the-odds-api.com/v4/sports/baseball_mlb"
 # the response smaller and matches exactly what should show on the card.
 BOOKMAKERS = "draftkings,fanduel,betmgm,hardrockbet"
 
-MARKETS = "batter_home_runs,batter_hits,batter_total_bases,batter_hits_runs_rbis,pitcher_strikeouts"
+MARKETS = ("batter_home_runs,batter_home_runs_alternate,"
+           "batter_hits,batter_hits_alternate,"
+           "batter_total_bases,batter_total_bases_alternate,"
+           "batter_hits_runs_rbis,batter_hits_runs_rbis_alternate,"
+           "pitcher_strikeouts,pitcher_strikeouts_alternate")
 
 # Maps our board's field names to the API's market keys, so the merge
-# step below can write odds onto the right spot on each player row.
-# NOTE: "batter_hits_runs_rbis" for HRR is a best-guess key based on The
-# Odds API's naming pattern (batter_{stat}) - multiple sources confirm
-# H+R+R is a real, commonly-offered prop at every major book, but I
-# haven't been able to verify this exact key against a live response.
-# If it comes back empty, check the response for the real key name (the
-# API typically just omits an unrecognized market rather than erroring,
-# so this is safe to try) and swap it in.
+# step below can write odds onto the right spot on each player row. Both
+# the standard AND "_alternate" (milestone/multi-line) markets map to the
+# same field, since alternates are just more lines for the same stat -
+# confirmed real via The Odds API's own docs ("Milestone (X+) markets are
+# captured using _alternate player market keys, e.g.
+# batter_home_runs_alternate"). batter_hits_runs_rbis (HRR) is still a
+# best-guess key per the note above - unverified against a live response.
 MARKET_TO_FIELD = {
-    "batter_home_runs": "hr",
-    "batter_hits": "hits",
-    "batter_total_bases": "tb",
-    "batter_hits_runs_rbis": "hrr",
-    "pitcher_strikeouts": "k",
+    "batter_home_runs": "hr", "batter_home_runs_alternate": "hr",
+    "batter_hits": "hits", "batter_hits_alternate": "hits",
+    "batter_total_bases": "tb", "batter_total_bases_alternate": "tb",
+    "batter_hits_runs_rbis": "hrr", "batter_hits_runs_rbis_alternate": "hrr",
+    "pitcher_strikeouts": "k", "pitcher_strikeouts_alternate": "k",
 }
 
 
@@ -90,7 +93,13 @@ def get_event_odds(event_id):
 
 
 def collect_odds():
-    """Returns { normalized_player_name: { field: { book_key: {line, price} } } }"""
+    """Returns { normalized_player_name: { field: [ {book, line, price}, ... ] } }
+    Deliberately a LIST per field, not a dict keyed by book - once
+    alternate lines are in the mix, a single book can offer several
+    different lines for the same player/stat simultaneously (e.g.
+    DraftKings might post 2.5, 3.5, AND 4.5 K's all as separate
+    alternate-line outcomes), so keying by book alone would silently
+    overwrite and lose all but the last one."""
     events = get_todays_events()
     print(f"Found {len(events)} MLB events today.")
     odds_by_player = {}
@@ -118,10 +127,17 @@ def collect_odds():
                     if not player_name or line is None:
                         continue
                     key = normalize_name(player_name)
-                    odds_by_player.setdefault(key, {}).setdefault(field, {})
-                    odds_by_player[key][field][book_key] = {
-                        "line": line, "price": price, "displayName": player_name,
-                    }
+                    odds_by_player.setdefault(key, {}).setdefault(field, [])
+                    entries = odds_by_player[key][field]
+                    # Skip an exact duplicate (same book, same line) that
+                    # can happen if the standard and _alternate markets
+                    # both happen to report that book's primary line.
+                    if any(e["book"] == book_key and e["line"] == line for e in entries):
+                        continue
+                    entries.append({
+                        "book": book_key, "line": line, "price": price,
+                        "displayName": player_name,
+                    })
         print(f"  {matchup}: processed")
 
     return odds_by_player
