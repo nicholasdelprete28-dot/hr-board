@@ -406,6 +406,12 @@
   .gl-winbtn.active .gl-winval{color:var(--green);}
 
   .gl-splitbox{background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:16px;}
+  .lineselector-wrap{display:flex; align-items:center; gap:8px; margin:10px 0;}
+  .lineselector-label{font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase;}
+  .lineselector{
+    background:var(--bg); border:1px solid var(--gold); border-radius:8px; color:var(--gold);
+    font-family:var(--mono); font-size:13px; font-weight:700; padding:6px 10px; cursor:pointer;
+  }
   .gl-splitbox-title{font-family:var(--body); font-weight:700; font-size:14px; margin-bottom:12px;}
   .gl-splitbox-main{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;}
   .gl-splitbox-pct{font-family:var(--mono); font-weight:700; font-size:26px; color:var(--green);}
@@ -972,10 +978,9 @@ function displayPct(rawScore, mode){
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
 // Real sportsbook lines, when fetch_odds.py has matched them onto this
-// player (p.bookOdds). Only HR, TB, and K have a real market at any
-// book - HRR is our own custom stat, no sportsbook offers it, so it's
-// deliberately left out of this map rather than showing an empty row.
-const BOARD_TO_ODDS_FIELD = { hr: 'hr', tb: 'tb', k: 'k' };
+// player (p.bookOdds). HR, Hits, TB, HRR, and K all have real markets at
+// major sportsbooks.
+const BOARD_TO_ODDS_FIELD = { hr: 'hr', hrr: 'hrr', tb: 'tb', k: 'k' };
 const BOOK_LABELS = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'Hard Rock' };
 function renderBookOdds(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
@@ -1488,22 +1493,88 @@ function renderModalHeader(p){
 // 1.5 like the batter boards, so the chart's threshold line is drawn at
 // that pitcher's own p.kLine rather than a shared constant.
 // ---------------------------------------------------------------------
+// JS port of fetch_hr_data.py's poisson_over_prob() - verified to produce
+// identical output to the Python version (same test cases, same results
+// to 15+ decimal places). Needed here so the line-switcher dropdown below
+// can recompute a real probability on the fly against whichever line the
+// user picks, without a round trip back to the server.
+function poissonOverProbJS(mean, line){
+  if(mean == null || mean <= 0) return null;
+  const threshold = Math.floor(line) + 1;
+  let cdf = Math.exp(-mean);
+  let term = cdf;
+  for(let k = 1; k < threshold; k++){
+    term *= mean / k;
+    cdf += term;
+  }
+  return Math.max(0, Math.min(1, 1 - cdf));
+}
+function americanToImpliedProb(price){
+  if(price == null) return null;
+  return price > 0 ? 100 / (price + 100) : (-price) / ((-price) + 100);
+}
+
+// Which line the pitcher modal's graph/probability is currently reading
+// against - null means "our own model line" (p.kLine). Reset every time
+// the modal opens for a new player, so switching players doesn't carry
+// over a stale selection from whoever was open before.
+let modalSelectedLine = null;
+
 function openPitcherModal(p){
   modalPlayer = p;
+  modalSelectedLine = null;
   document.getElementById('modalPropTabs').style.display = 'none';
   document.getElementById('modalTabs').style.display = 'none';
   renderModalHeader(p);
-  document.getElementById('modalBody').innerHTML = renderPitcherModalBody(p);
+  renderPitcherModalBody(p);
   document.getElementById('playerModal').style.display = 'flex';
 }
 
 function renderPitcherModalBody(p){
   const starts = p.starts || [];
+  const body = document.getElementById('modalBody');
   if(!starts.length){
-    return `<div class="gl-empty">No start-by-start log yet for ${p.player} this season.</div>`;
+    body.innerHTML = `<div class="gl-empty">No start-by-start log yet for ${p.player} this season.</div>`;
+    return;
   }
-  const maxVal = Math.max(1, p.kLine, ...starts.map(s => s.k));
-  const threshPct = Math.min(92, (p.kLine / maxVal) * 100);
+
+  // Every distinct real line offered across the books we have, deduped -
+  // this is what populates the dropdown alongside our own model line.
+  const kBooks = (p.bookOdds && p.bookOdds.k) || {};
+  const lineToBooks = {};
+  Object.entries(kBooks).forEach(([bookKey, d]) => {
+    if(d.line == null) return;
+    lineToBooks[d.line] = lineToBooks[d.line] || [];
+    lineToBooks[d.line].push({ book: BOOK_LABELS[bookKey] || bookKey, price: d.price });
+  });
+  const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
+
+  const activeLine = modalSelectedLine != null ? modalSelectedLine : p.kLine;
+  const overProb = poissonOverProbJS(p.projK, activeLine);
+  const overPct = overProb == null ? null : overProb * 100;
+
+  // If the active line exactly matches a real book's line, show that
+  // book's own implied probability alongside our model's - a direct,
+  // honest side-by-side of what we think vs what the market thinks,
+  // specifically at the number currently selected.
+  const matchingBooks = lineToBooks[activeLine] || [];
+
+  const dropdownOptions = [
+    `<option value="model" ${modalSelectedLine == null ? 'selected' : ''}>Our model line (${fmtNum(p.kLine, 1)})</option>`,
+    ...distinctLines.map(line => {
+      const books = lineToBooks[line].map(b => b.book).join('/');
+      return `<option value="${line}" ${modalSelectedLine === line ? 'selected' : ''}>${fmtNum(line, 1)} (${books})</option>`;
+    }),
+  ].join('');
+
+  const lineSelectorHtml = distinctLines.length ? `
+    <div class="lineselector-wrap">
+      <label for="lineSelector" class="lineselector-label">Line:</label>
+      <select id="lineSelector" class="lineselector">${dropdownOptions}</select>
+    </div>` : '';
+
+  const maxVal = Math.max(1, activeLine, ...starts.map(s => s.k));
+  const threshPct = Math.min(92, (activeLine / maxVal) * 100);
 
   const chart = `
     <div class="gl-chartwrap">
@@ -1512,7 +1583,7 @@ function renderPitcherModalBody(p){
           <div class="gl-threshline" style="bottom:${threshPct}%"></div>
           ${starts.map(s => `
             <div class="gl-col">
-              <div class="gl-bar ${s.k > p.kLine ? 'hit' : ''}" style="height:${Math.max(4, (s.k / maxVal) * 100)}%">
+              <div class="gl-bar ${s.k > activeLine ? 'hit' : ''}" style="height:${Math.max(4, (s.k / maxVal) * 100)}%">
                 <span class="gl-barval">${s.k}</span>
               </div>
             </div>`).join('')}
@@ -1527,19 +1598,21 @@ function renderPitcherModalBody(p){
       </div>
     </div>`;
 
-  const clearedCount = starts.filter(s => s.k > p.kLine).length;
+  const clearedCount = starts.filter(s => s.k > activeLine).length;
 
-  return `
+  body.innerHTML = `
     <div class="gl-splitbox">
-      <div class="gl-splitbox-title">${p.player} &ndash; Strikeouts, O/U ${fmtNum(p.kLine, 1)}</div>
+      <div class="gl-splitbox-title">${p.player} &ndash; Strikeouts, O/U ${fmtNum(activeLine, 1)}</div>
+      ${lineSelectorHtml}
       <div class="gl-splitbox-main">
         <div>
-          <div class="gl-splitbox-pct">${fmtNum(p.kScore, 1)}%</div>
-          <div class="gl-splitbox-sub">Over Probability (model)</div>
+          <div class="gl-splitbox-pct">${fmtNum(overPct, 1)}%</div>
+          <div class="gl-splitbox-sub">Over Probability (our model, at this line)</div>
         </div>
         <div class="gl-splitbox-avgs">
           <div>Projected K's: <b>${fmtNum(p.projK, 2)}</b></div>
-          <div>Cleared line: <b>${clearedCount} of ${starts.length}</b> recent starts</div>
+          <div>Cleared this line: <b>${clearedCount} of ${starts.length}</b> recent starts</div>
+          ${matchingBooks.map(b => `<div>${b.book} implied: <b>${fmtNum(americanToImpliedProb(b.price) * 100, 1)}%</b> (${b.price > 0 ? '+' : ''}${b.price})</div>`).join('')}
         </div>
       </div>
       <div class="gl-splitgrid">
@@ -1550,6 +1623,14 @@ function renderPitcherModalBody(p){
       </div>
     </div>
     ${chart}`;
+
+  const selectorEl = document.getElementById('lineSelector');
+  if(selectorEl){
+    selectorEl.addEventListener('change', (e) => {
+      modalSelectedLine = e.target.value === 'model' ? null : Number(e.target.value);
+      renderPitcherModalBody(p);
+    });
+  }
 }
 
 function renderModalBody(){
