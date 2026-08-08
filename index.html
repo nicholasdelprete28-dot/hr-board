@@ -320,6 +320,10 @@
     background:var(--book-color, #8b948d); color:#0a0d0b; font-weight:800; font-size:9px;
     padding:3px 6px; border-radius:5px; letter-spacing:0.2px; font-family:var(--mono);
   }
+  .bookodds-icon{
+    width:20px; height:20px; border-radius:5px; background:#fff; padding:2px;
+    object-fit:contain; flex-shrink:0;
+  }
   .bookodds-line{font-family:var(--mono); color:var(--text); font-weight:700; font-size:14px;}
   .bookodds-price{font-family:var(--mono); color:var(--muted); font-size:11px;}
   .trackrecordbtn{
@@ -1020,21 +1024,42 @@ function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 // major sportsbooks.
 const BOARD_TO_ODDS_FIELD = { hr: 'hr', hrr: 'hrr', tb: 'tb', k: 'k' };
 const BOOK_LABELS = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'Hard Rock' };
-// Colored badges instead of real sportsbook logos - avoids any trademark/
-// licensing question around reproducing official brand marks, while still
-// giving each book an instantly-recognizable color at a glance. Colors
-// chosen to loosely echo each book's real brand color (DK green, FD blue,
-// BetMGM gold, Hard Rock orange) without claiming to BE their logo.
+// Real favicons pulled from each book's own official domain, via
+// Google's public favicon-serving endpoint - this is NOT me reproducing
+// their trademarked logo artwork (which I intentionally avoid), it's
+// their own server's own real icon, same technical pattern already used
+// for player headshots (pulling from MLB's own CDN rather than drawing
+// one myself). The colored text badge stays as a graceful fallback via
+// onerror, in case a favicon fails to load or a domain guess is wrong -
+// I haven't been able to verify these exact domains/favicon quality
+// against a live response, so keep an eye on how these actually render.
 const BOOK_BADGE = {
-  draftkings: { text: 'DK', color: '#53d769' },
-  fanduel: { text: 'FD', color: '#1e88e5' },
-  betmgm: { text: 'MGM', color: '#d4af37' },
-  hardrockbet: { text: 'HRB', color: '#ff7a1a' },
+  draftkings: { text: 'DK', color: '#53d769', domain: 'draftkings.com' },
+  fanduel: { text: 'FD', color: '#1e88e5', domain: 'fanduel.com' },
+  betmgm: { text: 'MGM', color: '#d4af37', domain: 'betmgm.com' },
+  hardrockbet: { text: 'HRB', color: '#ff7a1a', domain: 'bet.hardrock.com' },
 };
 function bookBadgeHtml(bookKey){
   const b = BOOK_BADGE[bookKey];
-  if(!b) return `<span class="bookodds-badge" style="--book-color:#8b948d;">${BOOK_LABELS[bookKey] || bookKey}</span>`;
-  return `<span class="bookodds-badge" style="--book-color:${b.color};">${b.text}</span>`;
+  const fallbackText = b ? b.text : (BOOK_LABELS[bookKey] || bookKey);
+  const fallbackColor = b ? b.color : '#8b948d';
+  if(!b || !b.domain) return `<span class="bookodds-badge" style="--book-color:${fallbackColor};">${fallbackText}</span>`;
+  const iconUrl = `https://www.google.com/s2/favicons?domain=${b.domain}&sz=64`;
+  // If the real favicon fails to load for any reason, swap in the
+  // colored text badge - done via a real JS function (not a nested HTML
+  // string inside the onerror attribute) since embedding one quoted HTML
+  // fragment inside another quoted attribute breaks the browser's own
+  // attribute-value parsing the moment the inner content has its own
+  // double quotes, which the colored-badge span always does.
+  return `<img class="bookodds-icon" src="${iconUrl}" alt="${fallbackText}" title="${fallbackText}" onerror="bookIconFallback(this, '${bookKey}')">`;
+}
+function bookIconFallback(imgEl, bookKey){
+  const b = BOOK_BADGE[bookKey] || {};
+  const span = document.createElement('span');
+  span.className = 'bookodds-badge';
+  span.style.setProperty('--book-color', b.color || '#8b948d');
+  span.textContent = b.text || BOOK_LABELS[bookKey] || bookKey;
+  imgEl.replaceWith(span);
 }
 // Groups a flat list of {book, line, price} entries (fetch_odds.py's
 // output shape) into { lineValue: [{book, price}, ...] } plus a sorted
