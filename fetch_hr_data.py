@@ -39,6 +39,7 @@ import datetime
 import concurrent.futures
 from zoneinfo import ZoneInfo
 import requests
+from fetch_odds import normalize_name
 
 YEAR = 2026
 # GitHub Actions runners use UTC system time. Using that directly would mean
@@ -1554,6 +1555,37 @@ def main():
 
     print(f"  {len(pitchers)} probable starters found")
     players.extend(pitchers)
+
+    # Carry forward each player's existing real sportsbook odds (bookOdds)
+    # from the PREVIOUS players.json, rather than losing them every time
+    # this script runs. fetch_hr_data.py rebuilds the whole file from
+    # scratch on every run and has no concept of odds at all - without
+    # this, ANY run of this script (even just to catch a lineup update)
+    # would silently wipe every player's odds until fetch_odds.py ran
+    # again, forcing a real API-credit spend just to undo the wipe. Real
+    # tradeoff worth knowing: carried-forward odds can go stale (a line
+    # moves, a player gets scratched) until the next actual fetch_odds.py
+    # run refreshes them - that's the accepted cost of not burning
+    # credits on every single fetch_hr_data.py run.
+    if os.path.exists("players.json"):
+        try:
+            with open("players.json") as f:
+                old_players = json.load(f)
+            old_odds_by_name = {
+                normalize_name(p.get("player", "")): p["bookOdds"]
+                for p in old_players if p.get("bookOdds")
+            }
+            carried = 0
+            for player_row in players:
+                key = normalize_name(player_row.get("player", ""))
+                if key in old_odds_by_name:
+                    player_row["bookOdds"] = old_odds_by_name[key]
+                    carried += 1
+            print(f"Carried forward existing sportsbook odds for {carried} players "
+                  f"from the previous players.json.")
+        except Exception as e:
+            print(f"  WARNING: couldn't carry forward previous odds ({e}) - "
+                  f"bookOdds will be empty until fetch_odds.py runs again.")
 
     # Written sorted by the HR score for backward compatibility - the
     # frontend re-sorts client-side by whichever score field the active
