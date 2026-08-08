@@ -31,11 +31,26 @@ BASE_URL = "https://api.the-odds-api.com/v4/sports/baseball_mlb"
 # the response smaller and matches exactly what should show on the card.
 BOOKMAKERS = "draftkings,fanduel,betmgm,hardrockbet"
 
-MARKETS = ("batter_home_runs,batter_home_runs_alternate,"
-           "batter_hits,batter_hits_alternate,"
-           "batter_total_bases,batter_total_bases_alternate,"
-           "batter_hits_runs_rbis,batter_hits_runs_rbis_alternate,"
-           "pitcher_strikeouts,pitcher_strikeouts_alternate")
+# Split into two groups, controllable via --mode, since credits cost
+# markets x regions PER EVENT (confirmed via The Odds API's own docs) -
+# alternates double the market count and therefore double the cost, but
+# don't need refreshing as often as primary lines do. Run primary on the
+# main 3x/day schedule; run alternates just once/day on a separate
+# workflow - cuts the monthly credit need by roughly a third versus
+# fetching both every single run.
+PRIMARY_MARKETS = ("batter_home_runs,batter_hits,batter_total_bases,"
+                    "batter_hits_runs_rbis,pitcher_strikeouts")
+ALTERNATE_MARKETS = ("batter_home_runs_alternate,batter_hits_alternate,"
+                      "batter_total_bases_alternate,batter_hits_runs_rbis_alternate,"
+                      "pitcher_strikeouts_alternate")
+
+MODE = os.environ.get("ODDS_MODE", "both")  # "primary", "alternates", or "both"
+if MODE == "primary":
+    MARKETS = PRIMARY_MARKETS
+elif MODE == "alternates":
+    MARKETS = ALTERNATE_MARKETS
+else:
+    MARKETS = PRIMARY_MARKETS + "," + ALTERNATE_MARKETS
 
 # Maps our board's field names to the API's market keys, so the merge
 # step below can write odds onto the right spot on each player row. Both
@@ -161,17 +176,35 @@ def merge_into_players(odds_by_player):
     matched = 0
     for p in players:
         key = normalize_name(p.get("player", ""))
-        book_data = odds_by_player.get(key)
-        if not book_data:
-            p["bookOdds"] = None
+        new_book_data = odds_by_player.get(key)
+        if not new_book_data:
+            # No new data for this player THIS run - leave whatever's
+            # already on the row untouched, rather than wiping it. This
+            # matters now that primary and alternate lines run on
+            # separate schedules: an alternates-only run finding nothing
+            # new for a player must not erase that day's primary data
+            # (or vice versa).
             continue
-        p["bookOdds"] = book_data
+        existing = p.get("bookOdds") or {}
+        for field, new_entries in new_book_data.items():
+            existing_entries = existing.setdefault(field, [])
+            for new_entry in new_entries:
+                # Update an existing (book, line) entry in place - keeps
+                # the freshest price - rather than piling up stale
+                # duplicates across repeated runs of the same mode.
+                match = next((e for e in existing_entries
+                              if e["book"] == new_entry["book"] and e["line"] == new_entry["line"]), None)
+                if match:
+                    match.update(new_entry)
+                else:
+                    existing_entries.append(new_entry)
+        p["bookOdds"] = existing
         matched += 1
 
     with open("players.json", "w") as f:
         json.dump(players, f, indent=2)
 
-    print(f"Matched real sportsbook odds for {matched} of {len(players)} players.")
+    print(f"Matched real sportsbook odds for {matched} of {len(players)} players (mode={MODE}).")
 
 
 if __name__ == "__main__":
