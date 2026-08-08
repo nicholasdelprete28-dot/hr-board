@@ -298,6 +298,42 @@
   }
 
   /* ---- Always-visible stat box grid (swiftprops-style) ---- */
+  .bookodds{
+    font-family:var(--mono); font-size:11px; color:var(--muted); margin:10px 0 -2px;
+    padding:6px 10px; background:rgba(66,232,150,0.06); border:1px solid rgba(66,232,150,0.25);
+    border-radius:8px;
+  }
+  .bookodds-label{color:var(--stat-good); font-weight:700; margin-right:4px;}
+  .trackrecordbtn{
+    max-width:var(--content-width); width:100%; margin:10px auto 0; display:block;
+    background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+    color:var(--muted); font-family:var(--display); font-weight:700; font-size:13px;
+    padding:10px; cursor:pointer; text-align:center;
+  }
+  .trackrecordbtn:hover{border-color:var(--gold); color:var(--gold);}
+  .trackrecord-panel{
+    max-width:var(--content-width); margin:8px auto 0; background:var(--surface2);
+    border:1px solid var(--line); border-radius:12px; padding:14px;
+  }
+  .tr-board{margin-bottom:14px;}
+  .tr-board:last-child{margin-bottom:0;}
+  .tr-board-title{
+    font-family:var(--display); font-weight:700; font-size:13px; color:var(--gold);
+    margin-bottom:6px; letter-spacing:0.3px;
+  }
+  .tr-row{
+    display:flex; align-items:center; gap:10px; padding:5px 0;
+    border-bottom:1px solid var(--line); font-family:var(--mono); font-size:12px;
+  }
+  .tr-row:last-child{border-bottom:none;}
+  .tr-tier{flex:0 0 90px; font-weight:700; letter-spacing:0.3px;}
+  .tr-tier-prime{color:var(--stat-good);}
+  .tr-tier-strong{color:var(--gold);}
+  .tr-tier-inplay{color:var(--muted);}
+  .tr-tier-longshot{color:var(--stat-bad);}
+  .tr-pct{flex:0 0 50px; font-weight:700; color:var(--text);}
+  .tr-sample{color:var(--muted2); font-size:11px;}
+  .tr-empty{color:var(--muted); font-size:12px; text-align:center; padding:10px 0;}
   .statboxwrap{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:1px;
     margin-top:14px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;
@@ -433,6 +469,8 @@
     <div class="boardtab" data-board="tb">TB</div>
     <div class="boardtab" data-board="k">Pitcher Ks</div>
   </div>
+  <button class="trackrecordbtn" id="trackRecordBtn">&#128202; Track Record</button>
+  <div class="trackrecord-panel" id="trackRecordPanel" style="display:none;"></div>
   <div class="hrcounter" id="hrcounter" style="display:none;">
     <span class="hrcounter-dot"></span>
     <span id="hrcounter-text">Today's HRs: &ndash;</span>
@@ -504,6 +542,7 @@
 // so it's fetched from the same place, same deploy, no third-party CDN layer
 // in between - one less place for stale caching to hide.
 const DATA_URL = "./players.json";
+const TRACK_URL = "./history/accuracy_summary.json";
 
 let players = [];
 let boardMode = 'hr';  // 'hr' | 'hrr' - which board/toggle tab is active
@@ -624,6 +663,64 @@ async function loadPlayers() {
     list.innerHTML = '<div class="empty">Could not load live data (' + err.message + ').<br>Check that DATA_URL near the top of the script is set to your GitHub raw URL.</div>';
   }
 }
+
+// ---------------------------------------------------------------------
+// Track Record panel - reads history/accuracy_summary.json, written by
+// check_results.py after it grades each day's snapshot against real
+// final box scores. Loaded once alongside the main player data; fails
+// silently (empty-state message, not a broken page) since this file
+// won't exist at all until check_results.py has actually run once.
+// ---------------------------------------------------------------------
+let trackRecordData = null;
+
+async function loadTrackRecord(){
+  try {
+    const res = await fetch(TRACK_URL + '?t=' + Date.now());
+    if(!res.ok) throw new Error('not available yet');
+    trackRecordData = await res.json();
+  } catch (err) {
+    trackRecordData = null;
+  }
+}
+
+function renderTrackRecord(){
+  const panel = document.getElementById('trackRecordPanel');
+  const boardLabels = { hr: 'HR', hrr: 'HRR', tb: 'TB', k: 'Pitcher Ks' };
+  const tierOrder = ['prime', 'strong', 'inplay', 'longshot'];
+  const tierLabels = { prime: 'PRIME', strong: 'STRONG', inplay: 'IN PLAY', longshot: 'LONG SHOT' };
+
+  if(!trackRecordData){
+    panel.innerHTML = '<div class="tr-empty">No accuracy data yet - check_results.py needs to run at least once, after a full day of games is final, before there\'s anything real to show here.</div>';
+    return;
+  }
+
+  let html = '';
+  for(const board of ['hr', 'hrr', 'tb', 'k']){
+    const tiers = trackRecordData[board];
+    if(!tiers) continue;
+    let boardHtml = '';
+    for(const tier of tierOrder){
+      const r = tiers[tier];
+      if(!r || r.total === 0) continue;
+      const pct = Math.round(100 * r.hit / r.total);
+      boardHtml += `
+        <div class="tr-row">
+          <span class="tr-tier tr-tier-${tier}">${tierLabels[tier]}</span>
+          <span class="tr-pct">${pct}%</span>
+          <span class="tr-sample">(${r.hit}-${r.total - r.hit}, ${r.total} graded)</span>
+        </div>`;
+    }
+    if(boardHtml){
+      html += `<div class="tr-board"><div class="tr-board-title">${boardLabels[board]}</div>${boardHtml}</div>`;
+    }
+  }
+  panel.innerHTML = html || '<div class="tr-empty">No graded picks yet.</div>';
+}
+
+document.getElementById('trackRecordBtn').addEventListener('click', () => {
+  const panel = document.getElementById('trackRecordPanel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+});
 
 async function applyLiveGameStatus(){
   // players.json only has game status from whenever the backend script last
@@ -873,6 +970,25 @@ function displayPct(rawScore, mode){
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (DISPLAY_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
+
+// Real sportsbook lines, when fetch_odds.py has matched them onto this
+// player (p.bookOdds). Only HR, TB, and K have a real market at any
+// book - HRR is our own custom stat, no sportsbook offers it, so it's
+// deliberately left out of this map rather than showing an empty row.
+const BOARD_TO_ODDS_FIELD = { hr: 'hr', tb: 'tb', k: 'k' };
+const BOOK_LABELS = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'Hard Rock' };
+function renderBookOdds(p, mode){
+  const field = BOARD_TO_ODDS_FIELD[mode];
+  if(!field) return '';
+  const books = p.bookOdds && p.bookOdds[field];
+  if(!books || !Object.keys(books).length) return '';
+  const parts = Object.entries(books).map(([bookKey, d]) => {
+    const label = BOOK_LABELS[bookKey] || bookKey;
+    const priceStr = d.price == null ? '' : ` (${d.price > 0 ? '+' : ''}${d.price})`;
+    return `${label} ${fmtNum(d.line, 1)}${priceStr}`;
+  });
+  return `<div class="bookodds"><span class="bookodds-label">Real books:</span> ${parts.join(' &middot; ')}</div>`;
+}
 
 // Returns 'good' | 'bad' | 'verybad' | '' for a stat value against fixed
 // benchmarks, so each statbox on a card can be colored by whether it's
@@ -1161,6 +1277,7 @@ function render(){
           <div class="chip ${sampleChipClass(p.pa, 200, 80)}" title="${escAttr(tipSampleBatter(p))}" data-tip="${escAttr(tipSampleBatter(p))}">${p.pa == null ? 'PA N/A' : p.pa + ' PA'}</div>
         `}
       </div>
+      ${renderBookOdds(p, boardMode)}
       <div class="statboxwrap">${statboxes}
       </div>
     </div>`;
@@ -1266,6 +1383,7 @@ document.getElementById('list').addEventListener('click', (e) => {
 });
 
 loadPlayers();
+loadTrackRecord().then(renderTrackRecord);
 </script>
 
 <script>
