@@ -299,11 +299,12 @@
 
   /* ---- Always-visible stat box grid (swiftprops-style) ---- */
   .bookodds{
-    font-family:var(--mono); font-size:11px; color:var(--muted); margin:10px 0 -2px;
-    padding:6px 10px; background:rgba(66,232,150,0.06); border:1px solid rgba(66,232,150,0.25);
-    border-radius:8px;
+    font-family:var(--mono); font-size:13px; font-weight:700; color:var(--text); margin:12px 0 -2px;
+    padding:10px 14px; background:rgba(66,232,150,0.12); border:1.5px solid var(--stat-good);
+    border-radius:10px; box-shadow:0 0 16px rgba(66,232,150,0.35), inset 0 0 12px rgba(66,232,150,0.08);
+    text-align:center;
   }
-  .bookodds-label{color:var(--stat-good); font-weight:700; margin-right:4px;}
+  .bookodds-label{color:var(--stat-good); font-weight:800; margin-right:6px; letter-spacing:0.3px;}
   .trackrecordbtn{
     max-width:var(--content-width); width:100%; margin:10px auto 0; display:block;
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
@@ -1026,14 +1027,17 @@ function consensusLine(distinctLines, lineToBooks){
 function renderBookOdds(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
   if(!field) return '';
-  const entries = p.bookOdds && p.bookOdds[field];
-  if(!entries || !entries.length) return '';
+  // Card shows only PRIMARY lines (one per book) - alternates would
+  // clutter the card with 3-4 lines per book; those stay in the modal's
+  // dropdown where switching between them actually makes sense.
+  const entries = ((p.bookOdds && p.bookOdds[field]) || []).filter(e => !e.alt);
+  if(!entries.length) return '';
   const parts = entries.map(d => {
     const label = BOOK_LABELS[d.book] || d.book;
     const priceStr = d.price == null ? '' : ` (${d.price > 0 ? '+' : ''}${d.price})`;
     return `${label} ${fmtNum(d.line, 1)}${priceStr}`;
   });
-  return `<div class="bookodds"><span class="bookodds-label">Real books:</span> ${parts.join(' &middot; ')}</div>`;
+  return `<div class="bookodds"><span class="bookodds-label">&#128176; Real Books:</span> ${parts.join(' &middot; ')}</div>`;
 }
 
 // Returns 'good' | 'bad' | 'verybad' | '' for a stat value against fixed
@@ -1500,15 +1504,14 @@ function openPlayerModal(p){
   renderModalBody();
   document.getElementById('playerModal').style.display = 'flex';
 }
-// Defaults the line-switcher to the market's own consensus line for
-// whichever prop is currently active, falling back to our own fixed
-// threshold only when no real odds exist for that prop - same principle
-// as the pitcher modal, kept in its own function since this needs to
-// re-run every time the prop tab changes, not just on modal open.
+// Resets the line-switcher back to OUR OWN line whenever the modal opens
+// or the prop tab changes - matches the score already shown on the card,
+// so opening/switching never shows a different number than what was
+// just tapped. The market's consensus line is clearly labeled in the
+// dropdown (see renderGraphView) so it's still easy to find and switch
+// to, it just isn't the automatic starting point.
 function setDefaultLineForProp(p){
-  const field = PROP_FIELD[modalProp];
-  const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds[field]);
-  modalSelectedLine = consensusLine(distinctLines, lineToBooks);
+  modalSelectedLine = null;
 }
 function closePlayerModal(){
   document.getElementById('playerModal').style.display = 'none';
@@ -1574,12 +1577,12 @@ let modalSelectedLine = null;
 
 function openPitcherModal(p){
   modalPlayer = p;
-  // Default to the market's own consensus line when real odds exist,
-  // rather than our self-computed line - "Our Model" is still available
-  // as an explicit dropdown option (mapped to null), it just isn't the
-  // starting point anymore when we actually know what the books think.
-  const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds.k);
-  modalSelectedLine = consensusLine(distinctLines, lineToBooks);
+  // Default to OUR OWN line - matches the score already shown on the
+  // card, so clicking into a pitcher never shows a different number
+  // than what was just tapped. The market's consensus line is clearly
+  // labeled in the dropdown (see renderPitcherModalBody) so it's easy to
+  // find and switch to, it just isn't the automatic starting point.
+  modalSelectedLine = null;
   document.getElementById('modalPropTabs').style.display = 'none';
   document.getElementById('modalTabs').style.display = 'none';
   renderModalHeader(p);
@@ -1609,12 +1612,14 @@ function renderPitcherModalBody(p){
   // honest side-by-side of what we think vs what the market thinks,
   // specifically at the number currently selected.
   const matchingBooks = lineToBooks[activeLine] || [];
+  const consensus = consensusLine(distinctLines, lineToBooks);
 
   const dropdownOptions = [
     `<option value="model" ${modalSelectedLine == null ? 'selected' : ''}>Our model line (${fmtNum(p.kLine, 1)})</option>`,
     ...distinctLines.map(line => {
       const books = lineToBooks[line].map(b => b.book).join('/');
-      return `<option value="${line}" ${modalSelectedLine === line ? 'selected' : ''}>${fmtNum(line, 1)} (${books})</option>`;
+      const consensusTag = line === consensus ? ' &#9733; CONSENSUS' : '';
+      return `<option value="${line}" ${modalSelectedLine === line ? 'selected' : ''}>${fmtNum(line, 1)} (${books})${consensusTag}</option>`;
     }),
   ].join('');
 
@@ -1716,12 +1721,14 @@ function renderGraphView(){
   const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds[field]);
   const activeThreshold = modalSelectedLine != null ? modalSelectedLine : threshold;
   const matchingBooks = lineToBooks[activeThreshold] || [];
+  const consensus = consensusLine(distinctLines, lineToBooks);
 
   const dropdownOptions = [
     `<option value="model" ${modalSelectedLine == null ? 'selected' : ''}>Our line (${fmtNum(threshold, 1)})</option>`,
     ...distinctLines.map(line => {
       const books = lineToBooks[line].map(b => b.book).join('/');
-      return `<option value="${line}" ${modalSelectedLine === line ? 'selected' : ''}>${fmtNum(line, 1)} (${books})</option>`;
+      const consensusTag = line === consensus ? ' &#9733; CONSENSUS' : '';
+      return `<option value="${line}" ${modalSelectedLine === line ? 'selected' : ''}>${fmtNum(line, 1)} (${books})${consensusTag}</option>`;
     }),
   ].join('');
   const lineSelectorHtml = distinctLines.length ? `
