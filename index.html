@@ -1024,6 +1024,19 @@ function consensusLine(distinctLines, lineToBooks){
   }
   return best;
 }
+// Consensus must be computed from PRIMARY lines only, never alternates -
+// alternates deliberately span many different points (including a very
+// low, near-universal "easy over" number, e.g. 1.5 for HRR, since that's
+// the industry-standard headline line), which would otherwise win the
+// "most books agree" vote by sheer volume even when it isn't the real
+// consensus. This is exactly why the card (which already only shows
+// primary lines) and an earlier version of this dropdown disagreed -
+// same fix, applied consistently here.
+function computeConsensus(entries){
+  const primaryOnly = (entries || []).filter(e => !e.alt);
+  const { lineToBooks, distinctLines } = groupLinesByBook(primaryOnly);
+  return consensusLine(distinctLines, lineToBooks);
+}
 function renderBookOdds(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
   if(!field) return '';
@@ -1612,7 +1625,7 @@ function renderPitcherModalBody(p){
   // honest side-by-side of what we think vs what the market thinks,
   // specifically at the number currently selected.
   const matchingBooks = lineToBooks[activeLine] || [];
-  const consensus = consensusLine(distinctLines, lineToBooks);
+  const consensus = computeConsensus(p.bookOdds && p.bookOdds.k);
 
   const dropdownOptions = [
     `<option value="model" ${modalSelectedLine == null ? 'selected' : ''}>Our model line (${fmtNum(p.kLine, 1)})</option>`,
@@ -1721,7 +1734,7 @@ function renderGraphView(){
   const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds[field]);
   const activeThreshold = modalSelectedLine != null ? modalSelectedLine : threshold;
   const matchingBooks = lineToBooks[activeThreshold] || [];
-  const consensus = consensusLine(distinctLines, lineToBooks);
+  const consensus = computeConsensus(p.bookOdds && p.bookOdds[field]);
 
   const dropdownOptions = [
     `<option value="model" ${modalSelectedLine == null ? 'selected' : ''}>Our line (${fmtNum(threshold, 1)})</option>`,
