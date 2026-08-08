@@ -156,11 +156,14 @@
   .gamefilter::-webkit-scrollbar{height:4px;}
   .gamefilter::-webkit-scrollbar-thumb{background:var(--line); border-radius:2px;}
   .gamechip{
-    flex-shrink:0; background:var(--surface2); border:1px solid var(--line); border-radius:20px;
+    flex-shrink:0; background:var(--surface2); border:1px solid var(--line); border-radius:14px;
     color:var(--muted); font-family:var(--mono); font-size:11px; padding:6px 12px;
     cursor:pointer; white-space:nowrap; user-select:none;
-    display:inline-flex; align-items:center; gap:4px;
+    display:inline-flex; flex-direction:column; align-items:center; gap:2px;
   }
+  .gamechip > div:first-child{display:flex; align-items:center; gap:4px;}
+  .gamechip-time{font-size:9px; color:var(--muted2); letter-spacing:0.3px;}
+  .gamechip.active .gamechip-time{color:var(--gold); opacity:0.8;}
   .gamechip.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
   .gamechip-final{opacity:0.55;}
   .gamechip-live{opacity:0.75; border-color:rgba(217,107,91,0.4);}
@@ -300,12 +303,25 @@
 
   /* ---- Always-visible stat box grid (swiftprops-style) ---- */
   .bookodds{
-    font-family:var(--mono); font-size:13px; font-weight:700; color:var(--text); margin:12px 0 -2px;
-    padding:10px 14px; background:rgba(66,232,150,0.12); border:1.5px solid var(--stat-good);
-    border-radius:10px; box-shadow:0 0 16px rgba(66,232,150,0.35), inset 0 0 12px rgba(66,232,150,0.08);
-    text-align:center;
+    margin:12px 0 -2px; padding:12px 14px; background:rgba(66,232,150,0.10);
+    border:1.5px solid var(--stat-good); border-radius:12px;
+    box-shadow:0 0 18px rgba(66,232,150,0.35), inset 0 0 14px rgba(66,232,150,0.08);
   }
-  .bookodds-label{color:var(--stat-good); font-weight:800; margin-right:6px; letter-spacing:0.3px;}
+  .bookodds-title{
+    font-family:var(--mono); color:var(--stat-good); font-weight:800; font-size:11px;
+    letter-spacing:0.5px; text-transform:uppercase; text-align:center; margin-bottom:9px;
+  }
+  .bookodds-pills{display:flex; flex-wrap:wrap; gap:7px; justify-content:center;}
+  .bookodds-pill{
+    display:flex; align-items:center; gap:6px; background:rgba(0,0,0,0.28);
+    border:1px solid rgba(255,255,255,0.08); border-radius:9px; padding:6px 10px 6px 6px;
+  }
+  .bookodds-badge{
+    background:var(--book-color, #8b948d); color:#0a0d0b; font-weight:800; font-size:9px;
+    padding:3px 6px; border-radius:5px; letter-spacing:0.2px; font-family:var(--mono);
+  }
+  .bookodds-line{font-family:var(--mono); color:var(--text); font-weight:700; font-size:14px;}
+  .bookodds-price{font-family:var(--mono); color:var(--muted); font-size:11px;}
   .trackrecordbtn{
     max-width:var(--content-width); width:100%; margin:10px auto 0; display:block;
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
@@ -440,9 +456,13 @@
      bar happened to be tall near the line, this keeps it clean regardless
      of bar heights. */
   .gl-oddsbanner{
-    text-align:center; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--gold);
-    background:rgba(227,165,72,0.08); border:1px solid rgba(227,165,72,0.35); border-radius:8px;
-    padding:7px 10px; margin-bottom:10px;
+    display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+    background:rgba(227,165,72,0.08); border:1px solid rgba(227,165,72,0.35); border-radius:10px;
+    padding:8px 10px; margin-bottom:10px;
+  }
+  .gl-oddspill{
+    display:inline-flex; align-items:center; gap:5px; font-family:var(--mono);
+    font-size:12px; font-weight:700; color:var(--gold);
   }
   .gl-barsarea{display:flex; align-items:flex-end; gap:4px; height:110px; position:relative; padding:20px 10px 0 4px;}
   .gl-threshline{position:absolute; left:0; right:0; border-top:1px dashed var(--muted2); z-index:0;}
@@ -933,7 +953,8 @@ function showHomerToast(playerName, teamAbbr){
 function buildGameFilter(){
   const bar = document.getElementById('gamefilter');
   const statusByGame = {};
-  players.forEach(p => { statusByGame[p.game] = p.gameStatus; });
+  const timeByGame = {};
+  players.forEach(p => { statusByGame[p.game] = p.gameStatus; timeByGame[p.game] = p.gameTime; });
   const statusOrder = { 'Preview': 0, 'Live': 1, 'Final': 2 };
   const games = [...new Set(players.map(p => p.game))].sort((a, b) => {
     const orderA = statusOrder[statusByGame[a]] ?? 0;
@@ -949,7 +970,9 @@ function buildGameFilter(){
       const tag = isFinal ? ' <span style="opacity:0.6">(FINAL)</span>'
                 : isLive ? ' <span style="opacity:0.7">(LIVE)</span>' : '';
       const dimClass = isFinal ? 'gamechip-final' : (isLive ? 'gamechip-live' : '');
-      return `<div class="gamechip ${dimClass}" data-game="${g}">${matchupWithLogos(g, 14)}${tag}</div>`;
+      const timeStr = !isFinal && !isLive ? formatGameTime(timeByGame[g]) : '';
+      const timeHtml = timeStr ? `<div class="gamechip-time">${timeStr}</div>` : '';
+      return `<div class="gamechip ${dimClass}" data-game="${g}"><div>${matchupWithLogos(g, 14)}${tag}</div>${timeHtml}</div>`;
     }));
   bar.innerHTML = chips.join('');
   bar.querySelectorAll('.gamechip').forEach(chip => {
@@ -997,6 +1020,22 @@ function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 // major sportsbooks.
 const BOARD_TO_ODDS_FIELD = { hr: 'hr', hrr: 'hrr', tb: 'tb', k: 'k' };
 const BOOK_LABELS = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'Hard Rock' };
+// Colored badges instead of real sportsbook logos - avoids any trademark/
+// licensing question around reproducing official brand marks, while still
+// giving each book an instantly-recognizable color at a glance. Colors
+// chosen to loosely echo each book's real brand color (DK green, FD blue,
+// BetMGM gold, Hard Rock orange) without claiming to BE their logo.
+const BOOK_BADGE = {
+  draftkings: { text: 'DK', color: '#53d769' },
+  fanduel: { text: 'FD', color: '#1e88e5' },
+  betmgm: { text: 'MGM', color: '#d4af37' },
+  hardrockbet: { text: 'HRB', color: '#ff7a1a' },
+};
+function bookBadgeHtml(bookKey){
+  const b = BOOK_BADGE[bookKey];
+  if(!b) return `<span class="bookodds-badge" style="--book-color:#8b948d;">${BOOK_LABELS[bookKey] || bookKey}</span>`;
+  return `<span class="bookodds-badge" style="--book-color:${b.color};">${b.text}</span>`;
+}
 // Groups a flat list of {book, line, price} entries (fetch_odds.py's
 // output shape) into { lineValue: [{book, price}, ...] } plus a sorted
 // array of the distinct lines - shared by both the pitcher and batter
@@ -1007,7 +1046,7 @@ function groupLinesByBook(entries){
   (entries || []).forEach(e => {
     if(e.line == null) return;
     lineToBooks[e.line] = lineToBooks[e.line] || [];
-    lineToBooks[e.line].push({ book: BOOK_LABELS[e.book] || e.book, price: e.price });
+    lineToBooks[e.line].push({ bookKey: e.book, book: BOOK_LABELS[e.book] || e.book, price: e.price });
   });
   const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
   return { lineToBooks, distinctLines };
@@ -1046,12 +1085,15 @@ function renderBookOdds(p, mode){
   // dropdown where switching between them actually makes sense.
   const entries = ((p.bookOdds && p.bookOdds[field]) || []).filter(e => !e.alt);
   if(!entries.length) return '';
-  const parts = entries.map(d => {
-    const label = BOOK_LABELS[d.book] || d.book;
-    const priceStr = d.price == null ? '' : ` (${d.price > 0 ? '+' : ''}${d.price})`;
-    return `${label} ${fmtNum(d.line, 1)}${priceStr}`;
+  const pills = entries.map(d => {
+    const priceStr = d.price == null ? '' : `<span class="bookodds-price">${d.price > 0 ? '+' : ''}${d.price}</span>`;
+    return `<div class="bookodds-pill">${bookBadgeHtml(d.book)}<span class="bookodds-line">${fmtNum(d.line, 1)}</span>${priceStr}</div>`;
   });
-  return `<div class="bookodds"><span class="bookodds-label">&#128176; Real Books:</span> ${parts.join(' &middot; ')}</div>`;
+  return `
+    <div class="bookodds">
+      <div class="bookodds-title">&#128176; Real Sportsbook Lines</div>
+      <div class="bookodds-pills">${pills.join('')}</div>
+    </div>`;
 }
 
 // Returns 'good' | 'bad' | 'verybad' | '' for a stat value against fixed
@@ -1321,7 +1363,7 @@ function render(){
         </div>
         <div class="info">
           <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''} ${homerBadge}</div>
-          <div class="meta">${p.playerType === 'pitcher' ? `${matchupWithLogos(p.game, 14)} &middot; vs ${p.opponent} (${p.hand}HP)` : `${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})`}</div>
+          <div class="meta">${p.playerType === 'pitcher' ? `${matchupWithLogos(p.game, 14)} &middot; vs ${p.opponent} (${p.hand}HP)` : `${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})`}${formatGameTime(p.gameTime) ? ` &middot; ${formatGameTime(p.gameTime)}` : ''}</div>
         </div>
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
@@ -1480,6 +1522,16 @@ function fmtShortDate(iso){
   if (parts.length !== 3) return iso;
   return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
 }
+// MLB's API gives us a UTC timestamp - the browser's Date object converts
+// it to whatever timezone the viewer's own device is set to, so this
+// always shows a game's start time correctly relative to the person
+// actually looking at the page, not a hardcoded ET assumption.
+function formatGameTime(iso){
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
 function windowGames(bundle, key){
   const g = bundle.games || [];
   if (key === 'l5') return g.slice(-5);
@@ -1541,6 +1593,8 @@ function renderModalHeader(p){
   const metaLine = p.playerType === 'pitcher'
     ? `${matchupWithLogos(p.game, 12)} &middot; vs ${p.opponent} (${p.hand}HP)`
     : `${matchupWithLogos(p.game, 12)} &middot; vs ${p.pitcher} (${p.hand})`;
+  const timeStr = formatGameTime(p.gameTime);
+  const metaLineFull = metaLine + (timeStr ? ` &middot; ${timeStr}` : '');
   document.getElementById('modalPlayerHeader').innerHTML = `
     <div class="modal-headshot" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
       <div class="init">${initials}</div>
@@ -1548,7 +1602,7 @@ function renderModalHeader(p){
     </div>
     <div>
       <div class="modal-name">${p.player}</div>
-      <div class="modal-meta">${metaLine}</div>
+      <div class="modal-meta">${metaLineFull}</div>
     </div>`;
 }
 
@@ -1650,7 +1704,7 @@ function renderPitcherModalBody(p){
   // overlaid on the threshold line itself (which crowded into the bars
   // whenever the line sat near a tall column).
   const oddsBannerText = matchingBooks.length
-    ? matchingBooks.map(b => `${b.book} ${b.price > 0 ? '+' : ''}${b.price}`).join(' &middot; ')
+    ? matchingBooks.map(b => `<span class="gl-oddspill">${bookBadgeHtml(b.bookKey)} ${b.price > 0 ? '+' : ''}${b.price}</span>`).join('')
     : `O/U ${fmtNum(activeLine, 1)} (our model - no book match at this line)`;
 
   const chart = `
@@ -1775,7 +1829,7 @@ function renderGraphView(){
   const maxVal = Math.max(1, ...chartGames.map(g => g[field]));
   const threshPct = Math.min(92, (activeThreshold / maxVal) * 100);
   const oddsBannerText = matchingBooks.length
-    ? matchingBooks.map(b => `${b.book} ${b.price > 0 ? '+' : ''}${b.price}`).join(' &middot; ')
+    ? matchingBooks.map(b => `<span class="gl-oddspill">${bookBadgeHtml(b.bookKey)} ${b.price > 0 ? '+' : ''}${b.price}</span>`).join('')
     : `O/U ${fmtNum(activeThreshold, 1)} (our line - no book match at this line)`;
 
   const chart = `
