@@ -1,0 +1,46 @@
+name: Check Prediction Accuracy
+
+# Runs once nightly at 3:00 AM EST (well after every game nationwide is
+# final) and grades YESTERDAY's snapshot (history/{date}.json, written by
+# hr-board-update.yml's last run of the day) against real final box
+# scores. Also runnable manually anytime from the Actions tab or the
+# GitHub mobile app if you want to check a specific day sooner.
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "Date to check (YYYY-MM-DD). Leave blank for yesterday."
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  check-results:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run the results checker
+        run: python check_results.py ${{ github.event.inputs.date }}
+
+      - name: Commit and push accuracy results if they changed
+        run: |
+          git config user.name "hr-board-bot"
+          git config user.email "actions@github.com"
+          git add history/
+          git diff --quiet --cached || git commit -m "Update accuracy results ($(date -u +%Y-%m-%dT%H:%M))"
+          git pull --rebase origin main
+          git push
