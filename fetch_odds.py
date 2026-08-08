@@ -113,9 +113,11 @@ def collect_odds():
         for bookmaker in data.get("bookmakers", []):
             book_key = bookmaker.get("key")
             for market in bookmaker.get("markets", []):
-                field = MARKET_TO_FIELD.get(market.get("key"))
+                market_key = market.get("key", "")
+                field = MARKET_TO_FIELD.get(market_key)
                 if not field:
                     continue
+                is_alt = market_key.endswith("_alternate")
                 for outcome in market.get("outcomes", []):
                     # Player props only have "Over"/"Under" outcomes - we
                     # only care about the Over side's line and price.
@@ -135,8 +137,14 @@ def collect_odds():
                     if any(e["book"] == book_key and e["line"] == line for e in entries):
                         continue
                     entries.append({
+                        # "alt" marks whether this line came from the
+                        # standard market or the _alternate (milestone)
+                        # market - the frontend card only shows non-alt
+                        # entries (one line per book, not every alternate
+                        # cluttering the card); the dropdown shows all of
+                        # them regardless of this flag.
                         "book": book_key, "line": line, "price": price,
-                        "displayName": player_name,
+                        "alt": is_alt, "displayName": player_name,
                     })
         print(f"  {matchup}: processed")
 
