@@ -409,9 +409,13 @@
   .lineselector-wrap{display:flex; align-items:center; gap:8px; margin:10px 0;}
   .lineselector-label{font-family:var(--mono); font-size:11px; color:var(--muted); text-transform:uppercase;}
   .lineselector{
-    background:var(--bg); border:1px solid var(--gold); border-radius:8px; color:var(--gold);
-    font-family:var(--mono); font-size:13px; font-weight:700; padding:6px 10px; cursor:pointer;
+    background:var(--surface2); border:1px solid var(--line); border-radius:8px; color:var(--text);
+    font-family:var(--mono); font-size:13px; font-weight:700; padding:7px 30px 7px 12px; cursor:pointer;
+    -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b948d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center; background-size:14px;
   }
+  .lineselector:hover, .lineselector:focus{outline:none; border-color:var(--gold); color:var(--gold);}
   .gl-splitbox-title{font-family:var(--body); font-weight:700; font-size:14px; margin-bottom:12px;}
   .gl-splitbox-main{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;}
   .gl-splitbox-pct{font-family:var(--mono); font-weight:700; font-size:26px; color:var(--green);}
@@ -429,14 +433,17 @@
      narrow screens; it should never actually trigger in normal use. */
   .gl-chartwrap{overflow-x:auto; overflow-y:hidden; margin-top:16px; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
   .gl-chart{display:flex; flex-direction:column; width:100%;}
+  /* Sits in the clear space above the bars, not overlaid on the
+     threshold line itself - the odds text used to crowd into whichever
+     bar happened to be tall near the line, this keeps it clean regardless
+     of bar heights. */
+  .gl-oddsbanner{
+    text-align:center; font-family:var(--mono); font-size:12px; font-weight:700; color:var(--gold);
+    background:rgba(227,165,72,0.08); border:1px solid rgba(227,165,72,0.35); border-radius:8px;
+    padding:7px 10px; margin-bottom:10px;
+  }
   .gl-barsarea{display:flex; align-items:flex-end; gap:4px; height:110px; position:relative; padding:20px 10px 0 4px;}
   .gl-threshline{position:absolute; left:0; right:0; border-top:1px dashed var(--muted2); z-index:0;}
-  .gl-threshline-label{
-    position:absolute; right:2px; transform:translateY(-100%); z-index:1;
-    font-family:var(--mono); font-size:10px; font-weight:700; color:var(--gold);
-    background:var(--surface2); padding:2px 6px; border-radius:5px; border:1px solid var(--gold);
-    white-space:nowrap;
-  }
   .gl-col{display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0; height:100%; justify-content:flex-end; position:relative; z-index:1;}
   .gl-bar{width:60%; max-width:20px; border-radius:4px 4px 0 0; background:#2a322c; position:relative; min-height:2px;}
   .gl-bar.hit{background:var(--green);}
@@ -988,13 +995,41 @@ function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 // major sportsbooks.
 const BOARD_TO_ODDS_FIELD = { hr: 'hr', hrr: 'hrr', tb: 'tb', k: 'k' };
 const BOOK_LABELS = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'Hard Rock' };
+// Groups a flat list of {book, line, price} entries (fetch_odds.py's
+// output shape) into { lineValue: [{book, price}, ...] } plus a sorted
+// array of the distinct lines - shared by both the pitcher and batter
+// line-switcher dropdowns so alternate-line grouping stays consistent
+// between them.
+function groupLinesByBook(entries){
+  const lineToBooks = {};
+  (entries || []).forEach(e => {
+    if(e.line == null) return;
+    lineToBooks[e.line] = lineToBooks[e.line] || [];
+    lineToBooks[e.line].push({ book: BOOK_LABELS[e.book] || e.book, price: e.price });
+  });
+  const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
+  return { lineToBooks, distinctLines };
+}
+// The single most "consensus" real line among the books offering odds -
+// the line the most books agree on, tie-broken toward the lowest value.
+// Used to default the line-switcher to what the market actually thinks,
+// rather than our own self-computed line, per your request that OUR
+// default should match what the sportsbooks are actually setting.
+function consensusLine(distinctLines, lineToBooks){
+  if(!distinctLines.length) return null;
+  let best = distinctLines[0];
+  for(const line of distinctLines){
+    if(lineToBooks[line].length > lineToBooks[best].length) best = line;
+  }
+  return best;
+}
 function renderBookOdds(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
   if(!field) return '';
-  const books = p.bookOdds && p.bookOdds[field];
-  if(!books || !Object.keys(books).length) return '';
-  const parts = Object.entries(books).map(([bookKey, d]) => {
-    const label = BOOK_LABELS[bookKey] || bookKey;
+  const entries = p.bookOdds && p.bookOdds[field];
+  if(!entries || !entries.length) return '';
+  const parts = entries.map(d => {
+    const label = BOOK_LABELS[d.book] || d.book;
     const priceStr = d.price == null ? '' : ` (${d.price > 0 ? '+' : ''}${d.price})`;
     return `${label} ${fmtNum(d.line, 1)}${priceStr}`;
   });
@@ -1456,7 +1491,7 @@ function openPlayerModal(p){
   modalStatsMetric = 'pa';
   modalStatsMode = 'avg';
   modalView = 'graph';
-  modalSelectedLine = null;
+  setDefaultLineForProp(p);
   document.getElementById('modalPropTabs').style.display = '';
   document.getElementById('modalTabs').style.display = '';
   document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t.dataset.prop === modalProp));
@@ -1464,6 +1499,16 @@ function openPlayerModal(p){
   renderModalHeader(p);
   renderModalBody();
   document.getElementById('playerModal').style.display = 'flex';
+}
+// Defaults the line-switcher to the market's own consensus line for
+// whichever prop is currently active, falling back to our own fixed
+// threshold only when no real odds exist for that prop - same principle
+// as the pitcher modal, kept in its own function since this needs to
+// re-run every time the prop tab changes, not just on modal open.
+function setDefaultLineForProp(p){
+  const field = PROP_FIELD[modalProp];
+  const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds[field]);
+  modalSelectedLine = consensusLine(distinctLines, lineToBooks);
 }
 function closePlayerModal(){
   document.getElementById('playerModal').style.display = 'none';
@@ -1529,7 +1574,12 @@ let modalSelectedLine = null;
 
 function openPitcherModal(p){
   modalPlayer = p;
-  modalSelectedLine = null;
+  // Default to the market's own consensus line when real odds exist,
+  // rather than our self-computed line - "Our Model" is still available
+  // as an explicit dropdown option (mapped to null), it just isn't the
+  // starting point anymore when we actually know what the books think.
+  const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds.k);
+  modalSelectedLine = consensusLine(distinctLines, lineToBooks);
   document.getElementById('modalPropTabs').style.display = 'none';
   document.getElementById('modalTabs').style.display = 'none';
   renderModalHeader(p);
@@ -1545,16 +1595,10 @@ function renderPitcherModalBody(p){
     return;
   }
 
-  // Every distinct real line offered across the books we have, deduped -
-  // this is what populates the dropdown alongside our own model line.
-  const kBooks = (p.bookOdds && p.bookOdds.k) || {};
-  const lineToBooks = {};
-  Object.entries(kBooks).forEach(([bookKey, d]) => {
-    if(d.line == null) return;
-    lineToBooks[d.line] = lineToBooks[d.line] || [];
-    lineToBooks[d.line].push({ book: BOOK_LABELS[bookKey] || bookKey, price: d.price });
-  });
-  const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
+  // Every distinct real line offered across the books we have (including
+  // alternates), deduped - this populates the dropdown alongside our own
+  // model line.
+  const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds.k);
 
   const activeLine = modalSelectedLine != null ? modalSelectedLine : p.kLine;
   const overProb = poissonOverProbJS(p.projK, activeLine);
@@ -1583,21 +1627,19 @@ function renderPitcherModalBody(p){
   const maxVal = Math.max(1, activeLine, ...starts.map(s => s.k));
   const threshPct = Math.min(92, (activeLine / maxVal) * 100);
 
-  // The odds label shown directly ON the graph, right at the threshold
-  // line - if the currently-selected line matches a real book, show
-  // that book's actual price(s) there; otherwise just label it as our
-  // own model's line so the chart never looks unexplained.
-  const threshLabelText = matchingBooks.length
+  // The odds readout now sits in the clear space ABOVE the bars, not
+  // overlaid on the threshold line itself (which crowded into the bars
+  // whenever the line sat near a tall column).
+  const oddsBannerText = matchingBooks.length
     ? matchingBooks.map(b => `${b.book} ${b.price > 0 ? '+' : ''}${b.price}`).join(' &middot; ')
-    : `O/U ${fmtNum(activeLine, 1)} (model)`;
+    : `O/U ${fmtNum(activeLine, 1)} (our model - no book match at this line)`;
 
   const chart = `
     <div class="gl-chartwrap">
+      <div class="gl-oddsbanner">${oddsBannerText}</div>
       <div class="gl-chart">
         <div class="gl-barsarea">
-          <div class="gl-threshline" style="bottom:${threshPct}%">
-            <span class="gl-threshline-label">${threshLabelText}</span>
-          </div>
+          <div class="gl-threshline" style="bottom:${threshPct}%"></div>
           ${starts.map(s => `
             <div class="gl-col">
               <div class="gl-bar ${s.k > activeLine ? 'hit' : ''}" style="height:${Math.max(4, (s.k / maxVal) * 100)}%">
@@ -1667,18 +1709,11 @@ function renderGraphView(){
   const threshold = PROP_THRESHOLD[modalProp];
 
   // Every distinct real line offered across the books we have for THIS
-  // prop, deduped - same line-switcher pattern as the pitcher K board.
-  // Only HR/Hits/TB/HRR have a real market at any book; XBH has none,
-  // so its dropdown will just be empty and it silently falls back to
-  // our own fixed threshold, same as before.
-  const propBooks = (p.bookOdds && p.bookOdds[field]) || {};
-  const lineToBooks = {};
-  Object.entries(propBooks).forEach(([bookKey, d]) => {
-    if(d.line == null) return;
-    lineToBooks[d.line] = lineToBooks[d.line] || [];
-    lineToBooks[d.line].push({ book: BOOK_LABELS[bookKey] || bookKey, price: d.price });
-  });
-  const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
+  // prop (including alternates), deduped - same line-switcher pattern as
+  // the pitcher K board. Only HR/Hits/TB/HRR have a real market at any
+  // book; XBH has none, so its dropdown will just be empty and it
+  // silently falls back to our own fixed threshold, same as before.
+  const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds[field]);
   const activeThreshold = modalSelectedLine != null ? modalSelectedLine : threshold;
   const matchingBooks = lineToBooks[activeThreshold] || [];
 
@@ -1718,17 +1753,16 @@ function renderGraphView(){
   const chartGames = winGames;
   const maxVal = Math.max(1, ...chartGames.map(g => g[field]));
   const threshPct = Math.min(92, (activeThreshold / maxVal) * 100);
-  const threshLabelText = matchingBooks.length
+  const oddsBannerText = matchingBooks.length
     ? matchingBooks.map(b => `${b.book} ${b.price > 0 ? '+' : ''}${b.price}`).join(' &middot; ')
-    : `O/U ${fmtNum(activeThreshold, 1)} (our line)`;
+    : `O/U ${fmtNum(activeThreshold, 1)} (our line - no book match at this line)`;
 
   const chart = `
     <div class="gl-chartwrap">
+      <div class="gl-oddsbanner">${oddsBannerText}</div>
       <div class="gl-chart">
         <div class="gl-barsarea">
-          <div class="gl-threshline" style="bottom:${threshPct}%">
-            <span class="gl-threshline-label">${threshLabelText}</span>
-          </div>
+          <div class="gl-threshline" style="bottom:${threshPct}%"></div>
           ${chartGames.map(g => `
             <div class="gl-col">
               <div class="gl-bar ${g[field] >= Math.ceil(activeThreshold) ? 'hit' : ''}" style="height:${Math.max(4, (g[field] / maxVal) * 100)}%">
@@ -1848,7 +1882,7 @@ function wireModalBodyEvents(){
 document.querySelectorAll('.modal-proptab').forEach(tab => {
   tab.addEventListener('click', () => {
     modalProp = tab.dataset.prop;
-    modalSelectedLine = null;
+    setDefaultLineForProp(modalPlayer);
     document.querySelectorAll('.modal-proptab').forEach(t => t.classList.toggle('active', t === tab));
     renderModalBody();
   });
