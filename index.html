@@ -431,6 +431,12 @@
   .gl-chart{display:flex; flex-direction:column; width:100%;}
   .gl-barsarea{display:flex; align-items:flex-end; gap:4px; height:110px; position:relative; padding:20px 10px 0 4px;}
   .gl-threshline{position:absolute; left:0; right:0; border-top:1px dashed var(--muted2); z-index:0;}
+  .gl-threshline-label{
+    position:absolute; right:2px; transform:translateY(-100%); z-index:1;
+    font-family:var(--mono); font-size:10px; font-weight:700; color:var(--gold);
+    background:var(--surface2); padding:2px 6px; border-radius:5px; border:1px solid var(--gold);
+    white-space:nowrap;
+  }
   .gl-col{display:flex; flex-direction:column; align-items:center; flex:1 1 0; min-width:0; height:100%; justify-content:flex-end; position:relative; z-index:1;}
   .gl-bar{width:60%; max-width:20px; border-radius:4px 4px 0 0; background:#2a322c; position:relative; min-height:2px;}
   .gl-bar.hit{background:var(--green);}
@@ -1576,11 +1582,21 @@ function renderPitcherModalBody(p){
   const maxVal = Math.max(1, activeLine, ...starts.map(s => s.k));
   const threshPct = Math.min(92, (activeLine / maxVal) * 100);
 
+  // The odds label shown directly ON the graph, right at the threshold
+  // line - if the currently-selected line matches a real book, show
+  // that book's actual price(s) there; otherwise just label it as our
+  // own model's line so the chart never looks unexplained.
+  const threshLabelText = matchingBooks.length
+    ? matchingBooks.map(b => `${b.book} ${b.price > 0 ? '+' : ''}${b.price}`).join(' &middot; ')
+    : `O/U ${fmtNum(activeLine, 1)} (model)`;
+
   const chart = `
     <div class="gl-chartwrap">
       <div class="gl-chart">
         <div class="gl-barsarea">
-          <div class="gl-threshline" style="bottom:${threshPct}%"></div>
+          <div class="gl-threshline" style="bottom:${threshPct}%">
+            <span class="gl-threshline-label">${threshLabelText}</span>
+          </div>
           ${starts.map(s => `
             <div class="gl-col">
               <div class="gl-bar ${s.k > activeLine ? 'hit' : ''}" style="height:${Math.max(4, (s.k / maxVal) * 100)}%">
