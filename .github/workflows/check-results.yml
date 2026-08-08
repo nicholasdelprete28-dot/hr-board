@@ -40,6 +40,7 @@ jobs:
         run: |
           git config user.name "hr-board-bot"
           git config user.email "actions@github.com"
+          mkdir -p history
           git add history/
           git diff --quiet --cached || git commit -m "Update accuracy results ($(date -u +%Y-%m-%dT%H:%M))"
           git pull --rebase origin main
