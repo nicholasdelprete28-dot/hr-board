@@ -118,6 +118,11 @@ def get_todays_games():
                 # (completed) - used so the webpage can hide finished games
                 # by default while still letting you tap into them manually.
                 "status": g.get("status", {}).get("abstractGameState", "Preview"),
+                # Raw UTC ISO8601 timestamp - same field already trusted
+                # elsewhere in this file for date sorting (get_recent_lineup,
+                # get_recent_starter). The frontend converts this to the
+                # viewer's own local time for display.
+                "game_time": g.get("gameDate"),
             })
     return games
 
@@ -1344,6 +1349,7 @@ def main():
                     "lineupConfirmed": lineup_confirmed,
                     "pitcherConfirmed": pitcher_confirmed,
                     "gameStatus": g["status"],
+                    "gameTime": g.get("game_time"),
                     "playerId": batter_id,
                     "pitchMixMatch": compute_pitch_mix_match(
                         batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix),
@@ -1482,6 +1488,7 @@ def main():
                 "opponent": g[f"{opp_side}_team"],
                 "game": f"{g['away_team']} @ {g['home_team']}",
                 "gameStatus": g["status"],
+                "gameTime": g.get("game_time"),
                 "hand": pitcher.get("pitchHand", {}).get("code", "R"),
                 "k9": pstat.get("k9"),
                 "bb9": pstat.get("bb9"),
