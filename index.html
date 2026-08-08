@@ -1037,7 +1037,7 @@ const BOOK_BADGE = {
   draftkings: { text: 'DK', color: '#53d769', domain: 'draftkings.com' },
   fanduel: { text: 'FD', color: '#1e88e5', domain: 'fanduel.com' },
   betmgm: { text: 'MGM', color: '#d4af37', domain: 'betmgm.com' },
-  hardrockbet: { text: 'HRB', color: '#ff7a1a', domain: 'bet.hardrock.com' },
+  hardrockbet: { text: 'HRB', color: '#ff7a1a', domain: 'hardrock.bet' },
 };
 function bookBadgeHtml(bookKey){
   const b = BOOK_BADGE[bookKey];
@@ -1081,34 +1081,46 @@ function groupLinesByBook(entries){
 // Used to default the line-switcher to what the market actually thinks,
 // rather than our own self-computed line, per your request that OUR
 // default should match what the sportsbooks are actually setting.
-function consensusLine(distinctLines, lineToBooks){
-  if(!distinctLines.length) return null;
-  let best = distinctLines[0];
-  for(const line of distinctLines){
-    if(lineToBooks[line].length > lineToBooks[best].length) best = line;
-  }
-  return best;
-}
-// Consensus must be computed from PRIMARY lines only, never alternates -
-// alternates deliberately span many different points (including a very
-// low, near-universal "easy over" number, e.g. 1.5 for HRR, since that's
-// the industry-standard headline line), which would otherwise win the
-// "most books agree" vote by sheer volume even when it isn't the real
-// consensus. This is exactly why the card (which already only shows
-// primary lines) and an earlier version of this dropdown disagreed -
-// same fix, applied consistently here.
+// Consensus is a WEIGHTED vote - primary-market entries count fully (1.0),
+// alternate-market entries count partially (0.3) - rather than a strict
+// primary-only filter. Two real, opposite bugs forced this: (1) HRR - a
+// near-universal "easy" alternate line (1.5) was out-voting the real
+// primary line when alternates counted fully, so they needed to count
+// for less; (2) HR - it turns out most books represent an "anytime HR"
+// prop ENTIRELY through what the API calls the alternate/milestone
+// market (since "1+" is inherently a threshold concept), so a strict
+// primary-only filter was throwing out nearly all real data and left
+// only whichever single book happened to also report a redundant
+// primary entry. Weighting instead of filtering solves both: a
+// near-universal alt line still loses to a real primary line when one
+// exists, but real alt-only data still counts for something when no
+// primary data exists at all, instead of being silently discarded.
 function computeConsensus(entries){
-  const primaryOnly = (entries || []).filter(e => !e.alt);
-  const { lineToBooks, distinctLines } = groupLinesByBook(primaryOnly);
-  return consensusLine(distinctLines, lineToBooks);
+  if(!entries || !entries.length) return null;
+  const weightByLine = {};
+  entries.forEach(e => {
+    if(e.line == null) return;
+    weightByLine[e.line] = (weightByLine[e.line] || 0) + (e.alt ? 0.3 : 1.0);
+  });
+  let best = null;
+  for(const line in weightByLine){
+    if(best == null || weightByLine[line] > weightByLine[best]) best = line;
+  }
+  return best == null ? null : Number(best);
 }
 function renderBookOdds(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
   if(!field) return '';
-  // Card shows only PRIMARY lines (one per book) - alternates would
-  // clutter the card with 3-4 lines per book; those stay in the modal's
-  // dropdown where switching between them actually makes sense.
-  const entries = ((p.bookOdds && p.bookOdds[field]) || []).filter(e => !e.alt);
+  const allEntries = (p.bookOdds && p.bookOdds[field]) || [];
+  if(!allEntries.length) return '';
+  const consensus = computeConsensus(allEntries);
+  if(consensus == null) return '';
+  // Show every book with a line AT the established consensus number,
+  // regardless of whether that specific book happened to report it via
+  // their primary or alternate market - a book quoting the same real
+  // number through their milestone market is still real, current
+  // information, not something worth hiding from the card.
+  const entries = allEntries.filter(e => e.line === consensus);
   if(!entries.length) return '';
   const pills = entries.map(d => {
     const priceStr = d.price == null ? '' : `<span class="bookodds-price">${d.price > 0 ? '+' : ''}${d.price}</span>`;
