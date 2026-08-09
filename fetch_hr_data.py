@@ -1131,6 +1131,67 @@ def compute_tb_score(p):
 
 
 # ---------------------------------------------------------------------------
+# "Value" probability model - a SECOND, independent probability estimate
+# for HR/HRR/TB, separate from each board's composite favorability score
+# above. The composite score is a weighted comparison scale (0-100),
+# useful for ranking players against each other, but it was never
+# calibrated to BE a real probability of clearing a specific line - it's
+# a heuristic rescale for display (see DISPLAY_PCT_FLOOR/CEILING on the
+# frontend), not something that should be directly compared to a real
+# sportsbook's implied probability.
+#
+# This builds a genuinely calibrated probability instead, the same
+# rigorous way the K board's Poisson model works: start from the
+# player's own REAL recent per-game rate (not a composite score), adjust
+# for today's specific matchup, and get an actual modeled probability -
+# something that can be honestly compared against the market's price to
+# find where the market and our model disagree (a real "value" signal),
+# rather than comparing two different kinds of numbers that only look
+# alike.
+# ---------------------------------------------------------------------------
+LEAGUE_AVG_PITCHER_HR9 = 1.20
+LEAGUE_AVG_PITCHER_WHIP = 1.30
+
+
+def compute_hr_probability(p):
+    """HR is a raw COUNT stat (how many home runs, not "did he clear a
+    rate"), so this uses the same Poisson approach as the K board: a
+    real per-game mean (from l15hr, an actual HR total over real recent
+    games - not a composite score) adjusted by today's specific pitcher,
+    then P(HR >= 1) via the Poisson model."""
+    l15hr = p.get("l15hr")
+    if l15hr is None:
+        return None
+    base_rate = l15hr / 15  # average HR per game, from REAL recent games
+    phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
+    # Dampened 50% so one very homer-prone or very stingy pitcher doesn't
+    # swing the projection further than a real matchup edge should -
+    # same philosophy as the K board's matchup multiplier.
+    matchup_mult = 1 + ((phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
+    mean = max(0.01, base_rate * matchup_mult)
+    return poisson_over_prob(mean, 0.5)  # P(1 or more)
+
+
+def compute_rate_stat_probability(p, recent_field, matchup_field, league_avg_matchup):
+    """HRR and TB already track a games-CLEARED count (not a raw stat
+    total) over the last 15 games - l15hrr/l15tb are literally "how many
+    of the last 15 games cleared the line", a real empirical clearing
+    rate on their own, no Poisson conversion needed (unlike HR's raw
+    count). This just adjusts that real rate for today's matchup
+    (pitcher WHIP, since HRR/TB lean on contact/baserunners more than
+    pure power) and clamps to a valid probability."""
+    recent = p.get(recent_field)
+    if recent is None:
+        return None
+    base_rate = clamp01(recent / 15)
+    matchup_val = p.get(matchup_field)
+    if matchup_val is None:
+        matchup_val = league_avg_matchup
+    matchup_mult = 1 + ((matchup_val / league_avg_matchup) - 1) * 0.5
+    return clamp01(base_rate * matchup_mult)
+
+
+# ---------------------------------------------------------------------------
 # K (Strikeouts) board scoring, v2 - the first PITCHER-side board. Unlike
 # the three batter boards, which all share one fixed universal line (1.5),
 # a real strikeout prop line varies enormously by pitcher - an ace's line
@@ -1461,6 +1522,20 @@ def main():
         player_row.update(compute_score(player_row))
         player_row.update(compute_hrr_score(player_row))
         player_row.update(compute_tb_score(player_row))
+        # Real calibrated probabilities (see compute_hr_probability's
+        # docstring above), independent of the composite favorability
+        # scores just computed - lets the frontend compare our actual
+        # model probability against the market's real implied
+        # probability for a genuine "value" signal.
+        hr_prob = compute_hr_probability(player_row)
+        if hr_prob is not None:
+            player_row["hrProb"] = round(hr_prob * 100, 1)
+        hrr_prob = compute_rate_stat_probability(player_row, "l15hrr", "whip", LEAGUE_AVG_PITCHER_WHIP)
+        if hrr_prob is not None:
+            player_row["hrrProb"] = round(hrr_prob * 100, 1)
+        tb_prob = compute_rate_stat_probability(player_row, "l15tb", "whip", LEAGUE_AVG_PITCHER_WHIP)
+        if tb_prob is not None:
+            player_row["tbProb"] = round(tb_prob * 100, 1)
 
     # ---- PITCHERS: the K (strikeouts) board. Built as its own pass since
     # pitchers aren't part of the batter/lineup pipeline above at all - one
