@@ -504,112 +504,20 @@
     max-width:var(--content-width); margin:24px auto 0; padding:0 4px;
     font-family:var(--body); font-size:11px; color:var(--muted2); line-height:1.5;
   }
-
-  /* ---- Password gate ----
-     While html has .gy-locked, everything in <body> except #authGate is
-     hidden. This only stops the page from RENDERING for someone without
-     the password - it's a client-side static site with no server, so it
-     can't stop someone with dev tools from reading the underlying JS/data.
-     Good enough to keep this private/casual; not a substitute for real
-     auth if this ever holds sensitive data. */
-  html.gy-locked body > *:not(#authGate){display:none !important;}
-  #authGate{
-    position:fixed; inset:0; z-index:9999; background:var(--bg);
-    display:flex; align-items:center; justify-content:center; padding:20px;
-  }
-  #authGate .authbox{
-    background:var(--surface2); border:1px solid var(--line); border-radius:14px;
-    padding:32px 24px; max-width:320px; width:100%; text-align:center;
-  }
-  #authGate .authbox h2{font-family:var(--display); color:var(--text); margin:0 0 6px; font-size:20px;}
-  #authGate .authbox p{font-family:var(--body); color:var(--muted); font-size:13px; margin:0 0 18px;}
-  #authGate input{
-    width:100%; background:var(--bg); border:1px solid var(--line); border-radius:10px;
-    color:var(--text); font-family:var(--mono); font-size:15px; padding:12px;
-    outline:none; box-sizing:border-box; text-align:center; letter-spacing:2px;
-  }
-  #authGate input:focus{border-color:var(--gold);}
-  #authGate button{
-    margin-top:12px; width:100%; background:var(--green); color:#0a0d0b; border:none;
-    border-radius:10px; padding:12px; font-family:var(--display); font-weight:700;
-    font-size:14px; cursor:pointer;
-  }
-  #authGate .autherror{display:none; color:var(--red); font-family:var(--mono); font-size:12px; margin-top:10px;}
-  #authGate.shake{animation:gy-shake 0.4s;}
-  @keyframes gy-shake{
-    10%,90%{transform:translateX(-2px);} 20%,80%{transform:translateX(4px);}
-    30%,50%,70%{transform:translateX(-8px);} 40%,60%{transform:translateX(8px);}
-  }
 </style>
 </head>
 <body>
 
-<div id="authGate" style="display:none">
-  <div class="authbox">
-    <h2>&#128274; Going Yard</h2>
-    <p>Enter the password to continue.</p>
-    <form id="authForm" autocomplete="off">
-      <input id="authInput" type="password" placeholder="Password" autofocus>
-      <button type="submit">Unlock</button>
-      <div class="autherror" id="authError">Wrong password.</div>
-    </form>
-  </div>
+<div id="discordWelcomeBanner" style="display:none; background:var(--surface2); border-bottom:1px solid var(--line); padding:12px 16px; align-items:center; justify-content:center; gap:12px; font-family:var(--body); font-size:13px; color:var(--text); flex-wrap:wrap; text-align:center;">
+  <span>Welcome to Going Yard! Join our Discord for daily accuracy tracking and community discussion.</span>
+  <a href="https://discord.gg/W4dKhyJgMA" target="_blank" style="background:var(--gold); color:#0a0d0b; border-radius:8px; padding:6px 14px; font-weight:700; text-decoration:none; font-family:var(--display); font-size:12px; white-space:nowrap;">Join Discord</a>
+  <button onclick="document.getElementById('discordWelcomeBanner').style.display='none';" style="background:transparent; border:1px solid var(--line); color:var(--muted); border-radius:8px; padding:6px 12px; cursor:pointer; font-family:var(--mono); font-size:11px;">Dismiss</button>
 </div>
 <script>
-(function(){
-  // -------------------------------------------------------------------
-  // To set/change the password: open a browser console anywhere and run
-  //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword'))
-  //     .then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
-  // then paste the printed hash below. The plaintext password never
-  // needs to be committed to the repo - only the hash is.
-  // -------------------------------------------------------------------
-  var PASSWORD_HASH = '0414123ffb9cf8cff65b83ddc5db102ba16b781813d986ebc684ffcb01fe3541';
-  var STORAGE_KEY = 'gy_unlocked_v1';
-
-  function sha256Hex(text){
-    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function(buf){
-      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2, '0'); }).join('');
-    });
-  }
-
-  function unlock(remember){
-    document.documentElement.classList.remove('gy-locked');
-    document.getElementById('authGate').style.display = 'none';
-    if (remember) sessionStorage.setItem(STORAGE_KEY, '1');
-  }
-
-  if (sessionStorage.getItem(STORAGE_KEY) === '1') {
-    unlock(false);
-  }
-
-  document.getElementById('authForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    var input = document.getElementById('authInput');
-    var gate = document.getElementById('authGate');
-    var errorEl = document.getElementById('authError');
-    sha256Hex(input.value).then(function(hash){
-      if (hash === PASSWORD_HASH) {
-        errorEl.style.display = 'none';
-        unlock(true);
-      } else {
-        errorEl.style.display = 'block';
-        errorEl.textContent = 'Wrong password.';
-        input.value = '';
-        gate.classList.add('shake');
-        setTimeout(function(){ gate.classList.remove('shake'); }, 400);
-      }
-    }).catch(function(err){
-      // Most likely cause: crypto.subtle is unavailable because the page
-      // is being opened directly from disk (file://) instead of served
-      // over https (or localhost) - the Web Crypto API requires a
-      // "secure context" to work at all.
-      errorEl.style.display = 'block';
-      errorEl.textContent = 'Password check failed - open this over https, not as a local file.';
-      console.error('Auth gate error:', err);
-    });
-  });
-})();
+if (new URLSearchParams(window.location.search).get("welcome") === "1") {
+  var b = document.getElementById("discordWelcomeBanner");
+  b.style.display = "flex";
+}
 </script>
 
 <div id="toast-container"></div>
