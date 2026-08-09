@@ -1,4 +1,4 @@
-// Shared helpers used by every auth function.
+/ Shared helpers used by every auth function.
 // Cloudflare Pages Functions run on the Workers runtime, so Web Crypto
 // (crypto.subtle) is available natively - no extra libraries needed.
 
