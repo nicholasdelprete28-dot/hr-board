@@ -9,6 +9,7 @@ import { verifySessionToken, readCookie, COOKIE_NAME } from "./_utils.js";
 const PUBLIC_PATHS = [
   "/api/auth/login",
   "/api/auth/callback",
+  "/api/auth/password-login",
   "/subscribe.html",
   "/subscribe", // Cloudflare Pages auto-strips .html for "clean URLs" -
                 // without this, /subscribe.html <-> /subscribe loops forever.
