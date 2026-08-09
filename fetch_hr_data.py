@@ -1151,6 +1151,11 @@ def compute_tb_score(p):
 # ---------------------------------------------------------------------------
 LEAGUE_AVG_PITCHER_HR9 = 1.20
 LEAGUE_AVG_PITCHER_WHIP = 1.30
+# Rough league-average anchors this shrink pulls toward for a thin sample -
+# same role as LEAGUE_AVG_ISO/BARREL/etc above, just for these two new
+# probability models specifically.
+LEAGUE_AVG_HR_RATE = 0.12     # ~HRs per game across an average everyday MLB hitter
+LEAGUE_AVG_CLEAR_RATE = 0.35  # ~rate of clearing the fixed 1.5 HRR/TB line across all hitters
 
 
 def compute_hr_probability(p):
@@ -1158,11 +1163,35 @@ def compute_hr_probability(p):
     rate"), so this uses the same Poisson approach as the K board: a
     real per-game mean (from l15hr, an actual HR total over real recent
     games - not a composite score) adjusted by today's specific pitcher,
-    then P(HR >= 1) via the Poisson model."""
+    then P(HR >= 1) via the Poisson model.
+
+    Applies the SAME PA-based sample-size shrink used everywhere else in
+    this file (power_sample_weight) - without it, a hot streak from a
+    player with little established MLB track record (a rookie call-up,
+    a bat with a handful of games) gets taken at full, unwarranted
+    confidence, which is exactly what produced a misleadingly large
+    "value" gap for a real player during testing (PA: N/A, 6 HR in his
+    last 15 games treated as a fully proven rate rather than a small,
+    still-unsettled sample)."""
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
-    base_rate = l15hr / 15  # average HR per game, from REAL recent games
+    # Blend in L5 (last-5-games) rate too, same 60/40 weighting philosophy
+    # as the composite score's own recent-form factor - a HR from 12 days
+    # ago shouldn't count the same as one from yesterday. Without this, a
+    # player who was hot two weeks ago but has since gone completely cold
+    # (l5hr=0) still gets projected off his stale L15 pace, which is
+    # exactly what happened during testing: a real, established hitter
+    # with 6 HR in his last 15 games but ZERO in his last 5 was still
+    # modeled at nearly his hot-stretch rate, producing an inflated
+    # "value" gap that didn't account for the fact he's currently cold.
+    l5hr = p.get("l5hr")
+    if l5hr is not None:
+        raw_rate = (l15hr / 15) * 0.6 + (l5hr / 5) * 0.4
+    else:
+        raw_rate = l15hr / 15  # average HR per game, from REAL recent games
+    pw = power_sample_weight(p.get("pa"))
+    base_rate = raw_rate * pw + LEAGUE_AVG_HR_RATE * (1 - pw)
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     # Dampened 50% so one very homer-prone or very stingy pitcher doesn't
     # swing the projection further than a real matchup edge should -
@@ -1177,13 +1206,16 @@ def compute_rate_stat_probability(p, recent_field, matchup_field, league_avg_mat
     total) over the last 15 games - l15hrr/l15tb are literally "how many
     of the last 15 games cleared the line", a real empirical clearing
     rate on their own, no Poisson conversion needed (unlike HR's raw
-    count). This just adjusts that real rate for today's matchup
-    (pitcher WHIP, since HRR/TB lean on contact/baserunners more than
-    pure power) and clamps to a valid probability."""
+    count). This adjusts that real rate for today's matchup (pitcher
+    WHIP, since HRR/TB lean on contact/baserunners more than pure power),
+    with the same PA-based shrink toward league average as
+    compute_hr_probability above, for the same small-sample reason."""
     recent = p.get(recent_field)
     if recent is None:
         return None
-    base_rate = clamp01(recent / 15)
+    raw_rate = clamp01(recent / 15)
+    pw = power_sample_weight(p.get("pa"))
+    base_rate = raw_rate * pw + LEAGUE_AVG_CLEAR_RATE * (1 - pw)
     matchup_val = p.get(matchup_field)
     if matchup_val is None:
         matchup_val = league_avg_matchup
