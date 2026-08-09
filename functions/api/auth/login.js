@@ -17,6 +17,12 @@ export async function onRequestGet({ request, env }) {
   authorizeUrl.searchParams.set("state", state);
   authorizeUrl.searchParams.set("code_challenge", codeChallenge);
   authorizeUrl.searchParams.set("code_challenge_method", "S256");
+  // Whop requires a scope param - "openid profile email" covers basic
+  // login/identity. If the memberships check later fails to authorize,
+  // check the "View available scopes" button on Whop's OAuth settings
+  // page for a Whop-specific scope (e.g. something membership-related)
+  // that may need adding here too.
+  authorizeUrl.searchParams.set("scope", "openid profile email");
 
   const headers = new Headers();
   headers.set("Location", authorizeUrl.toString());
