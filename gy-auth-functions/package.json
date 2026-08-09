@@ -1,0 +1,7 @@
+{
+  "name": "going-yard",
+  "private": true,
+  "dependencies": {
+    "@whop/sdk": "latest"
+  }
+}
