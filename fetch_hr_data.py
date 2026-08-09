@@ -1256,7 +1256,22 @@ def compute_hrr_probability(p):
     as if it were a fully proven, sustainable rate - which is exactly
     what produced a wildly inflated 73.6% for a real player whose season
     AVG/OBP were both below league average, when the market's own price
-    (and this fix) both land close to a real ~52%."""
+    (and this fix) both land close to a real ~52%.
+
+    IMPORTANT: `quality` (the AVG/OBP ratio vs league average) is used
+    as an ADDITIVE nudge off LEAGUE_AVG_HRR_CLEAR_RATE, not a raw
+    multiplier on it. A straight multiplier (quality * anchor) compounds
+    badly for elite-contact hitters: their quality ratio can run 1.2-1.3x
+    league average, which - once also stacked with a hot recent stretch
+    (up to 40% weight above) and a soft-matchup multiplier below - pushed
+    a real elite contact hitter's number to 74.6% against a book price of
+    58.3%, a swing way past anything a "value" signal should be flagging
+    for an efficiently-priced star. QUALITY_SLOPE controls how many
+    points of probability one full unit of quality above/below average is
+    worth - keeping it well under 1.0 means the anchor itself (not the
+    quality ratio) still does most of the work of hitting the real ~52%
+    average, while a truly elite or truly weak hitter only shifts a
+    bounded amount off that anchor instead of scaling it."""
     l15hrr = p.get("l15hrr")
     if l15hrr is None:
         return None
@@ -1264,9 +1279,12 @@ def compute_hrr_probability(p):
 
     avg = p.get("avg")
     obp = p.get("obp")
+    QUALITY_SLOPE = 0.25
     if avg is not None and obp is not None:
         quality = ((avg / LEAGUE_AVG_AVG) + (obp / LEAGUE_AVG_OBP)) / 2
-        season_implied_rate = clamp01(quality * LEAGUE_AVG_HRR_CLEAR_RATE)
+        season_implied_rate = clamp01(
+            LEAGUE_AVG_HRR_CLEAR_RATE + QUALITY_SLOPE * (quality - 1)
+        )
     else:
         season_implied_rate = LEAGUE_AVG_HRR_CLEAR_RATE
 
