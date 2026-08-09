@@ -24,6 +24,9 @@
 <body>
 <div class="card">
   <h1>Going Yard</h1>
+  <div id="deniedMsg" style="display:none; background:rgba(217,107,91,0.12); border:1px solid var(--red); border-radius:10px; padding:12px; margin-bottom:16px; color:var(--red); font-size:13px;">
+    We checked your Whop account, but didn't find an active Going Yard membership. If you just subscribed, wait a moment and try logging in again — otherwise, pick a plan below.
+  </div>
   <p>Subscribe to unlock all four prediction boards — HR, HRR, Total Bases, and Pitcher Ks — with live sportsbook odds and per-player line switching.</p>
   <a class="btn" href="/api/auth/login">Log in with Whop</a>
   <a class="btn secondary" href="https://whop.com/checkout/plan_LEQ37zyfLkFJz">Subscribe monthly</a>
@@ -39,4 +42,9 @@
   </details>
 </div>
 </body>
+<script>
+  if (new URLSearchParams(window.location.search).get("denied") === "1") {
+    document.getElementById("deniedMsg").style.display = "block";
+  }
+</script>
 </html>
