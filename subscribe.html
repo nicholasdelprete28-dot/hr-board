@@ -26,8 +26,17 @@
   <h1>Going Yard</h1>
   <p>Subscribe to unlock all four prediction boards — HR, HRR, Total Bases, and Pitcher Ks — with live sportsbook odds and per-player line switching.</p>
   <a class="btn" href="/api/auth/login">Log in with Whop</a>
-  <a class="btn secondary" href="https://whop.com/going-yard/">Subscribe on Whop</a>
+  <a class="btn secondary" href="https://whop.com/checkout/plan_LEQ37zyfLkFJz">Subscribe monthly</a>
+  <a class="btn secondary" href="https://whop.com/checkout/plan_KDslg6Hixequt">Subscribe yearly &mdash; save more</a>
   <div class="fine">Already subscribed? Log in above to unlock instantly.</div>
+
+  <details style="margin-top:28px; text-align:left;">
+    <summary style="cursor:pointer; color:var(--muted); font-family:var(--mono); font-size:11px;">Founder access</summary>
+    <form method="POST" action="/api/auth/password-login" style="margin-top:12px;">
+      <input type="password" name="password" placeholder="Password" style="width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:var(--mono); font-size:13px; padding:10px; box-sizing:border-box;">
+      <button type="submit" style="margin-top:8px; width:100%; background:transparent; border:1px solid var(--line); color:var(--text); border-radius:8px; padding:10px; font-family:var(--display); font-weight:600; font-size:13px; cursor:pointer;">Unlock</button>
+    </form>
+  </details>
 </div>
 </body>
 </html>
