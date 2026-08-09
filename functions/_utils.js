@@ -50,6 +50,27 @@ export function readCookie(request, name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+// PKCE helpers - Whop's OAuth requires this. The verifier is a random
+// secret only your server ever sees; the challenge (its SHA-256 hash) is
+// sent up front, then the verifier itself is sent at token-exchange time
+// to prove the same client that started the flow is finishing it.
+function base64UrlEncode(bytes) {
+  let str = btoa(String.fromCharCode(...bytes));
+  return str.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function generateCodeVerifier() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return base64UrlEncode(bytes);
+}
+
+export async function generateCodeChallenge(verifier) {
+  const enc = new TextEncoder();
+  const digest = await crypto.subtle.digest("SHA-256", enc.encode(verifier));
+  return base64UrlEncode(new Uint8Array(digest));
+}
+
 export function buildSetCookie(name, value, maxAgeSeconds) {
   // Secure + HttpOnly + SameSite=Lax: JS on the page can't read it (XSS
   // protection), and it's only sent on same-site/top-level navigations.
