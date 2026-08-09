@@ -1161,37 +1161,50 @@ LEAGUE_AVG_CLEAR_RATE = 0.35  # ~rate of clearing the fixed 1.5 HRR/TB line acro
 def compute_hr_probability(p):
     """HR is a raw COUNT stat (how many home runs, not "did he clear a
     rate"), so this uses the same Poisson approach as the K board: a
-    real per-game mean (from l15hr, an actual HR total over real recent
-    games - not a composite score) adjusted by today's specific pitcher,
-    then P(HR >= 1) via the Poisson model.
+    real per-game mean adjusted by today's specific pitcher, then
+    P(HR >= 1) via the Poisson model.
 
-    Applies the SAME PA-based sample-size shrink used everywhere else in
-    this file (power_sample_weight) - without it, a hot streak from a
-    player with little established MLB track record (a rookie call-up,
-    a bat with a handful of games) gets taken at full, unwarranted
-    confidence, which is exactly what produced a misleadingly large
-    "value" gap for a real player during testing (PA: N/A, 6 HR in his
-    last 15 games treated as a fully proven rate rather than a small,
-    still-unsettled sample)."""
+    Recent form (l15hr/l5hr) is blended against the player's OWN season
+    power level (from ISO) rather than a flat league-average anchor -
+    critical fix, since a flat anchor left the model structurally blind
+    to whether a hot recent stretch was actually backed by real,
+    established power. A player who's fundamentally a modest power bat
+    but caught a fluky hot 15-game run would get modeled almost entirely
+    off that stretch, which isn't a real signal - it's a hot-streak-with-
+    long-odds illusion, not genuine value. Even for a player with a large
+    season PA sample, a 15-20 game recent window is still small and
+    noisy ON ITS OWN, so recent form is capped at 40% weight regardless
+    of how established the player is - the rest anchors to his real
+    season-long power level, with an ADDITIONAL pull toward that same
+    anchor for players who don't have enough PA to trust at all (the
+    original sample-size fix, now anchored to something more meaningful
+    than a flat league constant)."""
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
-    # Blend in L5 (last-5-games) rate too, same 60/40 weighting philosophy
-    # as the composite score's own recent-form factor - a HR from 12 days
-    # ago shouldn't count the same as one from yesterday. Without this, a
-    # player who was hot two weeks ago but has since gone completely cold
-    # (l5hr=0) still gets projected off his stale L15 pace, which is
-    # exactly what happened during testing: a real, established hitter
-    # with 6 HR in his last 15 games but ZERO in his last 5 was still
-    # modeled at nearly his hot-stretch rate, producing an inflated
-    # "value" gap that didn't account for the fact he's currently cold.
     l5hr = p.get("l5hr")
     if l5hr is not None:
-        raw_rate = (l15hr / 15) * 0.6 + (l5hr / 5) * 0.4
+        recent_rate = (l15hr / 15) * 0.6 + (l5hr / 5) * 0.4
     else:
-        raw_rate = l15hr / 15  # average HR per game, from REAL recent games
+        recent_rate = l15hr / 15
+
+    # This player's OWN season-implied HR rate, scaled off his real ISO
+    # relative to league average - e.g. a player with 20% better-than-
+    # average ISO gets a 20%-above-average implied rate, rather than
+    # every player sharing the same flat anchor regardless of their
+    # actual power profile.
+    iso = p.get("iso")
+    season_implied_rate = (iso / LEAGUE_AVG_ISO) * LEAGUE_AVG_HR_RATE if iso is not None else LEAGUE_AVG_HR_RATE
+
+    RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
+    blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
+
+    # Additional shrink toward the season-implied anchor specifically for
+    # players without a real established MLB track record (thin/no PA) -
+    # same mechanism as before, just pulling toward a smarter anchor now.
     pw = power_sample_weight(p.get("pa"))
-    base_rate = raw_rate * pw + LEAGUE_AVG_HR_RATE * (1 - pw)
+    base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
+
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     # Dampened 50% so one very homer-prone or very stingy pitcher doesn't
     # swing the projection further than a real matchup edge should -
@@ -1201,25 +1214,68 @@ def compute_hr_probability(p):
     return poisson_over_prob(mean, 0.5)  # P(1 or more)
 
 
-def compute_rate_stat_probability(p, recent_field, matchup_field, league_avg_matchup):
-    """HRR and TB already track a games-CLEARED count (not a raw stat
-    total) over the last 15 games - l15hrr/l15tb are literally "how many
-    of the last 15 games cleared the line", a real empirical clearing
-    rate on their own, no Poisson conversion needed (unlike HR's raw
-    count). This adjusts that real rate for today's matchup (pitcher
-    WHIP, since HRR/TB lean on contact/baserunners more than pure power),
-    with the same PA-based shrink toward league average as
-    compute_hr_probability above, for the same small-sample reason."""
-    recent = p.get(recent_field)
-    if recent is None:
+LEAGUE_AVG_AVG = 0.245
+LEAGUE_AVG_OBP = 0.315
+
+
+def compute_hrr_probability(p):
+    """Same anchor-to-season-level fix as compute_hr_probability above,
+    applied to HRR. Recent clearing rate (l15hrr) is capped at 40%
+    weight and blended against a season-quality anchor built from real
+    AVG/OBP - on-base ability drives Hits+Runs+RBI broadly, not raw
+    power specifically, so this uses contact/on-base stats as the
+    anchor rather than ISO. Without this, a hot 15-game stretch from a
+    hitter with a genuinely below-average season line (like a part-time
+    or currently-slumping regular catching one good week) gets modeled
+    as if it were a fully proven, sustainable rate - which is exactly
+    what produced a wildly inflated 73.6% for a real player whose season
+    AVG/OBP were both below league average, when the market's own price
+    (and this fix) both land close to a real ~52%."""
+    l15hrr = p.get("l15hrr")
+    if l15hrr is None:
         return None
-    raw_rate = clamp01(recent / 15)
+    recent_rate = clamp01(l15hrr / 15)
+
+    avg = p.get("avg")
+    obp = p.get("obp")
+    if avg is not None and obp is not None:
+        quality = ((avg / LEAGUE_AVG_AVG) + (obp / LEAGUE_AVG_OBP)) / 2
+        season_implied_rate = clamp01(quality * LEAGUE_AVG_CLEAR_RATE)
+    else:
+        season_implied_rate = LEAGUE_AVG_CLEAR_RATE
+
+    RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
+    blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
+
     pw = power_sample_weight(p.get("pa"))
-    base_rate = raw_rate * pw + LEAGUE_AVG_CLEAR_RATE * (1 - pw)
-    matchup_val = p.get(matchup_field)
-    if matchup_val is None:
-        matchup_val = league_avg_matchup
-    matchup_mult = 1 + ((matchup_val / league_avg_matchup) - 1) * 0.5
+    base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
+
+    whip = p.get("whip") if p.get("whip") is not None else LEAGUE_AVG_PITCHER_WHIP
+    matchup_mult = 1 + ((whip / LEAGUE_AVG_PITCHER_WHIP) - 1) * 0.5
+    return clamp01(base_rate * matchup_mult)
+
+
+def compute_tb_probability(p):
+    """Same fix, applied to Total Bases - anchored to season ISO
+    (power-driven, same anchor stat as HR) rather than AVG/OBP, since TB
+    specifically rewards extra bases, not just reaching base."""
+    l15tb = p.get("l15tb")
+    if l15tb is None:
+        return None
+    recent_rate = clamp01(l15tb / 15)
+
+    iso = p.get("iso")
+    season_implied_rate = (clamp01((iso / LEAGUE_AVG_ISO) * LEAGUE_AVG_CLEAR_RATE)
+                            if iso is not None else LEAGUE_AVG_CLEAR_RATE)
+
+    RECENT_TRUST = 0.4
+    blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
+
+    pw = power_sample_weight(p.get("pa"))
+    base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
+
+    whip = p.get("whip") if p.get("whip") is not None else LEAGUE_AVG_PITCHER_WHIP
+    matchup_mult = 1 + ((whip / LEAGUE_AVG_PITCHER_WHIP) - 1) * 0.5
     return clamp01(base_rate * matchup_mult)
 
 
@@ -1562,10 +1618,10 @@ def main():
         hr_prob = compute_hr_probability(player_row)
         if hr_prob is not None:
             player_row["hrProb"] = round(hr_prob * 100, 1)
-        hrr_prob = compute_rate_stat_probability(player_row, "l15hrr", "whip", LEAGUE_AVG_PITCHER_WHIP)
+        hrr_prob = compute_hrr_probability(player_row)
         if hrr_prob is not None:
             player_row["hrrProb"] = round(hrr_prob * 100, 1)
-        tb_prob = compute_rate_stat_probability(player_row, "l15tb", "whip", LEAGUE_AVG_PITCHER_WHIP)
+        tb_prob = compute_tb_probability(player_row)
         if tb_prob is not None:
             player_row["tbProb"] = round(tb_prob * 100, 1)
 
