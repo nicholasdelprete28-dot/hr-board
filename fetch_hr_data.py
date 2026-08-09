@@ -1188,13 +1188,28 @@ def compute_hr_probability(p):
     else:
         recent_rate = l15hr / 15
 
-    # This player's OWN season-implied HR rate, scaled off his real ISO
-    # relative to league average - e.g. a player with 20% better-than-
-    # average ISO gets a 20%-above-average implied rate, rather than
-    # every player sharing the same flat anchor regardless of their
-    # actual power profile.
-    iso = p.get("iso")
-    season_implied_rate = (iso / LEAGUE_AVG_ISO) * LEAGUE_AVG_HR_RATE if iso is not None else LEAGUE_AVG_HR_RATE
+    # This player's OWN season-implied HR rate, built from the SAME 4
+    # power indicators the composite score's own "power" bucket uses
+    # (barrel%, exit velo, ISO, hard-hit%) - not just ISO alone. Using
+    # only ISO left this model blind to real signals the card itself
+    # already shows and weighs (a guy could have modest ISO but elite
+    # barrel%/EV, or vice versa) - this keeps the two models genuinely
+    # comparable instead of one running on a narrower slice of the same
+    # data. barrel_confidence() is the same smoothed EV-vs-barrel% trust
+    # curve used in compute_score, so a barrel rate unsupported by real
+    # exit velo gets the same discount here that it gets there.
+    barrel = p.get("barrel") or 0
+    ev = p.get("ev") or 85
+    iso = p.get("iso") or 0
+    hardhit = p.get("hardhit") or 0.30
+    barrel_adj = barrel * barrel_confidence(barrel, ev)
+    power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
+                      + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
+    # power_quality is 0-1 (roughly 0.3-0.4 = a league-average power
+    # profile, higher = real elite power across the board). Scaled onto
+    # a realistic HR-rate range: a totally powerless profile floors at
+    # 30% of league average, a maxed-out elite profile caps near 1.7x.
+    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 1.4)
 
     RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
@@ -1256,17 +1271,35 @@ def compute_hrr_probability(p):
 
 
 def compute_tb_probability(p):
-    """Same fix, applied to Total Bases - anchored to season ISO
-    (power-driven, same anchor stat as HR) rather than AVG/OBP, since TB
-    specifically rewards extra bases, not just reaching base."""
+    """Same fix, applied to Total Bases - anchored to a BLEND of contact
+    (AVG/OBP) and power (barrel%/EV/ISO/hard-hit%), matching the same
+    two-factor philosophy the composite TB score itself uses (any hit
+    counts for at least 1 base, extra bases count for more - TB isn't a
+    pure power stat the way HR is), rather than power alone."""
     l15tb = p.get("l15tb")
     if l15tb is None:
         return None
     recent_rate = clamp01(l15tb / 15)
 
-    iso = p.get("iso")
-    season_implied_rate = (clamp01((iso / LEAGUE_AVG_ISO) * LEAGUE_AVG_CLEAR_RATE)
-                            if iso is not None else LEAGUE_AVG_CLEAR_RATE)
+    avg = p.get("avg")
+    obp = p.get("obp")
+    contact_quality = (((avg / LEAGUE_AVG_AVG) + (obp / LEAGUE_AVG_OBP)) / 2
+                        if avg is not None and obp is not None else 1.0)
+
+    barrel = p.get("barrel") or 0
+    ev = p.get("ev") or 85
+    iso = p.get("iso") or 0
+    hardhit = p.get("hardhit") or 0.30
+    barrel_adj = barrel * barrel_confidence(barrel, ev)
+    power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
+                      + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
+    power_multiplier = 0.3 + power_quality * 1.4
+
+    # Blend contact and power (roughly matching the composite TB score's
+    # own ~45/55 contact-to-power weighting), scaled onto a realistic
+    # clearing-rate range.
+    combined_multiplier = contact_quality * 0.45 + power_multiplier * 0.55
+    season_implied_rate = clamp01(LEAGUE_AVG_CLEAR_RATE * combined_multiplier)
 
     RECENT_TRUST = 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
