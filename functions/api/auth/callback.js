@@ -53,7 +53,15 @@ export async function onRequestGet({ request, env }) {
 
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
-      return new Response(`Login failed at token exchange: ${errText}`, { status: 200 });
+      return new Response(
+        `Login failed at token exchange: ${errText}\n\n` +
+        `--- debug info ---\n` +
+        `redirect_uri sent: ${env.WHOP_REDIRECT_URI}\n` +
+        `code present: ${Boolean(code)}\n` +
+        `code_verifier present: ${Boolean(codeVerifier)}\n` +
+        `code_verifier length: ${codeVerifier ? codeVerifier.length : 0}`,
+        { status: 200 }
+      );
     }
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
