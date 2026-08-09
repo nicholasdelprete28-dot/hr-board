@@ -27,8 +27,26 @@ export async function onRequestGet({ request, env }) {
     const savedState = readCookie(request, "gy_oauth_state");
     const codeVerifier = readCookie(request, "gy_pkce_verifier");
 
+    // Whop may bounce back immediately with its own error instead of a
+    // code, if something's misconfigured on the app/authorize side -
+    // check for that FIRST, since it's more specific than our generic
+    // state-mismatch message below.
+    const whopError = url.searchParams.get("error");
+    const whopErrorDesc = url.searchParams.get("error_description");
+    if (whopError) {
+      return new Response(`Whop rejected the login attempt: ${whopError} - ${whopErrorDesc || "(no description given)"}`, { status: 200 });
+    }
+
     if (!code || !state || state !== savedState) {
-      return new Response("Login failed: invalid or expired state. Please try again.", { status: 400 });
+      return new Response(
+        `Login failed: invalid or expired state. Please try again.\n\n` +
+        `--- debug info ---\n` +
+        `code present: ${Boolean(code)}\n` +
+        `state present: ${Boolean(state)}\n` +
+        `savedState (cookie) present: ${Boolean(savedState)}\n` +
+        `states match: ${state === savedState}`,
+        { status: 200 }
+      );
     }
     if (!codeVerifier) {
       return new Response("Login failed: missing PKCE verifier. Please try logging in again from the start.", { status: 200 });
