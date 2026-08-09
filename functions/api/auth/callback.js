@@ -67,7 +67,7 @@ export async function onRequestGet({ request, env }) {
 
   if (!hasAccess) {
     // Redirect to a "you need to subscribe" page instead of the real site.
-    return Response.redirect(new URL("/subscribe.html", url.origin).toString(), 302);
+    return Response.redirect(new URL("/subscribe", url.origin).toString(), 302);
   }
 
   // 5. Issue our own session cookie, valid for 7 days.
