@@ -27,13 +27,16 @@
   <div id="deniedMsg" style="display:none; background:rgba(217,107,91,0.12); border:1px solid var(--red); border-radius:10px; padding:12px; margin-bottom:16px; color:var(--red); font-size:13px;">
     We checked your Whop account, but didn't find an active Going Yard membership. If you just subscribed, wait a moment and try logging in again — otherwise, pick a plan below.
   </div>
+  <div id="wrongPwMsg" style="display:none; background:rgba(217,107,91,0.12); border:1px solid var(--red); border-radius:10px; padding:12px; margin-bottom:16px; color:var(--red); font-size:13px;">
+    Wrong password. Try again.
+  </div>
   <p>Subscribe to unlock all four prediction boards — HR, HRR, Total Bases, and Pitcher Ks — with live sportsbook odds and per-player line switching.</p>
   <a class="btn" href="/api/auth/login">Log in with Whop</a>
   <a class="btn secondary" href="https://whop.com/checkout/plan_LEQ37zyfLkFJz">Subscribe monthly</a>
   <a class="btn secondary" href="https://whop.com/checkout/plan_KDslg6Hixequt">Subscribe yearly &mdash; save more</a>
   <div class="fine">Already subscribed? Log in above to unlock instantly.</div>
 
-  <details style="margin-top:28px; text-align:left;">
+  <details id="founderDetails" style="margin-top:28px; text-align:left;">
     <summary style="cursor:pointer; color:var(--muted); font-family:var(--mono); font-size:11px;">Founder access</summary>
     <form method="POST" action="/api/auth/password-login" style="margin-top:12px;">
       <input type="password" name="password" placeholder="Password" style="width:100%; background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:var(--mono); font-size:13px; padding:10px; box-sizing:border-box;">
@@ -45,6 +48,10 @@
 <script>
   if (new URLSearchParams(window.location.search).get("denied") === "1") {
     document.getElementById("deniedMsg").style.display = "block";
+  }
+  if (new URLSearchParams(window.location.search).get("error") === "wrong_password") {
+    document.getElementById("wrongPwMsg").style.display = "block";
+    document.getElementById("founderDetails").open = true;
   }
 </script>
 </html>
