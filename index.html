@@ -287,6 +287,11 @@
     font-weight:800; box-shadow:0 0 12px rgba(66,232,150,0.4);
   }
   .chip-value:hover{box-shadow:0 0 16px rgba(66,232,150,0.6); border-color:var(--stat-good);}
+  .chip-value-mild{
+    color:var(--stat-good); border-color:rgba(66,232,150,0.35); background:rgba(66,232,150,0.08);
+    font-weight:700; box-shadow:none;
+  }
+  .chip-value-mild:hover{box-shadow:0 0 10px rgba(66,232,150,0.3); border-color:var(--stat-good);}
   .chip-sample-good{color:var(--stat-good); border-color:rgba(66,232,150,0.35); background:rgba(66,232,150,0.08);}
   .chip-sample-good:hover{box-shadow:0 0 12px rgba(66,232,150,0.35); border-color:var(--stat-good);}
   .chip-sample-bad{color:var(--stat-bad); border-color:rgba(255,150,56,0.35); background:rgba(255,150,56,0.08);}
@@ -1440,8 +1445,18 @@ function render(){
         `}
         ${(() => {
           const v = calculateValue(p, boardMode);
-          if(!v || v.edge < 8) return '';
-          return `<div class="chip chip-value" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
+          // Any real positive edge renders - not just edges clearing +8pt.
+          // The VALUE sort ranks every card by this same edge, so hiding
+          // anything under +8pt meant sorting by value could put a card
+          // in the #1 slot with no chip at all to show why it's there
+          // (this happens routinely on the HR/TB boards, where the props
+          // market runs tighter and a real edge is often a few points,
+          // not double digits). Edges under +8pt get a plainer, unglowed
+          // style so a genuine double-digit edge still visually stands
+          // out from a modest one - both are real, just different sizes.
+          if(!v || v.edge <= 0) return '';
+          const strong = v.edge >= 8;
+          return `<div class="chip ${strong ? 'chip-value' : 'chip-value-mild'}" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
         })()}
       </div>
       ${renderBookOdds(p, boardMode)}
