@@ -576,10 +576,10 @@
   function unlock(remember){
     document.documentElement.classList.remove('gy-locked');
     document.getElementById('authGate').style.display = 'none';
-    if (remember) localStorage.setItem(STORAGE_KEY, '1');
+    if (remember) sessionStorage.setItem(STORAGE_KEY, '1');
   }
 
-  if (localStorage.getItem(STORAGE_KEY) === '1') {
+  if (sessionStorage.getItem(STORAGE_KEY) === '1') {
     unlock(false);
   }
 
