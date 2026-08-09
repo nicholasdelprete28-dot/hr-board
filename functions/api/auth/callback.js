@@ -127,9 +127,9 @@ export async function onRequestGet({ request, env }) {
     }
 
     if (!hasAccess) {
-      // TEMPORARY: includes your user ID in the URL so you can copy it
-      // into the allowlist. Remove the ?uid= part once you've done that.
       const subscribeUrl = new URL("/subscribe", url.origin);
+      subscribeUrl.searchParams.set("denied", "1");
+      // TEMPORARY debug aid - remove once you've finished the allowlist setup.
       subscribeUrl.searchParams.set("uid", userId);
       return Response.redirect(subscribeUrl.toString(), 302);
     }
