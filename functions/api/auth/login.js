@@ -7,6 +7,7 @@ import { generateCodeVerifier, generateCodeChallenge } from "../../_utils.js";
 
 export async function onRequestGet({ request, env }) {
   const state = crypto.randomUUID();
+  const nonce = crypto.randomUUID();
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
 
@@ -23,6 +24,7 @@ export async function onRequestGet({ request, env }) {
   // page for a Whop-specific scope (e.g. something membership-related)
   // that may need adding here too.
   authorizeUrl.searchParams.set("scope", "openid profile email");
+  authorizeUrl.searchParams.set("nonce", nonce);
 
   const headers = new Headers();
   headers.set("Location", authorizeUrl.toString());
