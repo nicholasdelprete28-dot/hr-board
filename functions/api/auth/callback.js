@@ -127,7 +127,11 @@ export async function onRequestGet({ request, env }) {
     }
 
     if (!hasAccess) {
-      return Response.redirect(new URL("/subscribe", url.origin).toString(), 302);
+      // TEMPORARY: includes your user ID in the URL so you can copy it
+      // into the allowlist. Remove the ?uid= part once you've done that.
+      const subscribeUrl = new URL("/subscribe", url.origin);
+      subscribeUrl.searchParams.set("uid", userId);
+      return Response.redirect(subscribeUrl.toString(), 302);
     }
 
     // 5. Issue our own session cookie, valid for 7 days.
