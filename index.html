@@ -1742,6 +1742,18 @@ function calculateValue(p, mode){
   const entries = (p.bookOdds && p.bookOdds[field]) || [];
   if(!entries.length) return null;
 
+  // Confidence guardrail: a batter with little/no real MLB plate-
+  // appearance track record this season (debut, rare call-up, etc.)
+  // can still produce a mathematically "correct" edge per the formula,
+  // but our own confidence in that number is genuinely low for such a
+  // small/unknown sample - showing a bold VALUE badge in that case
+  // overstates how much we actually know about this player, even
+  // though the underlying math isn't wrong. Pitchers (mode 'k') aren't
+  // subject to this - kScore is already a real per-start probability,
+  // not a season-blended rate the same way.
+  const MIN_PA_FOR_VALUE = 20;
+  if(mode !== 'k' && (p.pa == null || p.pa < MIN_PA_FOR_VALUE)) return null;
+
   let ourProb, expectedLine;
   if(mode === 'k'){
     ourProb = p.kScore;
