@@ -10,7 +10,7 @@ export async function onRequestGet({ request, env }) {
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
 
-  const authorizeUrl = new URL("https://whop.com/oauth");
+  const authorizeUrl = new URL("https://api.whop.com/oauth/authorize");
   authorizeUrl.searchParams.set("client_id", env.WHOP_CLIENT_ID);
   authorizeUrl.searchParams.set("redirect_uri", env.WHOP_REDIRECT_URI);
   authorizeUrl.searchParams.set("response_type", "code");
