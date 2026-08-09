@@ -25,9 +25,13 @@ export async function onRequestGet({ request, env }) {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
     const savedState = readCookie(request, "gy_oauth_state");
+    const codeVerifier = readCookie(request, "gy_pkce_verifier");
 
     if (!code || !state || state !== savedState) {
       return new Response("Login failed: invalid or expired state. Please try again.", { status: 400 });
+    }
+    if (!codeVerifier) {
+      return new Response("Login failed: missing PKCE verifier. Please try logging in again from the start.", { status: 200 });
     }
 
     // 1. Exchange the authorization code for an access token.
@@ -40,6 +44,7 @@ export async function onRequestGet({ request, env }) {
         client_secret: env.WHOP_CLIENT_SECRET,
         redirect_uri: env.WHOP_REDIRECT_URI,
         grant_type: "authorization_code",
+        code_verifier: codeVerifier,
       }),
     });
 
@@ -106,6 +111,7 @@ export async function onRequestGet({ request, env }) {
     headers.set("Location", "/");
     headers.append("Set-Cookie", buildSetCookie(COOKIE_NAME, sessionToken, 7 * 24 * 60 * 60));
     headers.append("Set-Cookie", "gy_oauth_state=; Path=/; Max-Age=0");
+    headers.append("Set-Cookie", "gy_pkce_verifier=; Path=/; Max-Age=0");
 
     return new Response(null, { status: 302, headers });
   } catch (err) {
