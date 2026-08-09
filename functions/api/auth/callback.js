@@ -35,17 +35,20 @@ export async function onRequestGet({ request, env }) {
     }
 
     // 1. Exchange the authorization code for an access token.
+    // Using form-urlencoded (not JSON) - Whop's own curl example for this
+    // endpoint uses -d flags, which send form-urlencoded by default.
+    const tokenBody = new URLSearchParams({
+      code,
+      client_id: env.WHOP_CLIENT_ID,
+      client_secret: env.WHOP_CLIENT_SECRET,
+      redirect_uri: env.WHOP_REDIRECT_URI,
+      grant_type: "authorization_code",
+      code_verifier: codeVerifier,
+    });
     const tokenRes = await fetch("https://api.whop.com/oauth/token", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        code,
-        client_id: env.WHOP_CLIENT_ID,
-        client_secret: env.WHOP_CLIENT_SECRET,
-        redirect_uri: env.WHOP_REDIRECT_URI,
-        grant_type: "authorization_code",
-        code_verifier: codeVerifier,
-      }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: tokenBody.toString(),
     });
 
     if (!tokenRes.ok) {
