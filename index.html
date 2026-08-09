@@ -575,6 +575,7 @@
 
   function unlock(remember){
     document.documentElement.classList.remove('gy-locked');
+    document.getElementById('authGate').style.display = 'none';
     if (remember) localStorage.setItem(STORAGE_KEY, '1');
   }
 
@@ -593,10 +594,19 @@
         unlock(true);
       } else {
         errorEl.style.display = 'block';
+        errorEl.textContent = 'Wrong password.';
         input.value = '';
         gate.classList.add('shake');
         setTimeout(function(){ gate.classList.remove('shake'); }, 400);
       }
+    }).catch(function(err){
+      // Most likely cause: crypto.subtle is unavailable because the page
+      // is being opened directly from disk (file://) instead of served
+      // over https (or localhost) - the Web Crypto API requires a
+      // "secure context" to work at all.
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'Password check failed - open this over https, not as a local file.';
+      console.error('Auth gate error:', err);
     });
   });
 })();
