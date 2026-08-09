@@ -45,7 +45,7 @@ export async function onRequestGet({ request, env }) {
 
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
-      return new Response(`Login failed at token exchange: ${errText}`, { status: 502 });
+      return new Response(`Login failed at token exchange: ${errText}`, { status: 200 });
     }
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
@@ -56,7 +56,7 @@ export async function onRequestGet({ request, env }) {
     });
     if (!userInfoRes.ok) {
       const errText = await userInfoRes.text();
-      return new Response(`Login failed: could not fetch user info. ${errText}`, { status: 502 });
+      return new Response(`Login failed: could not fetch user info. ${errText}`, { status: 200 });
     }
     const userInfo = await userInfoRes.json();
     const userId = userInfo.sub || userInfo.id;
@@ -109,6 +109,6 @@ export async function onRequestGet({ request, env }) {
 
     return new Response(null, { status: 302, headers });
   } catch (err) {
-    return new Response(`Login failed unexpectedly: ${err.message}`, { status: 500 });
+    return new Response(`Login failed unexpectedly: ${err.message}`, { status: 200 });
   }
 }
