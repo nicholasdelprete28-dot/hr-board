@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   "/api/auth/login",
   "/api/auth/callback",
   "/subscribe.html",
+  "/subscribe", // Cloudflare Pages auto-strips .html for "clean URLs" -
+                // without this, /subscribe.html <-> /subscribe loops forever.
 ];
 
 // File extensions that are safe to always allow (so the subscribe page
@@ -26,7 +28,7 @@ export async function onRequest({ request, env, next }) {
   const session = await verifySessionToken(token, env.SESSION_SECRET);
 
   if (!session) {
-    return Response.redirect(new URL("/subscribe.html", url.origin).toString(), 302);
+    return Response.redirect(new URL("/subscribe", url.origin).toString(), 302);
   }
 
   return next();
