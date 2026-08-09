@@ -4,14 +4,19 @@
 // user has an active Going Yard membership, then set our own session
 // cookie and send them to the real site.
 //
-// NOTE: verify the exact token/userinfo endpoint paths against the live
-// docs at https://docs.whop.com/developer/guides/oauth before relying on
-// this in production - Whop's API surface has shifted across their doc
-// pages, so treat the URLs below as "best known as of Aug 2026" rather
-// than guaranteed-stable.
+// NOTE: the exact endpoint paths below are best-known as of Aug 2026 -
+// verify against the live docs at https://docs.whop.com/developer/guides/oauth
+// if anything here starts failing. Deliberately NOT using the @whop/sdk
+// npm package here - it's built for Node.js, and Cloudflare Workers runs
+// a different, more limited JS runtime, so Node-only packages can crash
+// at runtime even when the build succeeds. Plain fetch calls avoid that.
 
 import { createSessionToken, buildSetCookie, readCookie, COOKIE_NAME } from "../../_utils.js";
-import Whop from "@whop/sdk";
+
+// Your real Whop plan IDs (from the checkout links) - a membership to
+// EITHER of these counts as "subscribed."
+const VALID_PLAN_IDS = ["plan_LEQ37zyfLkFJz", "plan_KDslg6Hixequt"];
+const ACTIVE_STATUSES = ["active", "trialing"];
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
@@ -57,8 +62,6 @@ export async function onRequestGet({ request, env }) {
     const userId = userInfo.sub || userInfo.id;
 
     // 3. Check the allowlist first (comped/free access, no payment needed).
-    // Guarded so a missing/misconfigured KV binding falls through to the
-    // real membership check instead of crashing the whole function.
     let allowlisted = null;
     try {
       allowlisted = env.GY_ALLOWLIST ? await env.GY_ALLOWLIST.get(userId) : null;
@@ -68,15 +71,28 @@ export async function onRequestGet({ request, env }) {
 
     let hasAccess = Boolean(allowlisted);
 
-    // 4. If not on the allowlist, check real membership status via Whop's API.
+    // 4. If not on the allowlist, check the user's real memberships using
+    // their own OAuth token (plain fetch, no SDK).
     if (!hasAccess) {
-      const client = new Whop({ apiKey: env.WHOP_API_KEY });
-      const access = await client.users.checkAccess(env.WHOP_PRODUCT_ID, { id: userId });
-      hasAccess = access.has_access === true || access.access_level === "customer";
+      try {
+        const membershipsRes = await fetch("https://api.whop.com/api/v1/memberships", {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (membershipsRes.ok) {
+          const membershipsData = await membershipsRes.json();
+          const memberships = membershipsData.data || membershipsData.memberships || membershipsData || [];
+          hasAccess = Array.isArray(memberships) && memberships.some((m) => {
+            const planId = m.plan_id || m.plan?.id || m.planId;
+            const status = m.status;
+            return VALID_PLAN_IDS.includes(planId) && ACTIVE_STATUSES.includes(status);
+          });
+        }
+      } catch (err) {
+        hasAccess = false;
+      }
     }
 
     if (!hasAccess) {
-      // Redirect to a "you need to subscribe" page instead of the real site.
       return Response.redirect(new URL("/subscribe", url.origin).toString(), 302);
     }
 
@@ -93,8 +109,6 @@ export async function onRequestGet({ request, env }) {
 
     return new Response(null, { status: 302, headers });
   } catch (err) {
-    // Catch-all so failures show a readable message instead of a bare
-    // Cloudflare 502 page - makes debugging setup issues much faster.
     return new Response(`Login failed unexpectedly: ${err.message}`, { status: 500 });
   }
 }
