@@ -282,6 +282,11 @@
   .chip-crusher{color:#6a9fd8; border-color:rgba(106,159,216,0.4); background:rgba(106,159,216,0.08);}
   .chip-crusher:hover{box-shadow:0 0 12px rgba(106,159,216,0.4); border-color:#6a9fd8;}
   .chip-lineup{color:var(--gold); border-color:rgba(227,165,72,0.35); background:rgba(227,165,72,0.08);}
+  .chip-value{
+    color:var(--stat-good); border-color:var(--stat-good); background:rgba(66,232,150,0.14);
+    font-weight:800; box-shadow:0 0 12px rgba(66,232,150,0.4);
+  }
+  .chip-value:hover{box-shadow:0 0 16px rgba(66,232,150,0.6); border-color:var(--stat-good);}
   .chip-sample-good{color:var(--stat-good); border-color:rgba(66,232,150,0.35); background:rgba(66,232,150,0.08);}
   .chip-sample-good:hover{box-shadow:0 0 12px rgba(66,232,150,0.35); border-color:var(--stat-good);}
   .chip-sample-bad{color:var(--stat-bad); border-color:rgba(255,150,56,0.35); background:rgba(255,150,56,0.08);}
@@ -527,6 +532,7 @@
     <div class="sortbtn active" data-key="score">FAVORABILITY ↓</div>
     <div class="sortbtn" data-key="l15hr">RECENT FORM</div>
     <div class="sortbtn" data-key="ev">EV</div>
+    <div class="sortbtn" data-key="value">VALUE</div>
     <select class="tierselect" id="tierselect">
       <option value="">All Tiers</option>
       <option value="prime">Prime</option>
@@ -604,22 +610,22 @@ const BOARD_CONFIG = {
   hr: {
     scoreField: 'score',
     subtitle: 'Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted',
-    sorts: { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV' },
+    sorts: { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV', value: 'VALUE' },
   },
   hrr: {
     scoreField: 'hrrScore',
     subtitle: 'HRR = Hits + Runs + RBI combined, line 1.5 (needs 2+) &middot; on-base/matchup/RISP blended',
-    sorts: { hrrScore: 'FAVORABILITY', l15hrr: 'RECENT FORM', obp: 'OBP' },
+    sorts: { hrrScore: 'FAVORABILITY', l15hrr: 'RECENT FORM', obp: 'OBP', value: 'VALUE' },
   },
   tb: {
     scoreField: 'tbScore',
     subtitle: 'TB = Total Bases, line 1.5 (needs 2+) &middot; contact and power blended evenly &middot; SLG-weighted',
-    sorts: { tbScore: 'FAVORABILITY', l15tb: 'RECENT FORM', slg: 'SLG' },
+    sorts: { tbScore: 'FAVORABILITY', l15tb: 'RECENT FORM', slg: 'SLG', value: 'VALUE' },
   },
   k: {
     scoreField: 'kScore',
     subtitle: 'K = Strikeouts &middot; pitcher whiff quality vs. opposing lineup strikeout rate &middot; workload-adjusted',
-    sorts: { kScore: 'FAVORABILITY', l3k: 'RECENT FORM', k9: 'K/9' },
+    sorts: { kScore: 'FAVORABILITY', l3k: 'RECENT FORM', k9: 'K/9', value: 'VALUE' },
   },
 };
 function scoreField(){ return BOARD_CONFIG[boardMode].scoreField; }
@@ -1208,6 +1214,10 @@ function tipSamplePitcher(p){
   const read = gs >= 12 ? 'a well-established sample' : gs >= 5 ? 'a moderate sample, still settling in' : 'a thin sample - early numbers can swing a lot start to start';
   return `${gs} starts this season - ${read}.`;
 }
+function tipValue(v){
+  const bookLabel = BOOK_LABELS[v.book] || v.book;
+  return `Our model puts this at ${fmtNum(v.ourProb, 1)}% at the ${fmtNum(v.line, 1)} line - ${bookLabel}'s price (${v.price > 0 ? '+' : ''}${v.price}) only implies ${fmtNum(v.bookImplied, 1)}%. That ${fmtNum(v.edge, 1)}-point gap is where we think the market's underpricing this.`;
+}
 // Renders one or more statbox divs from {label, value, display, tier} entries,
 // then stretches the last row's boxes so they never leave an empty gap:
 // 1 trailing box spans the full row (6/6 cols), 2 trailing boxes split it
@@ -1279,8 +1289,17 @@ function render(){
     else matchesStatus = p.gameStatus !== 'Live' && p.gameStatus !== 'Final'; // default: Upcoming Only
     return matchesSearch && matchesGame && matchesTier && matchesType && matchesStatus;
   });
+  // Freshly computed every render (not stored on the raw data) since
+  // "value" depends on which board's odds market we're comparing
+  // against - a player's edge on the HR board isn't the same number as
+  // his edge on the TB board, so this can't just be a static field.
+  filtered.forEach(p => {
+    const v = calculateValue(p, boardMode);
+    p._valueEdge = v ? v.edge : -Infinity;
+  });
   filtered.sort((a,b) => {
-    const diff = (a[sortKey] ?? -Infinity) - (b[sortKey] ?? -Infinity);
+    const key = sortKey === 'value' ? '_valueEdge' : sortKey;
+    const diff = (a[key] ?? -Infinity) - (b[key] ?? -Infinity);
     return sortDesc ? -diff : diff;
   });
 
@@ -1419,6 +1438,11 @@ function render(){
           <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
           <div class="chip ${sampleChipClass(p.pa, 200, 80)}" title="${escAttr(tipSampleBatter(p))}" data-tip="${escAttr(tipSampleBatter(p))}">${p.pa == null ? 'PA N/A' : p.pa + ' PA'}</div>
         `}
+        ${(() => {
+          const v = calculateValue(p, boardMode);
+          if(!v || v.edge < 8) return '';
+          return `<div class="chip chip-value" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
+        })()}
       </div>
       ${renderBookOdds(p, boardMode)}
       <div class="statboxwrap">${statboxes}
@@ -1672,6 +1696,44 @@ function poissonOverProbJS(mean, line){
 function americanToImpliedProb(price){
   if(price == null) return null;
   return price > 0 ? 100 / (price + 100) : (-price) / ((-price) + 100);
+}
+// Real "value" signal: compares our own genuinely calibrated probability
+// (hrProb/hrrProb/tbProb from fetch_hr_data.py's Poisson/rate model, or
+// kScore for the K board, which is already a real probability) against
+// the market's own implied probability at THE SAME LINE our number was
+// modeled for. Deliberately returns null (shows nothing) rather than a
+// misleading comparison if the book's line doesn't match what our
+// probability actually applies to - comparing against a different line
+// isn't a real edge, it's comparing two different bets.
+function calculateValue(p, mode){
+  const field = BOARD_TO_ODDS_FIELD[mode];
+  if(!field) return null;
+  const entries = (p.bookOdds && p.bookOdds[field]) || [];
+  if(!entries.length) return null;
+
+  let ourProb, expectedLine;
+  if(mode === 'k'){
+    ourProb = p.kScore;
+    expectedLine = p.kLine;
+  } else if(mode === 'hr'){
+    ourProb = p.hrProb;
+    expectedLine = 0.5;
+  } else if(mode === 'hrr'){
+    ourProb = p.hrrProb;
+    expectedLine = 1.5;
+  } else if(mode === 'tb'){
+    ourProb = p.tbProb;
+    expectedLine = 1.5;
+  }
+  if(ourProb == null || expectedLine == null) return null;
+
+  const matchingEntry = entries.find(e => e.line === expectedLine && e.price != null);
+  if(!matchingEntry) return null;
+  const bookImplied = americanToImpliedProb(matchingEntry.price) * 100;
+  return {
+    ourProb, bookImplied, edge: ourProb - bookImplied,
+    book: matchingEntry.book, price: matchingEntry.price, line: expectedLine,
+  };
 }
 
 // Which line the pitcher modal's graph/probability is currently reading
