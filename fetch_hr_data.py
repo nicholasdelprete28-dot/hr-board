@@ -1155,7 +1155,18 @@ LEAGUE_AVG_PITCHER_WHIP = 1.30
 # same role as LEAGUE_AVG_ISO/BARREL/etc above, just for these two new
 # probability models specifically.
 LEAGUE_AVG_HR_RATE = 0.12     # ~HRs per game across an average everyday MLB hitter
-LEAGUE_AVG_CLEAR_RATE = 0.35  # ~rate of clearing the fixed 1.5 HRR/TB line across all hitters
+# NOTE: HRR and TB do NOT share one real-world clearing rate - a hitter's
+# average combined H+R+RBI per game (~1.8) clears the 1.5 line noticeably
+# more often than his average total-bases (~1.4) does, since a walk/other
+# non-hit event can still add a run or RBI toward HRR but contributes
+# nothing to TB. Using a single shared constant for both understated BOTH
+# probabilities relative to their own real baseline (confirmed against
+# actual sportsbook consensus: HRR's true clear rate lands close to ~52%,
+# TB's closer to ~43% - see compute_hrr_probability's own docstring,
+# which already documented the ~52% target this constant was silently
+# failing to hit).
+LEAGUE_AVG_HRR_CLEAR_RATE = 0.52  # ~rate of clearing the fixed 1.5 HRR line across all hitters
+LEAGUE_AVG_TB_CLEAR_RATE = 0.43   # ~rate of clearing the fixed 1.5 TB line across all hitters
 
 
 def compute_hr_probability(p):
@@ -1255,9 +1266,9 @@ def compute_hrr_probability(p):
     obp = p.get("obp")
     if avg is not None and obp is not None:
         quality = ((avg / LEAGUE_AVG_AVG) + (obp / LEAGUE_AVG_OBP)) / 2
-        season_implied_rate = clamp01(quality * LEAGUE_AVG_CLEAR_RATE)
+        season_implied_rate = clamp01(quality * LEAGUE_AVG_HRR_CLEAR_RATE)
     else:
-        season_implied_rate = LEAGUE_AVG_CLEAR_RATE
+        season_implied_rate = LEAGUE_AVG_HRR_CLEAR_RATE
 
     RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
@@ -1299,7 +1310,7 @@ def compute_tb_probability(p):
     # own ~45/55 contact-to-power weighting), scaled onto a realistic
     # clearing-rate range.
     combined_multiplier = contact_quality * 0.45 + power_multiplier * 0.55
-    season_implied_rate = clamp01(LEAGUE_AVG_CLEAR_RATE * combined_multiplier)
+    season_implied_rate = clamp01(LEAGUE_AVG_TB_CLEAR_RATE * combined_multiplier)
 
     RECENT_TRUST = 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
