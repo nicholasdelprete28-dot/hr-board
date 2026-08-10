@@ -60,6 +60,8 @@
   .proof-stat{background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:14px;}
   .proof-stat .val{font-family:var(--mono); font-weight:700; font-size:24px; color:var(--stat-good);}
   .proof-stat .lbl{font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;}
+  .proof-explainer{font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:14px;}
+  .proof-coverage{font-size:11.5px; color:var(--stat-good); margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-weight:600;}
   .proof-note{font-size:13px; color:var(--muted); margin-top:16px;}
 
   .features{margin:34px 0;}
@@ -195,6 +197,13 @@ fetch('/history/accuracy_summary.json')
     const grid = document.getElementById('proofGrid');
     const boards = ['hr','hrr','tb','k'];
     const labels = {hr:'Home runs', hrr:'Hits + runs + RBI', tb:'Total bases', k:'Pitcher strikeouts'};
+    // Same real baseline rates the main site uses - what a totally random
+    // pick, with no model at all, would hit on average. Home runs are
+    // rare even for great hitters, so a bare "11% correct" reads as bad
+    // to someone comparing it to a coin flip - the honest comparison is
+    // against random chance, not 50/50.
+    const boardBaseline = {hr:12, hrr:52, tb:43};
+    const coverage = data._coverage || {};
     let html = '';
     let anyData = false;
     boards.forEach(b => {
@@ -205,10 +214,21 @@ fetch('/history/accuracy_summary.json')
       if(total < 5) return;
       anyData = true;
       const pct = Math.round((hit/total)*100);
-      html += `<div class="proof-stat"><div class="val">${pct}% correct</div><div class="lbl">${labels[b]} &mdash; right ${hit} of ${total} times</div></div>`;
+      const baseline = boardBaseline[b];
+      const baselineNote = baseline != null ? ` (a random guess with no model hits ~${baseline}%)` : '';
+      // The real coverage stat - of everyone who ACTUALLY did this today
+      // across all of MLB, how many were players we had on our board at
+      // all (regardless of tier)? Grounded in real box scores, not an
+      // assumption - see fetch_league_wide_qualifiers() in check_results.py.
+      const cov = coverage[b];
+      const covNote = (cov && cov.real_total > 0)
+        ? `<div class="proof-coverage">We had ${cov.matched} of the ${cov.real_total} real ${labels[b].toLowerCase()} qualifiers on our board</div>`
+        : '';
+      html += `<div class="proof-stat"><div class="val">${pct}% correct</div><div class="lbl">${labels[b]} &mdash; right ${hit} of ${total} times${baselineNote}</div>${covNote}</div>`;
     });
     if(anyData){
       grid.innerHTML = html;
+      grid.insertAdjacentHTML('afterend', '<div class="proof-explainer">Home runs and similar props are rare even for great hitters, so these percentages will look low next to a coin flip - that\'s expected, not a red flag. What matters is beating the no-model baseline above, consistently, over time.</div>');
     } else {
       grid.innerHTML = '<div class="proof-stat" style="grid-column:1/-1;"><div class="lbl" style="font-size:12px;">Track record is still building &mdash; check back soon, or watch it grow live in our Discord.</div></div>';
     }
