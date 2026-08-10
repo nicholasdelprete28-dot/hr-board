@@ -1489,8 +1489,16 @@ function render(){
           // not double digits). Edges under +8pt get a plainer, unglowed
           // style so a genuine double-digit edge still visually stands
           // out from a modest one - both are real, just different sizes.
-          if(!v || v.edge <= 0) return '';
-          const strong = v.edge >= 8;
+          // Raised from "any positive edge" to a real minimum - a 0.3pt
+          // or 1pt edge isn't a genuine value pick, it's noise around
+          // zero, and showing every marginal edge diluted the signal
+          // for the picks that actually matter. MIN_VALUE_EDGE filters
+          // to real, actionable gaps only. "Strong" styling kicks in at
+          // an even bigger gap, for the standout plays among those.
+          const MIN_VALUE_EDGE = 6;
+          const STRONG_VALUE_EDGE = 12;
+          if(!v || v.edge < MIN_VALUE_EDGE) return '';
+          const strong = v.edge >= STRONG_VALUE_EDGE;
           return `<div class="chip ${strong ? 'chip-value' : 'chip-value-mild'}" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
         })()}
       </div>
