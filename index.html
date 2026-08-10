@@ -347,24 +347,24 @@
     max-width:var(--content-width); margin:8px auto 0; background:var(--surface2);
     border:1px solid var(--line); border-radius:12px; padding:14px;
   }
-  .tr-board{margin-bottom:14px;}
+  .tr-board{margin-bottom:16px;}
   .tr-board:last-child{margin-bottom:0;}
   .tr-board-title{
     font-family:var(--display); font-weight:700; font-size:13px; color:var(--gold);
-    margin-bottom:6px; letter-spacing:0.3px;
+    margin-bottom:8px; letter-spacing:0.3px;
   }
-  .tr-row{
-    display:flex; align-items:center; gap:10px; padding:5px 0;
-    border-bottom:1px solid var(--line); font-family:var(--mono); font-size:12px;
-  }
+  .tr-row{padding:8px 0; border-bottom:1px solid var(--line);}
   .tr-row:last-child{border-bottom:none;}
-  .tr-tier{flex:0 0 90px; font-weight:700; letter-spacing:0.3px;}
+  .tr-row-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:5px;}
+  .tr-tier{font-weight:700; letter-spacing:0.3px; font-family:var(--body); font-size:13px;}
   .tr-tier-prime{color:var(--stat-good);}
   .tr-tier-strong{color:var(--gold);}
   .tr-tier-inplay{color:var(--muted);}
   .tr-tier-longshot{color:var(--stat-bad);}
-  .tr-pct{flex:0 0 50px; font-weight:700; color:var(--text);}
-  .tr-sample{color:var(--muted2); font-size:11px;}
+  .tr-pct{font-weight:700; color:var(--text); font-family:var(--mono); font-size:15px;}
+  .tr-bar-track{background:var(--bg); border-radius:5px; height:8px; overflow:hidden; margin-bottom:5px;}
+  .tr-bar-fill{height:100%; border-radius:5px; background:var(--stat-good);}
+  .tr-sample{color:var(--muted2); font-size:11px; font-family:var(--body);}
   .tr-empty{color:var(--muted); font-size:12px; text-align:center; padding:10px 0;}
   .statboxwrap{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:1px;
@@ -782,9 +782,12 @@ function renderTrackRecord(){
       const pct = Math.round(100 * r.hit / r.total);
       boardHtml += `
         <div class="tr-row">
-          <span class="tr-tier tr-tier-${tier}">${tierLabels[tier]}</span>
-          <span class="tr-pct">${pct}%</span>
-          <span class="tr-sample">(${r.hit}-${r.total - r.hit}, ${r.total} graded)</span>
+          <div class="tr-row-top">
+            <span class="tr-tier tr-tier-${tier}">${tierLabels[tier]} picks</span>
+            <span class="tr-pct">${pct}% correct</span>
+          </div>
+          <div class="tr-bar-track"><div class="tr-bar-fill" style="width:${pct}%; background:${tier === 'longshot' ? 'var(--stat-bad)' : tier === 'strong' ? 'var(--gold)' : 'var(--stat-good)'};"></div></div>
+          <div class="tr-sample">Right ${r.hit} out of ${r.total} times</div>
         </div>`;
     }
     if(boardHtml){
