@@ -365,6 +365,8 @@
   .tr-bar-track{background:var(--bg); border-radius:5px; height:8px; overflow:hidden; margin-bottom:5px;}
   .tr-bar-fill{height:100%; border-radius:5px; background:var(--stat-good);}
   .tr-sample{color:var(--muted2); font-size:11px; font-family:var(--body);}
+  .tr-baseline{color:var(--muted2); font-size:11px; font-family:var(--body); font-style:italic;}
+  .tr-explainer{color:var(--muted); font-size:11.5px; line-height:1.5; margin-top:8px; padding-top:10px; border-top:1px solid var(--line); font-family:var(--body);}
   .tr-empty{color:var(--muted); font-size:12px; text-align:center; padding:10px 0;}
   .statboxwrap{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:1px;
@@ -765,17 +767,20 @@ function renderTrackRecord(){
   const boardLabels = { hr: 'HR', hrr: 'HRR', tb: 'TB', k: 'Pitcher Ks' };
   const tierOrder = ['prime', 'strong', 'inplay', 'longshot'];
   const tierLabels = { prime: 'PRIME', strong: 'STRONG', inplay: 'IN PLAY', longshot: 'LONG SHOT' };
+  // Real baseline rates already used by the backend model (see
+  // fetch_hr_data.py's LEAGUE_AVG_* constants) - what a totally random
+  // pick, with no model at all, would hit on average. Shown as honest
+  // context, not to inflate anything: a HR pick correct 22% of the time
+  // sounds low on its own, but it's nearly double a random guess's ~12%
+  // baseline - that comparison is the actually meaningful number, and
+  // it's real, not massaged.
+  const boardBaseline = { hr: 12, hrr: 52, tb: 43 };
 
   if(!trackRecordData){
     panel.innerHTML = '<div class="tr-empty">No accuracy data yet - check_results.py needs to run at least once, after a full day of games is final, before there\'s anything real to show here.</div>';
     return;
   }
 
-  // Only the currently active board's tab - showing all four boards
-  // stacked together regardless of which tab you're on was cluttered
-  // and confusing (e.g. seeing K accuracy while looking at the HR
-  // board). This re-renders automatically on tab switch (see the
-  // boardtab click handler) so it always matches what's on screen.
   let html = '';
   const tiers = trackRecordData[boardMode];
   if(tiers){
@@ -784,6 +789,10 @@ function renderTrackRecord(){
       const r = tiers[tier];
       if(!r || r.total === 0) continue;
       const pct = Math.round(100 * r.hit / r.total);
+      const baseline = boardBaseline[boardMode];
+      const baselineNote = baseline != null
+        ? `<span class="tr-baseline">vs ~${baseline}% for a random pick with no model at all</span>`
+        : '';
       boardHtml += `
         <div class="tr-row">
           <div class="tr-row-top">
@@ -791,11 +800,14 @@ function renderTrackRecord(){
             <span class="tr-pct">${pct}% correct</span>
           </div>
           <div class="tr-bar-track"><div class="tr-bar-fill" style="width:${pct}%; background:${tier === 'longshot' ? 'var(--stat-bad)' : tier === 'strong' ? 'var(--gold)' : 'var(--stat-good)'};"></div></div>
-          <div class="tr-sample">Right ${r.hit} out of ${r.total} times</div>
+          <div class="tr-sample">Right ${r.hit} out of ${r.total} times ${baselineNote}</div>
         </div>`;
     }
     if(boardHtml){
-      html += `<div class="tr-board"><div class="tr-board-title">${boardLabels[boardMode]}</div>${boardHtml}</div>`;
+      const explainer = boardMode !== 'k'
+        ? `<div class="tr-explainer">These are real rates, not promises of "more likely than not." Home runs and similar props are rare even for great hitters - a tier that consistently beats the no-model baseline above is genuinely finding an edge, even when the raw percentage looks low. What matters is PRIME beating STRONG beating IN PLAY beating LONG SHOT, in order - that ranking is the real signal.</div>`
+        : '';
+      html += `<div class="tr-board"><div class="tr-board-title">${boardLabels[boardMode]}</div>${boardHtml}${explainer}</div>`;
     }
   }
   panel.innerHTML = html || `<div class="tr-empty">No graded picks yet for the ${boardLabels[boardMode]} board.</div>`;
