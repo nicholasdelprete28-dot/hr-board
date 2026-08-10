@@ -1254,7 +1254,13 @@ def compute_hr_probability(p):
     # above for the other half of that fix.
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 2.0)
 
-    RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
+    RECENT_TRUST = 0.6  # raised from 0.4 - HR specifically needs recent hot streaks
+    # to carry real weight, since that's the exact signal being hunted for (a
+    # player heating up before the market/books catch up). HRR and TB keep the
+    # original 0.4 - they were already working well and this change is scoped
+    # to HR only. Verified this doesn't create false positives on cold
+    # streaks - a cold player's hrProb actually drops FURTHER at 0.6 than at
+    # 0.4, since the same weighting cuts both directions.
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     # Additional shrink toward the season-implied anchor specifically for
