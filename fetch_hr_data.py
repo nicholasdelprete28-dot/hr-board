@@ -935,27 +935,6 @@ def power_sample_weight(pa):
     return pa / (pa + POWER_SHRINK_K)
 
 
-def probability_sample_weight(pa):
-    """Separate, stricter version of power_sample_weight() used ONLY by
-    the value-comparison probability functions (compute_hr_probability,
-    compute_hrr_probability, compute_tb_probability) - deliberately not
-    shared with the composite score's power blending above, so this fix
-    doesn't shift the displayed favorability rankings at all.
-
-    A player with genuinely no recorded PA this season isn't a "modest
-    partial sample" for purposes of trusting a hot 15-game stretch as a
-    real signal - it's closer to no signal at all. The old shared 0.3
-    fallback gave an unproven player MORE trust in their recent stretch
-    than someone with a real (if thin) 10-PA track record, which is
-    backwards - that mismatch was producing spuriously large "value"
-    edges for unproven/debut players whose season anchor is a pure
-    guess. 0.05 means the recent stretch barely moves the needle until
-    the player has built up genuine real PA."""
-    if pa is None or pa <= 0:
-        return 0.05
-    return pa / (pa + POWER_SHRINK_K)
-
-
 def compute_score(p):
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
@@ -1241,32 +1220,15 @@ def compute_hr_probability(p):
     # profile, higher = real elite power across the board). Scaled onto
     # a realistic HR-rate range: a totally powerless profile floors at
     # 30% of league average, a maxed-out elite profile caps near 1.7x.
-    # Ceiling raised from 1.4x to 2.0x - the old ceiling capped even a
-    # maxed-out elite power profile around ~22-28% probability, which is
-    # below what real sportsbook pricing implies for a genuinely great
-    # HR matchup (typically +200 to +350, i.e. 22-33% implied). That gap
-    # meant the model could almost never clear the market's price, so
-    # the HR board's value tab was structurally starved of real edges
-    # regardless of how good a matchup actually was. 2.0x lets a truly
-    # elite profile reach the low-to-mid 30s, in line with real pricing,
-    # without producing anything close to the runaway 70%+ figures the
-    # HRR board's own past bug produced - see probability_sample_weight()
-    # above for the other half of that fix.
-    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 2.0)
+    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 1.4)
 
-    RECENT_TRUST = 0.6  # raised from 0.4 - HR specifically needs recent hot streaks
-    # to carry real weight, since that's the exact signal being hunted for (a
-    # player heating up before the market/books catch up). HRR and TB keep the
-    # original 0.4 - they were already working well and this change is scoped
-    # to HR only. Verified this doesn't create false positives on cold
-    # streaks - a cold player's hrProb actually drops FURTHER at 0.6 than at
-    # 0.4, since the same weighting cuts both directions.
+    RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     # Additional shrink toward the season-implied anchor specifically for
     # players without a real established MLB track record (thin/no PA) -
     # same mechanism as before, just pulling toward a smarter anchor now.
-    pw = probability_sample_weight(p.get("pa"))
+    pw = power_sample_weight(p.get("pa"))
     base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
 
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
@@ -1329,7 +1291,7 @@ def compute_hrr_probability(p):
     RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
-    pw = probability_sample_weight(p.get("pa"))
+    pw = power_sample_weight(p.get("pa"))
     base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
 
     whip = p.get("whip") if p.get("whip") is not None else LEAGUE_AVG_PITCHER_WHIP
@@ -1371,7 +1333,7 @@ def compute_tb_probability(p):
     RECENT_TRUST = 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
-    pw = probability_sample_weight(p.get("pa"))
+    pw = power_sample_weight(p.get("pa"))
     base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
 
     whip = p.get("whip") if p.get("whip") is not None else LEAGUE_AVG_PITCHER_WHIP
@@ -1877,7 +1839,13 @@ def write_daily_snapshot(players):
     actual box scores to build a real track record instead of just
     trusting the model blindly."""
     os.makedirs("history", exist_ok=True)
-    date_str = datetime.date.today().isoformat()
+    # Use the same Eastern-time TODAY as the rest of the script (see the
+    # comment at its definition near the top of the file) - NOT raw
+    # datetime.date.today(), which on GitHub Actions runs in UTC. A run
+    # after ~7-8pm Eastern would otherwise save this snapshot under
+    # TOMORROW's date, silently breaking check_results.py's ability to
+    # ever find it under today's actual date.
+    date_str = TODAY
     snapshot = []
     for p in players:
         if p.get("playerType") == "pitcher":
