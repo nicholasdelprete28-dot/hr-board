@@ -970,8 +970,13 @@ def compute_score(p):
     avgmix = avgmix_confidence_blend(p["avgmix"])
     wind = p["wind"] or 0
     park = p["park"] or 0
-    l15hr = p["l15hr"] if p["l15hr"] is not None else 0
-    l5hr = p["l5hr"] if p.get("l5hr") is not None else 0
+    # Uses the discounted _credit fields (see diminishing_hr_credit()),
+    # not the raw l15hr/l5hr counts - a single multi-homer game no longer
+    # single-handedly maxes this out the way it would with a raw sum.
+    # Falls back to the raw field if credit wasn't computed for some
+    # reason, rather than silently zeroing out a real player's score.
+    l15hr = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else (p["l15hr"] if p["l15hr"] is not None else 0)
+    l5hr = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else (p["l5hr"] if p.get("l5hr") is not None else 0)
     lbonus = p["lbonus"] if p["lbonus"] is not None else 3
     crush = p["crush"] or 0
     split = p["split"] or 0
@@ -1212,10 +1217,15 @@ def compute_hr_probability(p):
     if l15hr is None:
         return None
     l5hr = p.get("l5hr")
+    # Uses the discounted _credit fields for the actual rate math (see
+    # diminishing_hr_credit()) - the raw l15hr/l5hr above are still
+    # checked for None just to confirm real game-log data exists at all.
+    l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
+    l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
     if l5hr is not None:
-        recent_rate = (l15hr / 15) * 0.6 + (l5hr / 5) * 0.4
+        recent_rate = (l15hr_for_rate / 15) * 0.6 + (l5hr_for_rate / 5) * 0.4
     else:
-        recent_rate = l15hr / 15
+        recent_rate = l15hr_for_rate / 15
 
     # This player's OWN season-implied HR rate, built from the SAME 4
     # power indicators the composite score's own "power" bucket uses
@@ -1411,6 +1421,22 @@ def compute_tb_probability(p):
 # with a small, capped nudge from recent form.
 # ---------------------------------------------------------------------------
 LEAGUE_AVG_TEAM_K_RATE = 0.220
+
+
+def diminishing_hr_credit(games):
+    """A separate, scoring-ONLY signal from raw HR count - never touches
+    the honest l15hr/l5hr fields shown on the card. A 2-homer game gets
+    counted as slightly LESS than two separate 1-homer games would: the
+    first homer in any game counts fully (1.0), any additional homer(s)
+    in that SAME game count at a reduced weight (0.4 each). This matters
+    because a single big outlier game is a rarer, higher-variance event
+    than the same total spread across multiple separate games/pitchers/
+    days - treating them as equally strong evidence of a genuine hot
+    streak overstates how sustained the form actually is, and matters
+    even more now that RECENT_TRUST was raised to 0.6 for HR (recency
+    carries more weight than before, so a single-game outlier's
+    influence needed tempering more than it used to)."""
+    return sum(min(g["hr"], 1) + max(g["hr"] - 1, 0) * 0.4 for g in games)
 
 
 def poisson_over_prob(mean, line):
@@ -1681,6 +1707,14 @@ def main():
         # signal to sit alongside l15hr's steadier 15-game base rate. See
         # compute_score()'s "recent" factor below for how the two blend.
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
+        # Scoring-only versions of the two above - see diminishing_hr_credit()
+        # docstring. player_row["l15hr"]/["l5hr"] stay as the honest raw
+        # counts (shown on the card), these separate _credit fields feed
+        # the actual scoring formulas instead.
+        l15hr_credit = (diminishing_hr_credit(games_this_year[-15:])
+                         if games_this_year else None)
+        l5hr_credit = (diminishing_hr_credit(games_this_year[-5:])
+                        if games_this_year else None)
         # Games clearing the 1.5 HRR line (H+R+RBI >= 2) - feeds the HRR
         # board's "recent form" the same way l15hr feeds the HR board.
         l15hrr = (sum(1 for g in games_this_year[-15:] if g["hrr"] >= 2)
@@ -1700,6 +1734,8 @@ def main():
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
         player_row["l5hr"] = l5hr
+        player_row["l15hrCredit"] = l15hr_credit
+        player_row["l5hrCredit"] = l5hr_credit
         player_row["l15hrr"] = l15hrr
         player_row["l15tb"] = l15tb
         player_row["l15hits"] = l15hits
