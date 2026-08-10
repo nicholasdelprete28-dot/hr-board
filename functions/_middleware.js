@@ -50,7 +50,10 @@ export async function onRequest({ request, env, next }) {
   }
 
   if (!session) {
-    return Response.redirect(new URL("/subscribe", url.origin).toString(), 302);
+    // Default landing spot for anyone without a session - the persuasive
+    // pitch page, not the bare pricing page. /subscribe is still directly
+    // reachable (linked from here), just no longer the automatic first stop.
+    return Response.redirect(new URL("/landing", url.origin).toString(), 302);
   }
 
   return next();
