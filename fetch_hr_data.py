@@ -932,6 +932,7 @@ LEAGUE_AVG_HARDHIT = 0.36
 def power_sample_weight(pa):
     if pa is None or pa <= 0:
         return 0.3  # unknown PA - treat like a modest partial sample, not zero trust
+    return pa / (pa + POWER_SHRINK_K)
 
 
 def probability_sample_weight(pa):
@@ -952,7 +953,6 @@ def probability_sample_weight(pa):
     the player has built up genuine real PA."""
     if pa is None or pa <= 0:
         return 0.05
-    return pa / (pa + POWER_SHRINK_K)
     return pa / (pa + POWER_SHRINK_K)
 
 
