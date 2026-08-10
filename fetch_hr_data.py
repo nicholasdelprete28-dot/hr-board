@@ -394,6 +394,67 @@ def get_pitcher_season_stats(pitcher_id, season):
         return {}
 
 
+_batter_season_cache = {}
+
+
+def get_batter_season_stats(batter_id, season):
+    """This one batter's own season hitting line, fetched directly -
+    the exact same fix already applied to pitchers via
+    get_pitcher_season_stats() above, just never ported over to batters.
+    get_season_batting_stats()'s bulk call was silently dropping roughly
+    HALF of today's active batters (confirmed in practice: stars like
+    Ronald Acuña Jr., Mookie Betts, Francisco Lindor, and Corey Seager -
+    obviously not thin-sample players - came back with avg/obp/iso/pa
+    ALL None from the bulk list, while their Statcast data from a
+    separate source came through fine). Same fix as the pitcher side:
+    fetch this one player directly instead of trusting the bulk
+    leaderboard's sort/pagination not to drop him, and combine multiple
+    team splits (from a mid-season trade) into one real season-total
+    line via raw counting stats rather than averaging two rate stats
+    together, which would be wrong."""
+    if batter_id in _batter_season_cache:
+        return _batter_season_cache[batter_id]
+    try:
+        data = statsapi_get(f"people/{batter_id}/stats", {
+            "stats": "season", "group": "hitting", "season": season, "sportId": 1
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        if not splits:
+            _batter_season_cache[batter_id] = {}
+            return {}
+        name = None
+        total_ab = total_hits = total_bb = total_hbp = total_sf = 0
+        total_doubles = total_triples = total_hr = total_pa = 0
+        for s in splits:
+            name = name or s.get("player", {}).get("fullName")
+            stat = s.get("stat", {})
+            total_ab += int(stat.get("atBats", 0) or 0)
+            total_hits += int(stat.get("hits", 0) or 0)
+            total_bb += int(stat.get("baseOnBalls", 0) or 0)
+            total_hbp += int(stat.get("hitByPitch", 0) or 0)
+            total_sf += int(stat.get("sacFlies", 0) or 0)
+            total_doubles += int(stat.get("doubles", 0) or 0)
+            total_triples += int(stat.get("triples", 0) or 0)
+            total_hr += int(stat.get("homeRuns", 0) or 0)
+            total_pa += int(stat.get("plateAppearances", 0) or 0)
+        if total_ab <= 0:
+            result = {}
+        else:
+            avg = total_hits / total_ab
+            obp_denom = total_ab + total_bb + total_hbp + total_sf
+            obp = (total_hits + total_bb + total_hbp) / obp_denom if obp_denom else None
+            total_bases = total_hits + total_doubles + 2 * total_triples + 3 * total_hr
+            slg = total_bases / total_ab
+            result = {
+                "name": name, "avg": round(avg, 3), "obp": round(obp, 3) if obp is not None else None,
+                "slg": round(slg, 3), "iso": round(slg - avg, 3), "pa": total_pa,
+            }
+    except Exception:
+        result = {}
+    _batter_season_cache[batter_id] = result
+    return result
+
+
 def get_season_batting_stats():
     """AVG, OBP, ISO (computed from SLG-AVG), and plate appearances for every
     batter this season. AVG/OBP feed the HRR (Hits+Runs+RBI) board's
@@ -1213,6 +1274,20 @@ def compute_hr_probability(p):
     ev = p.get("ev") or 85
     iso = p.get("iso") or 0
     hardhit = p.get("hardhit") or 0.30
+    # Same gentle PA-weighted shrink toward league average that
+    # compute_score() already applies before these feed its power bucket
+    # - missing here was the actual bug behind a barely-sampled call-up
+    # (e.g. no AVG/OBP/PA on record at all) still getting his power
+    # inputs trusted at full strength just because a handful of batted
+    # balls happened to read as elite EV/barrel%. Without this, HR/TB
+    # probability and the composite favorability score could disagree on
+    # the same player for no real reason - one shrinking thin samples,
+    # the other not.
+    pw_power = power_sample_weight(p.get("pa"))
+    barrel = barrel * pw_power + LEAGUE_AVG_BARREL * (1 - pw_power)
+    ev = ev * pw_power + LEAGUE_AVG_EV * (1 - pw_power)
+    iso = iso * pw_power + LEAGUE_AVG_ISO * (1 - pw_power)
+    hardhit = hardhit * pw_power + LEAGUE_AVG_HARDHIT * (1 - pw_power)
     barrel_adj = barrel * barrel_confidence(barrel, ev)
     power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
                       + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
@@ -1319,6 +1394,15 @@ def compute_tb_probability(p):
     ev = p.get("ev") or 85
     iso = p.get("iso") or 0
     hardhit = p.get("hardhit") or 0.30
+    # Same PA-weighted shrink toward league average as compute_hr_probability
+    # above (and compute_score) - a thin/no-PA sample's Statcast reads get
+    # pulled toward league-average power before feeding the model, instead
+    # of being trusted at full strength.
+    pw_power = power_sample_weight(p.get("pa"))
+    barrel = barrel * pw_power + LEAGUE_AVG_BARREL * (1 - pw_power)
+    ev = ev * pw_power + LEAGUE_AVG_EV * (1 - pw_power)
+    iso = iso * pw_power + LEAGUE_AVG_ISO * (1 - pw_power)
+    hardhit = hardhit * pw_power + LEAGUE_AVG_HARDHIT * (1 - pw_power)
     barrel_adj = barrel * barrel_confidence(barrel, ev)
     power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
                       + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
@@ -1547,7 +1631,14 @@ def main():
                           f"- {g['away_team']} @ {g['home_team']}")
 
             for batter_id, order_pos in lineup.items():
-                bstats = batting_stats.get(batter_id, {})
+                # Same two-tier pattern as pitcher_stat above: trust the
+                # bulk list first (fast, no extra network call), fall
+                # back to a reliable individual fetch only for whoever
+                # the bulk list actually dropped - see
+                # get_batter_season_stats()'s docstring for why this was
+                # needed (bulk call was silently missing real
+                # established regulars, not just thin-sample players).
+                bstats = batting_stats.get(batter_id) or get_batter_season_stats(batter_id, YEAR)
                 name = bstats.get("name") or ""  # filled in pass 2 if still blank
                 sc = statcast.get(batter_id, {})
 
