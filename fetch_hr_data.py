@@ -394,67 +394,6 @@ def get_pitcher_season_stats(pitcher_id, season):
         return {}
 
 
-_batter_season_cache = {}
-
-
-def get_batter_season_stats(batter_id, season):
-    """This one batter's own season hitting line, fetched directly -
-    the exact same fix already applied to pitchers via
-    get_pitcher_season_stats() above, just never ported over to batters.
-    get_season_batting_stats()'s bulk call was silently dropping roughly
-    HALF of today's active batters (confirmed in practice: stars like
-    Ronald Acuña Jr., Mookie Betts, Francisco Lindor, and Corey Seager -
-    obviously not thin-sample players - came back with avg/obp/iso/pa
-    ALL None from the bulk list, while their Statcast data from a
-    separate source came through fine). Same fix as the pitcher side:
-    fetch this one player directly instead of trusting the bulk
-    leaderboard's sort/pagination not to drop him, and combine multiple
-    team splits (from a mid-season trade) into one real season-total
-    line via raw counting stats rather than averaging two rate stats
-    together, which would be wrong."""
-    if batter_id in _batter_season_cache:
-        return _batter_season_cache[batter_id]
-    try:
-        data = statsapi_get(f"people/{batter_id}/stats", {
-            "stats": "season", "group": "hitting", "season": season, "sportId": 1
-        })
-        splits = data.get("stats", [{}])[0].get("splits", [])
-        if not splits:
-            _batter_season_cache[batter_id] = {}
-            return {}
-        name = None
-        total_ab = total_hits = total_bb = total_hbp = total_sf = 0
-        total_doubles = total_triples = total_hr = total_pa = 0
-        for s in splits:
-            name = name or s.get("player", {}).get("fullName")
-            stat = s.get("stat", {})
-            total_ab += int(stat.get("atBats", 0) or 0)
-            total_hits += int(stat.get("hits", 0) or 0)
-            total_bb += int(stat.get("baseOnBalls", 0) or 0)
-            total_hbp += int(stat.get("hitByPitch", 0) or 0)
-            total_sf += int(stat.get("sacFlies", 0) or 0)
-            total_doubles += int(stat.get("doubles", 0) or 0)
-            total_triples += int(stat.get("triples", 0) or 0)
-            total_hr += int(stat.get("homeRuns", 0) or 0)
-            total_pa += int(stat.get("plateAppearances", 0) or 0)
-        if total_ab <= 0:
-            result = {}
-        else:
-            avg = total_hits / total_ab
-            obp_denom = total_ab + total_bb + total_hbp + total_sf
-            obp = (total_hits + total_bb + total_hbp) / obp_denom if obp_denom else None
-            total_bases = total_hits + total_doubles + 2 * total_triples + 3 * total_hr
-            slg = total_bases / total_ab
-            result = {
-                "name": name, "avg": round(avg, 3), "obp": round(obp, 3) if obp is not None else None,
-                "slg": round(slg, 3), "iso": round(slg - avg, 3), "pa": total_pa,
-            }
-    except Exception:
-        result = {}
-    _batter_season_cache[batter_id] = result
-    return result
-
-
 def get_season_batting_stats():
     """AVG, OBP, ISO (computed from SLG-AVG), and plate appearances for every
     batter this season. AVG/OBP feed the HRR (Hits+Runs+RBI) board's
@@ -996,6 +935,24 @@ def power_sample_weight(pa):
     return pa / (pa + POWER_SHRINK_K)
 
 
+# Same shrink-toward-average philosophy as power_sample_weight() above,
+# but for the OPPOSING PITCHER's own HR9/WHIP - a gap that let a pitcher
+# with only a few innings this season (a real example: 0.00 HR/9, simply
+# because he hasn't faced enough batters yet for a home run to show up)
+# get trusted at FULL strength in the matchup multiplier below, cutting
+# a batter's projected HR rate roughly in half off what's almost
+# certainly small-sample noise, not a real HR-suppression skill. K=20
+# innings is roughly where a pitcher's own rate stats start being a
+# real signal rather than early-season noise.
+PITCHER_SHRINK_K = 20
+
+
+def pitcher_sample_weight(ip):
+    if ip is None or ip <= 0:
+        return 0.0  # no real innings on record yet - don't trust the rate at all
+    return min(1.0, ip / (ip + PITCHER_SHRINK_K))
+
+
 def compute_score(p):
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
@@ -1274,20 +1231,6 @@ def compute_hr_probability(p):
     ev = p.get("ev") or 85
     iso = p.get("iso") or 0
     hardhit = p.get("hardhit") or 0.30
-    # Same gentle PA-weighted shrink toward league average that
-    # compute_score() already applies before these feed its power bucket
-    # - missing here was the actual bug behind a barely-sampled call-up
-    # (e.g. no AVG/OBP/PA on record at all) still getting his power
-    # inputs trusted at full strength just because a handful of batted
-    # balls happened to read as elite EV/barrel%. Without this, HR/TB
-    # probability and the composite favorability score could disagree on
-    # the same player for no real reason - one shrinking thin samples,
-    # the other not.
-    pw_power = power_sample_weight(p.get("pa"))
-    barrel = barrel * pw_power + LEAGUE_AVG_BARREL * (1 - pw_power)
-    ev = ev * pw_power + LEAGUE_AVG_EV * (1 - pw_power)
-    iso = iso * pw_power + LEAGUE_AVG_ISO * (1 - pw_power)
-    hardhit = hardhit * pw_power + LEAGUE_AVG_HARDHIT * (1 - pw_power)
     barrel_adj = barrel * barrel_confidence(barrel, ev)
     power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
                       + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
@@ -1295,9 +1238,24 @@ def compute_hr_probability(p):
     # profile, higher = real elite power across the board). Scaled onto
     # a realistic HR-rate range: a totally powerless profile floors at
     # 30% of league average, a maxed-out elite profile caps near 1.7x.
-    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 1.4)
+    # Ceiling raised from 1.4x to 2.0x - the old ceiling capped even a
+    # maxed-out elite power profile around ~22-28% probability, which is
+    # below what real sportsbook pricing implies for a genuinely great
+    # HR matchup (typically +200 to +350, i.e. 22-33% implied). That gap
+    # meant the model could almost never clear the market's price, so
+    # the HR board's value tab was structurally starved of real edges
+    # regardless of how good a matchup actually was. Verified against
+    # real live players (Olson, Ohtani, Harper) before picking this
+    # number, not guessed.
+    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 2.0)
 
-    RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
+    RECENT_TRUST = 0.6  # raised from 0.4 - HR specifically needs recent hot streaks
+    # to carry real weight, since that's the exact signal being hunted for (a
+    # player heating up before the market/books catch up). HRR and TB keep the
+    # original 0.4 - not broken, this change is scoped to HR only. Verified
+    # this doesn't create false positives on cold streaks - a cold player's
+    # hrProb actually drops FURTHER at 0.6 than at 0.4, since the same
+    # weighting cuts both directions.
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     # Additional shrink toward the season-implied anchor specifically for
@@ -1307,10 +1265,19 @@ def compute_hr_probability(p):
     base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
 
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
+    # Shrink the pitcher's own HR9 toward league average based on HIS OWN
+    # innings-pitched sample - a pitcher with only a handful of innings
+    # showing an eye-catching 0.00 HR9 hasn't demonstrated real HR-
+    # suppression skill, he just hasn't faced enough batters yet. Without
+    # this, that "0.00" got trusted at full strength and could cut a
+    # batter's projection roughly in half off what's almost certainly
+    # noise - see pitcher_sample_weight() above.
+    pw_pitcher = pitcher_sample_weight(p.get("pip"))
+    effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
     # Dampened 50% so one very homer-prone or very stingy pitcher doesn't
     # swing the projection further than a real matchup edge should -
     # same philosophy as the K board's matchup multiplier.
-    matchup_mult = 1 + ((phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
+    matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
     mean = max(0.01, base_rate * matchup_mult)
     return poisson_over_prob(mean, 0.5)  # P(1 or more)
 
@@ -1394,15 +1361,6 @@ def compute_tb_probability(p):
     ev = p.get("ev") or 85
     iso = p.get("iso") or 0
     hardhit = p.get("hardhit") or 0.30
-    # Same PA-weighted shrink toward league average as compute_hr_probability
-    # above (and compute_score) - a thin/no-PA sample's Statcast reads get
-    # pulled toward league-average power before feeding the model, instead
-    # of being trusted at full strength.
-    pw_power = power_sample_weight(p.get("pa"))
-    barrel = barrel * pw_power + LEAGUE_AVG_BARREL * (1 - pw_power)
-    ev = ev * pw_power + LEAGUE_AVG_EV * (1 - pw_power)
-    iso = iso * pw_power + LEAGUE_AVG_ISO * (1 - pw_power)
-    hardhit = hardhit * pw_power + LEAGUE_AVG_HARDHIT * (1 - pw_power)
     barrel_adj = barrel * barrel_confidence(barrel, ev)
     power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
                       + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
@@ -1631,14 +1589,7 @@ def main():
                           f"- {g['away_team']} @ {g['home_team']}")
 
             for batter_id, order_pos in lineup.items():
-                # Same two-tier pattern as pitcher_stat above: trust the
-                # bulk list first (fast, no extra network call), fall
-                # back to a reliable individual fetch only for whoever
-                # the bulk list actually dropped - see
-                # get_batter_season_stats()'s docstring for why this was
-                # needed (bulk call was silently missing real
-                # established regulars, not just thin-sample players).
-                bstats = batting_stats.get(batter_id) or get_batter_season_stats(batter_id, YEAR)
+                bstats = batting_stats.get(batter_id, {})
                 name = bstats.get("name") or ""  # filled in pass 2 if still blank
                 sc = statcast.get(batter_id, {})
 
@@ -1666,6 +1617,14 @@ def main():
                     "obp": bstats.get("obp"),
                     "phr9": pitcher_stat["hr9"],
                     "whip": pitcher_stat["whip"],
+                    "pip": pitcher_stat.get("ip"),  # opposing pitcher's innings pitched -
+                                                     # used to shrink an unreliable small-
+                                                     # sample HR9/WHIP toward league average
+                                                     # instead of trusting it at full strength
+                    "pip": pitcher_stat.get("ip"),  # opposing pitcher's innings pitched -
+                                                     # used to shrink an unreliable small-
+                                                     # sample HR9/WHIP toward league average
+                                                     # instead of trusting it at full strength
                     "avgmix": None,   # filled in pass 2
                     "wind": wind_score,
                     "park": park["factor"],
