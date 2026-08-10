@@ -20,6 +20,7 @@ import datetime
 import json
 import os
 import sys
+from zoneinfo import ZoneInfo
 
 from fetch_hr_data import statsapi_get
 
@@ -160,5 +161,13 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         target_date = sys.argv[1]
     else:
-        target_date = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+        # Eastern time, not raw system date - GitHub Actions runs in UTC,
+        # and this script's whole job is matching Eastern-calendar-day
+        # snapshots (see the same fix in fetch_hr_data.py's TODAY
+        # variable). Currently "safe" by coincidence since the 3am ET
+        # cron schedule doesn't cross the UTC/Eastern boundary, but that's
+        # fragile - fixing it properly so a schedule change can't quietly
+        # break this again.
+        today_eastern = datetime.datetime.now(ZoneInfo("America/New_York")).date()
+        target_date = (today_eastern - datetime.timedelta(days=1)).isoformat()
     check_date(target_date)
