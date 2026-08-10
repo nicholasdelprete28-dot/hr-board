@@ -1537,7 +1537,7 @@ function render(){
           // for the picks that actually matter. MIN_VALUE_EDGE filters
           // to real, actionable gaps only. "Strong" styling kicks in at
           // an even bigger gap, for the standout plays among those.
-          const MIN_VALUE_EDGE = 5;
+          const MIN_VALUE_EDGE = 3.5;
           const STRONG_VALUE_EDGE = 12;
           if(!v || v.edge < MIN_VALUE_EDGE) return '';
           const strong = v.edge >= STRONG_VALUE_EDGE;
@@ -1823,15 +1823,6 @@ function calculateValue(p, mode){
   const MIN_PA_FOR_VALUE = 20;
   if(mode !== 'k' && (p.pa == null || p.pa < MIN_PA_FOR_VALUE)) return null;
 
-  // ourProb now comes from the SAME displayed favorability percentage
-  // shown on the card itself (via displayPct on the relevant score
-  // field) - not the separate hrProb/hrrProb/tbProb probability model.
-  // Those were a second, independently-calibrated estimate that could
-  // land far from the trusted on-card number for the same player,
-  // which was confusing (two different "probabilities" per player,
-  // sometimes wildly apart). This keeps a single source of truth: the
-  // number the person is already looking at IS the number driving the
-  // value comparison.
   // ourProb comes from the DEDICATED probability model (hrProb/hrrProb/
   // tbProb), not the composite favorability score. That model exists
   // specifically to catch cases the composite score's own display can't
