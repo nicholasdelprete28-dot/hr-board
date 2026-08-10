@@ -520,7 +520,7 @@ whop.track("page");
     <div style="width:56px; height:56px; margin:0 auto 20px; border-radius:14px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:22px; color:var(--green); border:1px solid var(--line);">GY</div>
     <h2 style="font-family:var(--display); font-weight:700; color:var(--text); font-size:22px; margin:0 0 10px;">Welcome to Going Yard</h2>
     <p style="font-family:var(--body); color:var(--muted); font-size:14px; line-height:1.6; margin:0 0 24px;">Join our Discord for daily accuracy tracking, live discussion, and community wins. Free and takes 10 seconds.</p>
-    <a href="https://discord.gg/W4dKhyJgMA" target="_blank" style="display:block; background:var(--green); color:#0a0d0b; border-radius:10px; padding:14px; font-weight:700; text-decoration:none; font-family:var(--display); font-size:15px; margin-bottom:10px;">Join Discord</a>
+    <a href="https://discord.gg/W4dKhyJgMA" target="_blank" onclick="if(typeof whop!=='undefined')whop.track('join_discord')" style="display:block; background:var(--green); color:#0a0d0b; border-radius:10px; padding:14px; font-weight:700; text-decoration:none; font-family:var(--display); font-size:15px; margin-bottom:10px;">Join Discord</a>
     <button onclick="document.getElementById('discordWelcomeBanner').style.display='none';" style="background:transparent; border:none; color:var(--muted); cursor:pointer; font-family:var(--mono); font-size:12px; padding:8px;">Maybe later</button>
   </div>
 </div>
@@ -528,6 +528,24 @@ whop.track("page");
 if (new URLSearchParams(window.location.search).get("welcome") === "1") {
   var b = document.getElementById("discordWelcomeBanner");
   b.style.display = "flex";
+
+  // Identify this visitor to the Whop pixel now that we actually know
+  // who they are (they just completed a real login) - Whop's pixel has
+  // no separate identify() call, this IS how you identify someone: a
+  // track() call with customer info attached. Fires once, right after
+  // login, not on every page load - sessionStorage guards against
+  // re-firing if they reload this same URL.
+  if (typeof whop !== 'undefined' && !sessionStorage.getItem('gy_identified')) {
+    fetch('/api/me', { credentials: 'same-origin' })
+      .then(r => r.json())
+      .then(me => {
+        if (me.loggedIn && me.externalId) {
+          whop.track('complete_registration', { external_id: me.externalId });
+          sessionStorage.setItem('gy_identified', '1');
+        }
+      })
+      .catch(() => {}); // pixel identification failing silently is fine - never block the page for this
+  }
 }
 </script>
 
@@ -1330,25 +1348,6 @@ function favTierClass(score){
   return 'longshot';
 }
 
-// Shared with the per-card VALUE badge below and the VALUE-tab filter in
-// render() - one definition so the badge's cutoff and what the VALUE sort
-// actually shows can never drift apart from each other again.
-// Per-board, not one global number: each market has its own real vig
-// level (see the HR/HRR/TB discussion this was tuned from), so a single
-// shared cutoff either drowned HR in noise or hid genuine HRR/TB edges.
-// HR: real edges here are naturally small (high-vig "anytime HR" market)
-//     - 3.5 catches genuine, PA-backed edges without dipping into
-//     book-to-book price-rounding noise (anything under ~2-3pt here is
-//     indistinguishable from just picking a different book).
-// HRR: real edges run bigger here - 6 keeps the list to clearly real,
-//     actionable gaps rather than every small one.
-const VALUE_THRESHOLDS = {
-  hr:  { min: 3.5, strong: 8 },
-  hrr: { min: 6,   strong: 12 },
-  tb:  { min: 5,   strong: 12 },
-  k:   { min: 5,   strong: 12 },
-};
-
 function render(){
   const list = document.getElementById('list');
   const emptyEl = document.getElementById('empty');
@@ -1380,15 +1379,6 @@ function render(){
     const v = calculateValue(p, boardMode);
     p._valueEdge = v ? v.edge : -Infinity;
   });
-  // When sorted by VALUE, only show players who'd actually display the
-  // badge (edge >= this board's MIN_VALUE_EDGE) - otherwise sorting by
-  // value just reordered the same full board with most cards showing
-  // nothing to justify their position, which looked broken even though
-  // the sort itself was working correctly.
-  if (sortKey === 'value') {
-    const threshold = (VALUE_THRESHOLDS[boardMode] || VALUE_THRESHOLDS.tb).min;
-    filtered = filtered.filter(p => p._valueEdge >= threshold);
-  }
   filtered.sort((a,b) => {
     const key = sortKey === 'value' ? '_valueEdge' : sortKey;
     const diff = (a[key] ?? -Infinity) - (b[key] ?? -Infinity);
@@ -1547,10 +1537,10 @@ function render(){
           // for the picks that actually matter. MIN_VALUE_EDGE filters
           // to real, actionable gaps only. "Strong" styling kicks in at
           // an even bigger gap, for the standout plays among those.
-          if(!v) return '';
-          const { min, strong: strongCutoff } = VALUE_THRESHOLDS[boardMode] || VALUE_THRESHOLDS.tb;
-          if(v.edge < min) return '';
-          const strong = v.edge >= strongCutoff;
+          const MIN_VALUE_EDGE = 5;
+          const STRONG_VALUE_EDGE = 12;
+          if(!v || v.edge < MIN_VALUE_EDGE) return '';
+          const strong = v.edge >= STRONG_VALUE_EDGE;
           return `<div class="chip ${strong ? 'chip-value' : 'chip-value-mild'}" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
         })()}
       </div>
@@ -1833,6 +1823,15 @@ function calculateValue(p, mode){
   const MIN_PA_FOR_VALUE = 20;
   if(mode !== 'k' && (p.pa == null || p.pa < MIN_PA_FOR_VALUE)) return null;
 
+  // ourProb now comes from the SAME displayed favorability percentage
+  // shown on the card itself (via displayPct on the relevant score
+  // field) - not the separate hrProb/hrrProb/tbProb probability model.
+  // Those were a second, independently-calibrated estimate that could
+  // land far from the trusted on-card number for the same player,
+  // which was confusing (two different "probabilities" per player,
+  // sometimes wildly apart). This keeps a single source of truth: the
+  // number the person is already looking at IS the number driving the
+  // value comparison.
   // ourProb comes from the DEDICATED probability model (hrProb/hrrProb/
   // tbProb), not the composite favorability score. That model exists
   // specifically to catch cases the composite score's own display can't
