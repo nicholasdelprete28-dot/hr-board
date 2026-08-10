@@ -194,7 +194,7 @@ fetch('/history/accuracy_summary.json')
   .then(data => {
     const grid = document.getElementById('proofGrid');
     const boards = ['hr','hrr','tb','k'];
-    const labels = {hr:'HR', hrr:'HRR', tb:'TB', k:'K'};
+    const labels = {hr:'Home runs', hrr:'Hits + runs + RBI', tb:'Total bases', k:'Pitcher strikeouts'};
     let html = '';
     let anyData = false;
     boards.forEach(b => {
@@ -205,12 +205,12 @@ fetch('/history/accuracy_summary.json')
       if(total < 5) return;
       anyData = true;
       const pct = Math.round((hit/total)*100);
-      html += `<div class="proof-stat"><div class="val">${pct}%</div><div class="lbl">${labels[b]} board (${total} graded)</div></div>`;
+      html += `<div class="proof-stat"><div class="val">${pct}% correct</div><div class="lbl">${labels[b]} &mdash; right ${hit} of ${total} times</div></div>`;
     });
     if(anyData){
       grid.innerHTML = html;
     } else {
-      grid.innerHTML = '<div class="proof-stat" style="grid-column:1/-1;"><div class="lbl" style="font-size:12px;">Track record is still building — check back soon, or watch it grow live in our Discord.</div></div>';
+      grid.innerHTML = '<div class="proof-stat" style="grid-column:1/-1;"><div class="lbl" style="font-size:12px;">Track record is still building &mdash; check back soon, or watch it grow live in our Discord.</div></div>';
     }
   })
   .catch(() => {
