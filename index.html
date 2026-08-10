@@ -771,10 +771,14 @@ function renderTrackRecord(){
     return;
   }
 
+  // Only the currently active board's tab - showing all four boards
+  // stacked together regardless of which tab you're on was cluttered
+  // and confusing (e.g. seeing K accuracy while looking at the HR
+  // board). This re-renders automatically on tab switch (see the
+  // boardtab click handler) so it always matches what's on screen.
   let html = '';
-  for(const board of ['hr', 'hrr', 'tb', 'k']){
-    const tiers = trackRecordData[board];
-    if(!tiers) continue;
+  const tiers = trackRecordData[boardMode];
+  if(tiers){
     let boardHtml = '';
     for(const tier of tierOrder){
       const r = tiers[tier];
@@ -791,10 +795,10 @@ function renderTrackRecord(){
         </div>`;
     }
     if(boardHtml){
-      html += `<div class="tr-board"><div class="tr-board-title">${boardLabels[board]}</div>${boardHtml}</div>`;
+      html += `<div class="tr-board"><div class="tr-board-title">${boardLabels[boardMode]}</div>${boardHtml}</div>`;
     }
   }
-  panel.innerHTML = html || '<div class="tr-empty">No graded picks yet.</div>';
+  panel.innerHTML = html || `<div class="tr-empty">No graded picks yet for the ${boardLabels[boardMode]} board.</div>`;
 }
 
 document.getElementById('trackRecordBtn').addEventListener('click', () => {
@@ -1558,6 +1562,7 @@ document.querySelectorAll('.boardtab').forEach(tab => {
     document.getElementById('subtitle').innerHTML = BOARD_CONFIG[boardMode].subtitle;
     setSortButtonsForMode();
     render();
+    renderTrackRecord();
   });
 });
 
