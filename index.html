@@ -1105,6 +1105,11 @@ function valuePct(rawScore, mode){
   if(mode === 'k' || rawScore == null) return rawScore;
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (VALUE_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
+// Hoisted to top-level scope (used to live inside the card-render chip
+// logic only) so the VALUE-sort filtering in render() can share the
+// exact same threshold instead of two places needing to agree by hand.
+const MIN_VALUE_EDGE = 4;
+const STRONG_VALUE_EDGE = 12;
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
 // Real sportsbook lines, when fetch_odds.py has matched them onto this
@@ -1298,7 +1303,10 @@ function tipSamplePitcher(p){
 }
 function tipValue(v){
   const bookLabel = BOOK_LABELS[v.book] || v.book;
-  return `Our model puts this at ${fmtNum(v.ourProb, 1)}% at the ${fmtNum(v.line, 1)} line - ${bookLabel}'s price (${v.price > 0 ? '+' : ''}${v.price}) only implies ${fmtNum(v.bookImplied, 1)}%. That ${fmtNum(v.edge, 1)}-point gap is where we think the market's underpricing this.`;
+  const priceSource = v.isMedian
+    ? `the market's median price (${v.price > 0 ? '+' : ''}${v.price}, closest to ${bookLabel})`
+    : `${bookLabel}'s price (${v.price > 0 ? '+' : ''}${v.price})`;
+  return `Our model puts this at ${fmtNum(v.ourProb, 1)}% at the ${fmtNum(v.line, 1)} line - ${priceSource} only implies ${fmtNum(v.bookImplied, 1)}%. That ${fmtNum(v.edge, 1)}-point gap is where we think the market's underpricing this.`;
 }
 // Renders one or more statbox divs from {label, value, display, tier} entries,
 // then stretches the last row's boxes so they never leave an empty gap:
@@ -1379,6 +1387,13 @@ function render(){
     const v = calculateValue(p, boardMode);
     p._valueEdge = v ? v.edge : -Infinity;
   });
+  // When actively sorted by VALUE, only show players who actually clear
+  // the real value threshold - showing all ~180 players with only a
+  // handful having a badge made the tab feel broken/empty of purpose.
+  // Sorting by anything else still shows everyone as normal.
+  if(sortKey === 'value'){
+    filtered = filtered.filter(p => p._valueEdge >= MIN_VALUE_EDGE);
+  }
   filtered.sort((a,b) => {
     const key = sortKey === 'value' ? '_valueEdge' : sortKey;
     const diff = (a[key] ?? -Infinity) - (b[key] ?? -Infinity);
@@ -1389,6 +1404,9 @@ function render(){
 
   if(filtered.length === 0){
     list.innerHTML = '';
+    emptyEl.textContent = sortKey === 'value'
+      ? 'No players currently clear the value threshold - the market looks efficiently priced right now.'
+      : 'No players match that search.';
     emptyEl.style.display = 'block';
     return;
   }
@@ -1531,14 +1549,9 @@ function render(){
           // not double digits). Edges under +8pt get a plainer, unglowed
           // style so a genuine double-digit edge still visually stands
           // out from a modest one - both are real, just different sizes.
-          // Raised from "any positive edge" to a real minimum - a 0.3pt
-          // or 1pt edge isn't a genuine value pick, it's noise around
-          // zero, and showing every marginal edge diluted the signal
-          // for the picks that actually matter. MIN_VALUE_EDGE filters
-          // to real, actionable gaps only. "Strong" styling kicks in at
-          // an even bigger gap, for the standout plays among those.
-          const MIN_VALUE_EDGE = 3.5;
-          const STRONG_VALUE_EDGE = 12;
+          // MIN_VALUE_EDGE/STRONG_VALUE_EDGE are now top-level constants
+          // (see near valuePct()) so the VALUE-sort filtering in render()
+          // shares the exact same threshold as this badge.
           if(!v || v.edge < MIN_VALUE_EDGE) return '';
           const strong = v.edge >= STRONG_VALUE_EDGE;
           return `<div class="chip ${strong ? 'chip-value' : 'chip-value-mild'}" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
@@ -1847,20 +1860,30 @@ function calculateValue(p, mode){
   }
   if(ourProb == null || expectedLine == null) return null;
 
-  // Pick the BEST price across all books at this line, not just whichever
-  // one happens to appear first in the array - a longshot HR line in
-  // particular often has real spread between books (+775 to +1120 for
-  // the same player/line isn't unusual), and real value is often sitting
-  // at whichever book is currently most generous, not an arbitrary
-  // "first" one. Higher American odds = better payout = more value for
-  // the same underlying probability.
+  // Use the MEDIAN price across all books at this line, not the single
+  // best (highest) one. The best-price approach was overweighting
+  // outliers - if 3 books agree on a shorter price and 1 book is an
+  // outlier offering something unusually generous, comparing against
+  // only that outlier overstates the real market's edge. The median is
+  // what the market genuinely thinks, not what its most generous single
+  // book happens to think.
   const candidateEntries = entries.filter(e => e.line === expectedLine && e.price != null);
   if(!candidateEntries.length) return null;
-  const matchingEntry = candidateEntries.reduce((best, e) => e.price > best.price ? e : best);
-  const bookImplied = americanToImpliedProb(matchingEntry.price) * 100;
+  const sortedByPrice = [...candidateEntries].sort((a, b) => a.price - b.price);
+  const mid = Math.floor(sortedByPrice.length / 2);
+  const medianPrice = sortedByPrice.length % 2 !== 0
+    ? sortedByPrice[mid].price
+    : (sortedByPrice[mid - 1].price + sortedByPrice[mid].price) / 2;
+  // For display/tooltip purposes, cite whichever real entry sits closest
+  // to that median price, rather than inventing a synthetic "book".
+  const matchingEntry = sortedByPrice.reduce((closest, e) =>
+    Math.abs(e.price - medianPrice) < Math.abs(closest.price - medianPrice) ? e : closest
+  );
+  const bookImplied = americanToImpliedProb(medianPrice) * 100;
   return {
     ourProb, bookImplied, edge: ourProb - bookImplied,
-    book: matchingEntry.book, price: matchingEntry.price, line: expectedLine,
+    book: matchingEntry.book, price: medianPrice, line: expectedLine,
+    isMedian: candidateEntries.length > 1,
   };
 }
 
