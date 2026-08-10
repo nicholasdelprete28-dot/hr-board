@@ -20,7 +20,6 @@ import datetime
 import json
 import os
 import sys
-from zoneinfo import ZoneInfo
 
 from fetch_hr_data import statsapi_get
 
@@ -92,6 +91,71 @@ def bump(results, board, tier, hit):
         results[board][tier]["hit"] += 1
 
 
+def fetch_league_wide_qualifiers(date_str):
+    """The REAL, full-league answer to 'how many players actually cleared
+    this line today, across all of MLB' - not just the ones we happened
+    to be tracking. Pulls every completed game's full box score (both
+    teams' entire batting lineup, not just our snapshot's players) and
+    builds the true qualifying set for each board.
+
+    This is what makes an honest "we flagged 29 of the 33 real home run
+    hitters tonight" stat possible - a coverage number, not just a hit
+    rate, and grounded in real box scores rather than an assumption that
+    our tracked list already includes everyone.
+
+    Returns a dict of sets: {"hr": {playerId, ...}, "hrr": {...}, "tb": {...}}
+    Silently skips any game whose box score isn't available yet or errors
+    out - a partial-day fetch is far better than the whole check crashing
+    on one bad game.
+    """
+    qualifiers = {"hr": set(), "hrr": set(), "tb": set()}
+    try:
+        schedule = statsapi_get("schedule", {"sportId": 1, "date": date_str})
+    except Exception as e:
+        print(f"  Could not fetch league schedule for {date_str}: {e}")
+        return qualifiers
+
+    game_pks = []
+    for date_entry in schedule.get("dates", []):
+        for game in date_entry.get("games", []):
+            status = game.get("status", {}).get("abstractGameState")
+            if status == "Final":
+                game_pks.append(game.get("gamePk"))
+
+    for game_pk in game_pks:
+        try:
+            box = statsapi_get(f"game/{game_pk}/boxscore")
+        except Exception as e:
+            print(f"  Skipping game {game_pk} - boxscore fetch failed: {e}")
+            continue
+
+        for side in ("away", "home"):
+            players = box.get("teams", {}).get(side, {}).get("players", {})
+            for _, pdata in players.items():
+                batting = pdata.get("stats", {}).get("batting") or {}
+                if not batting:
+                    continue
+                player_id = pdata.get("person", {}).get("id")
+                if player_id is None:
+                    continue
+                hits = int(batting.get("hits", 0) or 0)
+                doubles = int(batting.get("doubles", 0) or 0)
+                triples = int(batting.get("triples", 0) or 0)
+                hr = int(batting.get("homeRuns", 0) or 0)
+                runs = int(batting.get("runs", 0) or 0)
+                rbi = int(batting.get("rbi", 0) or 0)
+                total_bases = hits + doubles + 2 * triples + 3 * hr
+
+                if hr >= 1:
+                    qualifiers["hr"].add(player_id)
+                if (hits + runs + rbi) >= 2:
+                    qualifiers["hrr"].add(player_id)
+                if total_bases >= 2:
+                    qualifiers["tb"].add(player_id)
+
+    return qualifiers
+
+
 def check_date(date_str):
     snapshot_path = f"history/{date_str}.json"
     if not os.path.exists(snapshot_path):
@@ -133,9 +197,39 @@ def check_date(date_str):
 
     print(f"Checked {date_str}: {checked} players graded, {skipped_no_result} skipped (no game/result found).")
 
+    # Real league-wide coverage: of everyone who ACTUALLY hit the mark
+    # today, across all of MLB - not just our tracked list - how many
+    # were players we had tracked at all that day? This is a genuinely
+    # different (and more honest) stat than the tier hit-rate above: it
+    # answers "did we even have the guy on our radar," not "did our
+    # confidence ranking work out."
+    print(f"Fetching real league-wide results for {date_str} (coverage check)...")
+    league_qualifiers = fetch_league_wide_qualifiers(date_str)
+    tracked_ids = {
+        board: set() for board in ("hr", "hrr", "tb")
+    }
+    for p in snapshot:
+        if p.get("playerType") == "pitcher":
+            continue
+        pid = p.get("playerId")
+        if pid is None:
+            continue
+        for board, score_key in [("hr", "score"), ("hrr", "hrrScore"), ("tb", "tbScore")]:
+            if p.get(score_key) is not None:
+                tracked_ids[board].add(pid)
+
+    coverage = {}
+    for board in ("hr", "hrr", "tb"):
+        real_set = league_qualifiers[board]
+        matched = real_set & tracked_ids[board]
+        coverage[board] = {"real_total": len(real_set), "matched": len(matched)}
+        print(f"  {board.upper()} coverage: {len(matched)} of {len(real_set)} real qualifiers were on our board")
+
     os.makedirs("history/results", exist_ok=True)
+    results_with_coverage = dict(results)
+    results_with_coverage["_coverage"] = coverage
     with open(f"history/results/{date_str}.json", "w") as f:
-        json.dump(results, f, indent=2)
+        json.dump(results_with_coverage, f, indent=2)
 
     # Roll this date's results into a running all-time summary too, so the
     # frontend can show "PRIME tier: 61% over the last 30 days" without
@@ -151,6 +245,14 @@ def check_date(date_str):
             summary[board].setdefault(tier, {"hit": 0, "total": 0})
             summary[board][tier]["hit"] += r["hit"]
             summary[board][tier]["total"] += r["total"]
+
+    # Same running-total treatment for coverage, kept in its own section
+    # so it doesn't get confused with the tier hit-rate data above.
+    summary.setdefault("_coverage", {})
+    for board, c in coverage.items():
+        summary["_coverage"].setdefault(board, {"real_total": 0, "matched": 0})
+        summary["_coverage"][board]["real_total"] += c["real_total"]
+        summary["_coverage"][board]["matched"] += c["matched"]
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2)
 
@@ -161,13 +263,5 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         target_date = sys.argv[1]
     else:
-        # Eastern time, not raw system date - GitHub Actions runs in UTC,
-        # and this script's whole job is matching Eastern-calendar-day
-        # snapshots (see the same fix in fetch_hr_data.py's TODAY
-        # variable). Currently "safe" by coincidence since the 3am ET
-        # cron schedule doesn't cross the UTC/Eastern boundary, but that's
-        # fragile - fixing it properly so a schedule change can't quietly
-        # break this again.
-        today_eastern = datetime.datetime.now(ZoneInfo("America/New_York")).date()
-        target_date = (today_eastern - datetime.timedelta(days=1)).isoformat()
+        target_date = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
     check_date(target_date)
