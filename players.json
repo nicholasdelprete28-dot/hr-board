@@ -647,7 +647,7 @@
         {
           "book": "hardrockbet",
           "line": 0.5,
-          "price": 300,
+          "price": 325,
           "alt": false,
           "displayName": "Pete Alonso"
         },
@@ -2726,14 +2726,14 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -270,
+          "price": -280,
           "alt": true,
           "displayName": "Alec Burleson"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 190,
+          "price": 195,
           "alt": true,
           "displayName": "Alec Burleson"
         },
@@ -2947,7 +2947,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 6500,
+          "price": 5500,
           "alt": true,
           "displayName": "Alec Burleson"
         },
@@ -2982,7 +2982,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 3500,
+          "price": 3300,
           "alt": true,
           "displayName": "Alec Burleson"
         },
@@ -3005,14 +3005,14 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 220,
+          "price": 230,
           "alt": true,
           "displayName": "Alec Burleson"
         },
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 370,
+          "price": 360,
           "alt": true,
           "displayName": "Alec Burleson"
         },
@@ -4299,7 +4299,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 160,
+          "price": 165,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4362,7 +4362,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 155,
+          "price": 160,
           "alt": false,
           "displayName": "Junior Caminero"
         },
@@ -4385,7 +4385,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -210,
+          "price": -220,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4434,7 +4434,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": -210,
+          "price": -220,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4448,7 +4448,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 140,
+          "price": 135,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4462,7 +4462,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": -105,
+          "price": 100,
           "alt": false,
           "displayName": "Junior Caminero"
         },
@@ -4485,7 +4485,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 1800,
+          "price": 1700,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4550,7 +4550,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -155,
+          "price": -150,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4571,7 +4571,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 340,
+          "price": 350,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -4613,7 +4613,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": -140,
+          "price": -150,
           "alt": false,
           "displayName": "Junior Caminero"
         },
@@ -4627,7 +4627,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 115,
+          "price": 110,
           "alt": true,
           "displayName": "Junior Caminero"
         },
@@ -5068,14 +5068,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 250,
+          "price": 260,
           "alt": true,
           "displayName": "Kyle Schwarber"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -220,
+          "price": -210,
           "alt": true,
           "displayName": "Kyle Schwarber"
         },
@@ -5296,7 +5296,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 2200,
+          "price": 2500,
           "alt": true,
           "displayName": "Kyle Schwarber"
         },
@@ -5324,7 +5324,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 1800,
+          "price": 1750,
           "alt": true,
           "displayName": "Kyle Schwarber"
         },
@@ -5354,7 +5354,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -110,
+          "price": -105,
           "alt": true,
           "displayName": "Kyle Schwarber"
         },
@@ -5375,7 +5375,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 165,
+          "price": 170,
           "alt": true,
           "displayName": "Kyle Schwarber"
         },
@@ -6783,7 +6783,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -370,
+          "price": -380,
           "alt": true,
           "displayName": "Bryce Harper"
         },
@@ -6890,14 +6890,14 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 450,
+          "price": 460,
           "alt": true,
           "displayName": "Bryce Harper"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 5000,
+          "price": 5500,
           "alt": true,
           "displayName": "Bryce Harper"
         },
@@ -6948,7 +6948,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -105,
+          "price": 100,
           "alt": true,
           "displayName": "Bryce Harper"
         },
@@ -6969,7 +6969,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 210,
+          "price": 220,
           "alt": true,
           "displayName": "Bryce Harper"
         },
@@ -7459,35 +7459,35 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -260,
+          "price": -250,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 210,
+          "price": 220,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 0.5,
-          "price": -244,
+          "price": -234,
           "alt": false,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 1.5,
-          "price": 236,
+          "price": 247,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 1180,
+          "price": 1260,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
@@ -7508,7 +7508,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 230,
+          "price": 240,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
@@ -7566,42 +7566,42 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -370,
+          "price": -360,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 1.5,
-          "price": -148,
+          "price": -142,
           "alt": false,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 0.5,
-          "price": -389,
+          "price": -365,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 130,
+          "price": 136,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 3.5,
-          "price": 237,
+          "price": 250,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 4.5,
-          "price": 426,
+          "price": 449,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
@@ -7643,7 +7643,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": -135,
+          "price": -130,
           "alt": false,
           "displayName": "Tyler Soderstrom"
         },
@@ -7680,14 +7680,14 @@
         {
           "book": "draftkings",
           "line": 0.5,
-          "price": 335,
+          "price": 346,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 1.5,
-          "price": 3500,
+          "price": 3600,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
@@ -7745,42 +7745,42 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 190,
+          "price": 195,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 1.5,
-          "price": 109,
+          "price": 113,
           "alt": false,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 202,
+          "price": 209,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 3.5,
-          "price": 272,
+          "price": 283,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "draftkings",
           "line": 4.5,
-          "price": 580,
+          "price": 610,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 110,
+          "price": 115,
           "alt": false,
           "displayName": "Tyler Soderstrom"
         },
@@ -7794,7 +7794,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -225,
+          "price": -220,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
@@ -7808,7 +7808,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 500,
+          "price": 525,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         },
@@ -7836,7 +7836,7 @@
         {
           "book": "draftkings",
           "line": 5.5,
-          "price": 1060,
+          "price": 1140,
           "alt": true,
           "displayName": "Tyler Soderstrom"
         }
@@ -8398,7 +8398,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 350,
+          "price": 360,
           "alt": true,
           "displayName": "Fernando Tatis Jr."
         },
@@ -9864,7 +9864,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -250,
+          "price": -235,
           "alt": false,
           "displayName": "Jackson Chourio"
         },
@@ -9885,7 +9885,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 3300,
+          "price": 3000,
           "alt": true,
           "displayName": "Jackson Chourio"
         },
@@ -9985,7 +9985,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -325,
+          "price": -300,
           "alt": true,
           "displayName": "Jackson Chourio"
         },
@@ -10006,7 +10006,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 155,
+          "price": 165,
           "alt": true,
           "displayName": "Jackson Chourio"
         },
@@ -10071,7 +10071,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 400,
+          "price": 425,
           "alt": true,
           "displayName": "Jackson Chourio"
         },
@@ -10150,7 +10150,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 115,
+          "price": 120,
           "alt": false,
           "displayName": "Jackson Chourio"
         },
@@ -10171,14 +10171,14 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 575,
+          "price": 625,
           "alt": true,
           "displayName": "Jackson Chourio"
         },
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 325,
+          "price": 333,
           "alt": true,
           "displayName": "Jackson Chourio"
         },
@@ -10605,7 +10605,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 200,
+          "price": 195,
           "alt": true,
           "displayName": "Jordan Walker"
         },
@@ -10647,7 +10647,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 675,
+          "price": 700,
           "alt": true,
           "displayName": "Jordan Walker"
         },
@@ -10712,7 +10712,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -370,
+          "price": -380,
           "alt": true,
           "displayName": "Jordan Walker"
         },
@@ -10768,7 +10768,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 220,
+          "price": 230,
           "alt": true,
           "displayName": "Jordan Walker"
         },
@@ -10847,7 +10847,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 2800,
+          "price": 3000,
           "alt": true,
           "displayName": "Jordan Walker"
         },
@@ -12264,7 +12264,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -390,
+          "price": -400,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -12306,21 +12306,21 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": -175,
-          "alt": true,
-          "displayName": "Jonathan Aranda"
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 120,
+          "price": -160,
           "alt": false,
           "displayName": "Jonathan Aranda"
         },
         {
           "book": "betmgm",
+          "line": 2.5,
+          "price": 110,
+          "alt": true,
+          "displayName": "Jonathan Aranda"
+        },
+        {
+          "book": "betmgm",
           "line": 4.5,
-          "price": 340,
+          "price": 350,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -12341,7 +12341,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": -165,
+          "price": -160,
           "alt": false,
           "displayName": "Jonathan Aranda"
         }
@@ -12350,14 +12350,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 6000,
+          "price": 5500,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 520,
+          "price": 500,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -12378,14 +12378,14 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 350,
+          "price": 360,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 2500,
+          "price": 2800,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -12422,7 +12422,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 800,
+          "price": 750,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -12457,14 +12457,14 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 120,
+          "price": 110,
           "alt": false,
           "displayName": "Jonathan Aranda"
         },
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 190,
+          "price": 195,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -12485,7 +12485,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 475,
+          "price": 500,
           "alt": true,
           "displayName": "Jonathan Aranda"
         },
@@ -15289,7 +15289,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 1800,
+          "price": 1850,
           "alt": true,
           "displayName": "Yandy Diaz"
         },
@@ -15410,7 +15410,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": -125,
+          "price": -120,
           "alt": false,
           "displayName": "Yandy Diaz"
         },
@@ -15461,14 +15461,14 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 2000,
+          "price": 1900,
           "alt": true,
           "displayName": "Yandy Diaz"
         },
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 280,
+          "price": 275,
           "alt": true,
           "displayName": "Yandy Diaz"
         },
@@ -15512,7 +15512,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 450,
+          "price": 440,
           "alt": true,
           "displayName": "Yandy Diaz"
         },
@@ -22174,7 +22174,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 155,
+          "price": 160,
           "alt": true,
           "displayName": "Trea Turner"
         },
@@ -22439,28 +22439,28 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -120,
+          "price": -115,
           "alt": true,
           "displayName": "Trea Turner"
         },
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 370,
+          "price": 390,
           "alt": true,
           "displayName": "Trea Turner"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 700,
+          "price": 750,
           "alt": true,
           "displayName": "Trea Turner"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 200,
+          "price": 210,
           "alt": true,
           "displayName": "Trea Turner"
         },
@@ -22502,7 +22502,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 105,
+          "price": 100,
           "alt": false,
           "displayName": "Trea Turner"
         },
@@ -22537,7 +22537,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 100,
+          "price": -105,
           "alt": false,
           "displayName": "Trea Turner"
         },
@@ -24595,7 +24595,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -390,
+          "price": -380,
           "alt": true,
           "displayName": "Ivan Herrera"
         },
@@ -24709,7 +24709,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 630,
+          "price": 680,
           "alt": true,
           "displayName": "Ivan Herrera"
         },
@@ -24753,7 +24753,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 300,
+          "price": 310,
           "alt": true,
           "displayName": "Ivan Herrera"
         },
@@ -24837,7 +24837,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 750,
+          "price": 800,
           "alt": true,
           "displayName": "Ivan Herrera"
         },
@@ -25413,7 +25413,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 800,
+          "price": 775,
           "alt": true,
           "displayName": "Jackson Merrill"
         },
@@ -25499,14 +25499,14 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 475,
+          "price": 450,
           "alt": true,
           "displayName": "Jackson Merrill"
         },
         {
           "book": "hardrockbet",
           "line": 0.5,
-          "price": 475,
+          "price": 500,
           "alt": false,
           "displayName": "Jackson Merrill"
         }
@@ -25578,7 +25578,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 400,
+          "price": 390,
           "alt": true,
           "displayName": "Jackson Merrill"
         },
@@ -27591,7 +27591,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -175,
+          "price": -170,
           "alt": true,
           "displayName": "Henry Bolte"
         },
@@ -27633,7 +27633,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1450,
+          "price": 1550,
           "alt": true,
           "displayName": "Henry Bolte"
         },
@@ -27740,7 +27740,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 105,
+          "price": 100,
           "alt": false,
           "displayName": "Henry Bolte"
         },
@@ -27856,7 +27856,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 150,
+          "price": 155,
           "alt": true,
           "displayName": "Henry Bolte"
         },
@@ -29236,28 +29236,28 @@
         {
           "book": "draftkings",
           "line": 0.5,
-          "price": -344,
+          "price": -343,
           "alt": true,
           "displayName": "Freddie Freeman"
         },
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 156,
+          "price": 153,
           "alt": true,
           "displayName": "Freddie Freeman"
         },
         {
           "book": "draftkings",
           "line": 3.5,
-          "price": 293,
+          "price": 286,
           "alt": true,
           "displayName": "Freddie Freeman"
         },
         {
           "book": "draftkings",
           "line": 4.5,
-          "price": 540,
+          "price": 519,
           "alt": true,
           "displayName": "Freddie Freeman"
         },
@@ -29322,14 +29322,14 @@
         {
           "book": "draftkings",
           "line": 0.5,
-          "price": 496,
+          "price": 477,
           "alt": true,
           "displayName": "Freddie Freeman"
         },
         {
           "book": "draftkings",
           "line": 1.5,
-          "price": 5400,
+          "price": 5200,
           "alt": true,
           "displayName": "Freddie Freeman"
         },
@@ -30638,7 +30638,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -230,
+          "price": -240,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -30680,8 +30680,8 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 195,
-          "alt": false,
+          "price": 200,
+          "alt": true,
           "displayName": "JJ Wetherholt"
         },
         {
@@ -30702,7 +30702,7 @@
           "book": "betmgm",
           "line": 0.5,
           "price": -275,
-          "alt": true,
+          "alt": false,
           "displayName": "JJ Wetherholt"
         },
         {
@@ -30801,7 +30801,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 260,
+          "price": 270,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -30815,7 +30815,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 135,
+          "price": 140,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -30859,7 +30859,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 680,
+          "price": 630,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -30880,14 +30880,14 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 3500,
+          "price": 4000,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 475,
+          "price": 500,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -30903,21 +30903,21 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 290,
+          "price": 280,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 500,
+          "price": 480,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 125,
+          "price": 120,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -30959,21 +30959,21 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 125,
+          "price": 130,
           "alt": false,
           "displayName": "JJ Wetherholt"
         },
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 675,
+          "price": 725,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 380,
+          "price": 400,
           "alt": true,
           "displayName": "JJ Wetherholt"
         },
@@ -32446,7 +32446,7 @@
         {
           "book": "hardrockbet",
           "line": 0.5,
-          "price": 325,
+          "price": 350,
           "alt": false,
           "displayName": "Corey Seager"
         },
@@ -42200,7 +42200,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 4500,
+          "price": 4000,
           "alt": true,
           "displayName": "Brice Turang"
         },
@@ -42279,14 +42279,14 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 140,
+          "price": 138,
           "alt": false,
           "displayName": "Brice Turang"
         },
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 800,
+          "price": 750,
           "alt": true,
           "displayName": "Brice Turang"
         },
@@ -42307,7 +42307,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -220,
+          "price": -225,
           "alt": true,
           "displayName": "Brice Turang"
         },
@@ -44265,7 +44265,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 360,
+          "price": 350,
           "alt": true,
           "displayName": "Jimmy Crooks"
         },
@@ -44321,7 +44321,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1550,
+          "price": 1600,
           "alt": true,
           "displayName": "Jimmy Crooks"
         },
@@ -44486,7 +44486,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 525,
+          "price": 550,
           "alt": true,
           "displayName": "Jimmy Crooks"
         },
@@ -44544,14 +44544,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 165,
+          "price": 160,
           "alt": true,
           "displayName": "Jimmy Crooks"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1300,
+          "price": 1200,
           "alt": true,
           "displayName": "Jimmy Crooks"
         },
@@ -47348,7 +47348,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -165,
+          "price": -160,
           "alt": false,
           "displayName": "Manny Machado"
         },
@@ -47490,7 +47490,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 650,
+          "price": 675,
           "alt": true,
           "displayName": "Manny Machado"
         },
@@ -47648,7 +47648,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -165,
+          "price": -160,
           "alt": false,
           "displayName": "Manny Machado"
         },
@@ -47669,7 +47669,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 675,
+          "price": 725,
           "alt": true,
           "displayName": "Manny Machado"
         },
@@ -49143,7 +49143,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 160,
+          "price": 155,
           "alt": false,
           "displayName": "Kazuma Okamoto"
         },
@@ -51947,7 +51947,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 275,
+          "price": 280,
           "alt": true,
           "displayName": "Andrew Vaughn"
         },
@@ -52205,7 +52205,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 160,
+          "price": 165,
           "alt": false,
           "displayName": "Andrew Vaughn"
         },
@@ -52254,7 +52254,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 800,
+          "price": 825,
           "alt": true,
           "displayName": "Andrew Vaughn"
         }
@@ -55017,14 +55017,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -145,
+          "price": -140,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -360,
+          "price": -350,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
@@ -55080,7 +55080,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 500,
+          "price": 475,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
@@ -55159,7 +55159,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 3000,
+          "price": 2800,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
@@ -55189,7 +55189,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -105,
+          "price": 100,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
@@ -55217,14 +55217,14 @@
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 244,
+          "price": 247,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
         {
           "book": "draftkings",
           "line": 3.5,
-          "price": 340,
+          "price": 345,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
@@ -55287,7 +55287,7 @@
         {
           "book": "draftkings",
           "line": 4.5,
-          "price": 690,
+          "price": 700,
           "alt": true,
           "displayName": "Lawrence Butler"
         },
@@ -55693,14 +55693,14 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -230,
+          "price": -220,
           "alt": true,
           "displayName": "Jonah Heim"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 250,
+          "price": 260,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -55742,7 +55742,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1300,
+          "price": 1350,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -55800,7 +55800,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -300,
+          "price": -290,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -55900,7 +55900,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 6000,
+          "price": 7000,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -55935,7 +55935,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 3300,
+          "price": 3500,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -55951,21 +55951,21 @@
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 390,
+          "price": 400,
           "alt": true,
           "displayName": "Jonah Heim"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 115,
+          "price": 120,
           "alt": true,
           "displayName": "Jonah Heim"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 850,
+          "price": 900,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -55979,28 +55979,28 @@
         {
           "book": "draftkings",
           "line": 1.5,
-          "price": 145,
+          "price": 147,
           "alt": true,
           "displayName": "Jonah Heim"
         },
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 291,
+          "price": 293,
           "alt": true,
           "displayName": "Jonah Heim"
         },
         {
           "book": "draftkings",
           "line": 3.5,
-          "price": 396,
+          "price": 404,
           "alt": true,
           "displayName": "Jonah Heim"
         },
         {
           "book": "draftkings",
           "line": 4.5,
-          "price": 880,
+          "price": 910,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -56021,7 +56021,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 360,
+          "price": 375,
           "alt": true,
           "displayName": "Jonah Heim"
         },
@@ -58028,7 +58028,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 220,
+          "price": 230,
           "alt": true,
           "displayName": "William Contreras"
         },
@@ -58321,14 +58321,14 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 380,
+          "price": 390,
           "alt": true,
           "displayName": "William Contreras"
         },
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 260,
+          "price": 270,
           "alt": true,
           "displayName": "William Contreras"
         },
@@ -63562,14 +63562,14 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 2800,
+          "price": 2500,
           "alt": true,
           "displayName": "Jacob Wilson"
         },
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 700,
+          "price": 725,
           "alt": true,
           "displayName": "Jacob Wilson"
         },
@@ -63620,7 +63620,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -145,
+          "price": -140,
           "alt": true,
           "displayName": "Jacob Wilson"
         },
@@ -63669,7 +63669,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": -150,
+          "price": -155,
           "alt": false,
           "displayName": "Jacob Wilson"
         },
@@ -63683,7 +63683,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -400,
+          "price": -375,
           "alt": true,
           "displayName": "Jacob Wilson"
         },
@@ -63727,7 +63727,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 30000,
+          "price": 40000,
           "alt": true,
           "displayName": "Jacob Wilson"
         },
@@ -64282,7 +64282,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 250,
+          "price": 230,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -64438,7 +64438,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 475,
+          "price": 500,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -64489,14 +64489,14 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 800,
+          "price": 750,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 10000,
+          "price": 12500,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -64540,7 +64540,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 130,
+          "price": 120,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -64554,14 +64554,14 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1100,
+          "price": 1000,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 300,
+          "price": 280,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -64610,7 +64610,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 400,
+          "price": 425,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -64624,7 +64624,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 725,
+          "price": 750,
           "alt": true,
           "displayName": "Brandon Marsh"
         },
@@ -68276,7 +68276,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 115,
+          "price": 110,
           "alt": false,
           "displayName": "Brooks Lee"
         }
@@ -69595,14 +69595,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 155,
+          "price": 160,
           "alt": true,
           "displayName": "Luis Arraez"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -340,
+          "price": -350,
           "alt": true,
           "displayName": "Luis Arraez"
         },
@@ -69867,7 +69867,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -110,
+          "price": -105,
           "alt": true,
           "displayName": "Luis Arraez"
         },
@@ -69888,7 +69888,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 260,
+          "price": 270,
           "alt": true,
           "displayName": "Luis Arraez"
         },
@@ -76173,7 +76173,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -210,
+          "price": -220,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76208,14 +76208,14 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1050,
+          "price": 1100,
           "alt": true,
           "displayName": "Bryson Stott"
         },
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 4000,
+          "price": 3500,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76343,7 +76343,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 600,
+          "price": 625,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76401,14 +76401,14 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 850,
+          "price": 875,
           "alt": true,
           "displayName": "Bryson Stott"
         },
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 5500,
+          "price": 6000,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76424,7 +76424,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 140,
+          "price": 135,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76438,14 +76438,14 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1100,
+          "price": 1200,
           "alt": true,
           "displayName": "Bryson Stott"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 330,
+          "price": 310,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76480,7 +76480,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -210,
+          "price": -220,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -76508,7 +76508,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1000,
+          "price": 1050,
           "alt": true,
           "displayName": "Bryson Stott"
         },
@@ -80766,7 +80766,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -250,
+          "price": -240,
           "alt": true,
           "displayName": "J.T. Realmuto"
         },
@@ -80880,7 +80880,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -135,
+          "price": -130,
           "alt": true,
           "displayName": "J.T. Realmuto"
         },
@@ -80987,7 +80987,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 20000,
+          "price": 17500,
           "alt": true,
           "displayName": "J.T. Realmuto"
         },
@@ -81022,7 +81022,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 700,
+          "price": 725,
           "alt": true,
           "displayName": "J.T. Realmuto"
         }
@@ -81038,7 +81038,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1200,
+          "price": 1300,
           "alt": true,
           "displayName": "J.T. Realmuto"
         },
@@ -82296,7 +82296,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -240,
+          "price": -250,
           "alt": true,
           "displayName": "Tommy White"
         },
@@ -82459,7 +82459,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -275,
+          "price": -250,
           "alt": true,
           "displayName": "Tommy White"
         },
@@ -82503,14 +82503,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 12500,
+          "price": 20000,
           "alt": true,
           "displayName": "Tommy White"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 830,
+          "price": 870,
           "alt": true,
           "displayName": "Tommy White"
         },
@@ -82575,7 +82575,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 330,
+          "price": 340,
           "alt": true,
           "displayName": "Tommy White"
         },
@@ -83065,14 +83065,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 185,
+          "price": 180,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
         {
           "book": "draftkings",
           "line": 0.5,
-          "price": -314,
+          "price": -312,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -83086,7 +83086,7 @@
         {
           "book": "draftkings",
           "line": 2.5,
-          "price": 760,
+          "price": 790,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -83107,7 +83107,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 650,
+          "price": 625,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -83207,7 +83207,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 310,
+          "price": 300,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -83221,7 +83221,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -450,
+          "price": -400,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -83288,14 +83288,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 120,
+          "price": 115,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 340,
+          "price": 330,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -83309,7 +83309,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1900,
+          "price": 2000,
           "alt": true,
           "displayName": "Chandler Simpson"
         },
@@ -95091,7 +95091,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 190,
+          "price": 195,
           "alt": false,
           "displayName": "Ryan Waldschmidt"
         },
@@ -95105,7 +95105,7 @@
         {
           "book": "hardrockbet",
           "line": 2.5,
-          "price": 425,
+          "price": 450,
           "alt": true,
           "displayName": "Ryan Waldschmidt"
         }
@@ -95632,7 +95632,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 310,
+          "price": 300,
           "alt": true,
           "displayName": "Nathan Church"
         },
@@ -95688,7 +95688,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1350,
+          "price": 1300,
           "alt": true,
           "displayName": "Nathan Church"
         },
@@ -95732,7 +95732,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 17500,
+          "price": 15000,
           "alt": true,
           "displayName": "Nathan Church"
         },
@@ -95753,7 +95753,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 5000,
+          "price": 5500,
           "alt": true,
           "displayName": "Nathan Church"
         }
@@ -95790,28 +95790,28 @@
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 650,
+          "price": 700,
           "alt": true,
           "displayName": "Nathan Church"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 400,
+          "price": 390,
           "alt": true,
           "displayName": "Nathan Church"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 165,
+          "price": 160,
           "alt": true,
           "displayName": "Nathan Church"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1500,
+          "price": 1400,
           "alt": true,
           "displayName": "Nathan Church"
         },
@@ -96415,7 +96415,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1100,
+          "price": 1150,
           "alt": true,
           "displayName": "Gavin Sheets"
         },
@@ -98680,14 +98680,14 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 900,
+          "price": 1000,
           "alt": true,
           "displayName": "Jake Cronenworth"
         },
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 250,
+          "price": 260,
           "alt": true,
           "displayName": "Jake Cronenworth"
         },
@@ -98766,7 +98766,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 650,
+          "price": 675,
           "alt": true,
           "displayName": "Jake Cronenworth"
         },
@@ -100687,7 +100687,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -125,
+          "price": -120,
           "alt": false,
           "displayName": "Luis Rengifo"
         },
@@ -100708,7 +100708,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 2500,
+          "price": 2200,
           "alt": true,
           "displayName": "Luis Rengifo"
         },
@@ -100801,7 +100801,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 155,
+          "price": 165,
           "alt": true,
           "displayName": "Luis Rengifo"
         },
@@ -100959,7 +100959,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -125,
+          "price": -120,
           "alt": false,
           "displayName": "Luis Rengifo"
         },
@@ -100980,7 +100980,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1500,
+          "price": 1450,
           "alt": true,
           "displayName": "Luis Rengifo"
         },
@@ -102169,14 +102169,14 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -195,
+          "price": -190,
           "alt": true,
           "displayName": "Masyn Winn"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 300,
+          "price": 310,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -102218,7 +102218,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1200,
+          "price": 1150,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -102276,7 +102276,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -270,
+          "price": -280,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -102376,14 +102376,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 35000,
+          "price": 40000,
           "alt": true,
           "displayName": "Masyn Winn"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 1060,
+          "price": 1000,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -102427,28 +102427,28 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 410,
+          "price": 400,
           "alt": true,
           "displayName": "Masyn Winn"
         },
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 750,
+          "price": 700,
           "alt": true,
           "displayName": "Masyn Winn"
         },
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 165,
+          "price": 160,
           "alt": true,
           "displayName": "Masyn Winn"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1600,
+          "price": 1700,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -102490,7 +102490,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1150,
+          "price": 1200,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -102504,7 +102504,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -220,
+          "price": -210,
           "alt": true,
           "displayName": "Masyn Winn"
         },
@@ -105294,7 +105294,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 4000,
+          "price": 3500,
           "alt": true,
           "displayName": "Alec Bohm"
         },
@@ -105394,7 +105394,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 190,
+          "price": 195,
           "alt": true,
           "displayName": "Alec Bohm"
         },
@@ -105431,7 +105431,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": 830,
+          "price": 870,
           "alt": true,
           "displayName": "Alec Bohm"
         },
@@ -105466,14 +105466,14 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 850,
+          "price": 875,
           "alt": true,
           "displayName": "Alec Bohm"
         },
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 5500,
+          "price": 6000,
           "alt": true,
           "displayName": "Alec Bohm"
         }
@@ -105489,7 +105489,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1100,
+          "price": 1200,
           "alt": true,
           "displayName": "Alec Bohm"
         },
@@ -105503,7 +105503,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 115,
+          "price": 110,
           "alt": true,
           "displayName": "Alec Bohm"
         },
@@ -105573,7 +105573,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 350,
+          "price": 360,
           "alt": true,
           "displayName": "Alec Bohm"
         },
@@ -108515,7 +108515,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -195,
+          "price": -200,
           "alt": true,
           "displayName": "Jose Fermin"
         },
@@ -108550,14 +108550,14 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -190,
+          "price": -185,
           "alt": false,
           "displayName": "Jose Fermin"
         },
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 300,
+          "price": 310,
           "alt": true,
           "displayName": "Jose Fermin"
         },
@@ -108571,7 +108571,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 4500,
+          "price": 5000,
           "alt": true,
           "displayName": "Jose Fermin"
         }
@@ -108664,7 +108664,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 800,
+          "price": 850,
           "alt": true,
           "displayName": "Jose Fermin"
         },
@@ -108780,7 +108780,7 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1500,
+          "price": 1600,
           "alt": true,
           "displayName": "Jose Fermin"
         },
@@ -108808,7 +108808,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -190,
+          "price": -185,
           "alt": false,
           "displayName": "Jose Fermin"
         },
@@ -108822,7 +108822,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 180,
+          "price": 185,
           "alt": true,
           "displayName": "Jose Fermin"
         },
@@ -110053,7 +110053,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -280,
+          "price": -270,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
@@ -110067,7 +110067,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -225,
+          "price": -220,
           "alt": false,
           "displayName": "Jeff McNeil"
         },
@@ -110153,7 +110153,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -140,
+          "price": -135,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
@@ -110174,7 +110174,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 625,
+          "price": 600,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
@@ -110195,7 +110195,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 180,
+          "price": 175,
           "alt": true,
           "displayName": "Jeff McNeil"
         }
@@ -110297,28 +110297,28 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 105,
+          "price": 110,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 480,
+          "price": 490,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 260,
+          "price": 270,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 950,
+          "price": 1000,
           "alt": true,
           "displayName": "Jeff McNeil"
         },
@@ -117045,7 +117045,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -130,
+          "price": -135,
           "alt": true,
           "displayName": "Bryan Torres"
         },
@@ -117101,7 +117101,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 375,
+          "price": 380,
           "alt": true,
           "displayName": "Bryan Torres"
         }
@@ -117201,7 +117201,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 260,
+          "price": 270,
           "alt": true,
           "displayName": "Bryan Torres"
         },
@@ -117259,7 +117259,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 1050,
+          "price": 1000,
           "alt": true,
           "displayName": "Bryan Torres"
         }
@@ -117303,7 +117303,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 600,
+          "price": 650,
           "alt": true,
           "displayName": "Bryan Torres"
         },
@@ -117366,14 +117366,14 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 750,
+          "price": 725,
           "alt": true,
           "displayName": "Bryan Torres"
         },
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1400,
+          "price": 1450,
           "alt": true,
           "displayName": "Bryan Torres"
         }
@@ -118758,7 +118758,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 270,
+          "price": 280,
           "alt": true,
           "displayName": "Justin Crawford"
         },
@@ -118865,7 +118865,7 @@
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -270,
+          "price": -290,
           "alt": true,
           "displayName": "Justin Crawford"
         },
@@ -119030,14 +119030,14 @@
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 2000,
+          "price": 2200,
           "alt": true,
           "displayName": "Justin Crawford"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": 450,
+          "price": 440,
           "alt": true,
           "displayName": "Justin Crawford"
         },
@@ -119072,7 +119072,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -235,
+          "price": -225,
           "alt": true,
           "displayName": "Justin Crawford"
         },
@@ -119086,7 +119086,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1250,
+          "price": 1200,
           "alt": true,
           "displayName": "Justin Crawford"
         },
@@ -120371,7 +120371,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1850,
+          "price": 1900,
           "alt": true,
           "displayName": "Luis Lara"
         }
@@ -120629,21 +120629,21 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1500,
+          "price": 1600,
           "alt": true,
           "displayName": "Luis Lara"
         },
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 475,
+          "price": 500,
           "alt": true,
           "displayName": "Luis Lara"
         },
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 800,
+          "price": 825,
           "alt": true,
           "displayName": "Luis Lara"
         }
@@ -125938,21 +125938,21 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 370,
+          "price": 360,
           "alt": true,
           "displayName": "Taylor Walls"
         },
         {
           "book": "fanduel",
           "line": 0.5,
-          "price": -160,
+          "price": -170,
           "alt": true,
           "displayName": "Taylor Walls"
         },
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -160,
+          "price": -155,
           "alt": false,
           "displayName": "Taylor Walls"
         },
@@ -125966,14 +125966,14 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 1550,
+          "price": 1450,
           "alt": true,
           "displayName": "Taylor Walls"
         },
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 340,
+          "price": 333,
           "alt": true,
           "displayName": "Taylor Walls"
         }
@@ -126010,7 +126010,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 8000,
+          "price": 10000,
           "alt": true,
           "displayName": "Taylor Walls"
         },
@@ -126024,7 +126024,7 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": 725,
+          "price": 700,
           "alt": true,
           "displayName": "Taylor Walls"
         }
@@ -126089,14 +126089,14 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": 165,
+          "price": 160,
           "alt": true,
           "displayName": "Taylor Walls"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 1200,
+          "price": 1300,
           "alt": true,
           "displayName": "Taylor Walls"
         },
@@ -126110,14 +126110,14 @@
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -160,
+          "price": -155,
           "alt": false,
           "displayName": "Taylor Walls"
         },
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 340,
+          "price": 333,
           "alt": true,
           "displayName": "Taylor Walls"
         },
@@ -126189,7 +126189,7 @@
         {
           "book": "fanduel",
           "line": 1.5,
-          "price": -105,
+          "price": -110,
           "alt": true,
           "displayName": "Taylor Walls"
         },
@@ -126210,14 +126210,14 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": 380,
+          "price": 375,
           "alt": true,
           "displayName": "Taylor Walls"
         },
         {
           "book": "betmgm",
           "line": 0.5,
-          "price": -235,
+          "price": -250,
           "alt": true,
           "displayName": "Taylor Walls"
         },
@@ -128296,14 +128296,14 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 165,
+          "price": 155,
           "alt": true,
           "displayName": "Xander Bogaerts"
         },
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1200,
+          "price": 1300,
           "alt": true,
           "displayName": "Xander Bogaerts"
         },
@@ -128503,7 +128503,7 @@
         {
           "book": "hardrockbet",
           "line": 1.5,
-          "price": 220,
+          "price": 240,
           "alt": false,
           "displayName": "Xander Bogaerts"
         },
@@ -128993,7 +128993,7 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 2500,
+          "price": 2800,
           "alt": true,
           "displayName": "David Hamilton"
         },
@@ -129086,7 +129086,7 @@
         {
           "book": "betmgm",
           "line": 1.5,
-          "price": 185,
+          "price": 180,
           "alt": true,
           "displayName": "David Hamilton"
         },
@@ -129100,14 +129100,14 @@
         {
           "book": "betmgm",
           "line": 2.5,
-          "price": 390,
+          "price": 375,
           "alt": true,
           "displayName": "David Hamilton"
         },
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1350,
+          "price": 1400,
           "alt": true,
           "displayName": "David Hamilton"
         }
@@ -129258,7 +129258,7 @@
         {
           "book": "betmgm",
           "line": 4.5,
-          "price": 1600,
+          "price": 1650,
           "alt": true,
           "displayName": "David Hamilton"
         },
@@ -134267,28 +134267,28 @@
         {
           "book": "fanduel",
           "line": 3.5,
-          "price": 122,
+          "price": 112,
           "alt": false,
           "displayName": "Hunter Dobbins"
         },
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": -250,
+          "price": -265,
           "alt": true,
           "displayName": "Hunter Dobbins"
         },
         {
           "book": "fanduel",
           "line": 4.5,
-          "price": 285,
+          "price": 255,
           "alt": true,
           "displayName": "Hunter Dobbins"
         },
         {
           "book": "fanduel",
           "line": 5.5,
-          "price": 680,
+          "price": 600,
           "alt": true,
           "displayName": "Hunter Dobbins"
         },
@@ -134337,14 +134337,14 @@
         {
           "book": "hardrockbet",
           "line": 3.5,
-          "price": 120,
+          "price": 115,
           "alt": false,
           "displayName": "Hunter Dobbins"
         },
         {
           "book": "hardrockbet",
           "line": 7.5,
-          "price": 5000,
+          "price": 4000,
           "alt": true,
           "displayName": "Hunter Dobbins"
         },
@@ -134372,7 +134372,7 @@
         {
           "book": "hardrockbet",
           "line": 2.5,
-          "price": -220,
+          "price": -225,
           "alt": true,
           "displayName": "Hunter Dobbins"
         },
@@ -134524,7 +134524,7 @@
         {
           "book": "fanduel",
           "line": 2.5,
-          "price": -290,
+          "price": -295,
           "alt": true,
           "displayName": "Andrew Painter"
         },
@@ -136038,7 +136038,7 @@
         {
           "book": "betmgm",
           "line": 6.5,
-          "price": 390,
+          "price": 380,
           "alt": true,
           "displayName": "Jacob Lopez"
         },
@@ -136190,7 +136190,7 @@
         {
           "book": "hardrockbet",
           "line": 4.5,
-          "price": -130,
+          "price": -135,
           "alt": false,
           "displayName": "Freddy Peralta"
         },
@@ -136323,7 +136323,7 @@
         {
           "book": "betmgm",
           "line": 3.5,
-          "price": -275,
+          "price": -295,
           "alt": true,
           "displayName": "Freddy Peralta"
         },
@@ -137854,14 +137854,14 @@
         {
           "book": "hardrockbet",
           "line": 6.5,
-          "price": 260,
+          "price": 275,
           "alt": true,
           "displayName": "Noah Cameron"
         },
         {
           "book": "hardrockbet",
           "line": 7.5,
-          "price": 500,
+          "price": 525,
           "alt": true,
           "displayName": "Noah Cameron"
         },
@@ -137875,7 +137875,7 @@
         {
           "book": "hardrockbet",
           "line": 2.5,
-          "price": -1000,
+          "price": -950,
           "alt": true,
           "displayName": "Noah Cameron"
         },
