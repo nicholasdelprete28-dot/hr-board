@@ -70,5 +70,19 @@
       "hit": 0,
       "total": 3
     }
+  },
+  "_coverage": {
+    "hr": {
+      "real_total": 30,
+      "matched": 29
+    },
+    "hrr": {
+      "real_total": 129,
+      "matched": 122
+    },
+    "tb": {
+      "real_total": 100,
+      "matched": 97
+    }
   }
 }
