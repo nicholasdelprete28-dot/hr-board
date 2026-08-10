@@ -1279,7 +1279,17 @@ def compute_hr_probability(p):
     # same philosophy as the K board's matchup multiplier.
     matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
     mean = max(0.01, base_rate * matchup_mult)
-    return poisson_over_prob(mean, 0.5)  # P(1 or more)
+    raw_prob = poisson_over_prob(mean, 0.5)  # P(1 or more)
+    # Hard sanity ceiling, grounded in real sportsbook pricing rather than
+    # a guess: even the shortest real "anytime HR" lines ever offered for
+    # the best sluggers in the best matchups sit around +196 to +220
+    # (31-34% implied) - the model stacking several favorable real
+    # factors on one player (hot streak + strong power + a genuinely
+    # homer-prone pitcher) can otherwise compound past what any real book
+    # actually prices, even though each individual input is legitimate.
+    # 30% keeps real exceptional cases meaningfully high without drifting
+    # into territory no real market has ever actually offered.
+    return min(raw_prob, 0.30) if raw_prob is not None else raw_prob
 
 
 LEAGUE_AVG_AVG = 0.245
