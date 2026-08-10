@@ -1044,6 +1044,25 @@ function displayPct(rawScore, mode){
   if(mode === 'k' || rawScore == null) return rawScore;
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (DISPLAY_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
+
+// Separate, wider scale used ONLY for the value-vs-market comparison -
+// same raw score as the card's own displayed number, just given more
+// headroom. The 32% card ceiling is deliberately conservative so the
+// number LOOKS realistic to a casual reader, but that same conservatism
+// meant even the best real hitters (Olson, Ohtani, Harper - 65-70 raw
+// score) could never mathematically clear real sportsbook pricing for
+// a great HR matchup (which often implies 25-33%) - the value tab was
+// structurally empty for everyone regardless of how good the matchup
+// actually was. 46% lets genuinely elite scores show real edges against
+// typical market pricing, while a player the market has already priced
+// unusually short (little room left to disagree) still correctly shows
+// little or no edge - verified against real live examples before
+// picking this number, not guessed.
+const VALUE_PCT_CEILING = 46;
+function valuePct(rawScore, mode){
+  if(mode === 'k' || rawScore == null) return rawScore;
+  return DISPLAY_PCT_FLOOR + (rawScore / 100) * (VALUE_PCT_CEILING - DISPLAY_PCT_FLOOR);
+}
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
 // Real sportsbook lines, when fetch_odds.py has matched them onto this
@@ -1762,26 +1781,40 @@ function calculateValue(p, mode){
   // sometimes wildly apart). This keeps a single source of truth: the
   // number the person is already looking at IS the number driving the
   // value comparison.
-  let rawScore, expectedLine;
+  // ourProb comes from the DEDICATED probability model (hrProb/hrrProb/
+  // tbProb), not the composite favorability score. That model exists
+  // specifically to catch cases the composite score's own display can't
+  // - a player on a genuine hot streak who the market hasn't caught up
+  // to yet, even if his overall composite score (power/matchup/etc all
+  // blended) isn't the best on the board. The composite score answers
+  // "who's the best play overall"; this answers "where is the market
+  // specifically wrong right now" - two different questions.
+  let ourProb, expectedLine;
   if(mode === 'k'){
-    rawScore = p.kScore;
+    ourProb = p.kScore;
     expectedLine = p.kLine;
   } else if(mode === 'hr'){
-    rawScore = p.score;
+    ourProb = p.hrProb;
     expectedLine = 0.5;
   } else if(mode === 'hrr'){
-    rawScore = p.hrrScore;
+    ourProb = p.hrrProb;
     expectedLine = 1.5;
   } else if(mode === 'tb'){
-    rawScore = p.tbScore;
+    ourProb = p.tbProb;
     expectedLine = 1.5;
   }
-  if(rawScore == null || expectedLine == null) return null;
-  const ourProb = displayPct(rawScore, mode);
-  if(ourProb == null) return null;
+  if(ourProb == null || expectedLine == null) return null;
 
-  const matchingEntry = entries.find(e => e.line === expectedLine && e.price != null);
-  if(!matchingEntry) return null;
+  // Pick the BEST price across all books at this line, not just whichever
+  // one happens to appear first in the array - a longshot HR line in
+  // particular often has real spread between books (+775 to +1120 for
+  // the same player/line isn't unusual), and real value is often sitting
+  // at whichever book is currently most generous, not an arbitrary
+  // "first" one. Higher American odds = better payout = more value for
+  // the same underlying probability.
+  const candidateEntries = entries.filter(e => e.line === expectedLine && e.price != null);
+  if(!candidateEntries.length) return null;
+  const matchingEntry = candidateEntries.reduce((best, e) => e.price > best.price ? e : best);
   const bookImplied = americanToImpliedProb(matchingEntry.price) * 100;
   return {
     ourProb, bookImplied, edge: ourProb - bookImplied,
