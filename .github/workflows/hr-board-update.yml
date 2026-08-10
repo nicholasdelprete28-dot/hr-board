@@ -33,11 +33,11 @@ jobs:
       - name: Run the data-fetching script
         run: python fetch_hr_data.py
 
-      - name: Commit and push players.json if it changed
+      - name: Commit and push players.json and today's snapshot if changed
         run: |
           git config user.name "hr-board-bot"
           git config user.email "actions@github.com"
-          git add players.json
+          git add players.json history/
           git diff --quiet --cached || git commit -m "Update player data ($(date -u +%Y-%m-%dT%H:%M))"
           # Pull in anything pushed to the repo (e.g. a manual edit on GitHub's
           # website) since this job's checkout, then push. Avoids "rejected -
