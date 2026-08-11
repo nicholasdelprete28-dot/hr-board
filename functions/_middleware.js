@@ -27,6 +27,12 @@ const SMART_PUBLIC_PATHS = [
 // Always-public data/assets - no session logic needed either way.
 const ALWAYS_PUBLIC_PATHS = [
   "/history/accuracy_summary.json", // landing page fetches this for the live proof section
+  "/players.json", // landing page fetches this to show a REAL live card (not a static
+                    // mockup) to logged-out visitors - added alongside that change.
+                    // Full board data was already public-ish (visible to anyone with
+                    // the raw GitHub URL / after fetch_hr_data.py commits it), so
+                    // exposing it pre-login isn't a new leak, just a legitimate fetch
+                    // path that didn't previously exist for the landing page.
 ];
 
 const PUBLIC_EXTENSIONS = [".css", ".svg", ".png", ".jpg", ".ico", ".woff2"];
