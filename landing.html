@@ -36,10 +36,23 @@
   .mockup-card-back{position:absolute; top:0; left:14px; right:14px; height:100%; background:var(--surface2); border:1px solid var(--line); border-radius:16px; transform:rotate(-2.5deg); opacity:0.5;}
   .mockup-card{position:relative; background:var(--surface2); border:1px solid rgba(227,165,72,0.5); border-radius:16px; padding:20px; text-align:left; border-left:4px solid var(--gold); background-image:linear-gradient(115deg, #e3a54833 0%, #e3a54812 55%, var(--surface2) 100%); box-shadow:0 16px 36px -10px rgba(227,165,72,0.28), 0 6px 16px rgba(0,0,0,0.45);}
   .mockup-row1{display:flex; align-items:center; gap:12px;}
-  .mockup-headshot{width:54px; height:54px; border-radius:50%; background:linear-gradient(160deg,var(--gold),#e3a54899); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; color:#0a0d0b; font-size:18px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.4); position:relative; overflow:hidden;}
-  .mockup-headshot img{position:absolute; width:118%; height:118%; left:-9%; top:-2%; object-fit:cover; object-position:50% 20%;}
+  .mockup-headshot{width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5); font-size:18px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.4); position:relative; overflow:hidden;}
+  .mockup-headshot img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;
+    mask-image:radial-gradient(circle, black 60%, transparent 92%);
+    -webkit-mask-image:radial-gradient(circle, black 60%, transparent 92%);
+  }
   .mockup-odds-pill{display:inline-flex; align-items:center; gap:5px;}
   .mockup-odds-pill img{width:13px; height:13px; border-radius:3px;}
+
+  .mockup-statboxwrap{display:grid; grid-template-columns:repeat(6,1fr); gap:1px; margin-top:14px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .mockup-statbox{background:var(--surface2); padding:12px 6px; text-align:center; grid-column:span 2;}
+  .mockup-statbox.wide{grid-column:span 3;}
+  .mockup-statbox .sblabel{font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;}
+  .mockup-statbox .sbval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text);}
+  .mockup-statbox.good .sbval{color:var(--stat-good);}
+  .mockup-statbox.bad .sbval{color:#ff9638;}
+  .mockup-statbox.verybad .sbval{color:#ff4242;}
   .mockup-info{flex:1; min-width:0;}
   .mockup-name{font-family:var(--body); font-weight:700; font-size:17px;}
   .mockup-meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
@@ -151,6 +164,7 @@ whop.track("page");
           <div class="mockup-odds-pill">DK 0.5 +429</div>
           <div class="mockup-odds-pill">MGM 0.5 +450</div>
         </div>
+        <div class="mockup-statboxwrap" id="mockupStats" style="display:none;"></div>
       </div>
     </div>
     <div class="mockup-caption">Real Statcast data + live sportsbook odds on every card</div>
@@ -287,6 +301,38 @@ fetch('/history/accuracy_summary.json')
 //    nothing. Requires /players.json to be public (see functions/
 //    _middleware.js — it's in ALWAYS_PUBLIC_PATHS).
 // ---------------------------------------------------------------------
+// Real per-team primary colors, same table index.html uses for its card
+// accent stripe/headshot ring - kept in sync by hand since this is a
+// separate static file with no shared build step.
+const MOCKUP_TEAM_COLORS = {
+  LAA:'#BA0021', AZ:'#A71930', BAL:'#DF4601', BOS:'#BD3039', CHC:'#0E3386',
+  CIN:'#C6011F', CLE:'#00385D', COL:'#333366', DET:'#0C2340', HOU:'#EB6E1F',
+  KC:'#004687', LAD:'#005A9C', WSH:'#AB0003', NYM:'#FF5910', ATH:'#003831',
+  PIT:'#FDB827', SD:'#2F241D', SEA:'#0C2C56', SF:'#FD5A1E', STL:'#C41E3A',
+  TB:'#092C5C', TEX:'#003278', TOR:'#134A8E', MIN:'#002B5C', PHI:'#E81828',
+  ATL:'#CE1141', CWS:'#27251F', MIA:'#00A3E0', NYY:'#003087', MIL:'#12284B',
+};
+
+// Same good/bad/verybad coloring logic as index.html's statTier() - a
+// stat only gets colored if it clears a real threshold in either
+// direction, otherwise it stays neutral rather than forcing a verdict
+// on borderline numbers.
+function mockupStatTier(value, { dir = 'high', good, bad, veryBad } = {}) {
+  if (value == null) return '';
+  if (dir === 'high') {
+    if (veryBad != null && value <= veryBad) return 'verybad';
+    if (bad != null && value <= bad) return 'bad';
+    if (good != null && value >= good) return 'good';
+  } else {
+    if (veryBad != null && value >= veryBad) return 'verybad';
+    if (bad != null && value >= bad) return 'bad';
+    if (good != null && value <= good) return 'good';
+  }
+  return '';
+}
+function mockupFmtNum(x, digits) { return x == null ? 'N/A' : x.toFixed(digits); }
+function mockupFmtPct(x) { return x == null ? 'N/A' : (x * 100).toFixed(1) + '%'; }
+
 fetch('/players.json')
   .then(r => { if (!r.ok) throw new Error(); return r.json(); })
   .then(players => {
@@ -308,13 +354,25 @@ fetch('/players.json')
     const timeStr = p.gameTime
       ? new Date(p.gameTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
       : '';
+    const teamColor = MOCKUP_TEAM_COLORS[p.team] || '#3a4038';
 
     document.getElementById('mockupLabel').textContent = "Today\u2019s board \u2014 a real card, live";
-    // Real MLB headshot, same CDN the main board uses - cropped/zoomed
-    // (not letterboxed) so the face reads clearly at this small size.
-    // Falls back to plain initials if the photo 404s (rookies/recent
-    // call-ups sometimes don't have one yet).
-    document.getElementById('mockupInitials').innerHTML = p.playerId
+
+    // Team-color accent on the card itself and the headshot ring, same
+    // as every real card on the board - was previously always gold
+    // regardless of team, which looked wrong for anyone not on a
+    // gold-branded team.
+    const cardEl = document.getElementById('mockupCard');
+    cardEl.style.borderLeftColor = teamColor;
+    cardEl.style.backgroundImage = `linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%)`;
+    const headshotEl = document.getElementById('mockupInitials');
+    headshotEl.style.background = `linear-gradient(160deg, ${teamColor}, ${teamColor}99)`;
+
+    // Real MLB headshot, same CDN and same object-fit:contain framing
+    // the main board uses (not cropped/zoomed) - falls back to plain
+    // initials if the photo 404s (rookies/recent call-ups sometimes
+    // don't have one yet).
+    headshotEl.innerHTML = p.playerId
       ? `${initials}<img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
       : initials;
     document.getElementById('mockupName').textContent = p.player;
@@ -345,6 +403,27 @@ fetch('/players.json')
         : '';
       return `<div class="mockup-odds-pill">${icon}0.5 ${e.price > 0 ? '+' : ''}${e.price}</div>`;
     }).join('');
+
+    // Full stat grid, same 10 stats and same good/bad/verybad thresholds
+    // as index.html's HR board card - not a partial preview, the whole
+    // real breakdown a subscriber sees.
+    const statItems = [
+      { label: 'Avg vs Mix', display: mockupFmtNum(p.avgmix, 3), tier: mockupStatTier(p.avgmix, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
+      { label: 'Exit Velo', display: mockupFmtNum(p.ev, 1), tier: mockupStatTier(p.ev, { good: 91, bad: 86, veryBad: 83 }) },
+      { label: 'Pitcher HR/9', display: mockupFmtNum(p.phr9, 2), tier: mockupStatTier(p.phr9, { good: 1.3, bad: 0.8, veryBad: 0.5 }) },
+      { label: 'L15 HR', display: p.l15hr == null ? 'N/A' : p.l15hr, tier: mockupStatTier(p.l15hr, { good: 3 }) },
+      { label: 'L5 HR', display: p.l5hr == null ? 'N/A' : p.l5hr, tier: mockupStatTier(p.l5hr, { good: 2 }) },
+      { label: 'Wind', display: (p.wind > 0 ? '+' : '') + p.wind, tier: mockupStatTier(p.wind, { good: 1, bad: -1, veryBad: -2 }) },
+      { label: 'Pitcher WHIP', display: mockupFmtNum(p.whip, 2), tier: mockupStatTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
+      { label: 'Barrel%', display: mockupFmtPct(p.barrel), tier: mockupStatTier(p.barrel, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
+      { label: 'Hard Hit%', display: mockupFmtPct(p.hardhit), tier: mockupStatTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
+      { label: 'Season ISO', display: mockupFmtNum(p.iso, 3), tier: mockupStatTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
+    ];
+    const statsEl = document.getElementById('mockupStats');
+    statsEl.innerHTML = statItems.map(it =>
+      `<div class="mockup-statbox ${it.tier}"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`
+    ).join('');
+    statsEl.style.display = 'grid';
   })
   .catch(() => { /* static example stays as-is */ });
 </script>
