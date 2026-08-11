@@ -46,8 +46,7 @@
   .mockup-odds-pill img{width:13px; height:13px; border-radius:3px;}
 
   .mockup-statboxwrap{display:grid; grid-template-columns:repeat(6,1fr); gap:1px; margin-top:14px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;}
-  .mockup-statbox{background:var(--surface2); padding:12px 6px; text-align:center; grid-column:span 2;}
-  .mockup-statbox.wide{grid-column:span 3;}
+  .mockup-statbox{background:var(--surface2); padding:12px 6px; text-align:center;}
   .mockup-statbox .sblabel{font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;}
   .mockup-statbox .sbval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text);}
   .mockup-statbox.good .sbval{color:var(--stat-good);}
@@ -61,9 +60,15 @@
   .mockup-score .val{font-family:var(--mono); font-weight:700; font-size:25px; color:var(--gold); margin-top:5px; text-shadow:0 0 16px rgba(227,165,72,0.4);}
   .mockup-score .lbl{font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.5px;}
   .mockup-chips{display:flex; gap:6px; flex-wrap:wrap; margin:14px 0;}
-  .mockup-chip{font-family:var(--mono); font-size:9.5px; font-weight:600; padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--muted);}
+  .mockup-chip{font-family:var(--mono); font-size:9.5px; font-weight:600; padding:4px 9px; border-radius:20px; border:1px solid var(--line); color:var(--muted); transition:all .15s ease;}
+  .mockup-chip.chip-platoon{color:#d99bea; border-color:rgba(199,125,214,0.4); background:rgba(199,125,214,0.08);}
+  .mockup-chip.chip-platoon:hover{box-shadow:0 0 12px rgba(199,125,214,0.4); border-color:#d99bea;}
+  .mockup-chip.chip-lineup{color:var(--gold); border-color:rgba(227,165,72,0.35); background:rgba(227,165,72,0.08);}
+  .mockup-chip.chip-lineup:hover{box-shadow:0 0 12px rgba(227,165,72,0.35); border-color:var(--gold);}
+  .mockup-card{transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease; cursor:pointer;}
+  .mockup-card:hover{transform:translateY(-3px); box-shadow:0 12px 28px -8px var(--mockup-glow, rgba(227,165,72,0.5)), 0 4px 10px rgba(0,0,0,0.35);}
   .mockup-chip.value{border-color:var(--stat-good); color:var(--stat-good); font-weight:800; box-shadow:0 0 14px rgba(66,232,150,0.35);}
-  .mockup-odds{background:rgba(66,232,150,0.06); border:1px solid rgba(66,232,150,0.35); border-radius:10px; padding:11px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+  .mockup-odds{background:rgba(66,232,150,0.06); border:1px solid rgba(66,232,150,0.35); border-radius:10px; padding:11px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; box-shadow:0 0 24px rgba(66,232,150,0.35), inset 0 0 20px rgba(66,232,150,0.08);}
   .mockup-odds-pill{font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); background:var(--surface2); border:1px solid var(--line); border-radius:7px; padding:5px 9px;}
   .mockup-caption{text-align:center; font-size:12px; color:var(--muted2); margin-top:14px;}
 
@@ -365,6 +370,7 @@ fetch('/players.json')
     const cardEl = document.getElementById('mockupCard');
     cardEl.style.borderLeftColor = teamColor;
     cardEl.style.backgroundImage = `linear-gradient(115deg, ${teamColor}80 0%, ${teamColor}35 55%, var(--surface2) 100%)`;
+    cardEl.style.setProperty('--mockup-glow', teamColor + '80');
     const headshotEl = document.getElementById('mockupInitials');
     headshotEl.style.background = `linear-gradient(160deg, ${teamColor}, ${teamColor}99)`;
 
@@ -384,10 +390,10 @@ fetch('/players.json')
     // Chips: only real ones, no invented labels. Platoon edge and lineup
     // bonus mirror the same thresholds the real board card uses.
     const chips = [];
-    if (p.platoonPct >= 70) chips.push('platoon edge');
-    if (typeof p.lbonus === 'number') chips.push(`lineup +${p.lbonus}`);
+    if (p.platoonPct >= 70) chips.push({ text: 'platoon edge', cls: 'chip-platoon' });
+    if (typeof p.lbonus === 'number') chips.push({ text: `lineup +${p.lbonus}`, cls: 'chip-lineup' });
     document.getElementById('mockupChips').innerHTML =
-      chips.map(c => `<div class="mockup-chip">${c}</div>`).join('');
+      chips.map(c => `<div class="mockup-chip ${c.cls}">${c.text}</div>`).join('');
 
     // Real sportsbook lines at the 0.5 HR line, with each book's own
     // real favicon (pulled live from Google's public favicon endpoint
@@ -420,9 +426,16 @@ fetch('/players.json')
       { label: 'Season ISO', display: mockupFmtNum(p.iso, 3), tier: mockupStatTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
     ];
     const statsEl = document.getElementById('mockupStats');
-    statsEl.innerHTML = statItems.map(it =>
-      `<div class="mockup-statbox ${it.tier}"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`
-    ).join('');
+    // Same trailing-row stretch logic as index.html's renderStatboxes():
+    // a lone trailing box spans the full row (6/6), two trailing boxes
+    // split it evenly (3/6 each), a full row of 3 needs no change -
+    // without this the last row leaves an empty gap instead of filling it.
+    const trailing = statItems.length % 3;
+    statsEl.innerHTML = statItems.map((it, i) => {
+      const isTrailing = trailing !== 0 && i >= statItems.length - trailing;
+      const span = trailing === 1 && isTrailing ? 6 : (trailing === 2 && isTrailing ? 3 : 2);
+      return `<div class="mockup-statbox ${it.tier}" style="grid-column:span ${span};"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`;
+    }).join('');
     statsEl.style.display = 'grid';
   })
   .catch(() => { /* static example stays as-is */ });
