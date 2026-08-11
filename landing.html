@@ -36,7 +36,10 @@
   .mockup-card-back{position:absolute; top:0; left:14px; right:14px; height:100%; background:var(--surface2); border:1px solid var(--line); border-radius:16px; transform:rotate(-2.5deg); opacity:0.5;}
   .mockup-card{position:relative; background:var(--surface2); border:1px solid rgba(227,165,72,0.5); border-radius:16px; padding:20px; text-align:left; border-left:4px solid var(--gold); background-image:linear-gradient(115deg, #e3a54833 0%, #e3a54812 55%, var(--surface2) 100%); box-shadow:0 16px 36px -10px rgba(227,165,72,0.28), 0 6px 16px rgba(0,0,0,0.45);}
   .mockup-row1{display:flex; align-items:center; gap:12px;}
-  .mockup-headshot{width:54px; height:54px; border-radius:50%; background:linear-gradient(160deg,var(--gold),#e3a54899); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; color:#0a0d0b; font-size:18px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.4);}
+  .mockup-headshot{width:54px; height:54px; border-radius:50%; background:linear-gradient(160deg,var(--gold),#e3a54899); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; color:#0a0d0b; font-size:18px; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.4); position:relative; overflow:hidden;}
+  .mockup-headshot img{position:absolute; width:118%; height:118%; left:-9%; top:-2%; object-fit:cover; object-position:50% 20%;}
+  .mockup-odds-pill{display:inline-flex; align-items:center; gap:5px;}
+  .mockup-odds-pill img{width:13px; height:13px; border-radius:3px;}
   .mockup-info{flex:1; min-width:0;}
   .mockup-name{font-family:var(--body); font-weight:700; font-size:17px;}
   .mockup-meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
@@ -307,7 +310,13 @@ fetch('/players.json')
       : '';
 
     document.getElementById('mockupLabel').textContent = "Today\u2019s board \u2014 a real card, live";
-    document.getElementById('mockupInitials').textContent = initials;
+    // Real MLB headshot, same CDN the main board uses - cropped/zoomed
+    // (not letterboxed) so the face reads clearly at this small size.
+    // Falls back to plain initials if the photo 404s (rookies/recent
+    // call-ups sometimes don't have one yet).
+    document.getElementById('mockupInitials').innerHTML = p.playerId
+      ? `${initials}<img src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
+      : initials;
     document.getElementById('mockupName').textContent = p.player;
     document.getElementById('mockupMeta').textContent =
       `${p.game || ''}${p.pitcher ? ' \u00b7 vs ' + p.pitcher + ' (' + (p.hand || '') + ')' : ''}${timeStr ? ' \u00b7 ' + timeStr : ''}`;
@@ -322,12 +331,20 @@ fetch('/players.json')
     document.getElementById('mockupChips').innerHTML =
       chips.map(c => `<div class="mockup-chip">${c}</div>`).join('');
 
-    // Real sportsbook lines at the 0.5 HR line.
+    // Real sportsbook lines at the 0.5 HR line, with each book's own
+    // real favicon (pulled live from Google's public favicon endpoint
+    // off that book's own domain - same technique the main board uses,
+    // not a reproduced logo). Falls back to plain text if a favicon
+    // fails to load.
     const oddsEntries = p.bookOdds.hr.filter(e => e.line === 0.5 && e.price != null);
-    const bookLabel = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'HRB' };
-    document.getElementById('mockupOdds').innerHTML = oddsEntries.slice(0, 3).map(e =>
-      `<div class="mockup-odds-pill">${bookLabel[e.book] || e.book} 0.5 ${e.price > 0 ? '+' : ''}${e.price}</div>`
-    ).join('');
+    const bookDomain = { draftkings: 'draftkings.com', fanduel: 'fanduel.com', betmgm: 'betmgm.com', hardrockbet: 'hardrock.bet' };
+    document.getElementById('mockupOdds').innerHTML = oddsEntries.slice(0, 4).map(e => {
+      const domain = bookDomain[e.book];
+      const icon = domain
+        ? `<img src="https://www.google.com/s2/favicons?domain=${domain}&sz=64" onerror="this.style.display='none'">`
+        : '';
+      return `<div class="mockup-odds-pill">${icon}0.5 ${e.price > 0 ? '+' : ''}${e.price}</div>`;
+    }).join('');
   })
   .catch(() => { /* static example stays as-is */ });
 </script>
