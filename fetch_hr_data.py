@@ -1334,21 +1334,41 @@ def compute_hr_subfactors(p):
     iso_season = iso * pw + LEAGUE_AVG_ISO * (1 - pw)
     hardhit_season = hardhit * pw + LEAGUE_AVG_HARDHIT * (1 - pw)
 
+    # v3.14: L15 weight now EARNS ITSELF with real sample size instead of
+    # snapping straight to full POWER_L15_WEIGHT the instant a hitter
+    # clears the old flat POWER_L15_MIN_PA/L15_ISO_MIN_PA cutoffs. 15-30
+    # PA is a tiny window - two or three well-struck balls can swing
+    # barrel%/hard-hit% wildly and make a short hot stretch look like an
+    # elite established profile when it's really just noise. This uses
+    # the same pa/(pa+K) shrinkage pattern already used everywhere else
+    # in this file (power_sample_weight, pitcher_sample_weight) so L15
+    # only approaches its full weight with a genuinely substantial
+    # recent sample, and stays heavily discounted right after clearing
+    # the minimum-PA gate.
+    L15_SHRINK_K = 35
+
+    def l15_weight(sample_pa, min_pa):
+        if not sample_pa or sample_pa < min_pa:
+            return 0.0
+        return POWER_L15_WEIGHT * (sample_pa / (sample_pa + L15_SHRINK_K))
+
     l15_barrel = p.get("l15Barrel")
     l15_ev = p.get("l15Ev")
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
-    if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
-        barrel_final = l15_barrel * POWER_L15_WEIGHT + barrel_season * (1 - POWER_L15_WEIGHT)
-        ev_final = l15_ev * POWER_L15_WEIGHT + ev_season * (1 - POWER_L15_WEIGHT)
-        hardhit_final = l15_hardhit * POWER_L15_WEIGHT + hardhit_season * (1 - POWER_L15_WEIGHT)
+    lw = l15_weight(l15_pa, POWER_L15_MIN_PA)
+    if l15_barrel is not None and lw > 0:
+        barrel_final = l15_barrel * lw + barrel_season * (1 - lw)
+        ev_final = l15_ev * lw + ev_season * (1 - lw)
+        hardhit_final = l15_hardhit * lw + hardhit_season * (1 - lw)
     else:
         barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
 
     l15_iso = p.get("l15Iso")
     l15_iso_pa = p.get("l15IsoPa") or 0
-    if l15_iso is not None and l15_iso_pa >= L15_ISO_MIN_PA:
-        iso_final = l15_iso * POWER_L15_WEIGHT + iso_season * (1 - POWER_L15_WEIGHT)
+    iso_lw = l15_weight(l15_iso_pa, L15_ISO_MIN_PA)
+    if l15_iso is not None and iso_lw > 0:
+        iso_final = l15_iso * iso_lw + iso_season * (1 - iso_lw)
     else:
         iso_final = iso_season
 
