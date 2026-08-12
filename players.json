@@ -8,7 +8,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -414,7 +414,7 @@
     "tbMatchupPct": 50.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 28.0,
+    "hrProb": 27.2,
     "hrrProb": 52.0,
     "tbProb": 45.4,
     "bookOdds": {
@@ -1228,7 +1228,7 @@
     "tbMatchupPct": 57.8,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 27.5,
+    "hrProb": 26.8,
     "hrrProb": 58.0,
     "tbProb": 53.0,
     "bookOdds": {
@@ -2042,7 +2042,7 @@
     "tbMatchupPct": 47.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 28.3,
+    "hrProb": 27.7,
     "hrrProb": 55.0,
     "tbProb": 50.6,
     "bookOdds": {
@@ -2855,7 +2855,7 @@
     "tbMatchupPct": 57.9,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.9,
+    "hrProb": 16.0,
     "hrrProb": 54.9,
     "tbProb": 49.3,
     "bookOdds": {
@@ -3627,7 +3627,7 @@
     "tbMatchupPct": 36.0,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 27.4,
+    "hrProb": 26.7,
     "hrrProb": 55.9,
     "tbProb": 47.4,
     "bookOdds": {
@@ -4441,7 +4441,7 @@
     "tbMatchupPct": 76.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.7,
+    "hrProb": 14.1,
     "hrrProb": 81.3,
     "tbProb": 60.2,
     "bookOdds": {
@@ -5213,7 +5213,7 @@
     "tbMatchupPct": 51.9,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 19.7,
+    "hrProb": 16.3,
     "hrrProb": 53.5,
     "tbProb": 36.4,
     "bookOdds": {
@@ -5992,7 +5992,7 @@
     "tbMatchupPct": 51.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 19.6,
+    "hrProb": 18.3,
     "hrrProb": 55.9,
     "tbProb": 46.7,
     "bookOdds": {
@@ -6813,7 +6813,7 @@
     "tbMatchupPct": 74.8,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 17.5,
+    "hrProb": 15.9,
     "hrrProb": 87.3,
     "tbProb": 80.4,
     "bookOdds": {
@@ -7634,7 +7634,7 @@
     "tbMatchupPct": 60.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 23.8,
+    "hrProb": 22.3,
     "hrrProb": 58.9,
     "tbProb": 52.2,
     "bookOdds": {
@@ -8427,7 +8427,7 @@
     "tbMatchupPct": 53.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 23.6,
+    "hrProb": 22.3,
     "hrrProb": 59.1,
     "tbProb": 44.6,
     "bookOdds": {
@@ -9199,7 +9199,7 @@
     "tbMatchupPct": 70.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.9,
+    "hrProb": 11.5,
     "hrrProb": 81.3,
     "tbProb": 59.4,
     "bookOdds": {
@@ -10020,7 +10020,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.1,
+    "hrProb": 14.6,
     "hrrProb": 53.4,
     "tbProb": 38.4,
     "bookOdds": {
@@ -10834,7 +10834,7 @@
     "tbMatchupPct": 49.1,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 19.6,
+    "hrProb": 18.8,
     "hrrProb": 60.5,
     "tbProb": 48.7,
     "bookOdds": {
@@ -11648,7 +11648,7 @@
     "tbMatchupPct": 49.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.8,
+    "hrProb": 17.2,
     "hrrProb": 60.5,
     "tbProb": 48.8,
     "bookOdds": {
@@ -12441,7 +12441,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 21.1,
+    "hrProb": 19.1,
     "hrrProb": 57.3,
     "tbProb": 48.2,
     "bookOdds": {
@@ -13255,7 +13255,7 @@
     "tbMatchupPct": 53.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.9,
+    "hrProb": 11.6,
     "hrrProb": 52.5,
     "tbProb": 40.6,
     "bookOdds": {
@@ -14012,7 +14012,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.5,
+    "hrProb": 12.8,
     "hrrProb": 58.7,
     "tbProb": 42.2,
     "bookOdds": {
@@ -14777,7 +14777,7 @@
     "tbMatchupPct": 54.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 23.4,
+    "hrProb": 22.6,
     "hrrProb": 50.3,
     "tbProb": 41.7,
     "bookOdds": {
@@ -15598,7 +15598,7 @@
     "tbMatchupPct": 54.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.4,
+    "hrProb": 17.3,
     "hrrProb": 53.8,
     "tbProb": 42.0,
     "bookOdds": {
@@ -16370,7 +16370,7 @@
     "tbMatchupPct": 54.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 24.9,
+    "hrProb": 24.4,
     "hrrProb": 53.2,
     "tbProb": 38.2,
     "bookOdds": {
@@ -17170,7 +17170,7 @@
     "tbMatchupPct": 52.4,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.7,
+    "hrProb": 15.5,
     "hrrProb": 51.9,
     "tbProb": 35.2,
     "bookOdds": {
@@ -17942,7 +17942,7 @@
     "tbMatchupPct": 29.2,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.8,
+    "hrProb": 12.7,
     "hrrProb": 44.9,
     "tbProb": 35.9,
     "bookOdds": {
@@ -18749,7 +18749,7 @@
     "tbMatchupPct": 28.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.2,
+    "hrProb": 15.5,
     "hrrProb": 40.0,
     "tbProb": 33.5,
     "bookOdds": {
@@ -19528,7 +19528,7 @@
     "tbMatchupPct": 52.8,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.2,
+    "hrProb": 15.9,
     "hrrProb": 57.4,
     "tbProb": 47.4,
     "bookOdds": {
@@ -19943,7 +19943,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -20349,7 +20349,7 @@
     "tbMatchupPct": 43.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 16.5,
+    "hrProb": 13.9,
     "hrrProb": 51.3,
     "tbProb": 34.2,
     "bookOdds": {
@@ -21156,7 +21156,7 @@
     "tbMatchupPct": 56.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 17.7,
+    "hrProb": 16.1,
     "hrrProb": 51.1,
     "tbProb": 37.3,
     "bookOdds": {
@@ -21963,7 +21963,7 @@
     "tbMatchupPct": 43.1,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 20.6,
+    "hrProb": 18.9,
     "hrrProb": 58.8,
     "tbProb": 49.0,
     "bookOdds": {
@@ -22756,7 +22756,7 @@
     "tbMatchupPct": 23.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.9,
+    "hrProb": 15.3,
     "hrrProb": 40.3,
     "tbProb": 31.6,
     "bookOdds": {
@@ -23122,7 +23122,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -23528,7 +23528,7 @@
     "tbMatchupPct": 45.8,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.4,
+    "hrProb": 13.3,
     "hrrProb": 44.3,
     "tbProb": 28.5,
     "bookOdds": {
@@ -24342,7 +24342,7 @@
     "tbMatchupPct": 61.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.3,
+    "hrProb": 8.0,
     "hrrProb": 64.5,
     "tbProb": 45.5,
     "bookOdds": {
@@ -25149,7 +25149,7 @@
     "tbMatchupPct": 56.6,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 14.4,
+    "hrProb": 12.3,
     "hrrProb": 55.2,
     "tbProb": 32.9
   },
@@ -25568,7 +25568,7 @@
     "tbMatchupPct": 46.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 20.0,
+    "hrProb": 18.5,
     "hrrProb": 60.8,
     "tbProb": 44.4,
     "bookOdds": {
@@ -26333,7 +26333,7 @@
     "tbMatchupPct": 49.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 16.9,
+    "hrProb": 14.7,
     "hrrProb": 51.9,
     "tbProb": 35.3,
     "bookOdds": {
@@ -27105,7 +27105,7 @@
     "tbMatchupPct": 53.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 15.1,
+    "hrProb": 13.7,
     "hrrProb": 48.8,
     "tbProb": 43.0,
     "bookOdds": {
@@ -27884,7 +27884,7 @@
     "tbMatchupPct": 36.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 14.9,
+    "hrProb": 13.0,
     "hrrProb": 46.4,
     "tbProb": 39.0,
     "bookOdds": {
@@ -28656,7 +28656,7 @@
     "tbMatchupPct": 54.5,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.1,
+    "hrProb": 16.4,
     "hrrProb": 59.2,
     "tbProb": 46.8,
     "bookOdds": {
@@ -29435,7 +29435,7 @@
     "tbMatchupPct": 37.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.2,
+    "hrProb": 16.9,
     "hrrProb": 46.9,
     "tbProb": 38.0,
     "bookOdds": {
@@ -30242,7 +30242,7 @@
     "tbMatchupPct": 51.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 15.3,
+    "hrProb": 13.2,
     "hrrProb": 54.4,
     "tbProb": 33.9
   },
@@ -30661,7 +30661,7 @@
     "tbMatchupPct": 57.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.9,
+    "hrProb": 10.6,
     "hrrProb": 53.6,
     "tbProb": 34.2,
     "bookOdds": {
@@ -31468,7 +31468,7 @@
     "tbMatchupPct": 65.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.4,
+    "hrProb": 9.0,
     "hrrProb": 54.4,
     "tbProb": 40.5,
     "bookOdds": {
@@ -32226,7 +32226,7 @@
     "tbMatchupPct": 42.4,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 18.0,
+    "hrProb": 16.8,
     "hrrProb": 57.2,
     "tbProb": 42.3,
     "bookOdds": {
@@ -33047,7 +33047,7 @@
     "tbMatchupPct": 47.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.0,
+    "hrProb": 12.5,
     "hrrProb": 52.5,
     "tbProb": 43.8,
     "bookOdds": {
@@ -33889,7 +33889,7 @@
     "tbMatchupPct": 26.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.1,
+    "hrProb": 16.9,
     "hrrProb": 49.3,
     "tbProb": 41.0
   },
@@ -34308,7 +34308,7 @@
     "tbMatchupPct": 49.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 20.6,
+    "hrProb": 19.2,
     "hrrProb": 52.8,
     "tbProb": 39.6,
     "bookOdds": {
@@ -35073,7 +35073,7 @@
     "tbMatchupPct": 53.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 19.7,
+    "hrProb": 19.0,
     "hrrProb": 59.1,
     "tbProb": 46.2,
     "bookOdds": {
@@ -35852,7 +35852,7 @@
     "tbMatchupPct": 35.0,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.7,
+    "hrProb": 11.2,
     "hrrProb": 47.5,
     "tbProb": 33.0,
     "bookOdds": {
@@ -36666,7 +36666,7 @@
     "tbMatchupPct": 52.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.1,
+    "hrProb": 17.3,
     "hrrProb": 58.0,
     "tbProb": 36.8,
     "bookOdds": {
@@ -37445,7 +37445,7 @@
     "tbMatchupPct": 47.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.7,
+    "hrProb": 8.8,
     "hrrProb": 51.5,
     "tbProb": 42.5,
     "bookOdds": {
@@ -38280,7 +38280,7 @@
     "tbMatchupPct": 47.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 13.0,
+    "hrProb": 11.9,
     "hrrProb": 45.4,
     "tbProb": 39.3,
     "bookOdds": {
@@ -39038,7 +39038,7 @@
     "tbMatchupPct": 34.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.1,
+    "hrProb": 10.1,
     "hrrProb": 47.4,
     "tbProb": 43.2,
     "bookOdds": {
@@ -39873,7 +39873,7 @@
     "tbMatchupPct": 37.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.6,
+    "hrProb": 14.1,
     "hrrProb": 39.3,
     "tbProb": 37.5,
     "bookOdds": {
@@ -40694,7 +40694,7 @@
     "tbMatchupPct": 51.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 11.6,
+    "hrProb": 9.3,
     "hrrProb": 51.9,
     "tbProb": 37.8,
     "bookOdds": {
@@ -41466,7 +41466,7 @@
     "tbMatchupPct": 56.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.9,
+    "hrProb": 14.8,
     "hrrProb": 53.4,
     "tbProb": 39.6,
     "bookOdds": {
@@ -42238,7 +42238,7 @@
     "tbMatchupPct": 51.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.4,
+    "hrProb": 7.0,
     "hrrProb": 58.5,
     "tbProb": 42.5,
     "bookOdds": {
@@ -42996,7 +42996,7 @@
     "tbMatchupPct": 47.5,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.8,
+    "hrProb": 14.6,
     "hrrProb": 61.9,
     "tbProb": 45.2,
     "bookOdds": {
@@ -43775,7 +43775,7 @@
     "tbMatchupPct": 54.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 12.9,
+    "hrProb": 10.7,
     "hrrProb": 54.4,
     "tbProb": 38.8,
     "bookOdds": {
@@ -44533,7 +44533,7 @@
     "tbMatchupPct": 60.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.9,
+    "hrProb": 7.3,
     "hrrProb": 62.1,
     "tbProb": 48.4,
     "bookOdds": {
@@ -45368,7 +45368,7 @@
     "tbMatchupPct": 60.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.5,
+    "hrProb": 11.5,
     "hrrProb": 61.0,
     "tbProb": 41.2,
     "bookOdds": {
@@ -46161,7 +46161,7 @@
     "tbMatchupPct": 42.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 17.3,
+    "hrProb": 15.8,
     "hrrProb": 45.9,
     "tbProb": 35.9,
     "bookOdds": {
@@ -46912,7 +46912,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 14.9,
+    "hrProb": 13.4,
     "hrrProb": 52.9,
     "tbProb": 47.7,
     "bookOdds": {
@@ -47712,7 +47712,7 @@
     "tbMatchupPct": 26.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.8,
+    "hrProb": 9.9,
     "hrrProb": 45.7,
     "tbProb": 29.1,
     "bookOdds": {
@@ -48470,7 +48470,7 @@
     "tbMatchupPct": 24.6,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 13.5,
+    "hrProb": 12.2,
     "hrrProb": 33.7,
     "tbProb": 24.7,
     "bookOdds": {
@@ -48829,7 +48829,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -49222,7 +49222,7 @@
     "tbMatchupPct": 45.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 14.2,
+    "hrProb": 11.6,
     "hrrProb": 49.7,
     "tbProb": 39.7,
     "bookOdds": {
@@ -49924,7 +49924,7 @@
     "tbMatchupPct": 61.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.4,
+    "hrProb": 15.5,
     "hrrProb": 61.2,
     "tbProb": 42.2,
     "bookOdds": {
@@ -50318,7 +50318,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -50724,7 +50724,7 @@
     "tbMatchupPct": 46.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 11.7,
+    "hrProb": 10.5,
     "hrrProb": 44.3,
     "tbProb": 35.8,
     "bookOdds": {
@@ -51510,7 +51510,7 @@
     "tbMatchupPct": 50.8,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.4,
+    "hrProb": 8.6,
     "hrrProb": 56.2,
     "tbProb": 39.8,
     "bookOdds": {
@@ -52282,7 +52282,7 @@
     "tbMatchupPct": 55.1,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.5,
+    "hrProb": 9.6,
     "hrrProb": 61.9,
     "tbProb": 42.7
   },
@@ -52701,7 +52701,7 @@
     "tbMatchupPct": 51.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.5,
+    "hrProb": 14.4,
     "hrrProb": 44.5,
     "tbProb": 35.7,
     "bookOdds": {
@@ -53473,7 +53473,7 @@
     "tbMatchupPct": 50.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.7,
+    "hrProb": 8.0,
     "hrrProb": 54.4,
     "tbProb": 38.3,
     "bookOdds": {
@@ -54231,7 +54231,7 @@
     "tbMatchupPct": 54.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.7,
+    "hrProb": 7.5,
     "hrrProb": 53.2,
     "tbProb": 38.6,
     "bookOdds": {
@@ -54989,7 +54989,7 @@
     "tbMatchupPct": 56.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 10.6,
+    "hrProb": 8.4,
     "hrrProb": 50.9,
     "tbProb": 36.8,
     "bookOdds": {
@@ -55747,7 +55747,7 @@
     "tbMatchupPct": 54.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.1,
+    "hrProb": 8.4,
     "hrrProb": 55.8,
     "tbProb": 33.3,
     "bookOdds": {
@@ -56099,7 +56099,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -56505,7 +56505,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.4,
+    "hrProb": 8.3,
     "hrrProb": 55.0,
     "tbProb": 39.5,
     "bookOdds": {
@@ -57326,7 +57326,7 @@
     "tbMatchupPct": 53.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.6,
+    "hrProb": 6.3,
     "hrrProb": 57.5,
     "tbProb": 41.1,
     "bookOdds": {
@@ -58118,7 +58118,7 @@
     "tbMatchupPct": 52.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.8,
+    "hrProb": 8.6,
     "hrrProb": 60.1,
     "tbProb": 44.8,
     "bookOdds": {
@@ -58911,7 +58911,7 @@
     "tbMatchupPct": 32.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.3,
+    "hrProb": 10.4,
     "hrrProb": 45.6,
     "tbProb": 35.2,
     "bookOdds": {
@@ -59717,7 +59717,7 @@
     "tbMatchupPct": 58.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.5,
+    "hrProb": 7.2,
     "hrrProb": 54.7,
     "tbProb": 33.7,
     "bookOdds": {
@@ -60509,7 +60509,7 @@
     "tbMatchupPct": 26.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 13.1,
+    "hrProb": 10.4,
     "hrrProb": 43.7,
     "tbProb": 31.1,
     "bookOdds": {
@@ -61294,7 +61294,7 @@
     "tbMatchupPct": 57.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.6,
+    "hrProb": 9.4,
     "hrrProb": 55.2,
     "tbProb": 35.9,
     "bookOdds": {
@@ -62087,7 +62087,7 @@
     "tbMatchupPct": 76.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.9,
+    "hrProb": 6.4,
     "hrrProb": 78.7,
     "tbProb": 51.9,
     "bookOdds": {
@@ -62901,7 +62901,7 @@
     "tbMatchupPct": 57.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 14.4,
+    "hrProb": 13.2,
     "hrrProb": 62.1,
     "tbProb": 43.2,
     "bookOdds": {
@@ -63694,7 +63694,7 @@
     "tbMatchupPct": 46.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 16.5,
+    "hrProb": 15.4,
     "hrrProb": 44.5,
     "tbProb": 33.9,
     "bookOdds": {
@@ -64466,7 +64466,7 @@
     "tbMatchupPct": 41.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.6,
+    "hrProb": 7.8,
     "hrrProb": 48.2,
     "tbProb": 28.1,
     "bookOdds": {
@@ -65273,7 +65273,7 @@
     "tbMatchupPct": 60.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 12.2,
+    "hrProb": 9.9,
     "hrrProb": 53.9,
     "tbProb": 36.6,
     "bookOdds": {
@@ -66080,7 +66080,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.3,
+    "hrProb": 3.4,
     "hrrProb": 49.1,
     "tbProb": 31.2,
     "bookOdds": {
@@ -66852,7 +66852,7 @@
     "tbMatchupPct": 45.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.9,
+    "hrProb": 10.1,
     "hrrProb": 51.9,
     "tbProb": 29.8,
     "bookOdds": {
@@ -67652,7 +67652,7 @@
     "tbMatchupPct": 50.0,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.8,
+    "hrProb": 8.5,
     "hrrProb": 53.4,
     "tbProb": 38.5,
     "bookOdds": {
@@ -68417,7 +68417,7 @@
     "tbMatchupPct": 55.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.9,
+    "hrProb": 8.5,
     "hrrProb": 53.4,
     "tbProb": 29.6,
     "bookOdds": {
@@ -68978,7 +68978,7 @@
     "tbMatchupPct": 29.1,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 11.8,
+    "hrProb": 10.0,
     "hrrProb": 41.7,
     "tbProb": 26.1,
     "bookOdds": {
@@ -69337,7 +69337,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -69743,7 +69743,7 @@
     "tbMatchupPct": 47.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.0,
+    "hrProb": 13.4,
     "hrrProb": 50.6,
     "tbProb": 36.9,
     "bookOdds": {
@@ -70550,7 +70550,7 @@
     "tbMatchupPct": 38.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 7.9,
+    "hrProb": 6.3,
     "hrrProb": 42.7,
     "tbProb": 36.3,
     "bookOdds": {
@@ -71364,7 +71364,7 @@
     "tbMatchupPct": 72.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.9,
+    "hrProb": 5.7,
     "hrrProb": 71.3,
     "tbProb": 54.7,
     "bookOdds": {
@@ -71765,7 +71765,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -72171,7 +72171,7 @@
     "tbMatchupPct": 52.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.5,
+    "hrProb": 7.0,
     "hrrProb": 49.3,
     "tbProb": 30.3,
     "bookOdds": {
@@ -72957,7 +72957,7 @@
     "tbMatchupPct": 50.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 11.3,
+    "hrProb": 10.2,
     "hrrProb": 43.3,
     "tbProb": 29.0,
     "bookOdds": {
@@ -73749,7 +73749,7 @@
     "tbMatchupPct": 29.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.3,
+    "hrProb": 6.7,
     "hrrProb": 38.1,
     "tbProb": 27.7,
     "bookOdds": {
@@ -74549,7 +74549,7 @@
     "tbMatchupPct": 39.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 13.2,
+    "hrProb": 11.9,
     "hrrProb": 44.1,
     "tbProb": 38.0,
     "bookOdds": {
@@ -75355,7 +75355,7 @@
     "tbMatchupPct": 57.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.3,
+    "hrProb": 7.9,
     "hrrProb": 53.2,
     "tbProb": 32.7,
     "bookOdds": {
@@ -75707,7 +75707,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -76113,7 +76113,7 @@
     "tbMatchupPct": 49.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.9,
+    "hrProb": 8.5,
     "hrrProb": 52.2,
     "tbProb": 33.2,
     "bookOdds": {
@@ -76898,7 +76898,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 11.4,
+    "hrProb": 9.2,
     "hrrProb": 52.5,
     "tbProb": 37.0,
     "bookOdds": {
@@ -77530,7 +77530,7 @@
     "tbMatchupPct": 59.4,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.0,
+    "hrProb": 7.4,
     "hrrProb": 53.6,
     "tbProb": 37.9,
     "bookOdds": {
@@ -78288,7 +78288,7 @@
     "tbMatchupPct": 58.4,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 13.4,
+    "hrProb": 12.5,
     "hrrProb": 50.6,
     "tbProb": 34.8,
     "bookOdds": {
@@ -79046,7 +79046,7 @@
     "tbMatchupPct": 50.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.5,
+    "hrProb": 12.0,
     "hrrProb": 50.5,
     "tbProb": 40.2,
     "bookOdds": {
@@ -79839,7 +79839,7 @@
     "tbMatchupPct": 39.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.0,
+    "hrProb": 15.5,
     "hrrProb": 49.8,
     "tbProb": 40.2,
     "bookOdds": {
@@ -80618,7 +80618,7 @@
     "tbMatchupPct": 63.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 10.6,
+    "hrProb": 10.0,
     "hrrProb": 61.8,
     "tbProb": 42.5,
     "bookOdds": {
@@ -81368,7 +81368,7 @@
     "tbMatchupPct": 20.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 13.1,
+    "hrProb": 10.5,
     "hrrProb": 42.4,
     "tbProb": 34.1,
     "bookOdds": {
@@ -82126,7 +82126,7 @@
     "tbMatchupPct": 52.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.1,
+    "hrProb": 6.0,
     "hrrProb": 52.1,
     "tbProb": 41.0,
     "bookOdds": {
@@ -82884,7 +82884,7 @@
     "tbMatchupPct": 28.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.1,
+    "hrProb": 7.2,
     "hrrProb": 41.7,
     "tbProb": 31.2,
     "bookOdds": {
@@ -83642,7 +83642,7 @@
     "tbMatchupPct": 51.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 11.1,
+    "hrProb": 9.2,
     "hrrProb": 51.7,
     "tbProb": 37.7,
     "bookOdds": {
@@ -84442,7 +84442,7 @@
     "tbMatchupPct": 55.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 11.4,
+    "hrProb": 9.4,
     "hrrProb": 52.6,
     "tbProb": 34.7,
     "bookOdds": {
@@ -85104,7 +85104,7 @@
     "tbMatchupPct": 30.8,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.5,
+    "hrProb": 7.1,
     "hrrProb": 45.8,
     "tbProb": 27.4,
     "bookOdds": {
@@ -85862,7 +85862,7 @@
     "tbMatchupPct": 32.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 13.3,
+    "hrProb": 12.6,
     "hrrProb": 41.5,
     "tbProb": 30.3,
     "bookOdds": {
@@ -86655,7 +86655,7 @@
     "tbMatchupPct": 54.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 11.6,
+    "hrProb": 9.3,
     "hrrProb": 48.2,
     "tbProb": 28.1,
     "bookOdds": {
@@ -87406,7 +87406,7 @@
     "tbMatchupPct": 44.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 10.0,
+    "hrProb": 8.6,
     "hrrProb": 50.6,
     "tbProb": 31.9,
     "bookOdds": {
@@ -88206,7 +88206,7 @@
     "tbMatchupPct": 61.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 6.1,
+    "hrProb": 5.7,
     "hrrProb": 52.9,
     "tbProb": 38.2,
     "bookOdds": {
@@ -88963,7 +88963,7 @@
     "tbMatchupPct": 42.0,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.2,
+    "hrProb": 13.7,
     "hrrProb": 54.0,
     "tbProb": 40.8,
     "bookOdds": {
@@ -89728,7 +89728,7 @@
     "tbMatchupPct": 49.9,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 3.1,
+    "hrProb": 2.7,
     "hrrProb": 42.4,
     "tbProb": 28.1,
     "bookOdds": {
@@ -90486,7 +90486,7 @@
     "tbMatchupPct": 40.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.0,
+    "hrProb": 6.6,
     "hrrProb": 46.1,
     "tbProb": 36.9,
     "bookOdds": {
@@ -91251,7 +91251,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 11.4,
+    "hrProb": 9.3,
     "hrrProb": 46.1,
     "tbProb": 31.6,
     "bookOdds": {
@@ -92044,7 +92044,7 @@
     "tbMatchupPct": 53.2,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.4,
+    "hrProb": 6.9,
     "hrrProb": 50.9,
     "tbProb": 30.8,
     "bookOdds": {
@@ -92724,7 +92724,7 @@
     "tbMatchupPct": 53.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.2,
+    "hrProb": 7.7,
     "hrrProb": 53.6,
     "tbProb": 33.0,
     "bookOdds": {
@@ -93370,7 +93370,7 @@
     "tbMatchupPct": 63.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 10.5,
+    "hrProb": 8.6,
     "hrrProb": 51.7,
     "tbProb": 32.4,
     "bookOdds": {
@@ -94135,7 +94135,7 @@
     "tbMatchupPct": 21.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 10.3,
+    "hrProb": 8.8,
     "hrrProb": 44.3,
     "tbProb": 30.4,
     "bookOdds": {
@@ -94942,7 +94942,7 @@
     "tbMatchupPct": 53.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 11.7,
+    "hrProb": 9.6,
     "hrrProb": 53.9,
     "tbProb": 32.4
   },
@@ -95361,7 +95361,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 11.5,
+    "hrProb": 10.6,
     "hrrProb": 51.8,
     "tbProb": 38.2,
     "bookOdds": {
@@ -96133,7 +96133,7 @@
     "tbMatchupPct": 47.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 11.3,
+    "hrProb": 9.5,
     "hrrProb": 52.7,
     "tbProb": 32.0,
     "bookOdds": {
@@ -96891,7 +96891,7 @@
     "tbMatchupPct": 77.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.3,
+    "hrProb": 6.6,
     "hrrProb": 86.3,
     "tbProb": 49.3,
     "bookOdds": {
@@ -97691,7 +97691,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.0,
+    "hrProb": 7.8,
     "hrrProb": 50.1,
     "tbProb": 31.1,
     "bookOdds": {
@@ -98344,7 +98344,7 @@
     "tbMatchupPct": 48.1,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 6.1,
+    "hrProb": 5.1,
     "hrrProb": 42.6,
     "tbProb": 33.0,
     "bookOdds": {
@@ -99186,7 +99186,7 @@
     "tbMatchupPct": 53.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 5.2,
+    "hrProb": 3.9,
     "hrrProb": 49.3,
     "tbProb": 32.8,
     "bookOdds": {
@@ -99993,7 +99993,7 @@
     "tbMatchupPct": 55.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.7,
+    "hrProb": 7.2,
     "hrrProb": 57.0,
     "tbProb": 34.6,
     "bookOdds": {
@@ -100751,7 +100751,7 @@
     "tbMatchupPct": 38.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.8,
+    "hrProb": 3.6,
     "hrrProb": 47.3,
     "tbProb": 36.9,
     "bookOdds": {
@@ -101565,7 +101565,7 @@
     "tbMatchupPct": 54.8,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.1,
+    "hrProb": 8.0,
     "hrrProb": 58.5,
     "tbProb": 39.8,
     "bookOdds": {
@@ -102316,7 +102316,7 @@
     "tbMatchupPct": 48.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.3,
+    "hrProb": 7.5,
     "hrrProb": 51.7,
     "tbProb": 37.4,
     "bookOdds": {
@@ -103074,7 +103074,7 @@
     "tbMatchupPct": 39.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.6,
+    "hrProb": 8.9,
     "hrrProb": 54.2,
     "tbProb": 38.3,
     "bookOdds": {
@@ -103888,7 +103888,7 @@
     "tbMatchupPct": 41.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.7,
+    "hrProb": 7.0,
     "hrrProb": 47.6,
     "tbProb": 27.2,
     "bookOdds": {
@@ -104646,7 +104646,7 @@
     "tbMatchupPct": 49.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 7.7,
+    "hrProb": 6.4,
     "hrrProb": 52.3,
     "tbProb": 37.5,
     "bookOdds": {
@@ -105033,7 +105033,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -105439,7 +105439,7 @@
     "tbMatchupPct": 49.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.8,
+    "hrProb": 9.1,
     "hrrProb": 52.6,
     "tbProb": 35.7,
     "bookOdds": {
@@ -106239,7 +106239,7 @@
     "tbMatchupPct": 49.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.0,
+    "hrProb": 7.2,
     "hrrProb": 51.8,
     "tbProb": 35.1
   },
@@ -106658,7 +106658,7 @@
     "tbMatchupPct": 53.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.5,
+    "hrProb": 9.1,
     "hrrProb": 51.8,
     "tbProb": 27.2,
     "bookOdds": {
@@ -107423,7 +107423,7 @@
     "tbMatchupPct": 45.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 12.9,
+    "hrProb": 12.2,
     "hrrProb": 46.5,
     "tbProb": 27.7,
     "bookOdds": {
@@ -108208,7 +108208,7 @@
     "tbMatchupPct": 40.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.3,
+    "hrProb": 6.8,
     "hrrProb": 50.7,
     "tbProb": 32.0,
     "bookOdds": {
@@ -108560,7 +108560,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -108966,7 +108966,7 @@
     "tbMatchupPct": 49.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 10.4,
+    "hrProb": 8.5,
     "hrrProb": 51.3,
     "tbProb": 30.6,
     "bookOdds": {
@@ -109752,7 +109752,7 @@
     "tbMatchupPct": 40.6,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.1,
+    "hrProb": 7.3,
     "hrrProb": 48.6,
     "tbProb": 41.3,
     "bookOdds": {
@@ -110552,7 +110552,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.0,
+    "hrProb": 6.4,
     "hrrProb": 50.1,
     "tbProb": 37.3,
     "bookOdds": {
@@ -111317,7 +111317,7 @@
     "tbMatchupPct": 46.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 11.1,
+    "hrProb": 8.9,
     "hrrProb": 48.2,
     "tbProb": 29.5,
     "bookOdds": {
@@ -111747,7 +111747,7 @@
     "tbMatchupPct": 49.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 4.2,
+    "hrProb": 3.3,
     "hrrProb": 62.1,
     "tbProb": 41.9,
     "bookOdds": {
@@ -112547,7 +112547,7 @@
     "tbMatchupPct": 39.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.0,
+    "hrProb": 7.0,
     "hrrProb": 47.6,
     "tbProb": 32.1,
     "bookOdds": {
@@ -113297,7 +113297,7 @@
     "tbMatchupPct": 62.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.3,
+    "hrProb": 2.2,
     "hrrProb": 51.2,
     "tbProb": 36.6
   },
@@ -113716,7 +113716,7 @@
     "tbMatchupPct": 37.7,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.2,
+    "hrProb": 5.4,
     "hrrProb": 44.8,
     "tbProb": 29.6,
     "bookOdds": {
@@ -114523,7 +114523,7 @@
     "tbMatchupPct": 32.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 7.3,
+    "hrProb": 6.3,
     "hrrProb": 52.7,
     "tbProb": 40.6,
     "bookOdds": {
@@ -115288,7 +115288,7 @@
     "tbMatchupPct": 49.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.0,
+    "hrProb": 3.7,
     "hrrProb": 44.5,
     "tbProb": 33.0,
     "bookOdds": {
@@ -116046,7 +116046,7 @@
     "tbMatchupPct": 55.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.7,
+    "hrProb": 8.0,
     "hrrProb": 51.8,
     "tbProb": 29.8,
     "bookOdds": {
@@ -116797,7 +116797,7 @@
     "tbMatchupPct": 42.8,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.5,
+    "hrProb": 7.0,
     "hrrProb": 49.5,
     "tbProb": 32.4,
     "bookOdds": {
@@ -117163,7 +117163,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -117569,7 +117569,7 @@
     "tbMatchupPct": 48.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.7,
+    "hrProb": 6.2,
     "hrrProb": 49.7,
     "tbProb": 30.3,
     "bookOdds": {
@@ -118355,7 +118355,7 @@
     "tbMatchupPct": 30.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 11.3,
+    "hrProb": 10.2,
     "hrrProb": 44.4,
     "tbProb": 35.0,
     "bookOdds": {
@@ -119148,7 +119148,7 @@
     "tbMatchupPct": 49.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.2,
+    "hrProb": 8.5,
     "hrrProb": 49.6,
     "tbProb": 27.1,
     "bookOdds": {
@@ -119913,7 +119913,7 @@
     "tbMatchupPct": 31.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.5,
+    "hrProb": 6.5,
     "hrrProb": 41.0,
     "tbProb": 34.7,
     "bookOdds": {
@@ -120727,7 +120727,7 @@
     "tbMatchupPct": 51.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.8,
+    "hrProb": 6.0,
     "hrrProb": 50.7,
     "tbProb": 30.5,
     "bookOdds": {
@@ -121492,7 +121492,7 @@
     "tbMatchupPct": 81.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.5,
+    "hrProb": 5.4,
     "hrrProb": 76.1,
     "tbProb": 41.8
   },
@@ -121911,7 +121911,7 @@
     "tbMatchupPct": 41.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.1,
+    "hrProb": 3.1,
     "hrrProb": 48.1,
     "tbProb": 33.7,
     "bookOdds": {
@@ -122718,7 +122718,7 @@
     "tbMatchupPct": 32.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.2,
+    "hrProb": 8.7,
     "hrrProb": 49.9,
     "tbProb": 37.7,
     "bookOdds": {
@@ -123539,7 +123539,7 @@
     "tbMatchupPct": 55.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 8.2,
+    "hrProb": 6.9,
     "hrrProb": 52.3,
     "tbProb": 32.7,
     "bookOdds": {
@@ -124297,7 +124297,7 @@
     "tbMatchupPct": 50.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.5,
+    "hrProb": 5.4,
     "hrrProb": 51.5,
     "tbProb": 39.1,
     "bookOdds": {
@@ -124881,7 +124881,7 @@
     "tbMatchupPct": 57.3,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.4,
+    "hrProb": 7.0,
     "hrrProb": 50.1,
     "tbProb": 37.4,
     "bookOdds": {
@@ -125632,7 +125632,7 @@
     "tbMatchupPct": 57.4,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 2.4,
+    "hrProb": 2.2,
     "hrrProb": 54.2,
     "tbProb": 39.9,
     "bookOdds": {
@@ -126312,7 +126312,7 @@
     "tbMatchupPct": 43.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 7.7,
+    "hrProb": 6.5,
     "hrrProb": 51.6,
     "tbProb": 31.8
   },
@@ -126731,7 +126731,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.5,
+    "hrProb": 7.2,
     "hrrProb": 51.1,
     "tbProb": 32.4,
     "bookOdds": {
@@ -127474,7 +127474,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.3,
+    "hrProb": 6.8,
     "hrrProb": 50.1,
     "tbProb": 29.8,
     "bookOdds": {
@@ -128225,7 +128225,7 @@
     "tbMatchupPct": 48.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 8.0,
+    "hrProb": 6.7,
     "hrrProb": 51.9,
     "tbProb": 32.2,
     "bookOdds": {
@@ -128983,7 +128983,7 @@
     "tbMatchupPct": 57.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 4.3,
+    "hrProb": 4.1,
     "hrrProb": 56.4,
     "tbProb": 36.7,
     "bookOdds": {
@@ -129782,7 +129782,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.7,
+    "hrProb": 4.8,
     "hrrProb": 53.4,
     "tbProb": 35.8,
     "bookOdds": {
@@ -130582,7 +130582,7 @@
     "tbMatchupPct": 23.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.5,
+    "hrProb": 8.4,
     "hrrProb": 42.4,
     "tbProb": 29.3,
     "bookOdds": {
@@ -131340,7 +131340,7 @@
     "tbMatchupPct": 39.6,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 9.2,
+    "hrProb": 7.0,
     "hrrProb": 43.8,
     "tbProb": 31.0,
     "bookOdds": {
@@ -132140,7 +132140,7 @@
     "tbMatchupPct": 25.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.5,
+    "hrProb": 7.6,
     "hrrProb": 42.4,
     "tbProb": 29.5,
     "bookOdds": {
@@ -132898,7 +132898,7 @@
     "tbMatchupPct": 53.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.0,
+    "hrProb": 4.7,
     "hrrProb": 50.6,
     "tbProb": 32.2
   },
@@ -133317,7 +133317,7 @@
     "tbMatchupPct": 40.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.5,
+    "hrProb": 7.7,
     "hrrProb": 50.2,
     "tbProb": 32.5,
     "bookOdds": {
@@ -134011,7 +134011,7 @@
     "tbMatchupPct": 52.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.2,
+    "hrProb": 2.7,
     "hrrProb": 49.4,
     "tbProb": 30.3,
     "bookOdds": {
@@ -134762,7 +134762,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.6,
+    "hrProb": 4.3,
     "hrrProb": 51.6,
     "tbProb": 35.7,
     "bookOdds": {
@@ -135562,7 +135562,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.2,
+    "hrProb": 4.8,
     "hrrProb": 50.0,
     "tbProb": 29.8,
     "bookOdds": {
@@ -136354,7 +136354,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.9,
+    "hrProb": 6.7,
     "hrrProb": 54.6,
     "tbProb": 31.0,
     "bookOdds": {
@@ -137139,7 +137139,7 @@
     "tbMatchupPct": 45.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.1,
+    "hrProb": 5.9,
     "hrrProb": 50.3,
     "tbProb": 28.1,
     "bookOdds": {
@@ -137897,7 +137897,7 @@
     "tbMatchupPct": 29.2,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.1,
+    "hrProb": 8.8,
     "hrrProb": 44.9,
     "tbProb": 28.8,
     "bookOdds": {
@@ -138655,7 +138655,7 @@
     "tbMatchupPct": 70.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 5.5,
+    "hrProb": 4.5,
     "hrrProb": 80.0,
     "tbProb": 47.7,
     "bookOdds": {
@@ -139413,7 +139413,7 @@
     "tbMatchupPct": 38.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.4,
+    "hrProb": 2.1,
     "hrrProb": 45.4,
     "tbProb": 34.7,
     "bookOdds": {
@@ -140220,7 +140220,7 @@
     "tbMatchupPct": 46.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.5,
+    "hrProb": 5.2,
     "hrrProb": 49.8,
     "tbProb": 31.9,
     "bookOdds": {
@@ -141020,7 +141020,7 @@
     "tbMatchupPct": 50.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.0,
+    "hrProb": 4.6,
     "hrrProb": 45.0,
     "tbProb": 34.5,
     "bookOdds": {
@@ -141820,7 +141820,7 @@
     "tbMatchupPct": 52.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.0,
+    "hrProb": 6.8,
     "hrrProb": 53.4,
     "tbProb": 28.9,
     "bookOdds": {
@@ -142585,7 +142585,7 @@
     "tbMatchupPct": 31.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 7.6,
+    "hrProb": 6.3,
     "hrrProb": 44.9,
     "tbProb": 29.2,
     "bookOdds": {
@@ -143385,7 +143385,7 @@
     "tbMatchupPct": 48.5,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.5,
+    "hrProb": 5.3,
     "hrrProb": 51.1,
     "tbProb": 27.3
   },
@@ -143804,7 +143804,7 @@
     "tbMatchupPct": 55.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.0,
+    "hrProb": 1.8,
     "hrrProb": 54.5,
     "tbProb": 41.0,
     "bookOdds": {
@@ -144387,7 +144387,7 @@
     "tbMatchupPct": 61.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 4.6,
+    "hrProb": 4.1,
     "hrrProb": 48.5,
     "tbProb": 25.4,
     "bookOdds": {
@@ -145089,7 +145089,7 @@
     "tbMatchupPct": 54.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.2,
+    "hrProb": 1.9,
     "hrrProb": 51.2,
     "tbProb": 29.4,
     "bookOdds": {
@@ -145847,7 +145847,7 @@
     "tbMatchupPct": 32.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.0,
+    "hrProb": 7.1,
     "hrrProb": 44.6,
     "tbProb": 31.6
   },
@@ -146266,7 +146266,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 4.9,
+    "hrProb": 4.2,
     "hrrProb": 47.6,
     "tbProb": 37.3,
     "bookOdds": {
@@ -147031,7 +147031,7 @@
     "tbMatchupPct": 46.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.1,
+    "hrProb": 5.8,
     "hrrProb": 51.1,
     "tbProb": 27.8,
     "bookOdds": {
@@ -147376,7 +147376,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -147782,7 +147782,7 @@
     "tbMatchupPct": 50.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.7,
+    "hrProb": 5.3,
     "hrrProb": 48.5,
     "tbProb": 31.5,
     "bookOdds": {
@@ -148546,7 +148546,7 @@
     "tbMatchupPct": 48.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 8.2,
+    "hrProb": 6.5,
     "hrrProb": 48.5,
     "tbProb": 39.2,
     "bookOdds": {
@@ -149311,7 +149311,7 @@
     "tbMatchupPct": 53.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.8,
+    "hrProb": 5.5,
     "hrrProb": 52.7,
     "tbProb": 32.5,
     "bookOdds": {
@@ -150076,7 +150076,7 @@
     "tbMatchupPct": 33.5,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.5,
+    "hrProb": 4.5,
     "hrrProb": 40.9,
     "tbProb": 23.0,
     "bookOdds": {
@@ -150820,7 +150820,7 @@
     "tbMatchupPct": 22.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.7,
+    "hrProb": 8.0,
     "hrrProb": 42.9,
     "tbProb": 30.8,
     "bookOdds": {
@@ -151585,7 +151585,7 @@
     "tbMatchupPct": 54.7,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.7,
+    "hrProb": 4.7,
     "hrrProb": 50.3,
     "tbProb": 26.6,
     "bookOdds": {
@@ -152335,7 +152335,7 @@
     "tbMatchupPct": 50.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.3,
+    "hrProb": 5.9,
     "hrrProb": 50.9,
     "tbProb": 32.7,
     "bookOdds": {
@@ -153093,7 +153093,7 @@
     "tbMatchupPct": 54.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.5,
+    "hrProb": 6.0,
     "hrrProb": 50.5,
     "tbProb": 32.0
   },
@@ -153322,7 +153322,7 @@
     "tbMatchupPct": 41.6,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.5,
+    "hrProb": 5.3,
     "hrrProb": 47.7,
     "tbProb": 25.1,
     "bookOdds": {
@@ -154080,7 +154080,7 @@
     "tbMatchupPct": 38.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 4.5,
+    "hrProb": 3.8,
     "hrrProb": 47.4,
     "tbProb": 28.4,
     "bookOdds": {
@@ -154866,7 +154866,7 @@
     "tbMatchupPct": 47.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.7,
+    "hrProb": 6.3,
     "hrrProb": 51.1,
     "tbProb": 33.9,
     "bookOdds": {
@@ -155609,7 +155609,7 @@
     "tbMatchupPct": 61.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.2,
+    "hrProb": 4.5,
     "hrrProb": 53.2,
     "tbProb": 35.1,
     "bookOdds": {
@@ -156374,7 +156374,7 @@
     "tbMatchupPct": 45.0,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.9,
+    "hrProb": 7.2,
     "hrrProb": 47.4,
     "tbProb": 28.7,
     "bookOdds": {
@@ -157160,7 +157160,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.8,
+    "hrProb": 8.4,
     "hrrProb": 55.7,
     "tbProb": 36.5,
     "bookOdds": {
@@ -157519,7 +157519,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -157748,7 +157748,7 @@
     "tbMatchupPct": 36.4,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.8,
+    "hrProb": 6.2,
     "hrrProb": 46.5,
     "tbProb": 29.0,
     "bookOdds": {
@@ -158422,7 +158422,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.1,
+    "hrProb": 6.0,
     "hrrProb": 49.5,
     "tbProb": 26.3
   },
@@ -158435,7 +158435,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -158841,7 +158841,7 @@
     "tbMatchupPct": 49.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 5.4,
+    "hrProb": 5.2,
     "hrrProb": 52.2,
     "tbProb": 30.1,
     "bookOdds": {
@@ -159503,7 +159503,7 @@
     "tbMatchupPct": 25.6,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.3,
+    "hrProb": 7.0,
     "hrrProb": 40.9,
     "tbProb": 26.4
   },
@@ -159784,7 +159784,7 @@
     "tbMatchupPct": 39.8,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.7,
+    "hrProb": 5.6,
     "hrrProb": 46.9,
     "tbProb": 25.5,
     "bookOdds": {
@@ -160535,7 +160535,7 @@
     "tbMatchupPct": 50.5,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 5.6,
+    "hrProb": 4.6,
     "hrrProb": 50.1,
     "tbProb": 31.2,
     "bookOdds": {
@@ -161286,7 +161286,7 @@
     "tbMatchupPct": 41.2,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.3,
+    "hrProb": 6.3,
     "hrrProb": 48.5,
     "tbProb": 26.3,
     "bookOdds": {
@@ -162044,7 +162044,7 @@
     "tbMatchupPct": 25.5,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 6.6,
+    "hrProb": 5.3,
     "hrrProb": 41.6,
     "tbProb": 26.0,
     "bookOdds": {
@@ -162794,7 +162794,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.5,
+    "hrProb": 5.1,
     "hrrProb": 52.0,
     "tbProb": 32.0,
     "bookOdds": {
@@ -163587,7 +163587,7 @@
     "tbMatchupPct": 77.9,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.5,
+    "hrProb": 3.8,
     "hrrProb": 77.4,
     "tbProb": 40.0,
     "bookOdds": {
@@ -164331,7 +164331,7 @@
     "tbMatchupPct": 28.4,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.4,
+    "hrProb": 5.3,
     "hrrProb": 45.0,
     "tbProb": 25.7,
     "bookOdds": {
@@ -165103,7 +165103,7 @@
     "tbMatchupPct": 27.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 4.3,
+    "hrProb": 3.3,
     "hrrProb": 46.2,
     "tbProb": 32.9,
     "bookOdds": {
@@ -165896,7 +165896,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.2,
+    "hrProb": 4.0,
     "hrrProb": 53.5,
     "tbProb": 35.8,
     "bookOdds": {
@@ -166675,7 +166675,7 @@
     "tbMatchupPct": 46.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.2,
+    "hrProb": 4.5,
     "hrrProb": 53.0,
     "tbProb": 33.5,
     "bookOdds": {
@@ -167461,7 +167461,7 @@
     "tbMatchupPct": 37.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 2.8,
+    "hrProb": 2.3,
     "hrrProb": 46.2,
     "tbProb": 27.7,
     "bookOdds": {
@@ -168247,7 +168247,7 @@
     "tbMatchupPct": 39.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.8,
+    "hrProb": 5.8,
     "hrrProb": 48.3,
     "tbProb": 26.8,
     "bookOdds": {
@@ -168893,7 +168893,7 @@
     "tbMatchupPct": 43.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 4.3,
+    "hrProb": 3.9,
     "hrrProb": 51.8,
     "tbProb": 33.5,
     "bookOdds": {
@@ -169476,7 +169476,7 @@
     "tbMatchupPct": 29.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 3.3,
+    "hrProb": 3.0,
     "hrrProb": 45.8,
     "tbProb": 24.5,
     "bookOdds": {
@@ -170262,7 +170262,7 @@
     "tbMatchupPct": 52.9,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.7,
+    "hrProb": 5.6,
     "hrrProb": 50.1,
     "tbProb": 30.7,
     "bookOdds": {
@@ -170957,7 +170957,7 @@
     "tbMatchupPct": 44.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.7,
+    "hrProb": 6.2,
     "hrrProb": 49.0,
     "tbProb": 36.1,
     "bookOdds": {
@@ -171666,7 +171666,7 @@
     "tbMatchupPct": 38.0,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 5.4,
+    "hrProb": 4.4,
     "hrrProb": 44.6,
     "tbProb": 27.6,
     "bookOdds": {
@@ -172270,7 +172270,7 @@
     "tbMatchupPct": 45.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.4,
+    "hrProb": 4.5,
     "hrrProb": 53.7,
     "tbProb": 33.6,
     "bookOdds": {
@@ -173128,7 +173128,7 @@
     "tbMatchupPct": 42.9,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.8,
+    "hrProb": 6.2,
     "hrrProb": 41.2,
     "tbProb": 24.3
   },
@@ -173547,7 +173547,7 @@
     "tbMatchupPct": 22.7,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.4,
+    "hrProb": 5.1,
     "hrrProb": 40.9,
     "tbProb": 28.6,
     "bookOdds": {
@@ -173955,7 +173955,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -174361,7 +174361,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 4.9,
+    "hrProb": 4.0,
     "hrrProb": 48.5,
     "tbProb": 31.7,
     "bookOdds": {
@@ -175140,7 +175140,7 @@
     "tbMatchupPct": 43.8,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.1,
+    "hrProb": 4.9,
     "hrrProb": 50.1,
     "tbProb": 32.4,
     "bookOdds": {
@@ -175849,7 +175849,7 @@
     "tbMatchupPct": 39.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 3.4,
+    "hrProb": 3.2,
     "hrrProb": 50.3,
     "tbProb": 29.2,
     "bookOdds": {
@@ -176607,7 +176607,7 @@
     "tbMatchupPct": 39.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.4,
+    "hrProb": 5.3,
     "hrrProb": 49.2,
     "tbProb": 29.4
   },
@@ -177026,7 +177026,7 @@
     "tbMatchupPct": 55.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.9,
+    "hrProb": 4.7,
     "hrrProb": 50.9,
     "tbProb": 35.5
   },
@@ -177445,7 +177445,7 @@
     "tbMatchupPct": 41.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.7,
+    "hrProb": 2.5,
     "hrrProb": 50.8,
     "tbProb": 29.4,
     "bookOdds": {
@@ -177839,7 +177839,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": false,
@@ -178245,7 +178245,7 @@
     "tbMatchupPct": 41.6,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.2,
+    "hrProb": 5.1,
     "hrrProb": 46.5,
     "tbProb": 29.9,
     "bookOdds": {
@@ -178611,7 +178611,7 @@
     "game": "BAL @ MIN",
     "lineupConfirmed": true,
     "pitcherConfirmed": true,
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "isDayGame": true,
     "isHomeGame": true,
@@ -179017,7 +179017,7 @@
     "tbMatchupPct": 38.9,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.9,
+    "hrProb": 4.0,
     "hrrProb": 50.1,
     "tbProb": 29.1,
     "bookOdds": {
@@ -179796,7 +179796,7 @@
     "tbMatchupPct": 48.6,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.0,
+    "hrProb": 4.9,
     "hrrProb": 49.5,
     "tbProb": 25.0
   },
@@ -180215,7 +180215,7 @@
     "tbMatchupPct": 42.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.5,
+    "hrProb": 4.7,
     "hrrProb": 43.6,
     "tbProb": 32.1,
     "bookOdds": {
@@ -180973,7 +180973,7 @@
     "tbMatchupPct": 44.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.4,
+    "hrProb": 3.2,
     "hrrProb": 48.4,
     "tbProb": 32.6,
     "bookOdds": {
@@ -181709,7 +181709,7 @@
     "tbMatchupPct": 47.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.5,
+    "hrProb": 4.1,
     "hrrProb": 50.0,
     "tbProb": 27.6,
     "bookOdds": {
@@ -182516,7 +182516,7 @@
     "tbMatchupPct": 44.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.7,
+    "hrProb": 5.5,
     "hrrProb": 51.4,
     "tbProb": 30.2,
     "bookOdds": {
@@ -183281,7 +183281,7 @@
     "tbMatchupPct": 40.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.3,
+    "hrProb": 5.9,
     "hrrProb": 51.2,
     "tbProb": 26.9,
     "bookOdds": {
@@ -183951,7 +183951,7 @@
     "tbMatchupPct": 16.4,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.2,
+    "hrProb": 5.0,
     "hrrProb": 40.1,
     "tbProb": 23.0,
     "bookOdds": {
@@ -184604,7 +184604,7 @@
     "tbMatchupPct": 26.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.4,
+    "hrProb": 5.3,
     "hrrProb": 43.6,
     "tbProb": 24.3,
     "bookOdds": {
@@ -185397,7 +185397,7 @@
     "tbMatchupPct": 36.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 4.3,
+    "hrProb": 3.7,
     "hrrProb": 44.2,
     "tbProb": 27.8,
     "bookOdds": {
@@ -186204,7 +186204,7 @@
     "tbMatchupPct": 52.3,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.3,
+    "hrProb": 2.0,
     "hrrProb": 36.5,
     "tbProb": 22.8,
     "bookOdds": {
@@ -186955,7 +186955,7 @@
     "tbMatchupPct": 56.4,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.7,
+    "hrProb": 3.9,
     "hrrProb": 50.6,
     "tbProb": 30.0,
     "bookOdds": {
@@ -187692,7 +187692,7 @@
     "tbMatchupPct": 42.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.8,
+    "hrProb": 4.1,
     "hrrProb": 45.4,
     "tbProb": 24.1,
     "bookOdds": {
@@ -188436,7 +188436,7 @@
     "tbMatchupPct": 47.8,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.3,
+    "hrProb": 4.3,
     "hrrProb": 50.3,
     "tbProb": 27.8,
     "bookOdds": {
@@ -189222,7 +189222,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.3,
+    "hrProb": 2.0,
     "hrrProb": 52.1,
     "tbProb": 32.3,
     "bookOdds": {
@@ -190000,7 +190000,7 @@
     "tbMatchupPct": 51.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.8,
+    "hrProb": 4.0,
     "hrrProb": 50.1,
     "tbProb": 27.5,
     "bookOdds": {
@@ -190737,7 +190737,7 @@
     "tbMatchupPct": 44.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.2,
+    "hrProb": 3.9,
     "hrrProb": 47.3,
     "tbProb": 25.5,
     "bookOdds": {
@@ -191264,7 +191264,7 @@
     "tbMatchupPct": 35.5,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.5,
+    "hrProb": 3.9,
     "hrrProb": 49.1,
     "tbProb": 28.4,
     "bookOdds": {
@@ -192015,7 +192015,7 @@
     "tbMatchupPct": 42.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.5,
+    "hrProb": 2.0,
     "hrrProb": 43.9,
     "tbProb": 28.1,
     "bookOdds": {
@@ -192766,7 +192766,7 @@
     "tbMatchupPct": 47.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.6,
+    "hrProb": 3.1,
     "hrrProb": 49.8,
     "tbProb": 25.7,
     "bookOdds": {
@@ -193573,7 +193573,7 @@
     "tbMatchupPct": 40.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.7,
+    "hrProb": 3.9,
     "hrrProb": 48.5,
     "tbProb": 26.6,
     "bookOdds": {
@@ -194323,7 +194323,7 @@
     "tbMatchupPct": 33.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.3,
+    "hrProb": 3.5,
     "hrrProb": 43.9,
     "tbProb": 26.3
   },
@@ -195266,7 +195266,7 @@
     "tbMatchupPct": 35.9,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.0,
+    "hrProb": 4.1,
     "hrrProb": 46.3,
     "tbProb": 23.5
   },
@@ -195685,7 +195685,7 @@
     "tbMatchupPct": 41.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.2,
+    "hrProb": 2.7,
     "hrrProb": 48.0,
     "tbProb": 28.0,
     "bookOdds": {
@@ -196234,7 +196234,7 @@
     "tbMatchupPct": 18.1,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.7,
+    "hrProb": 3.7,
     "hrrProb": 40.7,
     "tbProb": 21.6
   },
@@ -196653,7 +196653,7 @@
     "tbMatchupPct": 25.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.1,
+    "hrProb": 3.4,
     "hrrProb": 41.4,
     "tbProb": 22.6
   },
@@ -197064,7 +197064,7 @@
     "tbMatchupPct": 21.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.0,
+    "hrProb": 2.7,
     "hrrProb": 41.6,
     "tbProb": 24.0,
     "bookOdds": {
@@ -197162,7 +197162,7 @@
     "team": "MIN",
     "opponent": "BAL",
     "game": "BAL @ MIN",
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "hand": "R",
     "k9": 7.81,
@@ -197484,7 +197484,7 @@
     "team": "BAL",
     "opponent": "MIN",
     "game": "BAL @ MIN",
-    "gameStatus": "Preview",
+    "gameStatus": "Live",
     "gameTime": "2026-08-12T17:40:00Z",
     "hand": "R",
     "k9": 8.69,
