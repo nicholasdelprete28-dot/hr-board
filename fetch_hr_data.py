@@ -1502,6 +1502,23 @@ def compute_hr_probability(p):
     mean *= day_night_adjustment(p)
     mean *= bullpen_adjustment(p)
     mean *= day_of_week_adjustment(p)  # NEW v3.6
+
+    # FIX v3.9: the stacking dampener that already exists in compute_score()
+    # (penalizing power+pitcher+recent ALL being simultaneously maxed) was
+    # never carried over here when hrProb became the board's primary
+    # number - a real gap, not a tuning question. Expressed as a
+    # multiplicative reduction on the mean instead of a point deduction,
+    # since hrProb works in probability space, not a 0-100 score, but the
+    # same threshold and same three factors as compute_score()'s version.
+    STACK_THRESHOLD = 0.75
+    STACK_REDUCTION_PER_EXTRA = 0.08   # ~8% relative reduction per additional maxed factor
+    STACK_REDUCTION_MAX = 0.20          # capped at a 20% relative reduction, never more
+    stack_buckets = [sf["power"], sf["pitcher_s"], sf["recent"]]
+    n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
+    if n_maxed > 1:
+        reduction = min(STACK_REDUCTION_MAX, (n_maxed - 1) * STACK_REDUCTION_PER_EXTRA)
+        mean *= (1 - reduction)
+
     mean = max(0.01, mean)
 
     raw_prob = poisson_over_prob(mean, 0.5)
