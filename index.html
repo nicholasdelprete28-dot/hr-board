@@ -18,9 +18,7 @@
     --gold: #e3a548;
     --green: #4fdb9a;
     --red: #d96b5b;
-    /* Deliberately punchier than --green/--red above, used only for the
-       stat-box good/bad/very-bad reads so they pop against the rest of
-       the card's muted palette. */
+    --teal: #5bc8e8;
     --stat-good: #42e896;
     --stat-bad: #ff9638;
     --stat-verybad: #ff4242;
@@ -43,7 +41,6 @@
 
   .wrap{max-width:var(--content-width); margin:0 auto; padding:0 14px 80px;}
 
-  /* ---- Header ---- */
   header{
     position:sticky; top:0; z-index:20;
     background:
@@ -80,7 +77,6 @@
   }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-  /* ---- Live homer alert toasts ---- */
   #toast-container{
     position:fixed; top:14px; left:0; right:0; z-index:100;
     display:flex; flex-direction:column; align-items:center; gap:8px;
@@ -113,17 +109,12 @@
   }
   .sortbtn.active{color:var(--gold); border-color:var(--gold);}
 
-  /* ---- Mobile: the 3 sort buttons + 2 dropdowns don't fit one row at
-     phone widths. Rather than letting the last dropdown (Upcoming Only)
-     overflow off-screen, wrap the row and drop it onto its own full-width
-     line below the others - same control, same styling, just stacked. ---- */
   @media (max-width: 640px){
     .controls{flex-wrap:wrap;}
     #tierselect{flex:1 1 auto;}
     #statusselect{flex:1 1 100%; margin-top:8px;}
   }
 
-  /* ---- HR / HRR board toggle - sits right under the title, always visible ---- */
   .boardtoggle{
     max-width:var(--content-width); margin:12px auto 0; display:flex; gap:8px;
     background:var(--surface2); border:1px solid var(--line); border-radius:12px; padding:4px;
@@ -144,7 +135,6 @@
   }
   .tierselect:focus{outline:none; border-color:var(--gold); color:var(--gold);}
 
-  /* ---- Game filter (horizontal scroll) ---- */
   .gamefilter-label{
     font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase;
     letter-spacing:1px; padding:10px 2px 0; max-width:var(--content-width); margin:0 auto;
@@ -168,7 +158,6 @@
   .gamechip-final{opacity:0.55;}
   .gamechip-live{opacity:0.75; border-color:rgba(217,107,91,0.4);}
 
-  /* ---- Legend ---- */
   .legend{
     display:flex; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:10px; color:var(--muted2);
     padding:10px 2px 0; max-width:var(--content-width); margin:0 auto;
@@ -176,7 +165,6 @@
   .legend span{display:flex; align-items:center; gap:4px;}
   .swatch{width:8px; height:8px; border-radius:2px; display:inline-block;}
 
-  /* ---- List ---- */
   .list{padding-top:14px; display:flex; flex-direction:column; gap:12px;}
 
   .card{
@@ -216,11 +204,6 @@
   }
   .headshot-img{
     position:absolute; inset:0; width:100%; height:100%; object-fit:contain; object-position:50% 50%;
-    /* Soft vignette so the flat studio-backdrop rectangle in the source
-       photo fades into the circle's team-color gradient at the rim
-       instead of cutting off as a hard-edged box. Doesn't remove the
-       backdrop color around the shoulders/chest (that needs real
-       background removal), but it kills the harshest part of the clash. */
     mask-image:radial-gradient(circle, black 60%, transparent 92%);
     -webkit-mask-image:radial-gradient(circle, black 60%, transparent 92%);
   }
@@ -262,7 +245,6 @@
   .favtier-inplay{color:#e3a548; background:rgba(227,165,72,0.16); border:1px solid rgba(227,165,72,0.45);}
   .favtier-longshot{color:var(--muted); background:rgba(139,148,141,0.1); border:1px solid var(--line);}
 
-  /* segmented bar */
   .segbar{display:flex; height:5px; border-radius:3px; overflow:hidden; margin-top:14px; background:#1c231f;}
   .seg{height:100%;}
   .seg.power{background:var(--gold);}
@@ -299,11 +281,19 @@
   .chip-sample-verybad{color:var(--stat-verybad); border-color:rgba(255,66,66,0.35); background:rgba(255,66,66,0.08);}
   .chip-sample-verybad:hover{box-shadow:0 0 12px rgba(255,66,66,0.35); border-color:var(--stat-verybad);}
   .chip-lineup:hover{box-shadow:0 0 12px rgba(227,165,72,0.35); border-color:var(--gold);}
-  .chip:not(.chip-platoon):not(.chip-crusher):not(.chip-lineup):hover{border-color:var(--muted);}
+  .chip-surge{color:var(--stat-good); border-color:rgba(66,232,150,0.4); background:rgba(66,232,150,0.08);}
+  .chip-surge:hover{box-shadow:0 0 12px rgba(66,232,150,0.4); border-color:var(--stat-good);}
+  .chip-fade{color:var(--muted); border-color:var(--line); background:#1a201c;}
+  .chip-softmatchup{color:var(--stat-good); border-color:rgba(66,232,150,0.35); background:rgba(66,232,150,0.08);}
+  .chip-softmatchup:hover{box-shadow:0 0 12px rgba(66,232,150,0.35); border-color:var(--stat-good);}
+  .chip-toughmatchup{color:var(--stat-bad); border-color:rgba(255,150,56,0.4); background:rgba(255,150,56,0.08);}
+  .chip-toughmatchup:hover{box-shadow:0 0 12px rgba(255,150,56,0.4); border-color:var(--stat-bad);}
+  .chip-edge{color:var(--teal); border-color:rgba(91,200,232,0.4); background:rgba(91,200,232,0.08);}
+  .chip-edge:hover{box-shadow:0 0 12px rgba(91,200,232,0.4); border-color:var(--teal);}
+  .chip-bullpen{color:var(--red); border-color:rgba(217,107,91,0.4); background:rgba(217,107,91,0.08);}
+  .chip-bullpen:hover{box-shadow:0 0 12px rgba(217,107,91,0.4); border-color:var(--red);}
+  .chip:not(.chip-platoon):not(.chip-crusher):not(.chip-lineup):not(.chip-surge):not(.chip-fade):not(.chip-softmatchup):not(.chip-toughmatchup):not(.chip-edge):not(.chip-bullpen):hover{border-color:var(--muted);}
 
-  /* ---- Tap-to-open chip tooltip - native `title` hover tooltips barely
-     work on mobile Safari, so this is the real cross-device mechanism;
-     `title` stays on as a free bonus for desktop hover. ---- */
   .chip-tooltip{
     position:fixed; z-index:200; max-width:240px; background:#1c231f; color:var(--text);
     border:1px solid var(--gold); border-radius:10px; padding:10px 12px;
@@ -311,7 +301,6 @@
     box-shadow:0 8px 24px rgba(0,0,0,0.5);
   }
 
-  /* ---- Always-visible stat box grid (swiftprops-style) ---- */
   .bookodds{
     margin:12px 0 -2px; padding:12px 14px; background:rgba(66,232,150,0.10);
     border:1.5px solid var(--stat-good); border-radius:12px;
@@ -379,10 +368,6 @@
     letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;
   }
   .statbox .sbval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text);}
-  /* Good/bad/very-bad read on each stat, kept deliberately vibrant (with a
-     faint glow) so a scan down the card immediately flags what's working
-     for or against this player - a neutral stat just keeps the default
-     off-white color instead of getting a tier class at all. */
   .statbox.good .sbval{color:var(--stat-good); text-shadow:0 0 10px rgba(66,232,150,0.45);}
   .statbox.bad .sbval{color:var(--stat-bad); text-shadow:0 0 10px rgba(255,150,56,0.4);}
   .statbox.verybad .sbval{color:var(--stat-verybad); text-shadow:0 0 10px rgba(255,66,66,0.45);}
@@ -390,7 +375,6 @@
   .empty{text-align:center; color:var(--muted2); font-family:var(--mono); font-size:13px; padding:40px 0;}
   .card{cursor:pointer;}
 
-  /* ---- Player detail modal ---- */
   .modal-overlay{
     position:fixed; inset:0; background:rgba(6,8,7,0.75); backdrop-filter:blur(2px);
     z-index:200; display:flex; align-items:center; justify-content:center; padding:24px 14px;
@@ -460,17 +444,8 @@
   .gl-splitgrid div{display:flex; justify-content:space-between;}
   .gl-splitgrid b{color:var(--text);}
 
-  /* gl-chartwrap no longer needs to scroll: columns below use flex:1 instead
-     of a fixed width, so 5, 10, or 20 games all stretch to fill the
-     available width exactly - the whole chart is always visible without
-     scrolling. overflow-x:auto is kept only as a safety net for extremely
-     narrow screens; it should never actually trigger in normal use. */
   .gl-chartwrap{overflow-x:auto; overflow-y:hidden; margin-top:16px; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
   .gl-chart{display:flex; flex-direction:column; width:100%;}
-  /* Sits in the clear space above the bars, not overlaid on the
-     threshold line itself - the odds text used to crowd into whichever
-     bar happened to be tall near the line, this keeps it clean regardless
-     of bar heights. */
   .gl-oddsbanner{
     display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
     background:rgba(227,165,72,0.08); border:1px solid rgba(227,165,72,0.35); border-radius:10px;
@@ -528,13 +503,6 @@ whop.track("page");
 if (new URLSearchParams(window.location.search).get("welcome") === "1") {
   var b = document.getElementById("discordWelcomeBanner");
   b.style.display = "flex";
-
-  // Identify this visitor to the Whop pixel now that we actually know
-  // who they are (they just completed a real login) - Whop's pixel has
-  // no separate identify() call, this IS how you identify someone: a
-  // track() call with customer info attached. Fires once, right after
-  // login, not on every page load - sessionStorage guards against
-  // re-firing if they reload this same URL.
   if (typeof whop !== 'undefined' && !sessionStorage.getItem('gy_identified')) {
     fetch('/api/me', { credentials: 'same-origin' })
       .then(r => r.json())
@@ -544,7 +512,7 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
           sessionStorage.setItem('gy_identified', '1');
         }
       })
-      .catch(() => {}); // pixel identification failing silently is fine - never block the page for this
+      .catch(() => {});
   }
 }
 </script>
@@ -631,27 +599,16 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
 </div>
 
 <script>
-// ---------------------------------------------------------------------
-// EDIT THIS LINE: paste your GitHub raw URL for players.json here.
-// It looks like: https://raw.githubusercontent.com/YOUR-USERNAME/YOUR-REPO/main/players.json
-// ---------------------------------------------------------------------
-// Relative path: players.json lives right next to this page on GitHub Pages,
-// so it's fetched from the same place, same deploy, no third-party CDN layer
-// in between - one less place for stale caching to hide.
 const DATA_URL = "./players.json";
 const TRACK_URL = "./history/accuracy_summary.json";
 
 let players = [];
-let boardMode = 'hr';  // 'hr' | 'hrr' - which board/toggle tab is active
+let boardMode = 'hr';
 let sortKey = 'score';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
 
-// Everything that differs between the two boards lives here in one place:
-// which field holds the 0-100 favorability score, the three sort options
-// offered, and the header subtitle text. Keeps render()/tier-filtering
-// generic (they just read scoreField()) instead of branching everywhere.
 const BOARD_CONFIG = {
   hr: {
     scoreField: 'score',
@@ -676,11 +633,6 @@ const BOARD_CONFIG = {
 };
 function scoreField(){ return BOARD_CONFIG[boardMode].scoreField; }
 
-// Returns today's date as YYYY-MM-DD using the BROWSER'S LOCAL timezone,
-// not UTC. new Date().toISOString() always gives the UTC date, which in
-// the evening in US timezones has often already rolled into tomorrow -
-// that mismatch was causing the live-status check to ask MLB about the
-// wrong calendar day entirely.
 function getLocalDateString(){
   const d = new Date();
   const y = d.getFullYear();
@@ -691,9 +643,6 @@ function getLocalDateString(){
 let selectedTier = '';
 let selectedStatus = '';
 
-// MLB team IDs, used to build logo URLs from MLB's own public CDN
-// (mlbstatic.com/team-logos/{id}.svg). Mirrors the same table the fetch
-// script uses, so logos work with data already on hand, no re-run needed.
 const TEAM_IDS = {
   LAA:108, AZ:109, BAL:110, BOS:111, CHC:112, CIN:113, CLE:114, COL:115,
   DET:116, HOU:117, KC:118, LAD:119, WSH:120, NYM:121, ATH:133, PIT:134,
@@ -701,8 +650,6 @@ const TEAM_IDS = {
   PHI:143, ATL:144, CWS:145, MIA:146, NYY:147, MIL:158,
 };
 
-// Approximate official primary team colors, used as a small accent stripe
-// on each card so the list doesn't read as one flat color throughout.
 const TEAM_COLORS = {
   LAA:'#BA0021', AZ:'#A71930', BAL:'#DF4601', BOS:'#BD3039', CHC:'#0E3386',
   CIN:'#C6011F', CLE:'#00385D', COL:'#333366', DET:'#0C2340', HOU:'#EB6E1F',
@@ -722,8 +669,6 @@ function matchupWithLogos(gameStr, size){
   if(parts.length !== 2) return gameStr;
   return `${teamLogo(parts[0], size)} ${parts[0]} @ ${teamLogo(parts[1], size)} ${parts[1]}`;
 }
-// Rewrites the 3 sort buttons' data-key + label to match the active board,
-// and resets sorting to that board's default (its favorability score, desc).
 function setSortButtonsForMode(){
   const sorts = BOARD_CONFIG[boardMode].sorts;
   const keys = Object.keys(sorts);
@@ -747,10 +692,6 @@ async function loadPlayers() {
     await applyLiveGameStatus();
     buildGameFilter();
     render();
-    // Re-check live status every 2 minutes so a game that goes Live (or
-    // Final) after the page was first opened gets picked up without
-    // needing a manual reload - the first check on load only covers
-    // whatever the game states were at that exact moment.
     setInterval(async () => {
       await applyLiveGameStatus();
       buildGameFilter();
@@ -761,13 +702,6 @@ async function loadPlayers() {
   }
 }
 
-// ---------------------------------------------------------------------
-// Track Record panel - reads history/accuracy_summary.json, written by
-// check_results.py after it grades each day's snapshot against real
-// final box scores. Loaded once alongside the main player data; fails
-// silently (empty-state message, not a broken page) since this file
-// won't exist at all until check_results.py has actually run once.
-// ---------------------------------------------------------------------
 let trackRecordData = null;
 
 async function loadTrackRecord(){
@@ -785,13 +719,6 @@ function renderTrackRecord(){
   const boardLabels = { hr: 'HR', hrr: 'HRR', tb: 'TB', k: 'Pitcher Ks' };
   const tierOrder = ['prime', 'strong', 'inplay', 'longshot'];
   const tierLabels = { prime: 'PRIME', strong: 'STRONG', inplay: 'IN PLAY', longshot: 'LONG SHOT' };
-  // Real baseline rates already used by the backend model (see
-  // fetch_hr_data.py's LEAGUE_AVG_* constants) - what a totally random
-  // pick, with no model at all, would hit on average. Shown as honest
-  // context, not to inflate anything: a HR pick correct 22% of the time
-  // sounds low on its own, but it's nearly double a random guess's ~12%
-  // baseline - that comparison is the actually meaningful number, and
-  // it's real, not massaged.
   const boardBaseline = { hr: 12, hrr: 52, tb: 43 };
 
   if(!trackRecordData){
@@ -837,11 +764,6 @@ document.getElementById('trackRecordBtn').addEventListener('click', () => {
 });
 
 async function applyLiveGameStatus(){
-  // players.json only has game status from whenever the backend script last
-  // ran (usually 10am, before anything's started) - it's a snapshot, not
-  // live. This checks MLB's schedule directly, every time the page loads,
-  // so games that have since gone Live or Final grey out/hide correctly
-  // without needing the whole backend pipeline to re-run.
   try {
     const today = getLocalDateString();
     const res = await fetch(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${today}`);
@@ -858,9 +780,6 @@ async function applyLiveGameStatus(){
         const home = g.teams.home.team.name;
         const away = g.teams.away.team.name;
         const status = (g.status || {}).abstractGameState;
-        // Match loosely by team name substrings since players.json uses
-        // abbreviations (e.g. "HOU") and this API returns full names
-        // (e.g. "Houston Astros").
         statusByMatchup[`${away}__${home}`] = status;
         if (status === 'Live' || status === 'Final') activeGamePks.push(g.gamePk);
         if (status === 'Live') liveGamePks.push(g.gamePk);
@@ -886,12 +805,6 @@ async function applyLiveGameStatus(){
   }
 }
 
-// For players whose game is Live or Final, pulls their REAL home run count
-// from that game specifically (not season totals) via the boxscore, and
-// attaches it as p.actualHR. Players in games that haven't started yet are
-// left untouched (actualHR stays undefined) - only shown on the card once
-// there's a real result to show, per your "if they didn't hit one, no
-// change" request.
 async function applyActualHomers(gamePks){
   if (!gamePks.length) return;
   try {
@@ -922,8 +835,6 @@ async function applyActualHomers(gamePks){
   }
 }
 
-// Rough city/nickname hint per abbreviation, used only to loosely match
-// against MLB's full team names above (e.g. "HOU" -> "Astros").
 function TEAM_FULLNAME_HINT(abbr){
   const hints = {
     LAA:'Angels', AZ:'Diamondbacks', BAL:'Orioles', BOS:'Red Sox', CHC:'Cubs',
@@ -960,20 +871,13 @@ async function updateHrCounter(gamePks){
   }
 }
 
-// ---------------------------------------------------------------------
-// Live HR alerts. Polls each currently-Live game's play-by-play feed on an
-// interval, and pops a toast at the top of the page the moment a new home
-// run play appears. Only runs while the tab is open - there's no way to
-// send a real push notification from a static GitHub Pages site without a
-// backend, so this only alerts while someone actually has the page open.
-// ---------------------------------------------------------------------
 const seenHomerPlays = new Set();
 let homerPollInterval = null;
 
 function startHomerAlertPolling(liveGamePks){
   if (homerPollInterval) clearInterval(homerPollInterval);
   if (!liveGamePks.length) return;
-  checkForNewHomers(liveGamePks); // check once immediately
+  checkForNewHomers(liveGamePks);
   homerPollInterval = setInterval(() => checkForNewHomers(liveGamePks), 45000);
 }
 
@@ -993,10 +897,6 @@ async function checkForNewHomers(gamePks){
         const key = `${gamePk}-${play.about.atBatIndex}`;
         if (seenHomerPlays.has(key)) return;
         seenHomerPlays.add(key);
-        // Only fire real toasts for plays we've actually seen appear fresh
-        // (skip the very first poll of a game already in progress, so we
-        // don't dump 5 alerts at once for HRs that already happened before
-        // the page was opened).
         if (!checkForNewHomers.warmedUp) return;
         const battingTeam = play.about.isTopInning ? awayAbbr : homeAbbr;
         showHomerToast(play.matchup.batter.fullName, battingTeam);
@@ -1004,7 +904,6 @@ async function checkForNewHomers(gamePks){
     });
     checkForNewHomers.warmedUp = true;
   } catch (err) {
-    // silent - just try again next interval
   }
 }
 
@@ -1068,64 +967,24 @@ function tierFor(i){
 }
 
 function fmtPct(x){ return x == null ? 'N/A' : (x*100).toFixed(1) + '%'; }
-// The internal composite favorability score (0-100) was never meant to BE
-// a real probability - it's a weighted comparison scale so the formula's
-// factors can be weighed against each other. Real single-game MLB HR odds
-// run roughly 2-3% for a weak matchup up to ~28-30% for an elite slugger
-// in a great spot, nowhere close to the composite's raw range - which is
-// exactly why a 60-70% "favorability" reads as confusingly high. This
-// maps the composite onto a realistic-looking range for DISPLAY ONLY.
-// Sorting, tiers (PRIME/STRONG/IN PLAY/LONG SHOT), and every other use of
-// the raw score are completely untouched by this - only the number shown
-// on the card changes, so no tier recalibration is needed. The K board's
-// score is already a genuine calibrated Poisson probability (see
-// compute_k_score in fetch_hr_data.py), so it's left alone here.
-const DISPLAY_PCT_FLOOR = 3;     // even a 0-composite matchup isn't truly 0% in real life
-const DISPLAY_PCT_CEILING = 32;  // roughly the real-world ceiling for an elite slugger, great spot
+const DISPLAY_PCT_FLOOR = 3;
+const DISPLAY_PCT_CEILING = 32;
 function displayPct(rawScore, mode){
   if(mode === 'k' || rawScore == null) return rawScore;
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (DISPLAY_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
 
-// Separate, wider scale used ONLY for the value-vs-market comparison -
-// same raw score as the card's own displayed number, just given more
-// headroom. The 32% card ceiling is deliberately conservative so the
-// number LOOKS realistic to a casual reader, but that same conservatism
-// meant even the best real hitters (Olson, Ohtani, Harper - 65-70 raw
-// score) could never mathematically clear real sportsbook pricing for
-// a great HR matchup (which often implies 25-33%) - the value tab was
-// structurally empty for everyone regardless of how good the matchup
-// actually was. 46% lets genuinely elite scores show real edges against
-// typical market pricing, while a player the market has already priced
-// unusually short (little room left to disagree) still correctly shows
-// little or no edge - verified against real live examples before
-// picking this number, not guessed.
 const VALUE_PCT_CEILING = 46;
 function valuePct(rawScore, mode){
   if(mode === 'k' || rawScore == null) return rawScore;
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (VALUE_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
-// Hoisted to top-level scope (used to live inside the card-render chip
-// logic only) so the VALUE-sort filtering in render() can share the
-// exact same threshold instead of two places needing to agree by hand.
 const MIN_VALUE_EDGE = 4;
 const STRONG_VALUE_EDGE = 12;
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
-// Real sportsbook lines, when fetch_odds.py has matched them onto this
-// player (p.bookOdds). HR, Hits, TB, HRR, and K all have real markets at
-// major sportsbooks.
 const BOARD_TO_ODDS_FIELD = { hr: 'hr', hrr: 'hrr', tb: 'tb', k: 'k' };
 const BOOK_LABELS = { draftkings: 'DK', fanduel: 'FD', betmgm: 'MGM', hardrockbet: 'Hard Rock' };
-// Real favicons pulled from each book's own official domain, via
-// Google's public favicon-serving endpoint - this is NOT me reproducing
-// their trademarked logo artwork (which I intentionally avoid), it's
-// their own server's own real icon, same technical pattern already used
-// for player headshots (pulling from MLB's own CDN rather than drawing
-// one myself). The colored text badge stays as a graceful fallback via
-// onerror, in case a favicon fails to load or a domain guess is wrong -
-// I haven't been able to verify these exact domains/favicon quality
-// against a live response, so keep an eye on how these actually render.
 const BOOK_BADGE = {
   draftkings: { text: 'DK', color: '#53d769', domain: 'draftkings.com' },
   fanduel: { text: 'FD', color: '#1e88e5', domain: 'fanduel.com' },
@@ -1138,12 +997,6 @@ function bookBadgeHtml(bookKey){
   const fallbackColor = b ? b.color : '#8b948d';
   if(!b || !b.domain) return `<span class="bookodds-badge" style="--book-color:${fallbackColor};">${fallbackText}</span>`;
   const iconUrl = `https://www.google.com/s2/favicons?domain=${b.domain}&sz=64`;
-  // If the real favicon fails to load for any reason, swap in the
-  // colored text badge - done via a real JS function (not a nested HTML
-  // string inside the onerror attribute) since embedding one quoted HTML
-  // fragment inside another quoted attribute breaks the browser's own
-  // attribute-value parsing the moment the inner content has its own
-  // double quotes, which the colored-badge span always does.
   return `<img class="bookodds-icon" src="${iconUrl}" alt="${fallbackText}" title="${fallbackText}" onerror="bookIconFallback(this, '${bookKey}')">`;
 }
 function bookIconFallback(imgEl, bookKey){
@@ -1154,11 +1007,6 @@ function bookIconFallback(imgEl, bookKey){
   span.textContent = b.text || BOOK_LABELS[bookKey] || bookKey;
   imgEl.replaceWith(span);
 }
-// Groups a flat list of {book, line, price} entries (fetch_odds.py's
-// output shape) into { lineValue: [{book, price}, ...] } plus a sorted
-// array of the distinct lines - shared by both the pitcher and batter
-// line-switcher dropdowns so alternate-line grouping stays consistent
-// between them.
 function groupLinesByBook(entries){
   const lineToBooks = {};
   (entries || []).forEach(e => {
@@ -1169,25 +1017,6 @@ function groupLinesByBook(entries){
   const distinctLines = Object.keys(lineToBooks).map(Number).sort((a, b) => a - b);
   return { lineToBooks, distinctLines };
 }
-// The single most "consensus" real line among the books offering odds -
-// the line the most books agree on, tie-broken toward the lowest value.
-// Used to default the line-switcher to what the market actually thinks,
-// rather than our own self-computed line, per your request that OUR
-// default should match what the sportsbooks are actually setting.
-// Consensus is a WEIGHTED vote - primary-market entries count fully (1.0),
-// alternate-market entries count partially (0.3) - rather than a strict
-// primary-only filter. Two real, opposite bugs forced this: (1) HRR - a
-// near-universal "easy" alternate line (1.5) was out-voting the real
-// primary line when alternates counted fully, so they needed to count
-// for less; (2) HR - it turns out most books represent an "anytime HR"
-// prop ENTIRELY through what the API calls the alternate/milestone
-// market (since "1+" is inherently a threshold concept), so a strict
-// primary-only filter was throwing out nearly all real data and left
-// only whichever single book happened to also report a redundant
-// primary entry. Weighting instead of filtering solves both: a
-// near-universal alt line still loses to a real primary line when one
-// exists, but real alt-only data still counts for something when no
-// primary data exists at all, instead of being silently discarded.
 function computeConsensus(entries){
   if(!entries || !entries.length) return null;
   const weightByLine = {};
@@ -1208,11 +1037,6 @@ function renderBookOdds(p, mode){
   if(!allEntries.length) return '';
   const consensus = computeConsensus(allEntries);
   if(consensus == null) return '';
-  // Show every book with a line AT the established consensus number,
-  // regardless of whether that specific book happened to report it via
-  // their primary or alternate market - a book quoting the same real
-  // number through their milestone market is still real, current
-  // information, not something worth hiding from the card.
   const entries = allEntries.filter(e => e.line === consensus);
   if(!entries.length) return '';
   const pills = entries.map(d => {
@@ -1226,13 +1050,6 @@ function renderBookOdds(p, mode){
     </div>`;
 }
 
-// Returns 'good' | 'bad' | 'verybad' | '' for a stat value against fixed
-// benchmarks, so each statbox on a card can be colored by whether it's
-// actually working for or against the player - not just displayed as a
-// flat number. dir: 'high' means bigger is better (e.g. AVG), 'low' means
-// smaller is better (e.g. nothing currently, kept for future stats).
-// Only the 'good' and 'bad'/'verybad' cutoffs need to be supplied - a
-// value between them is left uncolored (neutral).
 function statTier(value, { dir = 'high', good, bad, veryBad } = {}){
   if(value == null) return '';
   if(dir === 'high'){
@@ -1247,14 +1064,8 @@ function statTier(value, { dir = 'high', good, bad, veryBad } = {}){
   return '';
 }
 
-// HTML-attribute-safe escaping for the tooltip strings below - the text is
-// built from live player data (names, hands) so it isn't hand-authored,
-// safest to escape rather than assume no player ever has a stray quote.
 function escAttr(s){ return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
 
-// Each of these builds the specific, per-player "why is this tag here
-// today" explanation shown as a hover tooltip on that chip - not a static
-// caption, the real numbers behind today's tag.
 function tipPlatoon(p){
   const avgmixStr = p.avgmix != null ? p.avgmix.toFixed(3) : 'N/A';
   const handWord = p.hand === 'L' ? 'lefties' : 'righties';
@@ -1279,11 +1090,6 @@ function tipOppKRate(p){
 function tipWorkhorse(p){
   return `Averaging ${fmtNum(p.ipPerStart, 1)} innings per start this season - a longer outing means facing more batters, which raises the strikeout ceiling regardless of stuff.`;
 }
-// Sample-size confidence chip - not a new metric, just surfacing the exact
-// PA-weighted shrink already driving compute_score()'s power inputs (see
-// power_sample_weight() in fetch_hr_data.py), so a thin-sample reader can
-// actually see when a stat line hasn't accumulated enough real innings/
-// at-bats to fully trust yet, instead of only finding out the hard way.
 function sampleChipClass(n, good, bad){
   if(n == null) return '';
   if(n >= good) return 'chip-sample-good';
@@ -1308,10 +1114,65 @@ function tipValue(v){
     : `${bookLabel}'s price (${v.price > 0 ? '+' : ''}${v.price})`;
   return `Our model puts this at ${fmtNum(v.ourProb, 1)}% at the ${fmtNum(v.line, 1)} line - ${priceSource} only implies ${fmtNum(v.bookImplied, 1)}%. That ${fmtNum(v.edge, 1)}-point gap is where we think the market's underpricing this.`;
 }
-// Renders one or more statbox divs from {label, value, display, tier} entries,
-// then stretches the last row's boxes so they never leave an empty gap:
-// 1 trailing box spans the full row (6/6 cols), 2 trailing boxes split it
-// evenly (3/6 cols each) - a full row of 3 (2/6 cols each) needs no change.
+
+function tipPowerSurge(p){
+  return `Last-15-day barrel rate is ${fmtPct(p.l15Barrel)} vs a ${fmtPct(p.barrel)} season rate (${p.l15PowerPa} real batted-ball events) - real recent power increase, not just a hot HR streak.`;
+}
+function tipPowerFade(p){
+  return `Last-15-day barrel rate is ${fmtPct(p.l15Barrel)} vs a ${fmtPct(p.barrel)} season rate (${p.l15PowerPa} real batted-ball events) - quality of contact has cooled off recently.`;
+}
+function tipSoftMatchup(p){
+  return `${p.pitcher}'s blended HR/9 (${fmtNum(p.phr9,2)}) is running worse than his season rate (${fmtNum(p.phr9Season,2)}) right now - a pitcher trending in the wrong direction.`;
+}
+function tipToughMatchup(p){
+  return `${p.pitcher}'s blended HR/9 (${fmtNum(p.phr9,2)}) is running better than his season rate (${fmtNum(p.phr9Season,2)}) right now - tougher than his full-season line suggests.`;
+}
+function tipHomeEdge(p){
+  return `Home HR rate is ${fmtPct(p.homeHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.homePa} home PA) - a real, demonstrated home-park advantage, and tonight's a home game.`;
+}
+function tipRoadEdge(p){
+  return `Road HR rate is ${fmtPct(p.roadHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.roadPa} road PA) - a real, demonstrated road advantage, and tonight's a road game.`;
+}
+function tipDayEdge(p){
+  return `Day-game HR rate is ${fmtPct(p.dayHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.dayPa} day-game PA) - real, demonstrated day-game advantage, and this is a day game.`;
+}
+function tipNightEdge(p){
+  return `Night-game HR rate is ${fmtPct(p.nightHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.nightPa} night-game PA) - real, demonstrated night-game advantage, and this is a night game.`;
+}
+function tipWeakBullpen(p){
+  return `Opposing bullpen ERA ${fmtNum(p.oppBullpenEra,2)} / WHIP ${fmtNum(p.oppBullpenWhip,2)} over ${fmtNum(p.oppBullpenIp,1)} real relief innings - a genuinely shaky relief corps if this game gets deep.`;
+}
+function situationalChips(p){
+  if(boardMode !== 'hr') return '';
+  const chips = [];
+  if(p.l15Barrel != null && p.l15PowerPa >= 15 && p.barrel != null){
+    const diff = p.l15Barrel - p.barrel;
+    if(diff >= 0.03) chips.push(`<div class="chip chip-surge" title="${escAttr(tipPowerSurge(p))}" data-tip="${escAttr(tipPowerSurge(p))}">&#128640; power surge</div>`);
+    else if(diff <= -0.03) chips.push(`<div class="chip chip-fade" title="${escAttr(tipPowerFade(p))}" data-tip="${escAttr(tipPowerFade(p))}">power fade</div>`);
+  }
+  if(p.phr9 != null && p.phr9Season != null){
+    const diff = p.phr9 - p.phr9Season;
+    if(diff >= 0.3) chips.push(`<div class="chip chip-softmatchup" title="${escAttr(tipSoftMatchup(p))}" data-tip="${escAttr(tipSoftMatchup(p))}">soft matchup</div>`);
+    else if(diff <= -0.3) chips.push(`<div class="chip chip-toughmatchup" title="${escAttr(tipToughMatchup(p))}" data-tip="${escAttr(tipToughMatchup(p))}">tough matchup</div>`);
+  }
+  if(p.seasonHrRate != null && p.seasonHrRate > 0){
+    if(p.isHomeGame && p.homeHrRate != null && p.homePa >= 60 && p.homeHrRate >= p.seasonHrRate * 1.15){
+      chips.push(`<div class="chip chip-edge" title="${escAttr(tipHomeEdge(p))}" data-tip="${escAttr(tipHomeEdge(p))}">home edge</div>`);
+    } else if(!p.isHomeGame && p.roadHrRate != null && p.roadPa >= 60 && p.roadHrRate >= p.seasonHrRate * 1.15){
+      chips.push(`<div class="chip chip-edge" title="${escAttr(tipRoadEdge(p))}" data-tip="${escAttr(tipRoadEdge(p))}">road edge</div>`);
+    }
+    if(p.isDayGame && p.dayHrRate != null && p.dayPa >= 60 && p.dayHrRate >= p.seasonHrRate * 1.15){
+      chips.push(`<div class="chip chip-edge" title="${escAttr(tipDayEdge(p))}" data-tip="${escAttr(tipDayEdge(p))}">day edge</div>`);
+    } else if(!p.isDayGame && p.nightHrRate != null && p.nightPa >= 60 && p.nightHrRate >= p.seasonHrRate * 1.15){
+      chips.push(`<div class="chip chip-edge" title="${escAttr(tipNightEdge(p))}" data-tip="${escAttr(tipNightEdge(p))}">night edge</div>`);
+    }
+  }
+  if(p.oppBullpenEra != null && p.oppBullpenIp >= 20 && p.oppBullpenEra >= 4.20 * 1.15){
+    chips.push(`<div class="chip chip-bullpen" title="${escAttr(tipWeakBullpen(p))}" data-tip="${escAttr(tipWeakBullpen(p))}">&#9888; weak bullpen</div>`);
+  }
+  return chips.join('');
+}
+
 function renderStatboxes(items){
   const trailing = items.length % 3;
   return items.map((it, i) => {
@@ -1321,14 +1182,6 @@ function renderStatboxes(items){
   }).join('');
 }
 
-// Favorability bands, independent of rank position. The K board uses its
-// own thresholds since its score is a real Poisson probability against a
-// self-adjusting line (see compute_k_score in fetch_hr_data.py) rather
-// than the other boards' wider 0-100 composite - its realistic range is
-// only about 33-59% for EVERY pitcher, good or bad (verified by sweeping
-// the formula across realistic projections: p10=40, p50=47, p90=54), so
-// reusing the batter boards' 55/40/35 cutoffs would mean PRIME almost
-// never triggers and STRONG/IN PLAY swallow nearly everything.
 function favTierName(score){
   if(score == null) return 'N/A';
   if(boardMode === 'k'){
@@ -1361,36 +1214,23 @@ function render(){
   const emptyEl = document.getElementById('empty');
   let filtered = players.filter(p => {
     const q = query.toLowerCase();
-    // pitcher rows don't have a `.pitcher` field (they have `.opponent`
-    // instead, since a pitcher doesn't face an "opposing pitcher") - guard
-    // with || '' so search doesn't throw on the K board.
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || (p.pitcher || p.opponent || '').toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
     const matchesTier = !selectedTier || favTierClass(p[scoreField()]) === selectedTier;
-    // K board shows pitcher rows; every other board shows batter rows -
-    // both live in the same players array, distinguished by playerType.
     const matchesType = p.playerType === (boardMode === 'k' ? 'pitcher' : 'batter');
     let matchesStatus = true;
     if (selectedGame) {
-      matchesStatus = true; // tapping a specific game always shows it regardless of status filter
+      matchesStatus = true;
     } else if (selectedStatus === 'live') matchesStatus = p.gameStatus === 'Live';
     else if (selectedStatus === 'final') matchesStatus = p.gameStatus === 'Final';
     else if (selectedStatus === 'allstatus') matchesStatus = true;
-    else matchesStatus = p.gameStatus !== 'Live' && p.gameStatus !== 'Final'; // default: Upcoming Only
+    else matchesStatus = p.gameStatus !== 'Live' && p.gameStatus !== 'Final';
     return matchesSearch && matchesGame && matchesTier && matchesType && matchesStatus;
   });
-  // Freshly computed every render (not stored on the raw data) since
-  // "value" depends on which board's odds market we're comparing
-  // against - a player's edge on the HR board isn't the same number as
-  // his edge on the TB board, so this can't just be a static field.
   filtered.forEach(p => {
     const v = calculateValue(p, boardMode);
     p._valueEdge = v ? v.edge : -Infinity;
   });
-  // When actively sorted by VALUE, only show players who actually clear
-  // the real value threshold - showing all ~180 players with only a
-  // handful having a badge made the tab feel broken/empty of purpose.
-  // Sorting by anything else still shows everyone as normal.
   if(sortKey === 'value'){
     filtered = filtered.filter(p => p._valueEdge >= MIN_VALUE_EDGE);
   }
@@ -1428,10 +1268,11 @@ function render(){
       ? `<span class="badge-homer">&#9917; ${p.actualHR} HR TODAY</span>`
       : '';
     const cardScore = p[scoreField()];
+    const avgVsMixVal = p.avgVsMix != null ? p.avgVsMix : p.avgmix;
     const statboxes = boardMode === 'hr' ? renderStatboxes([
-        { label: 'AVG vs Mix', display: fmtNum(p.avgmix, 3),
-          tier: statTier(p.avgmix, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
-        { label: 'Exit Velo', display: fmtNum(p.ev, 1),
+        { label: 'AVG vs Mix', display: fmtNum(avgVsMixVal, 3),
+          tier: statTier(avgVsMixVal, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
+        { label: 'Exit Velo (L15)', display: fmtNum(p.ev, 1),
           tier: statTier(p.ev, { good: 91, bad: 86, veryBad: 83 }) },
         { label: 'Pitcher HR/9', display: fmtNum(p.phr9, 2),
           tier: statTier(p.phr9, { good: 1.3, bad: 0.8, veryBad: 0.5 }) },
@@ -1445,7 +1286,7 @@ function render(){
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
         { label: 'Barrel%', display: fmtPct(p.barrel),
           tier: statTier(p.barrel, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
-        { label: 'Hard Hit%', display: fmtPct(p.hardhit),
+        { label: 'Hard Hit% (L15)', display: fmtPct(p.hardhit),
           tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
         { label: 'Season ISO', display: fmtNum(p.iso, 3),
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
@@ -1537,21 +1378,10 @@ function render(){
           <div class="chip ${p.crush ? 'chip-crusher' : ''}" title="${escAttr(tipCrusher(p))}" data-tip="${escAttr(tipCrusher(p))}">${p.crush ? 'crusher match' : 'no crusher match'}</div>
           <div class="chip chip-lineup" title="${escAttr(tipLineup(p, boardMode))}" data-tip="${escAttr(tipLineup(p, boardMode))}">lineup +${boardMode === 'hrr' ? p.hrrLbonus : p.lbonus}</div>
           <div class="chip ${sampleChipClass(p.pa, 200, 80)}" title="${escAttr(tipSampleBatter(p))}" data-tip="${escAttr(tipSampleBatter(p))}">${p.pa == null ? 'PA N/A' : p.pa + ' PA'}</div>
+          ${situationalChips(p)}
         `}
         ${(() => {
           const v = calculateValue(p, boardMode);
-          // Any real positive edge renders - not just edges clearing +8pt.
-          // The VALUE sort ranks every card by this same edge, so hiding
-          // anything under +8pt meant sorting by value could put a card
-          // in the #1 slot with no chip at all to show why it's there
-          // (this happens routinely on the HR/TB boards, where the props
-          // market runs tighter and a real edge is often a few points,
-          // not double digits). Edges under +8pt get a plainer, unglowed
-          // style so a genuine double-digit edge still visually stands
-          // out from a modest one - both are real, just different sizes.
-          // MIN_VALUE_EDGE/STRONG_VALUE_EDGE are now top-level constants
-          // (see near valuePct()) so the VALUE-sort filtering in render()
-          // shares the exact same threshold as this badge.
           if(!v || v.edge < MIN_VALUE_EDGE) return '';
           const strong = v.edge >= STRONG_VALUE_EDGE;
           return `<div class="chip ${strong ? 'chip-value' : 'chip-value-mild'}" title="${escAttr(tipValue(v))}" data-tip="${escAttr(tipValue(v))}">&#128176; VALUE +${fmtNum(v.edge, 1)}pt</div>`;
@@ -1609,8 +1439,6 @@ document.querySelectorAll('.boardtab').forEach(tab => {
   });
 });
 
-// Tap-to-open chip tooltip (see .chip-tooltip CSS above for why this
-// exists instead of relying on the native `title` hover tooltip).
 let openChipTipEl = null;
 function hideChipTip(){
   const existing = document.querySelector('.chip-tooltip');
@@ -1631,7 +1459,7 @@ function showChipTip(chipEl){
   left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
   let top = r.bottom + 8;
   if(top + th > window.innerHeight - 8){
-    top = r.top - th - 8;  // flip above the chip if it'd overflow the bottom
+    top = r.top - th - 8;
   }
   tip.style.left = left + 'px';
   tip.style.top = top + 'px';
@@ -1656,7 +1484,7 @@ document.getElementById('list').addEventListener('click', (e) => {
   const card = e.target.closest('.card');
   if (!card) return;
   const pid = card.dataset.playerId;
-  if (!pid) return; // no MLBAM id on this row - nothing to look up a game log by
+  if (!pid) return;
   const p = players.find(pp => String(pp.playerId) === pid && pp.playerType === card.dataset.playerType);
   if (!p) return;
   if (p.playerType === 'pitcher') openPitcherModal(p);
@@ -1668,25 +1496,15 @@ loadTrackRecord().then(renderTrackRecord);
 </script>
 
 <script>
-// ---------------------------------------------------------------------
-// Player detail modal: Graph tab (per-game HR/Hits/XBH bar chart vs a
-// binary threshold, plus L5/L10/L20/season split %s) and Stats tab
-// (PA/Hits/XBH averages with a raw-count bar chart) - built entirely from
-// the p.gamelog bundle the backend script precomputes each run, so opening
-// a card is instant with no extra network calls.
-// ---------------------------------------------------------------------
 let modalPlayer = null;
-let modalProp = 'hr';           // 'hr' | 'hits' | 'xbh' - drives the Graph tab
-let modalWindow = 'l10';        // 'l5' | 'l10' | 'l20' - which window headlines the Graph split box
-let modalStatsMetric = 'pa';    // 'pa' | 'hits' | 'xbh' - drives the Stats tab
-let modalStatsMode = 'avg';     // 'avg' | 'median'
-let modalView = 'graph';        // 'graph' | 'stats'
+let modalProp = 'hr';
+let modalWindow = 'l10';
+let modalStatsMetric = 'pa';
+let modalStatsMode = 'avg';
+let modalView = 'graph';
 
 const PROP_FIELD = { hr: 'hr', hits: 'hits', xbh: 'xbh', hrr: 'hrr', tb: 'tb' };
 const PROP_LABEL = { hr: 'Home Runs', hits: 'Hits', xbh: 'Extra Base Hits', hrr: 'Hits+Runs+RBI (1.5 line)', tb: 'Total Bases (1.5 line)' };
-// The "line" each prop needs to clear to count as a hit game. HR/Hits/XBH
-// are standard 0.5 lines (any 1+ counts). HRR is a real, commonly-offered
-// prop line of 1.5 combined Hits+Runs+RBI, so it needs 2+ to clear.
 const PROP_THRESHOLD = { hr: 0.5, hits: 0.5, xbh: 0.5, hrr: 1.5, tb: 1.5 };
 const STATS_FIELD = { pa: 'pa', hits: 'hits', xbh: 'xbh' };
 const STATS_LABEL = { pa: 'Plate Appearances', hits: 'Hits', xbh: 'Extra Base Hits' };
@@ -1697,10 +1515,6 @@ function fmtShortDate(iso){
   if (parts.length !== 3) return iso;
   return `${parseInt(parts[1], 10)}/${parseInt(parts[2], 10)}`;
 }
-// MLB's API gives us a UTC timestamp - the browser's Date object converts
-// it to whatever timezone the viewer's own device is set to, so this
-// always shows a game's start time correctly relative to the person
-// actually looking at the page, not a hardcoded ET assumption.
 function formatGameTime(iso){
   if (!iso) return '';
   const d = new Date(iso);
@@ -1745,12 +1559,6 @@ function openPlayerModal(p){
   renderModalBody();
   document.getElementById('playerModal').style.display = 'flex';
 }
-// Resets the line-switcher back to OUR OWN line whenever the modal opens
-// or the prop tab changes - matches the score already shown on the card,
-// so opening/switching never shows a different number than what was
-// just tapped. The market's consensus line is clearly labeled in the
-// dropdown (see renderGraphView) so it's still easy to find and switch
-// to, it just isn't the automatic starting point.
 function setDefaultLineForProp(p){
   modalSelectedLine = null;
 }
@@ -1781,21 +1589,6 @@ function renderModalHeader(p){
     </div>`;
 }
 
-// ---------------------------------------------------------------------
-// Pitcher detail modal - a parallel, simpler path from openPlayerModal()
-// above. Reuses the same overlay/header/close-button chrome, but the
-// prop-tabs and Graph/Stats tabs are batter-specific (HR/Hits/XBH/HRR/TB
-// props against a fixed universal line) and don't apply to a pitcher, so
-// those get hidden and the body is built directly instead. The K board's
-// line is DYNAMIC per pitcher (see compute_k_score's kLine), not a fixed
-// 1.5 like the batter boards, so the chart's threshold line is drawn at
-// that pitcher's own p.kLine rather than a shared constant.
-// ---------------------------------------------------------------------
-// JS port of fetch_hr_data.py's poisson_over_prob() - verified to produce
-// identical output to the Python version (same test cases, same results
-// to 15+ decimal places). Needed here so the line-switcher dropdown below
-// can recompute a real probability on the fly against whichever line the
-// user picks, without a round trip back to the server.
 function poissonOverProbJS(mean, line){
   if(mean == null || mean <= 0) return null;
   const threshold = Math.floor(line) + 1;
@@ -1811,39 +1604,15 @@ function americanToImpliedProb(price){
   if(price == null) return null;
   return price > 0 ? 100 / (price + 100) : (-price) / ((-price) + 100);
 }
-// Real "value" signal: compares our own genuinely calibrated probability
-// (hrProb/hrrProb/tbProb from fetch_hr_data.py's Poisson/rate model, or
-// kScore for the K board, which is already a real probability) against
-// the market's own implied probability at THE SAME LINE our number was
-// modeled for. Deliberately returns null (shows nothing) rather than a
-// misleading comparison if the book's line doesn't match what our
-// probability actually applies to - comparing against a different line
-// isn't a real edge, it's comparing two different bets.
 function calculateValue(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
   if(!field) return null;
   const entries = (p.bookOdds && p.bookOdds[field]) || [];
   if(!entries.length) return null;
 
-  // Confidence guardrail: a batter with little/no real MLB plate-
-  // appearance track record this season (debut, rare call-up, etc.)
-  // can still produce a mathematically "valid" edge, but our own
-  // confidence in that number is genuinely low for such a small/
-  // unknown sample - showing a bold VALUE badge in that case overstates
-  // how much we actually know about this player. Pitchers (mode 'k')
-  // aren't subject to this - kScore is already a real per-start
-  // probability, not a season-blended composite the same way.
   const MIN_PA_FOR_VALUE = 20;
   if(mode !== 'k' && (p.pa == null || p.pa < MIN_PA_FOR_VALUE)) return null;
 
-  // ourProb comes from the DEDICATED probability model (hrProb/hrrProb/
-  // tbProb), not the composite favorability score. That model exists
-  // specifically to catch cases the composite score's own display can't
-  // - a player on a genuine hot streak who the market hasn't caught up
-  // to yet, even if his overall composite score (power/matchup/etc all
-  // blended) isn't the best on the board. The composite score answers
-  // "who's the best play overall"; this answers "where is the market
-  // specifically wrong right now" - two different questions.
   let ourProb, expectedLine;
   if(mode === 'k'){
     ourProb = p.kScore;
@@ -1860,13 +1629,6 @@ function calculateValue(p, mode){
   }
   if(ourProb == null || expectedLine == null) return null;
 
-  // Use the MEDIAN price across all books at this line, not the single
-  // best (highest) one. The best-price approach was overweighting
-  // outliers - if 3 books agree on a shorter price and 1 book is an
-  // outlier offering something unusually generous, comparing against
-  // only that outlier overstates the real market's edge. The median is
-  // what the market genuinely thinks, not what its most generous single
-  // book happens to think.
   const candidateEntries = entries.filter(e => e.line === expectedLine && e.price != null);
   if(!candidateEntries.length) return null;
   const sortedByPrice = [...candidateEntries].sort((a, b) => a.price - b.price);
@@ -1874,8 +1636,6 @@ function calculateValue(p, mode){
   const medianPrice = sortedByPrice.length % 2 !== 0
     ? sortedByPrice[mid].price
     : (sortedByPrice[mid - 1].price + sortedByPrice[mid].price) / 2;
-  // For display/tooltip purposes, cite whichever real entry sits closest
-  // to that median price, rather than inventing a synthetic "book".
   const matchingEntry = sortedByPrice.reduce((closest, e) =>
     Math.abs(e.price - medianPrice) < Math.abs(closest.price - medianPrice) ? e : closest
   );
@@ -1887,19 +1647,10 @@ function calculateValue(p, mode){
   };
 }
 
-// Which line the pitcher modal's graph/probability is currently reading
-// against - null means "our own model line" (p.kLine). Reset every time
-// the modal opens for a new player, so switching players doesn't carry
-// over a stale selection from whoever was open before.
 let modalSelectedLine = null;
 
 function openPitcherModal(p){
   modalPlayer = p;
-  // Default to OUR OWN line - matches the score already shown on the
-  // card, so clicking into a pitcher never shows a different number
-  // than what was just tapped. The market's consensus line is clearly
-  // labeled in the dropdown (see renderPitcherModalBody) so it's easy to
-  // find and switch to, it just isn't the automatic starting point.
   modalSelectedLine = null;
   document.getElementById('modalPropTabs').style.display = 'none';
   document.getElementById('modalTabs').style.display = 'none';
@@ -1916,19 +1667,12 @@ function renderPitcherModalBody(p){
     return;
   }
 
-  // Every distinct real line offered across the books we have (including
-  // alternates), deduped - this populates the dropdown alongside our own
-  // model line.
   const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds.k);
 
   const activeLine = modalSelectedLine != null ? modalSelectedLine : p.kLine;
   const overProb = poissonOverProbJS(p.projK, activeLine);
   const overPct = overProb == null ? null : overProb * 100;
 
-  // If the active line exactly matches a real book's line, show that
-  // book's own implied probability alongside our model's - a direct,
-  // honest side-by-side of what we think vs what the market thinks,
-  // specifically at the number currently selected.
   const matchingBooks = lineToBooks[activeLine] || [];
   const consensus = computeConsensus(p.bookOdds && p.bookOdds.k);
 
@@ -1950,9 +1694,6 @@ function renderPitcherModalBody(p){
   const maxVal = Math.max(1, activeLine, ...starts.map(s => s.k));
   const threshPct = Math.min(92, (activeLine / maxVal) * 100);
 
-  // The odds readout now sits in the clear space ABOVE the bars, not
-  // overlaid on the threshold line itself (which crowded into the bars
-  // whenever the line sat near a tall column).
   const oddsBannerText = matchingBooks.length
     ? matchingBooks.map(b => `<span class="gl-oddspill">${bookBadgeHtml(b.bookKey)} ${b.price > 0 ? '+' : ''}${b.price}</span>`).join('')
     : `O/U ${fmtNum(activeLine, 1)} (our model - no book match at this line)`;
@@ -2031,11 +1772,6 @@ function renderGraphView(){
   const label = PROP_LABEL[modalProp];
   const threshold = PROP_THRESHOLD[modalProp];
 
-  // Every distinct real line offered across the books we have for THIS
-  // prop (including alternates), deduped - same line-switcher pattern as
-  // the pitcher K board. Only HR/Hits/TB/HRR have a real market at any
-  // book; XBH has none, so its dropdown will just be empty and it
-  // silently falls back to our own fixed threshold, same as before.
   const { lineToBooks, distinctLines } = groupLinesByBook(p.bookOdds && p.bookOdds[field]);
   const activeThreshold = modalSelectedLine != null ? modalSelectedLine : threshold;
   const matchingBooks = lineToBooks[activeThreshold] || [];
