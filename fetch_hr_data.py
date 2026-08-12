@@ -1,32 +1,49 @@
 """
-fetch_hr_data.py  (v2 - full automation)
+fetch_hr_data.py  (v3 - reweighted formula + situational signals)
 
 Builds today's HR favorability board with NO manual screenshots, using only
 free, public data sources:
 
   - MLB Stats API (statsapi.mlb.com)  -> schedule, probable pitchers,
-    confirmed lineups, season batting/pitching stats, platoon splits
-  - Baseball Savant CSV export        -> barrel%, exit velocity, hard-hit%
+    confirmed lineups, season batting/pitching stats, platoon splits,
+    day/night splits, per-start pitcher game logs
+  - Baseball Savant CSV export        -> season AND last-15-day barrel%,
+    exit velocity, hard-hit%
   - Open-Meteo weather API            -> live wind speed/direction per park
 
-WHAT THIS REPLACES FROM SWIFTPROPS, AND HOW:
-  - "AVG vs Pitch Mix"  -> approximated with the batter's real platoon split
-                           (AVG vs LHP or vs RHP, whichever matches today's
-                           starter) - not identical to swiftprops' proprietary
-                           calculation, but a real, defensible stat that
-                           measures the same underlying idea.
-  - Crusher/Split tags   -> derived directly from that same platoon split
-                           data instead of a black-box tag.
-  - Wind, Park           -> live weather API + a fixed park-factor table.
-  - Lineup Bonus         -> batting order position from confirmed lineups
-                           (falls back to blank if lineups aren't posted yet
-                           - usually 1-3 hours before first pitch).
+WHAT CHANGED IN v3 (see the project's weighting-reform discussion):
+  - compute_score() reweighted from 5 buckets to 7: Power 25%, Pitcher 20%,
+    Platoon 15%, Recent 15%, Opportunity 15%, Park 5%, Wind 5%. Pitcher used
+    to be diluted inside a blended "matchup" bucket (worth ~19% of that
+    bucket's 30%, i.e. ~6% of the whole score) - it's now a standalone,
+    genuinely meaningful 20% lever, without being allowed to outweigh Power.
+  - Power now blends SEASON Statcast power (barrel%/EV/hard-hit%, still the
+    anchor) with a LAST-15-DAYS version of the same three stats, so a real
+    recent power surge (or decline) that hasn't fully shown up in the
+    season aggregate yet - or has started fading from it - actually moves
+    the score. ISO stays season-only; TB/HRR are unaffected.
+  - Pitcher's own hr9/whip now blend in his last-3-starts form (reusing
+    get_pitcher_gamelog(), already built and verified working for the K
+    board), the same way the K board already blends recent ipPerStart/k9.
+  - Two new small, capped adjustments: a home/road HR-rate split (built
+    entirely from the season gamelog already being fetched - no new API
+    call) and a day/night HR-rate split (one new per-player stat-splits
+    call). Both are bounded multipliers on the final score, not new
+    percentage-of-100 buckets - see HOME_ROAD_MAX_ADJ / DAY_NIGHT_MAX_ADJ
+    below for exactly how much either can move a score.
 
-HONESTY NOTE: this script has not been run against live data (the environment
-that wrote it has no network access). Field names in MLB's API responses are
-correct as documented, but if MLB tweaks a field name, you may need to adjust
-a line or two. Test it locally first with `python fetch_hr_data.py` before
-trusting the automated schedule.
+HONESTY NOTE ON NEW PIECES (same standard the rest of this file already
+holds itself to): fetch_batter_statcast_l15() uses Baseball Savant's
+"custom leaderboard" endpoint with a date range - this specific endpoint,
+its param names, and its column names have NOT been confirmed against a
+live response. get_day_night_split()'s sitCode ('day'/'night') is a
+best-guess, same unverified status as get_risp_avg()'s 'risp' sitCode
+already was in earlier versions of this file. Both print their raw
+response shape either way, same defensive pattern as
+fetch_batter_statcast() and fetch_pitch_mix_data() use, so a wrong
+assumption is immediately visible in the Action's run log instead of
+silently producing nothing. Test locally before trusting the automated
+schedule, same advice the v2 docstring already gave.
 """
 
 import csv
@@ -42,21 +59,11 @@ import requests
 from fetch_odds import normalize_name
 
 YEAR = 2026
-# GitHub Actions runners use UTC system time. Using that directly would mean
-# every run after ~7-8pm Eastern starts asking about TOMORROW's schedule
-# (barely populated - no pitchers or lineups posted yet) instead of finishing
-# out today's real slate. MLB's own scheduling is anchored to US Eastern
-# time, so that's what "today" should mean here too.
 TODAY = datetime.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
 
-# ---------------------------------------------------------------------------
-# Fixed park factors (rough HR-friendliness, -2 pitcher-friendly to +2 hitter-
-# friendly) and each park's lat/lon for live wind lookup. Extend this table
-# with any team not yet listed.
-# ---------------------------------------------------------------------------
 PARKS = {
-    "COL": {"factor": 2, "lat": 39.7559, "lon": -104.9942},   # Coors Field
-    "NYY": {"factor": 2, "lat": 40.8296, "lon": -73.9262},    # Yankee Stadium
+    "COL": {"factor": 2, "lat": 39.7559, "lon": -104.9942},
+    "NYY": {"factor": 2, "lat": 40.8296, "lon": -73.9262},
     "CIN": {"factor": 1, "lat": 39.0975, "lon": -84.5068},
     "MIL": {"factor": 1, "lat": 43.0280, "lon": -87.9712},
     "HOU": {"factor": 0, "lat": 29.7573, "lon": -95.3555},
@@ -70,7 +77,6 @@ PARKS = {
     "CLE": {"factor": -1, "lat": 41.4962, "lon": -81.6852},
     "PIT": {"factor": -1, "lat": 40.4469, "lon": -80.0057},
     "SD":  {"factor": -1, "lat": 32.7073, "lon": -117.1566},
-    # Add remaining parks as needed - default factor 0 is used if a team is missing.
 }
 
 
@@ -81,9 +87,6 @@ def statsapi_get(path, params=None):
     return resp.json()
 
 
-# MLB team IDs are stable and well documented - hardcoding this avoids relying on
-# the schedule endpoint returning an "abbreviation" field, which it does not
-# include by default (that was the KeyError bug).
 TEAM_ABBR = {
     108: "LAA", 109: "AZ", 110: "BAL", 111: "BOS", 112: "CHC", 113: "CIN",
     114: "CLE", 115: "COL", 116: "DET", 117: "HOU", 118: "KC", 119: "LAD",
@@ -94,13 +97,10 @@ TEAM_ABBR = {
 
 
 def team_abbr(team_obj):
-    """Look up a team's abbreviation by ID, falling back to its full name if
-    somehow not in the table (e.g. a new expansion team)."""
     return TEAM_ABBR.get(team_obj.get("id"), team_obj.get("name", "UNK"))
 
 
 def get_todays_games():
-    """Today's schedule with probable starting pitchers and live game status."""
     data = statsapi_get("schedule", {
         "sportId": 1, "date": TODAY, "hydrate": "probablePitcher,linescore"
     })
@@ -115,27 +115,27 @@ def get_todays_games():
                 "away_team_id": g["teams"]["away"]["team"].get("id"),
                 "home_pitcher": g["teams"]["home"].get("probablePitcher", {}),
                 "away_pitcher": g["teams"]["away"].get("probablePitcher", {}),
-                # "Preview" (not started), "Live" (in progress), or "Final"
-                # (completed) - used so the webpage can hide finished games
-                # by default while still letting you tap into them manually.
                 "status": g.get("status", {}).get("abstractGameState", "Preview"),
-                # Raw UTC ISO8601 timestamp - same field already trusted
-                # elsewhere in this file for date sorting (get_recent_lineup,
-                # get_recent_starter). The frontend converts this to the
-                # viewer's own local time for display.
                 "game_time": g.get("gameDate"),
             })
     return games
 
 
+def is_day_game(game_time_iso):
+    """True if this game's local (US Eastern) start time is before 5:00 PM -
+    the standard rough cutoff used across baseball analytics for "day game"
+    vs "night game." Returns None if the game time is missing."""
+    if not game_time_iso:
+        return None
+    try:
+        dt_utc = datetime.datetime.fromisoformat(game_time_iso.replace("Z", "+00:00"))
+        dt_et = dt_utc.astimezone(ZoneInfo("America/New_York"))
+        return dt_et.hour < 17
+    except Exception:
+        return None
+
+
 def get_lineup(game_pk, side):
-    """
-    Confirmed STARTING batting order for 'home' or 'away' side, if posted yet.
-    Uses each player's individual battingOrder code (e.g. '100' = leadoff starter,
-    '801' = a substitute who entered later in the 8-hole) rather than the team-level
-    list, which can include the full active roster instead of just the 9 starters.
-    Only codes ending in '00' are true starters.
-    """
     try:
         box = statsapi_get(f"game/{game_pk}/boxscore")
         team_box = box["teams"][side]
@@ -145,7 +145,7 @@ def get_lineup(game_pk, side):
             order_code = pdata.get("battingOrder")
             if order_code and order_code.endswith("00"):
                 pid = int(pid_key.replace("ID", ""))
-                slot = int(order_code) // 100  # '300' -> 3rd in the order
+                slot = int(order_code) // 100
                 lineup[pid] = slot
         return lineup
     except Exception:
@@ -153,14 +153,6 @@ def get_lineup(game_pk, side):
 
 
 def get_recent_lineup(team_id):
-    """
-    FALLBACK for when today's official lineup isn't posted yet (usually not
-    available until 1-3 hours before first pitch). Pulls the starting lineup
-    from this team's most recently completed game instead - regulars are
-    usually stable day to day, so this is a reasonable 'probable starters'
-    estimate, NOT a confirmed lineup. Rows built this way are tagged
-    lineup_confirmed=False so you always know which you're looking at.
-    """
     try:
         end = datetime.date.today() - datetime.timedelta(days=1)
         start = end - datetime.timedelta(days=10)
@@ -184,15 +176,6 @@ def get_recent_lineup(team_id):
 
 
 def get_recent_starter(team_id):
-    """FALLBACK for when a team hasn't officially announced today's probable
-    pitcher yet (this can lag behind lineup confirmation, and some teams
-    announce later than others). Without this, a batter facing that team
-    gets skipped ENTIRELY, not just marked unconfirmed - the whole
-    opposing lineup silently disappears from the board rather than
-    showing a projected read. Falls back to whoever started this team's
-    most recently completed game, same "recent form as a stand-in for
-    today" philosophy as get_recent_lineup() above. Returns a probable-
-    pitcher-shaped dict ({"id", "fullName", "pitchHand"}) or None."""
     try:
         end = datetime.date.today() - datetime.timedelta(days=1)
         start = end - datetime.timedelta(days=10)
@@ -213,7 +196,7 @@ def get_recent_starter(team_id):
             pitcher_ids = team_box.get("pitchers", [])
             if not pitcher_ids:
                 continue
-            starter_id = pitcher_ids[0]  # first pitcher listed for the game = the starter
+            starter_id = pitcher_ids[0]
             person = team_box.get("players", {}).get(f"ID{starter_id}", {}).get("person", {})
             if not person:
                 continue
@@ -230,10 +213,6 @@ def get_pitcher_hand_and_id(probable_pitcher):
 
 
 def _parse_innings(ip_str):
-    """MLB reports innings pitched as a string like '142.1' where the part
-    after the decimal is OUTS recorded (0, 1, or 2) in that partial inning,
-    NOT tenths of an inning - '142.1' means 142 and 1/3 innings, not
-    142.1 innings. This converts it to a true decimal value."""
     if ip_str in (None, ""):
         return None
     whole_str, _, frac_str = str(ip_str).partition(".")
@@ -246,10 +225,6 @@ def _parse_innings(ip_str):
 
 
 def get_season_pitching_stats():
-    """WHIP, HR/9, K/9, BB/9, ERA, and season K/IP/starts totals for every
-    pitcher with a decision this season. WHIP/HR9 feed the HR/HRR/TB
-    boards' pitcher-matchup factor (unchanged from before); K9/ERA/season
-    totals feed the new K (strikeouts) board."""
     data = statsapi_get("stats", {
         "stats": "season", "group": "pitching", "season": YEAR, "sportId": 1, "limit": 1500
     })
@@ -280,11 +255,6 @@ def get_season_pitching_stats():
 
 
 def get_team_k_rate():
-    """Season strikeout rate (K% of plate appearances) for every team's
-    LINEUP - not the team's own pitching staff. This is the K board's
-    matchup signal: a pitcher facing a free-swinging, high-strikeout-rate
-    lineup has a real edge, same idea as a batter facing a hittable
-    pitcher on the other boards."""
     try:
         data = statsapi_get("teams/stats", {
             "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1
@@ -303,11 +273,11 @@ def get_team_k_rate():
 
 
 def get_pitcher_gamelog(pitcher_id, season):
-    """Every start this pitcher has made in `season`, oldest first, with
-    strikeouts and innings pitched per start - feeds the K board's
-    recent-form (last-3-starts) number. Relief appearances (if any) are
-    skipped so a spot-start reliever's low-inning outing doesn't dilute
-    the "as a starter" read."""
+    """Every start this pitcher has made in `season`, oldest first. Feeds
+    BOTH the K board's recent-form (last-3-starts) number AND, new in v3,
+    the HR/HRR/TB boards' recent hr9/whip blend via
+    get_pitcher_recent_form() below - so this now also captures homeRuns,
+    hits, and walks per start, not just strikeouts/innings."""
     try:
         data = statsapi_get(f"people/{pitcher_id}/stats", {
             "stats": "gameLog", "group": "pitching", "season": season, "sportId": 1
@@ -324,6 +294,9 @@ def get_pitcher_gamelog(pitcher_id, season):
                 "opp": team_abbr(opp) if opp else "",
                 "k": int(stat.get("strikeOuts", 0) or 0),
                 "ip": _parse_innings(stat.get("inningsPitched")),
+                "hr": int(stat.get("homeRuns", 0) or 0),
+                "hits": int(stat.get("hits", 0) or 0),
+                "bb": int(stat.get("baseOnBalls", 0) or 0),
             })
         starts.sort(key=lambda g: g["date"] or "")
         return starts
@@ -331,19 +304,25 @@ def get_pitcher_gamelog(pitcher_id, season):
         return []
 
 
+def get_pitcher_recent_form(pitcher_id, season, season_hr9, season_whip):
+    """NEW in v3. This pitcher's last-3-starts hr9/whip, shrunk toward his
+    OWN season rate based on how many real innings those 3 starts actually
+    covered. Reuses get_pitcher_gamelog(), the same verified-working fetch
+    the K board already relies on - no new API call, no new endpoint risk."""
+    starts = get_pitcher_gamelog(pitcher_id, season)
+    last3 = starts[-3:]
+    ip_total = sum(g["ip"] or 0 for g in last3)
+    if ip_total <= 0:
+        return season_hr9, season_whip
+    recent_hr9 = sum(g["hr"] for g in last3) * 9 / ip_total
+    recent_whip = sum(g["hits"] + g["bb"] for g in last3) / ip_total
+    pw = pitcher_sample_weight(ip_total)
+    blended_hr9 = recent_hr9 * pw + season_hr9 * (1 - pw)
+    blended_whip = recent_whip * pw + season_whip * (1 - pw)
+    return blended_hr9, blended_whip
+
+
 def get_pitcher_season_stats(pitcher_id, season):
-    """This one pitcher's own season pitching line, fetched directly
-    rather than pulled from the bulk league-wide stats/season/pitching
-    leaderboard. The K board only needs this for today's ~15-16 probable
-    starters - a small enough set that a reliable per-pitcher call beats
-    depending on whatever sort/pagination quirk was silently dropping
-    real starters from the bulk list even at a generous limit (confirmed
-    happening in practice - a real starter's season stats came back
-    completely blank despite his per-start game log fetching fine, which
-    only makes sense if he simply wasn't present in that bulk response).
-    If a pitcher was traded mid-season, MLB's API can return one split per
-    team - this combines them into one real season-total line instead of
-    just taking whichever split happens to come first."""
     try:
         data = statsapi_get(f"people/{pitcher_id}/stats", {
             "stats": "season", "group": "pitching", "season": season, "sportId": 1
@@ -368,14 +347,6 @@ def get_pitcher_season_stats(pitcher_id, season):
         ip_total = total_outs / 3
         if ip_total <= 0:
             return {}
-        # Hard sanity clamp: innings-per-start can never realistically
-        # exceed a complete game (9), and average IP/start above ~8 is
-        # already essentially impossible for a modern starter. Without
-        # this, a pitcher who had even one relief outing mixed into his
-        # season (his innings from that outing count toward total_outs,
-        # but gamesStarted doesn't increment) can produce a nonsensical
-        # inflated ratio - this catches that regardless of the exact
-        # cause rather than trusting the raw division blindly.
         ip_per_start = round(ip_total / total_gs, 1) if total_gs else None
         if ip_per_start is not None:
             ip_per_start = min(ip_per_start, 8.0)
@@ -395,11 +366,6 @@ def get_pitcher_season_stats(pitcher_id, season):
 
 
 def get_season_batting_stats():
-    """AVG, OBP, ISO (computed from SLG-AVG), and plate appearances for every
-    batter this season. AVG/OBP feed the HRR (Hits+Runs+RBI) board's
-    "on-base" component. PA feeds compute_score()'s sample-size shrink on
-    the power inputs (ISO/barrel%/EV/hard-hit%) - see power_sample_weight()
-    below."""
     data = statsapi_get("stats", {
         "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1, "limit": 1500
     })
@@ -441,12 +407,6 @@ _name_cache = {}
 
 
 def get_player_name(player_id):
-    """
-    Fallback for players missing from get_season_batting_stats() - usually
-    rookies or recent call-ups with too few plate appearances to appear in
-    season aggregate stats yet. Without this, those players showed up with a
-    blank name in players.json even though their other stats were fine.
-    """
     if player_id in _name_cache:
         return _name_cache[player_id]
     try:
@@ -459,7 +419,6 @@ def get_player_name(player_id):
 
 
 def get_platoon_split(batter_id, vs_hand):
-    """Batter's AVG facing LHP or RHP this season. vs_hand is 'L' or 'R'."""
     sit_code = "vl" if vs_hand == "L" else "vr"
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
@@ -475,17 +434,6 @@ def get_platoon_split(batter_id, vs_hand):
 
 
 def get_risp_avg(batter_id):
-    """
-    Batter's AVG with Runners In Scoring Position this season - feeds the HRR
-    (Hits+Runs+RBI) board's RBI-opportunity signal, the same role
-    get_platoon_split() plays for the HR board's matchup signal.
-
-    HONESTY NOTE: "risp" is the commonly-documented MLB Stats API sitCode for
-    this split, but - like every other untested endpoint in this file (see
-    the module docstring) - it hasn't been confirmed against a live response.
-    If this silently returns None for everyone, check the run log (add a
-    print of the raw response here temporarily) and fix the sitCode string.
-    """
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "statSplits", "sitCodes": "risp",
@@ -499,19 +447,40 @@ def get_risp_avg(batter_id):
     return None
 
 
-def get_gamelog(batter_id, season):
-    """
-    Every game this batter has played in `season`, oldest first, with the
-    per-game counting stats the player detail view needs (HR, hits, XBH,
-    runs, RBI, plate appearances) plus the opponent and home/away flag so the
-    frontend can label each bar ("vs CLE" / "@ PIT").
+def get_day_night_split(batter_id):
+    """NEW in v3. This batter's HR rate (per-PA) in day games vs night
+    games this season.
 
-    Feeds BOTH the existing L15-HR "recent form" number and the player detail
-    graphs (HR board), plus the new "hrr" field (Hits + Runs + RBI combined,
-    the standard prop-bet stat line) that powers the HRR board. Note "hrr"
-    intentionally double-counts a home run (it's already 1 hit, plus at least
-    1 run and 1 RBI) - that's how the real H+R+RBI prop line works, not a bug.
-    """
+    HONESTY NOTE: 'day'/'night' are the best-guess sitCodes for this split -
+    not confirmed against a live response, same unverified status as
+    get_risp_avg()'s 'risp' code. Returns Nones on failure so callers fall
+    back cleanly."""
+    try:
+        day_data = statsapi_get(f"people/{batter_id}/stats", {
+            "stats": "statSplits", "sitCodes": "day",
+            "group": "hitting", "season": YEAR, "sportId": 1
+        })
+        night_data = statsapi_get(f"people/{batter_id}/stats", {
+            "stats": "statSplits", "sitCodes": "night",
+            "group": "hitting", "season": YEAR, "sportId": 1
+        })
+        day_splits = day_data.get("stats", [{}])[0].get("splits", [])
+        night_splits = night_data.get("stats", [{}])[0].get("splits", [])
+        day_stat = day_splits[0]["stat"] if day_splits else {}
+        night_stat = night_splits[0]["stat"] if night_splits else {}
+        day_pa = int(day_stat.get("plateAppearances", 0) or 0)
+        night_pa = int(night_stat.get("plateAppearances", 0) or 0)
+        day_hr = int(day_stat.get("homeRuns", 0) or 0)
+        night_hr = int(night_stat.get("homeRuns", 0) or 0)
+        day_rate = day_hr / day_pa if day_pa > 0 else None
+        night_rate = night_hr / night_pa if night_pa > 0 else None
+        return {"dayHrRate": day_rate, "dayPa": day_pa,
+                "nightHrRate": night_rate, "nightPa": night_pa}
+    except Exception:
+        return {"dayHrRate": None, "dayPa": 0, "nightHrRate": None, "nightPa": 0}
+
+
+def get_gamelog(batter_id, season):
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "gameLog", "group": "hitting", "season": season, "sportId": 1
@@ -538,22 +507,35 @@ def get_gamelog(batter_id, season):
                 "runs": runs,
                 "rbi": rbi,
                 "hrr": hits + runs + rbi,
-                # Total bases: 1*singles + 2*2B + 3*3B + 4*HR, expanded so we
-                # don't need singles stored separately - feeds the TB board.
                 "tb": hits + doubles + 2 * triples + 3 * hr,
             })
-        # The API normally returns these oldest-first already; sort defensively
-        # so a change on MLB's end can't silently flip chart order left-to-right.
         games.sort(key=lambda g: g["date"] or "")
         return games
     except Exception:
         return []
 
 
+def home_road_split(games):
+    """NEW in v3. This batter's HR rate at home vs on the road, built
+    entirely from the season gamelog already fetched - zero new API calls.
+    Returns per-PA rates with the underlying PA counts, so compute_score
+    can shrink small samples the same cautious way every other rate stat
+    in this file already does."""
+    home_games = [g for g in games if g.get("home")]
+    road_games = [g for g in games if not g.get("home")]
+
+    def pa_rate(gs):
+        pa = sum(g["pa"] for g in gs)
+        hr = sum(g["hr"] for g in gs)
+        return (hr / pa if pa > 0 else None), pa
+
+    home_rate, home_pa = pa_rate(home_games)
+    road_rate, road_pa = pa_rate(road_games)
+    return {"homeHrRate": home_rate, "homePa": home_pa,
+            "roadHrRate": road_rate, "roadPa": road_pa}
+
+
 def get_season_totals_hitting(batter_id, season):
-    """Aggregate hitting totals for a prior season (used for the '2025' row
-    in the player detail split box, where a full game log isn't needed -
-    just games played and counting stats)."""
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "season", "group": "hitting", "season": season, "sportId": 1
@@ -580,12 +562,6 @@ def get_season_totals_hitting(batter_id, season):
 
 
 def window_stats(games):
-    """HR%/hits%/XBH%/HRR% (share of games with at least one, or - for HRR -
-    at least 2, matching the standard 1.5 Hits+Runs+RBI prop line), plus
-    average hits/XBH/HRR/PA, across a list of games (a window like
-    L5/L10/L20, or a full season's real game log) - these percentages are
-    exact since they're built from real per-game data, not an aggregate
-    approximation."""
     n = len(games)
     if n == 0:
         return None
@@ -610,14 +586,6 @@ def window_stats(games):
 
 
 def season_totals_to_window(totals):
-    """Same shape as window_stats(), but built from season-AGGREGATE totals
-    (used for a prior season, where we don't pull the full game log). There's
-    no way to recover '% of games with >=1 hit/HR/XBH/HRR-line' from
-    aggregate totals alone (a multi-hit game looks the same as two
-    single-hit games), so only hrPct is included, as a per-game-played
-    approximation - hitsPct/xbhPct/hrrPct are left out entirely rather than
-    shown as something they're not; the frontend falls back to the
-    average-per-game figures for those instead."""
     if not totals or not totals.get("gamesPlayed"):
         return None
     gp = totals["gamesPlayed"]
@@ -634,7 +602,6 @@ def season_totals_to_window(totals):
 
 
 def get_wind(lat, lon):
-    """Current wind speed (mph) and direction (degrees) at a park."""
     try:
         resp = requests.get("https://api.open-meteo.com/v1/forecast", params={
             "latitude": lat, "longitude": lon,
@@ -649,33 +616,10 @@ def get_wind(lat, lon):
 
 
 def fetch_batter_statcast():
-    """
-    Returns a dict keyed by MLBAM player ID (an integer both Baseball Savant
-    and MLB's Stats API use for the same players), NOT by name. Matching by
-    name string was unreliable - accented letters, "Jr." formatting, and
-    suffix punctuation don't line up character-for-character between the two
-    sources. Player ID is the correct join key.
-
-    Tries a few possible column names for the ID field since we can't verify
-    Savant's exact current CSV schema without a live test run - and prints
-    the real header row either way, so if matching still fails we can see
-    exactly what columns actually came back instead of guessing again.
-    """
     url = (f"https://baseballsavant.mlb.com/leaderboard/statcast"
-           # min=1 instead of min=q: "q" (qualified) only includes the ~150 top
-           # batters by plate-appearance volume league-wide, which excludes
-           # plenty of real starters (platoon players, part-timers). min=1
-           # includes anyone with at least 1 batted ball event this season.
            f"?type=batter&year={YEAR}&position=&team=&min=1&csv=true")
     resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
     resp.raise_for_status()
-    # decode with utf-8-sig, NOT resp.text: Savant's CSV starts with a BOM
-    # (byte-order-mark) character that sits directly before the quoted
-    # "last_name, first_name" header. That BOM breaks Python's csv parser's
-    # ability to recognize the opening quote for that one field, which
-    # splits it into two garbage columns and shifts every column after it
-    # by one position - silently misaligning player_id with the wrong data.
-    # utf-8-sig strips the BOM before parsing, fixing this at the root.
     text = resp.content.decode("utf-8-sig")
     reader = csv.DictReader(io.StringIO(text))
     rows = list(reader)
@@ -688,12 +632,6 @@ def fetch_batter_statcast():
     id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
     print(f"  using ID column: {id_col_used}")
 
-    # Same fallback approach as the ID column above: Savant has renamed CSV
-    # columns before, and a silently-wrong name here doesn't error - it just
-    # makes row.get() return None, "or 0" swallows that, and every player's
-    # stat quietly comes out as 0.0% with no error anywhere. Trying several
-    # known names and LOGGING which one matched (or that none did) turns
-    # that into something visible in the Action's run log instead.
     ev_columns = ["avg_hit_speed", "exit_velocity_avg", "launch_speed_avg"]
     barrel_columns = ["brl_percent", "barrel_percent", "barrel_batted_rate"]
     hardhit_columns = ["ev95percent", "hard_hit_percent", "hardhit_percent", "z_hard_hit_percent"]
@@ -723,28 +661,70 @@ def fetch_batter_statcast():
     return out
 
 
+def fetch_batter_statcast_l15():
+    """NEW in v3. Same three stats as fetch_batter_statcast() (barrel%, EV,
+    hard-hit%), but from ONLY the last 15 days.
+
+    HONESTY NOTE (see module docstring): uses Savant's "custom leaderboard"
+    endpoint with an explicit date range, NOT confirmed against a live
+    response. If wrong, compute_score() falls back cleanly to season-only
+    power (see POWER_L15_WEIGHT) - a failed L15 fetch degrades gracefully."""
+    end_date = datetime.date.today()
+    start_date = end_date - datetime.timedelta(days=15)
+    url = (f"https://baseballsavant.mlb.com/leaderboard/custom"
+           f"?type=batter&year={YEAR}&position=&team=&min=1"
+           f"&start_date={start_date.isoformat()}&end_date={end_date.isoformat()}"
+           f"&csv=true")
+    try:
+        resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        text = resp.content.decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text))
+        rows = list(reader)
+        print(f"  Savant L15 CSV columns: {reader.fieldnames}")
+        print(f"  Savant L15 CSV row count: {len(rows)}")
+        if rows:
+            print(f"  sample row: {rows[0]}")
+    except Exception as e:
+        print(f"  WARNING: L15 Statcast fetch failed ({e}) - power score will "
+              f"fall back to season-only for everyone.")
+        return {}
+
+    id_columns = ["player_id", "batter", "xba_id", "id", "mlb_id", "mlbam_id"]
+    id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
+    ev_columns = ["avg_hit_speed", "exit_velocity_avg", "launch_speed_avg"]
+    barrel_columns = ["brl_percent", "barrel_percent", "barrel_batted_rate"]
+    hardhit_columns = ["ev95percent", "hard_hit_percent", "hardhit_percent", "z_hard_hit_percent"]
+    pa_columns = ["pa", "plate_appearances", "abs"]
+    ev_col = next((c for c in ev_columns if rows and c in rows[0]), None)
+    barrel_col = next((c for c in barrel_columns if rows and c in rows[0]), None)
+    hardhit_col = next((c for c in hardhit_columns if rows and c in rows[0]), None)
+    pa_col = next((c for c in pa_columns if rows and c in rows[0]), None)
+    print(f"  L15 using ID={id_col_used} EV={ev_col} barrel={barrel_col} "
+          f"hardhit={hardhit_col} PA={pa_col}")
+    if rows and (ev_col is None or barrel_col is None or hardhit_col is None):
+        print(f"  WARNING: L15 stat column(s) not found - falling back to "
+              f"season-only power for anyone missing L15 data.")
+
+    out = {}
+    for row in rows:
+        pid_raw = row.get(id_col_used) if id_col_used else None
+        if not pid_raw:
+            continue
+        try:
+            pid = int(pid_raw)
+            out[pid] = {
+                "ev": float((row.get(ev_col) if ev_col else None) or 0),
+                "barrel": float((row.get(barrel_col) if barrel_col else None) or 0) / 100,
+                "hardhit": float((row.get(hardhit_col) if hardhit_col else None) or 0) / 100,
+                "pa": int(float(row.get(pa_col) or 0)) if pa_col else None,
+            }
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def fetch_pitch_mix_data():
-    """Pulls TWO things in one bulk call each from Baseball Savant's
-    pitch-arsenal-stats leaderboard: (1) every BATTER's performance
-    (hard-hit%) against each individual pitch type this season, and (2)
-    every PITCHER's own pitch-type usage mix (what % of their pitches are
-    fastballs vs sliders vs curves etc). Blended together in
-    compute_pitch_mix_match() below, this answers a sharper question than
-    the existing handedness-only platoon split: not just "does he hit
-    lefties/righties well" but "does his swing profile match what THIS
-    specific pitcher actually throws."
-
-    Like fetch_batter_statcast() above, the exact column names AND
-    whether this endpoint returns all pitch types unfiltered in one call
-    are both best-effort assumptions - can't be verified without a live
-    run. Prints the raw columns/row count/sample either way, same as
-    that function, so a wrong assumption is immediately diagnosable from
-    the Action log instead of silently producing nothing.
-
-    Returns (batter_pitch_data, pitcher_pitch_mix):
-      batter_pitch_data: {batter_id: {pitch_type: hard_hit_pct_0_to_1}}
-      pitcher_pitch_mix: {pitcher_id: {pitch_type: usage_fraction_0_to_1}}
-    """
     batter_pitch_data = {}
     pitcher_pitch_mix = {}
 
@@ -792,8 +772,6 @@ def fetch_pitch_mix_data():
             if kind == "pitcher" and usage_col:
                 try:
                     usage_raw = float(row[usage_col])
-                    # Usage might come back as a percent (45.2) or already
-                    # a fraction (0.452) - normalize to a 0-1 fraction.
                     out_dict[pid][pitch_type] = usage_raw / 100 if usage_raw > 1 else usage_raw
                 except (ValueError, TypeError):
                     pass
@@ -810,12 +788,6 @@ def fetch_pitch_mix_data():
 
 
 def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix):
-    """0-1 score: this batter's hard-hit% weighted by how often the
-    OPPOSING PITCHER actually throws each pitch type - a sharper question
-    than plain handedness. Returns None (not 0) when there isn't enough
-    real data to trust, so compute_score's blend can cleanly fall back to
-    handedness-only instead of treating "no data" the same as "bad
-    matchup" - a None here should never quietly drag a score down."""
     batter_data = batter_pitch_data.get(batter_id)
     mix = pitcher_pitch_mix.get(pitcher_id)
     if not batter_data or not mix:
@@ -826,13 +798,12 @@ def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pi
         if pitch_type in batter_data:
             weighted_sum += usage * batter_data[pitch_type]
             weight_total += usage
-    if weight_total < 0.3:  # too little real overlap to trust the result
+    if weight_total < 0.3:
         return None
     return weighted_sum / weight_total
 
 
 def wind_park_factor(speed, direction):
-    """Rough wind-effect scoring: strong wind matters more than light wind."""
     if speed is None or speed < 5:
         return 0
     if speed >= 15:
@@ -842,32 +813,16 @@ def wind_park_factor(speed, direction):
     return 0
 
 
-# ---------------------------------------------------------------------------
-# Same scoring formula as the HR Board webpage (v10): Power 35%, Matchup 30%,
-# Recent 15%, Platoon 10%, Opportunity 10%. Kept in sync by hand - if the
-# formula changes on the webpage, update it here too.
-# ---------------------------------------------------------------------------
 def clamp01(x):
     return max(0.0, min(1.0, x))
 
 
 def barrel_confidence(barrel, ev):
-    """How much to trust a batter's barrel% as real power signal, rather
-    than taking it at face value. The idea: a high barrel rate unsupported
-    by real exit velo is a little suspect, so it gets discounted - but this
-    now ramps in smoothly instead of snapping at hard cutoffs (barrel==0.12,
-    ev==90/92), which used to create a cliff where a guy at 11.9% barrel
-    scored BETTER than a guy at 12.0% with identical EV, since crossing the
-    line used to roughly halve the effective value overnight. Same
-    endpoints and same 0.5 max-discount ceiling as before, just continuous
-    in between: no discount below ~8% barrel or at elite EV (95+), full
-    0.5 discount only at both high barrel AND weak EV (85 or below).
-    """
     if barrel is None or ev is None:
         return 1.0
-    barrel_intensity = clamp01((barrel - 0.08) / 0.08)   # ramps in 8% -> 16%
-    ev_support = clamp01((ev - 85) / 10)                  # ramps in 85 -> 95 mph
-    discount = barrel_intensity * (1 - ev_support) * 0.5  # 0.5 = same ceiling as before
+    barrel_intensity = clamp01((barrel - 0.08) / 0.08)
+    ev_support = clamp01((ev - 85) / 10)
+    discount = barrel_intensity * (1 - ev_support) * 0.5
     return 1 - discount
 
 
@@ -880,13 +835,6 @@ def avgmix_confidence_blend(avgmix):
 
 
 def risp_confidence_blend(risp):
-    """Same shrink-toward-league-average treatment as avgmix_confidence_blend()
-    above, applied to RISP AVG. RISP splits are usually an even smaller
-    sample than the vs-hand platoon split - early in the season a batter
-    can go 3-for-6 with runners in scoring position and look like an RBI
-    lock off a tiny sample. Anchored to ~.255 (RISP AVG's typical league
-    mean) rather than .24 since RISP average runs a little higher than
-    the platoon-average anchor."""
     if risp is None:
         return 0.255
     if risp <= 0.15 or risp >= 0.35:
@@ -894,15 +842,6 @@ def risp_confidence_blend(risp):
     return risp
 
 
-# Lineup-slot bonus tuned for HRR (Hits+Runs+RBI) rather than the HR board's
-# straight top-of-order-favoring formula (max(1, 9 - order_pos)). Runs favor
-# the top of the order (most plate appearances, most times up with the
-# bottom of the order on base ahead of them); RBI favors the heart of the
-# order (3-6, batting with the most traffic already on base). A straight
-# line down from leadoff shortchanges the 3-6 hole hitters who drive in the
-# most runs, so this plateaus across slots 1-6 instead and only drops off
-# for the bottom of the order - this is the fix the compute_hrr_score()
-# docstring below used to flag as a known gap.
 HRR_LINEUP_BONUS = {1: 7, 2: 8, 3: 8, 4: 8, 5: 7, 6: 5, 7: 3, 8: 2, 9: 1}
 
 
@@ -912,150 +851,169 @@ def hrr_lineup_bonus(order_pos):
     return HRR_LINEUP_BONUS.get(order_pos, 1)
 
 
-# Gentle sample-size confidence shrink for the power inputs (ISO/barrel%/
-# EV/hard-hit%), all of which come straight from this season's aggregate
-# stats with zero protection against small samples. A part-time player who
-# gets hot over a short stretch can otherwise look like a proven elite
-# power bat off a handful of at-bats. This is deliberately soft, not a
-# hard cutoff - POWER_SHRINK_K is "how many PA of league-average we mix in
-# as a prior," so even a thin-but-real sample keeps most of its own signal
-# instead of getting flattened toward average. Tuned gentle on purpose: the
-# goal is to take the edge off a lucky 20-PA flash, not punish a guy who's
-# genuinely 60-80 PA into a real hot stretch.
 POWER_SHRINK_K = 40
 LEAGUE_AVG_ISO = 0.150
 LEAGUE_AVG_BARREL = 0.075
 LEAGUE_AVG_EV = 88.5
 LEAGUE_AVG_HARDHIT = 0.36
 
+# How much the L15 (last-15-day) power read is trusted relative to season
+# power, INSIDE the power bucket - not a top-level weight, a blend ratio.
+# Deliberately well under 50%: L15 is a much smaller, noisier sample, so
+# it nudges the power score rather than overriding it.
+POWER_L15_WEIGHT = 0.35
+POWER_L15_MIN_PA = 15  # below this many L15 batted-ball events, ignore L15 entirely
+
+HOME_ROAD_MAX_ADJ = 0.06
+HOME_ROAD_MIN_PA = 60
+DAY_NIGHT_MAX_ADJ = 0.04
+DAY_NIGHT_MIN_PA = 60
+
 
 def power_sample_weight(pa):
     if pa is None or pa <= 0:
-        return 0.3  # unknown PA - treat like a modest partial sample, not zero trust
+        return 0.3
     return pa / (pa + POWER_SHRINK_K)
 
 
-# Same shrink-toward-average philosophy as power_sample_weight() above,
-# but for the OPPOSING PITCHER's own HR9/WHIP - a gap that let a pitcher
-# with only a few innings this season (a real example: 0.00 HR/9, simply
-# because he hasn't faced enough batters yet for a home run to show up)
-# get trusted at FULL strength in the matchup multiplier below, cutting
-# a batter's projected HR rate roughly in half off what's almost
-# certainly small-sample noise, not a real HR-suppression skill. K=20
-# innings is roughly where a pitcher's own rate stats start being a
-# real signal rather than early-season noise.
 PITCHER_SHRINK_K = 20
 
 
 def pitcher_sample_weight(ip):
     if ip is None or ip <= 0:
-        return 0.0  # no real innings on record yet - don't trust the rate at all
+        return 0.0
     return min(1.0, ip / (ip + PITCHER_SHRINK_K))
 
 
+def home_road_adjustment(p):
+    """Bounded multiplier from the home/road HR-rate split, applied based
+    on whether TODAY's game is home or away for this batter. Compares to
+    the batter's OWN overall season rate (not league average), and only
+    applies once there's a real sample in the relevant split."""
+    is_home = p.get("isHomeGame")
+    if is_home is None:
+        return 1.0
+    relevant_rate = p.get("homeHrRate") if is_home else p.get("roadHrRate")
+    relevant_pa = p.get("homePa" if is_home else "roadPa") or 0
+    overall_rate = p.get("seasonHrRate")
+    if relevant_rate is None or overall_rate is None or overall_rate <= 0:
+        return 1.0
+    if relevant_pa < HOME_ROAD_MIN_PA:
+        return 1.0
+    raw_ratio = relevant_rate / overall_rate
+    adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
+    adj = max(-HOME_ROAD_MAX_ADJ, min(HOME_ROAD_MAX_ADJ, adj))
+    return 1 + adj
+
+
+def day_night_adjustment(p):
+    """Same pattern as home_road_adjustment(), for day/night games."""
+    is_day = p.get("isDayGame")
+    if is_day is None:
+        return 1.0
+    relevant_rate = p.get("dayHrRate") if is_day else p.get("nightHrRate")
+    relevant_pa = p.get("dayPa" if is_day else "nightPa") or 0
+    overall_rate = p.get("seasonHrRate")
+    if relevant_rate is None or overall_rate is None or overall_rate <= 0:
+        return 1.0
+    if relevant_pa < DAY_NIGHT_MIN_PA:
+        return 1.0
+    raw_ratio = relevant_rate / overall_rate
+    adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
+    adj = max(-DAY_NIGHT_MAX_ADJ, min(DAY_NIGHT_MAX_ADJ, adj))
+    return 1 + adj
+
+
 def compute_score(p):
+    """HR Board scoring - REWEIGHTED in v3.
+    Power 25% / Pitcher 20% / Platoon 15% / Recent 15% / Opportunity 15% /
+    Park 5% / Wind 5%, plus small bounded home/road + day/night multipliers
+    applied on top. See module docstring for the full rationale."""
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
     iso = p["iso"] or 0
     hardhit = p["hardhit"] or 0.30
-    # Gentle PA-weighted shrink toward league average before these feed the
-    # power score - see power_sample_weight() above for the reasoning.
     pw = power_sample_weight(p.get("pa"))
-    barrel = barrel * pw + LEAGUE_AVG_BARREL * (1 - pw)
-    ev = ev * pw + LEAGUE_AVG_EV * (1 - pw)
-    iso = iso * pw + LEAGUE_AVG_ISO * (1 - pw)
-    hardhit = hardhit * pw + LEAGUE_AVG_HARDHIT * (1 - pw)
+    barrel_season = barrel * pw + LEAGUE_AVG_BARREL * (1 - pw)
+    ev_season = ev * pw + LEAGUE_AVG_EV * (1 - pw)
+    iso_season = iso * pw + LEAGUE_AVG_ISO * (1 - pw)
+    hardhit_season = hardhit * pw + LEAGUE_AVG_HARDHIT * (1 - pw)
+
+    l15_barrel = p.get("l15Barrel")
+    l15_ev = p.get("l15Ev")
+    l15_hardhit = p.get("l15Hardhit")
+    l15_pa = p.get("l15PowerPa") or 0
+    if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
+        barrel_final = barrel_season * (1 - POWER_L15_WEIGHT) + l15_barrel * POWER_L15_WEIGHT
+        ev_final = ev_season * (1 - POWER_L15_WEIGHT) + l15_ev * POWER_L15_WEIGHT
+        hardhit_final = hardhit_season * (1 - POWER_L15_WEIGHT) + l15_hardhit * POWER_L15_WEIGHT
+    else:
+        barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
+    iso_final = iso_season
+
     phr9 = p["phr9"] if p["phr9"] is not None else 1.2
     whip = p["whip"] if p["whip"] is not None else 1.30
     avgmix = avgmix_confidence_blend(p["avgmix"])
     wind = p["wind"] or 0
     park = p["park"] or 0
-    # Uses the discounted _credit fields (see diminishing_hr_credit()),
-    # not the raw l15hr/l5hr counts - a single multi-homer game no longer
-    # single-handedly maxes this out the way it would with a raw sum.
-    # Falls back to the raw field if credit wasn't computed for some
-    # reason, rather than silently zeroing out a real player's score.
     l15hr = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else (p["l15hr"] if p["l15hr"] is not None else 0)
     l5hr = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else (p["l5hr"] if p.get("l5hr") is not None else 0)
     lbonus = p["lbonus"] if p["lbonus"] is not None else 3
     crush = p["crush"] or 0
     split = p["split"] or 0
 
-    conf = barrel_confidence(barrel, ev)
-    barrel_adj = barrel * conf
+    conf = barrel_confidence(barrel_final, ev_final)
+    barrel_adj = barrel_final * conf
 
-    power = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
-             + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
+    power = (clamp01(barrel_adj / 0.25) + clamp01((ev_final - 85) / 15)
+             + clamp01(iso_final / 0.4) + clamp01((hardhit_final - 0.3) / 0.4)) / 4
 
     phr9_s = clamp01((phr9 - 0.3) / 1.7)
     whip_s = clamp01((whip - 0.9) / 0.9)
-    pitcher_quality = (phr9_s + whip_s) / 2
-    avgmix_s = clamp01(avgmix / 0.5)
+    pitcher_s = (phr9_s + whip_s) / 2
+
     wind_s = clamp01((wind + 2) / 4)
     park_s = clamp01((park + 2) / 4)
-    # wind_s carries a bit more weight than before (0.5 -> 0.7) per request -
-    # still clearly the smallest of the four matchup inputs (~19% of the
-    # bucket vs ~27% each for pitcher quality/avgmix/park), just no longer
-    # nearly invisible on days with real wind.
-    matchup = (pitcher_quality + avgmix_s + park_s + wind_s * 0.7) / 3.7
 
-    # Recent form: blends the steadier 15-game base rate with a
-    # fast-reacting 5-game streak read, so a player who's gone cold (or
-    # caught fire) this week actually moves instead of being masked by a
-    # slow-draining 15-game window. L15 anchors it (60%) so one huge game
-    # doesn't spike the score; L5 (40%) is what makes "on a heater right
-    # now" show up day to day instead of taking two weeks to register.
-    # 2+ HR in the last 5 games is rare enough to max out that half.
     recent = clamp01(l15hr / 6) * 0.6 + clamp01(l5hr / 2) * 0.4
-    # Platoon: blends the sharper pitch-mix match (how well this batter's
-    # actual performance profile lines up against what THIS pitcher
-    # specifically throws, weighted by his real usage rates) with the
-    # original handedness-only read, rather than replacing it outright -
-    # pitch-mix data isn't always available (thin sample, fetch failure),
-    # and handedness alone is still a real, working signal on its own.
-    # 70/30 favoring the sharper signal when it's there; falls back to
-    # 100% handedness when it isn't, rather than treating missing data
-    # as a bad matchup.
+
     handedness_platoon = (crush + split) / 2
-    pitch_mix_raw = p.get("pitchMixMatch")  # this batter's weighted hard-hit% vs the arsenal, or None
+    pitch_mix_raw = p.get("pitchMixMatch")
     if pitch_mix_raw is not None:
-        pitch_mix_norm = clamp01(pitch_mix_raw / 0.45)  # ~45% hard-hit vs arsenal = elite
-        platoon = pitch_mix_norm * 0.7 + handedness_platoon * 0.3
+        pitch_mix_norm = clamp01(pitch_mix_raw / 0.45)
+        pitch_mix_platoon = pitch_mix_norm * 0.7 + handedness_platoon * 0.3
     else:
-        platoon = handedness_platoon
+        pitch_mix_platoon = handedness_platoon
+    avgmix_s = clamp01(avgmix / 0.5)
+    platoon = pitch_mix_platoon * 0.7 + avgmix_s * 0.3
+
     opportunity = clamp01((lbonus - 1) / 5)
 
-    score = power * 35 + matchup * 30 + recent * 15 + platoon * 10 + opportunity * 10
+    score = (power * 25 + pitcher_s * 20 + platoon * 15 + recent * 15
+             + opportunity * 15 + park_s * 5 + wind_s * 5)
+
+    score *= home_road_adjustment(p)
+    score *= day_night_adjustment(p)
+    score = max(0.0, min(100.0, score))
 
     return {
         "score": round(score, 1),
         "conf": conf,
         "powerPct": round(power * 100, 1),
-        "matchupPct": round(matchup * 100, 1),
-        "recentPct": round(recent * 100, 1),
+        "pitcherPct": round(pitcher_s * 100, 1),
         "platoonPct": round(platoon * 100, 1),
+        "recentPct": round(recent * 100, 1),
         "opportunityPct": round(opportunity * 100, 1),
+        "parkPct": round(park_s * 100, 1),
+        "windPct": round(wind_s * 100, 1),
     }
 
 
-# ---------------------------------------------------------------------------
-# HRR (Hits+Runs+RBI, over 1.5 line - i.e. needs 2+ combined) board scoring.
-# Same 5-factor shape and 0-100 scale as compute_score() above so both boards
-# read consistently, but built from different underlying stats since HRR
-# rewards getting on base and driving in runs, not raw power:
-#   OnBase 35%     - season AVG/OBP/ISO (times on base + extra-base ability
-#                    drive both hits AND runs)
-#   Matchup 30%    - opposing pitcher WHIP (a leaky pitcher means more
-#                    baserunners AND more RBI chances) blended with the same
-#                    platoon-AVG signal the HR board uses
-#   Recent 15%     - share of the last 15 games clearing the 1.5 HRR line
-#   RISP 10%       - confidence-blended AVG with runners in scoring position
-#                    (RBI conversion) - see risp_confidence_blend() above
-#   Opportunity 10%- lineup slot, via hrr_lineup_bonus() above rather than
-#                    the HR board's lbonus - tuned to plateau across the
-#                    1-6 holes instead of favoring leadoff hitters only.
-# ---------------------------------------------------------------------------
 def compute_hrr_score(p):
+    """HRR Board scoring - UNCHANGED weighting in v3 (OnBase 35 / Matchup
+    30 / Recent 15 / RISP 10 / Opportunity 10). Implicitly benefits from
+    the pitcher-recent-form WHIP blend since main() overwrites p["whip"]
+    before this runs - a side effect, not a deliberate reweighting."""
     avg = p.get("avg") if p.get("avg") is not None else 0.240
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     iso = p["iso"] or 0
@@ -1072,7 +1030,7 @@ def compute_hrr_score(p):
     avgmix_s = clamp01(avgmix / 0.5)
     matchup = (whip_s + avgmix_s) / 2
 
-    recent = clamp01(l15hrr / 10)  # clearing the line ~10/15 games is elite
+    recent = clamp01(l15hrr / 10)
     risp_s = clamp01((risp - 0.150) / 0.250)
     opportunity = clamp01((hrr_lbonus - 1) / 5)
 
@@ -1088,22 +1046,9 @@ def compute_hrr_score(p):
     }
 
 
-# ---------------------------------------------------------------------------
-# TB (Total Bases, line 1.5 - needs 2+) board scoring. Sits between HR and
-# HRR in spirit: TB rewards BOTH contact (any hit counts for at least 1
-# base) and power (extra-base hits count for more), so it gets a heavier
-# power weight than HRR but still credits pure contact, unlike the HR
-# board which only cares about the ball leaving the park.
-#   Contact 25%    - AVG/OBP, same on-base signal as HRR but lower weight
-#   Power 30%      - barrel/EV/ISO/hard-hit% (PA-shrunk, same as the HR
-#                    board) PLUS season SLG, which is literally TB/AB -
-#                    the most direct rate-stat proxy for this exact prop
-#   Matchup 25%    - pitcher WHIP + platoon AVG, same pattern as the other
-#                    two boards
-#   Recent 10%     - share of the last 15 games clearing the 1.5 TB line
-#   Opportunity 10%- lineup slot bonus (same field as the HR board)
-# ---------------------------------------------------------------------------
 def compute_tb_score(p):
+    """TB Board scoring - UNCHANGED weighting in v3, same implicit-benefit
+    note as HRR above (reads p["whip"] too)."""
     avg = p.get("avg") if p.get("avg") is not None else 0.240
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     slg = p.get("slg") if p.get("slg") is not None else 0.390
@@ -1116,8 +1061,6 @@ def compute_tb_score(p):
     l15tb = p.get("l15tb") if p.get("l15tb") is not None else 0
     lbonus = p["lbonus"] if p["lbonus"] is not None else 3
 
-    # Same gentle PA-weighted shrink as the HR board - these are the same
-    # small-sample-prone inputs, so they get the same protection here.
     pw = power_sample_weight(p.get("pa"))
     barrel_s = barrel * pw + LEAGUE_AVG_BARREL * (1 - pw)
     ev_s = ev * pw + LEAGUE_AVG_EV * (1 - pw)
@@ -1137,7 +1080,7 @@ def compute_tb_score(p):
     avgmix_s = clamp01(avgmix / 0.5)
     matchup = (whip_s + avgmix_s) / 2
 
-    recent = clamp01(l15tb / 10)  # clearing the line ~10/15 games is elite
+    recent = clamp01(l15tb / 10)
 
     opportunity = clamp01((lbonus - 1) / 5)
 
@@ -1153,73 +1096,18 @@ def compute_tb_score(p):
     }
 
 
-# ---------------------------------------------------------------------------
-# "Value" probability model - a SECOND, independent probability estimate
-# for HR/HRR/TB, separate from each board's composite favorability score
-# above. The composite score is a weighted comparison scale (0-100),
-# useful for ranking players against each other, but it was never
-# calibrated to BE a real probability of clearing a specific line - it's
-# a heuristic rescale for display (see DISPLAY_PCT_FLOOR/CEILING on the
-# frontend), not something that should be directly compared to a real
-# sportsbook's implied probability.
-#
-# This builds a genuinely calibrated probability instead, the same
-# rigorous way the K board's Poisson model works: start from the
-# player's own REAL recent per-game rate (not a composite score), adjust
-# for today's specific matchup, and get an actual modeled probability -
-# something that can be honestly compared against the market's price to
-# find where the market and our model disagree (a real "value" signal),
-# rather than comparing two different kinds of numbers that only look
-# alike.
-# ---------------------------------------------------------------------------
 LEAGUE_AVG_PITCHER_HR9 = 1.20
 LEAGUE_AVG_PITCHER_WHIP = 1.30
-# Rough league-average anchors this shrink pulls toward for a thin sample -
-# same role as LEAGUE_AVG_ISO/BARREL/etc above, just for these two new
-# probability models specifically.
-LEAGUE_AVG_HR_RATE = 0.12     # ~HRs per game across an average everyday MLB hitter
-# NOTE: HRR and TB do NOT share one real-world clearing rate - a hitter's
-# average combined H+R+RBI per game (~1.8) clears the 1.5 line noticeably
-# more often than his average total-bases (~1.4) does, since a walk/other
-# non-hit event can still add a run or RBI toward HRR but contributes
-# nothing to TB. Using a single shared constant for both understated BOTH
-# probabilities relative to their own real baseline (confirmed against
-# actual sportsbook consensus: HRR's true clear rate lands close to ~52%,
-# TB's closer to ~43% - see compute_hrr_probability's own docstring,
-# which already documented the ~52% target this constant was silently
-# failing to hit).
-LEAGUE_AVG_HRR_CLEAR_RATE = 0.52  # ~rate of clearing the fixed 1.5 HRR line across all hitters
-LEAGUE_AVG_TB_CLEAR_RATE = 0.43   # ~rate of clearing the fixed 1.5 TB line across all hitters
+LEAGUE_AVG_HR_RATE = 0.12
+LEAGUE_AVG_HRR_CLEAR_RATE = 0.52
+LEAGUE_AVG_TB_CLEAR_RATE = 0.43
 
 
 def compute_hr_probability(p):
-    """HR is a raw COUNT stat (how many home runs, not "did he clear a
-    rate"), so this uses the same Poisson approach as the K board: a
-    real per-game mean adjusted by today's specific pitcher, then
-    P(HR >= 1) via the Poisson model.
-
-    Recent form (l15hr/l5hr) is blended against the player's OWN season
-    power level (from ISO) rather than a flat league-average anchor -
-    critical fix, since a flat anchor left the model structurally blind
-    to whether a hot recent stretch was actually backed by real,
-    established power. A player who's fundamentally a modest power bat
-    but caught a fluky hot 15-game run would get modeled almost entirely
-    off that stretch, which isn't a real signal - it's a hot-streak-with-
-    long-odds illusion, not genuine value. Even for a player with a large
-    season PA sample, a 15-20 game recent window is still small and
-    noisy ON ITS OWN, so recent form is capped at 40% weight regardless
-    of how established the player is - the rest anchors to his real
-    season-long power level, with an ADDITIONAL pull toward that same
-    anchor for players who don't have enough PA to trust at all (the
-    original sample-size fix, now anchored to something more meaningful
-    than a flat league constant)."""
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
     l5hr = p.get("l5hr")
-    # Uses the discounted _credit fields for the actual rate math (see
-    # diminishing_hr_credit()) - the raw l15hr/l5hr above are still
-    # checked for None just to confirm real game-log data exists at all.
     l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
     l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
     if l5hr is not None:
@@ -1227,16 +1115,6 @@ def compute_hr_probability(p):
     else:
         recent_rate = l15hr_for_rate / 15
 
-    # This player's OWN season-implied HR rate, built from the SAME 4
-    # power indicators the composite score's own "power" bucket uses
-    # (barrel%, exit velo, ISO, hard-hit%) - not just ISO alone. Using
-    # only ISO left this model blind to real signals the card itself
-    # already shows and weighs (a guy could have modest ISO but elite
-    # barrel%/EV, or vice versa) - this keeps the two models genuinely
-    # comparable instead of one running on a narrower slice of the same
-    # data. barrel_confidence() is the same smoothed EV-vs-barrel% trust
-    # curve used in compute_score, so a barrel rate unsupported by real
-    # exit velo gets the same discount here that it gets there.
     barrel = p.get("barrel") or 0
     ev = p.get("ev") or 85
     iso = p.get("iso") or 0
@@ -1244,61 +1122,20 @@ def compute_hr_probability(p):
     barrel_adj = barrel * barrel_confidence(barrel, ev)
     power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
                       + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
-    # power_quality is 0-1 (roughly 0.3-0.4 = a league-average power
-    # profile, higher = real elite power across the board). Scaled onto
-    # a realistic HR-rate range: a totally powerless profile floors at
-    # 30% of league average, a maxed-out elite profile caps near 1.7x.
-    # Ceiling raised from 1.4x to 2.0x - the old ceiling capped even a
-    # maxed-out elite power profile around ~22-28% probability, which is
-    # below what real sportsbook pricing implies for a genuinely great
-    # HR matchup (typically +200 to +350, i.e. 22-33% implied). That gap
-    # meant the model could almost never clear the market's price, so
-    # the HR board's value tab was structurally starved of real edges
-    # regardless of how good a matchup actually was. Verified against
-    # real live players (Olson, Ohtani, Harper) before picking this
-    # number, not guessed.
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 2.0)
 
-    RECENT_TRUST = 0.6  # raised from 0.4 - HR specifically needs recent hot streaks
-    # to carry real weight, since that's the exact signal being hunted for (a
-    # player heating up before the market/books catch up). HRR and TB keep the
-    # original 0.4 - not broken, this change is scoped to HR only. Verified
-    # this doesn't create false positives on cold streaks - a cold player's
-    # hrProb actually drops FURTHER at 0.6 than at 0.4, since the same
-    # weighting cuts both directions.
+    RECENT_TRUST = 0.6
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
-    # Additional shrink toward the season-implied anchor specifically for
-    # players without a real established MLB track record (thin/no PA) -
-    # same mechanism as before, just pulling toward a smarter anchor now.
     pw = power_sample_weight(p.get("pa"))
     base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
 
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
-    # Shrink the pitcher's own HR9 toward league average based on HIS OWN
-    # innings-pitched sample - a pitcher with only a handful of innings
-    # showing an eye-catching 0.00 HR9 hasn't demonstrated real HR-
-    # suppression skill, he just hasn't faced enough batters yet. Without
-    # this, that "0.00" got trusted at full strength and could cut a
-    # batter's projection roughly in half off what's almost certainly
-    # noise - see pitcher_sample_weight() above.
     pw_pitcher = pitcher_sample_weight(p.get("pip"))
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
-    # Dampened 50% so one very homer-prone or very stingy pitcher doesn't
-    # swing the projection further than a real matchup edge should -
-    # same philosophy as the K board's matchup multiplier.
     matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
     mean = max(0.01, base_rate * matchup_mult)
-    raw_prob = poisson_over_prob(mean, 0.5)  # P(1 or more)
-    # Hard sanity ceiling, grounded in real sportsbook pricing rather than
-    # a guess: even the shortest real "anytime HR" lines ever offered for
-    # the best sluggers in the best matchups sit around +196 to +220
-    # (31-34% implied) - the model stacking several favorable real
-    # factors on one player (hot streak + strong power + a genuinely
-    # homer-prone pitcher) can otherwise compound past what any real book
-    # actually prices, even though each individual input is legitimate.
-    # 30% keeps real exceptional cases meaningfully high without drifting
-    # into territory no real market has ever actually offered.
+    raw_prob = poisson_over_prob(mean, 0.5)
     return min(raw_prob, 0.30) if raw_prob is not None else raw_prob
 
 
@@ -1307,33 +1144,6 @@ LEAGUE_AVG_OBP = 0.315
 
 
 def compute_hrr_probability(p):
-    """Same anchor-to-season-level fix as compute_hr_probability above,
-    applied to HRR. Recent clearing rate (l15hrr) is capped at 40%
-    weight and blended against a season-quality anchor built from real
-    AVG/OBP - on-base ability drives Hits+Runs+RBI broadly, not raw
-    power specifically, so this uses contact/on-base stats as the
-    anchor rather than ISO. Without this, a hot 15-game stretch from a
-    hitter with a genuinely below-average season line (like a part-time
-    or currently-slumping regular catching one good week) gets modeled
-    as if it were a fully proven, sustainable rate - which is exactly
-    what produced a wildly inflated 73.6% for a real player whose season
-    AVG/OBP were both below league average, when the market's own price
-    (and this fix) both land close to a real ~52%.
-
-    IMPORTANT: `quality` (the AVG/OBP ratio vs league average) is used
-    as an ADDITIVE nudge off LEAGUE_AVG_HRR_CLEAR_RATE, not a raw
-    multiplier on it. A straight multiplier (quality * anchor) compounds
-    badly for elite-contact hitters: their quality ratio can run 1.2-1.3x
-    league average, which - once also stacked with a hot recent stretch
-    (up to 40% weight above) and a soft-matchup multiplier below - pushed
-    a real elite contact hitter's number to 74.6% against a book price of
-    58.3%, a swing way past anything a "value" signal should be flagging
-    for an efficiently-priced star. QUALITY_SLOPE controls how many
-    points of probability one full unit of quality above/below average is
-    worth - keeping it well under 1.0 means the anchor itself (not the
-    quality ratio) still does most of the work of hitting the real ~52%
-    average, while a truly elite or truly weak hitter only shifts a
-    bounded amount off that anchor instead of scaling it."""
     l15hrr = p.get("l15hrr")
     if l15hrr is None:
         return None
@@ -1350,7 +1160,7 @@ def compute_hrr_probability(p):
     else:
         season_implied_rate = LEAGUE_AVG_HRR_CLEAR_RATE
 
-    RECENT_TRUST = 0.4  # even a hot, well-established stretch caps out at 40% weight
+    RECENT_TRUST = 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     pw = power_sample_weight(p.get("pa"))
@@ -1362,11 +1172,6 @@ def compute_hrr_probability(p):
 
 
 def compute_tb_probability(p):
-    """Same fix, applied to Total Bases - anchored to a BLEND of contact
-    (AVG/OBP) and power (barrel%/EV/ISO/hard-hit%), matching the same
-    two-factor philosophy the composite TB score itself uses (any hit
-    counts for at least 1 base, extra bases count for more - TB isn't a
-    pure power stat the way HR is), rather than power alone."""
     l15tb = p.get("l15tb")
     if l15tb is None:
         return None
@@ -1386,9 +1191,6 @@ def compute_tb_probability(p):
                       + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
     power_multiplier = 0.3 + power_quality * 1.4
 
-    # Blend contact and power (roughly matching the composite TB score's
-    # own ~45/55 contact-to-power weighting), scaled onto a realistic
-    # clearing-rate range.
     combined_multiplier = contact_quality * 0.45 + power_multiplier * 0.55
     season_implied_rate = clamp01(LEAGUE_AVG_TB_CLEAR_RATE * combined_multiplier)
 
@@ -1403,53 +1205,18 @@ def compute_tb_probability(p):
     return clamp01(base_rate * matchup_mult)
 
 
-# ---------------------------------------------------------------------------
-# K (Strikeouts) board scoring, v2 - the first PITCHER-side board. Unlike
-# the three batter boards, which all share one fixed universal line (1.5),
-# a real strikeout prop line varies enormously by pitcher - an ace's line
-# might be 7.5, a backend starter's might be 3.5. So instead of scoring
-# against a fixed threshold, this computes an actual per-pitcher projection
-# and derives THAT pitcher's own line from it, then uses a Poisson model
-# (the standard statistical model for a bounded count stat like strikeouts
-# in a start) to get a genuine probability of clearing it - that
-# probability IS the headline "favorability" number, not an arbitrary
-# weighted composite like the other boards use.
-#
-# Projection = today's expected innings x this pitcher's own K rate per
-# inning x a matchup multiplier from the opposing lineup's strikeout rate
-# (dampened 40% so one extreme opponent number doesn't swing it too hard),
-# with a small, capped nudge from recent form.
-# ---------------------------------------------------------------------------
 LEAGUE_AVG_TEAM_K_RATE = 0.220
 
 
 def diminishing_hr_credit(games):
-    """A separate, scoring-ONLY signal from raw HR count - never touches
-    the honest l15hr/l5hr fields shown on the card. A 2-homer game gets
-    counted as slightly LESS than two separate 1-homer games would: the
-    first homer in any game counts fully (1.0), any additional homer(s)
-    in that SAME game count at a reduced weight (0.4 each). This matters
-    because a single big outlier game is a rarer, higher-variance event
-    than the same total spread across multiple separate games/pitchers/
-    days - treating them as equally strong evidence of a genuine hot
-    streak overstates how sustained the form actually is, and matters
-    even more now that RECENT_TRUST was raised to 0.6 for HR (recency
-    carries more weight than before, so a single-game outlier's
-    influence needed tempering more than it used to)."""
     return sum(min(g["hr"], 1) + max(g["hr"] - 1, 0) * 0.4 for g in games)
 
 
 def poisson_over_prob(mean, line):
-    """P(X > line) for X ~ Poisson(mean). `line` is a half-integer (e.g.
-    4.5) so "over" is unambiguous: it means X >= the next whole number up
-    (5, 6, 7...), with no possibility of a push. Built as an iterative
-    running product rather than computing factorials directly, since a
-    season's worth of strikeouts can make factorial(n) astronomically
-    large - this way is numerically stable for any realistic mean."""
     if mean is None or mean <= 0:
         return None
-    threshold = math.floor(line) + 1  # smallest whole count that clears the line
-    cdf = math.exp(-mean)  # P(X=0)
+    threshold = math.floor(line) + 1
+    cdf = math.exp(-mean)
     term = cdf
     for k in range(1, threshold):
         term *= mean / k
@@ -1464,30 +1231,16 @@ def compute_k_score(p):
     l3k = p.get("l3k") if p.get("l3k") is not None else 0
     ip_per_start = p.get("ipPerStart") if p.get("ipPerStart") is not None else 5.0
 
-    # Matchup multiplier, dampened to 40% of the raw ratio so a lineup
-    # that's wildly above/below league-average K rate doesn't swing the
-    # projection further than a real matchup edge should.
     matchup_mult = 1 + ((opp_k_rate / LEAGUE_AVG_TEAM_K_RATE) - 1) * 0.4
     proj_k = ip_per_start * (k9 / 9) * matchup_mult
 
-    # Small, capped recent-form nudge: if the last 3 starts ran meaningfully
-    # hotter or colder than what the season rate alone would predict for 3
-    # starts, shade the projection toward that - capped at +/-15% so a
-    # single monster or disaster start can't dominate the projection.
     expected_l3 = proj_k * 3
     if expected_l3 > 0:
         nudge = clamp01((l3k - expected_l3) / (expected_l3 * 1.5) + 0.5) - 0.5
-        proj_k *= (1 + nudge * 0.3)  # nudge in [-0.5,0.5] -> swing in [-15%,+15%]
+        proj_k *= (1 + nudge * 0.3)
 
     proj_k = max(0.5, round(proj_k, 2))
 
-    # Model line: nearest half-integer AT OR BELOW the projection - the
-    # standard prop-betting convention (half-lines can't push), and it
-    # deliberately sits at/under the projected mean so the "over"
-    # probability comes out meaningfully above a flat coinflip rather than
-    # exactly 50/50 for every single pitcher, same way a real sportsbook's
-    # opening number tends to sit slightly favorable-to-the-over on a
-    # model projection.
     model_line = math.floor(proj_k * 2) / 2
     if model_line < 0.5:
         model_line = 0.5
@@ -1495,9 +1248,6 @@ def compute_k_score(p):
     over_prob = poisson_over_prob(proj_k, model_line)
     score = round((over_prob if over_prob is not None else 0.5) * 100, 1)
 
-    # Sub-factor percentages, kept as supplementary "why" context shown on
-    # the card - they no longer drive the headline score directly, the
-    # Poisson probability above does.
     whiff = (clamp01((k9 - 6.5) / 5.0) + clamp01((5.20 - era) / 2.50)) / 2
     matchup = clamp01((opp_k_rate - 0.170) / 0.110)
     recent = clamp01(l3k / 24)
@@ -1522,20 +1272,6 @@ def main():
     print("Fetching season pitching stats (WHIP, HR/9)...")
     pitching_stats = get_season_pitching_stats()
 
-    # The bulk stats/season/pitching list above is the SAME unreliable
-    # source that turned out to silently drop real starters for the K
-    # board (confirmed live - a real pitcher's season line came back
-    # completely blank despite him definitely having pitched this
-    # season). That fix (get_pitcher_season_stats, a reliable per-pitcher
-    # call) only ever got wired into the K board's own pitcher pass - the
-    # HR/HRR/TB boards' "opposing pitcher" WHIP/HR9 was still trusting the
-    # same flaky bulk list, silently falling back to a hardcoded league-
-    # average-ish default ({"whip": 1.30, "hr9": 1.20}) for any pitcher it
-    # dropped, with nothing on the card distinguishing a real 1.30/1.20
-    # from a missing one. Since today's probable starters are a small,
-    # known set (the same ~30 pitchers the K board already fetches
-    # individually), just fetch all of them reliably up front here too,
-    # rather than trusting the bulk list for anyone.
     print("Fetching reliable per-pitcher season stats for today's probable starters...")
     todays_pitcher_ids = set()
     for g in games:
@@ -1556,6 +1292,20 @@ def main():
           f"{len(todays_pitcher_ids)} probable starters "
           f"({len(todays_pitcher_ids) - len(reliable_pitcher_stats)} still falling back to the bulk list/default)")
 
+    print("Fetching recent (last-3-starts) form for today's probable starters...")
+    pitcher_recent_form = {}
+
+    def fetch_one_recent_form(pid):
+        season_stat = reliable_pitcher_stats.get(pid, {"hr9": 1.20, "whip": 1.30})
+        recent_hr9, recent_whip = get_pitcher_recent_form(
+            pid, YEAR, season_stat.get("hr9", 1.20), season_stat.get("whip", 1.30))
+        return pid, (recent_hr9, recent_whip)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        for pid, result in executor.map(fetch_one_recent_form, todays_pitcher_ids):
+            pitcher_recent_form[pid] = result
+    print(f"  computed recent-form blend for {len(pitcher_recent_form)} pitchers")
+
     print("Fetching season batting stats (ISO)...")
     batting_stats = get_season_batting_stats()
 
@@ -1563,12 +1313,14 @@ def main():
     statcast = fetch_batter_statcast()
     print(f"  parsed {len(statcast)} batters with Statcast data")
 
+    print("Fetching last-15-day Statcast batter data (barrel%, EV, hard-hit%)...")
+    statcast_l15 = fetch_batter_statcast_l15()
+    print(f"  parsed {len(statcast_l15)} batters with L15 Statcast data")
+
     print("Fetching pitch-mix data (batter vs pitch type, pitcher usage)...")
     batter_pitch_data, pitcher_pitch_mix = fetch_pitch_mix_data()
 
-    # ---- PASS 1: build every player row using only data we already have in
-    # memory (no network calls in this loop) - fast, a few seconds at most.
-    rows = []  # each entry: (player_row_dict, batter_id, pitcher_hand)
+    rows = []
     sides_with_pitcher = 0
     sides_confirmed_lineup = 0
     sides_projected_lineup = 0
@@ -1578,6 +1330,7 @@ def main():
     sides_no_pitcher_at_all = 0
 
     for g in games:
+        is_day = is_day_game(g.get("game_time"))
         for side, opp_side in [("home", "away"), ("away", "home")]:
             team = g[f"{side}_team"]
             team_id = g[f"{side}_team_id"]
@@ -1601,6 +1354,13 @@ def main():
             pitcher_id, pitcher_hand = get_pitcher_hand_and_id(opp_pitcher)
             pitcher_stat = reliable_pitcher_stats.get(
                 pitcher_id, pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20}))
+
+            recent_form = pitcher_recent_form.get(pitcher_id)
+            if recent_form:
+                effective_hr9, effective_whip = recent_form
+            else:
+                effective_hr9 = pitcher_stat.get("hr9", 1.20)
+                effective_whip = pitcher_stat.get("whip", 1.30)
 
             park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None})
             wind_speed, wind_dir = (None, None)
@@ -1626,8 +1386,9 @@ def main():
 
             for batter_id, order_pos in lineup.items():
                 bstats = batting_stats.get(batter_id, {})
-                name = bstats.get("name") or ""  # filled in pass 2 if still blank
+                name = bstats.get("name") or ""
                 sc = statcast.get(batter_id, {})
+                sc_l15 = statcast_l15.get(batter_id, {})
 
                 player_row = {
                     "playerType": "batter",
@@ -1640,38 +1401,39 @@ def main():
                     "pitcherConfirmed": pitcher_confirmed,
                     "gameStatus": g["status"],
                     "gameTime": g.get("game_time"),
+                    "isDayGame": is_day,
+                    "isHomeGame": side == "home",
                     "playerId": batter_id,
                     "pitchMixMatch": compute_pitch_mix_match(
                         batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix),
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
+                    "l15Barrel": sc_l15.get("barrel"),
+                    "l15Ev": sc_l15.get("ev"),
+                    "l15Hardhit": sc_l15.get("hardhit"),
+                    "l15PowerPa": sc_l15.get("pa"),
                     "iso": bstats.get("iso"),
                     "pa": bstats.get("pa"),
                     "slg": bstats.get("slg"),
                     "avg": bstats.get("avg"),
                     "obp": bstats.get("obp"),
-                    "phr9": pitcher_stat["hr9"],
-                    "whip": pitcher_stat["whip"],
-                    "pip": pitcher_stat.get("ip"),  # opposing pitcher's innings pitched -
-                                                     # used to shrink an unreliable small-
-                                                     # sample HR9/WHIP toward league average
-                                                     # instead of trusting it at full strength
-                    "pip": pitcher_stat.get("ip"),  # opposing pitcher's innings pitched -
-                                                     # used to shrink an unreliable small-
-                                                     # sample HR9/WHIP toward league average
-                                                     # instead of trusting it at full strength
-                    "avgmix": None,   # filled in pass 2
+                    "phr9": effective_hr9,
+                    "whip": effective_whip,
+                    "phr9Season": pitcher_stat.get("hr9"),
+                    "whipSeason": pitcher_stat.get("whip"),
+                    "pip": pitcher_stat.get("ip"),
+                    "avgmix": None,
                     "wind": wind_score,
                     "park": park["factor"],
-                    "l15hr": None,    # filled in pass 2
-                    "l5hr": None,     # filled in pass 2
-                    "l15hrr": None,   # filled in pass 2
-                    "l15tb": None,    # filled in pass 2
-                    "risp": None,     # filled in pass 2
+                    "l15hr": None,
+                    "l5hr": None,
+                    "l15hrr": None,
+                    "l15tb": None,
+                    "risp": None,
                     "lbonus": max(1, 9 - order_pos),
                     "hrrLbonus": hrr_lineup_bonus(order_pos),
-                    "crush": 0,       # finalized after pass 2
+                    "crush": 0,
                     "split": 0,
                     "hrprob": None,
                 }
@@ -1684,13 +1446,6 @@ def main():
     print(f"  sides using a PROJECTED lineup (from last game): {sides_projected_lineup}")
     print(f"  sides with no lineup available at all: {sides_no_lineup_at_all}")
 
-    # ---- PASS 2: the slow part - platoon split, full game log (for L15 HR
-    # and the player detail view), prior-season totals, and any missing name
-    # lookups - run CONCURRENTLY across many threads instead of one at a time.
-    # This is what previously made the whole run take 4-10+ minutes; with
-    # ~20 requests in flight at once instead of 1, it should stay well under
-    # a couple minutes for a typical ~270-player slate even with the extra
-    # per-player calls the detail view now needs.
     print(f"Fetching per-player matchup data ({len(rows)} players, concurrently)...")
 
     def fetch_one(item):
@@ -1703,33 +1458,24 @@ def main():
         totals_prev_year = get_season_totals_hitting(batter_id, YEAR - 1)
         last20 = games_this_year[-20:]
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
-        # Last-5-game HR count - a fast-reacting "is this guy hot right now"
-        # signal to sit alongside l15hr's steadier 15-game base rate. See
-        # compute_score()'s "recent" factor below for how the two blend.
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
-        # Scoring-only versions of the two above - see diminishing_hr_credit()
-        # docstring. player_row["l15hr"]/["l5hr"] stay as the honest raw
-        # counts (shown on the card), these separate _credit fields feed
-        # the actual scoring formulas instead.
         l15hr_credit = (diminishing_hr_credit(games_this_year[-15:])
                          if games_this_year else None)
         l5hr_credit = (diminishing_hr_credit(games_this_year[-5:])
                         if games_this_year else None)
-        # Games clearing the 1.5 HRR line (H+R+RBI >= 2) - feeds the HRR
-        # board's "recent form" the same way l15hr feeds the HR board.
         l15hrr = (sum(1 for g in games_this_year[-15:] if g["hrr"] >= 2)
                   if games_this_year else None)
-        # Games clearing the 1.5 TB line (2+ total bases) - same pattern,
-        # feeds the new TB board's recent-form factor.
         l15tb = (sum(1 for g in games_this_year[-15:] if g["tb"] >= 2)
                  if games_this_year else None)
-        # Raw last-15 hits count (not a "clear the line" count like the two
-        # above) - just the actual number of hits, for the HRR board's
-        # dedicated Hits display so it's not only implied inside the
-        # combined HRR line-clearing count.
         l15hits = (sum(g["hits"] for g in games_this_year[-15:])
                    if games_this_year else None)
         risp = get_risp_avg(batter_id)
+
+        hr_road = home_road_split(games_this_year) if games_this_year else {}
+        day_night = get_day_night_split(batter_id)
+        season_pa = sum(g["pa"] for g in games_this_year) if games_this_year else 0
+        season_hr = sum(g["hr"] for g in games_this_year) if games_this_year else 0
+        season_hr_rate = (season_hr / season_pa) if season_pa > 0 else None
 
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
@@ -1742,9 +1488,15 @@ def main():
         player_row["risp"] = risp
         player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
         player_row["split"] = 1 if (platoon_avg or 0) >= 0.260 else 0
-        # Powers the player detail view (Graph + Stats tabs): last 20 games
-        # plus L5/L10/L20/season splits, precomputed here so tapping a card
-        # on the site is instant - no extra API calls from the browser.
+        player_row["homeHrRate"] = hr_road.get("homeHrRate")
+        player_row["homePa"] = hr_road.get("homePa")
+        player_row["roadHrRate"] = hr_road.get("roadHrRate")
+        player_row["roadPa"] = hr_road.get("roadPa")
+        player_row["dayHrRate"] = day_night.get("dayHrRate")
+        player_row["dayPa"] = day_night.get("dayPa")
+        player_row["nightHrRate"] = day_night.get("nightHrRate")
+        player_row["nightPa"] = day_night.get("nightPa")
+        player_row["seasonHrRate"] = season_hr_rate
         player_row["gamelog"] = {
             "games": last20,
             "l5": window_stats(last20[-5:]),
@@ -1768,11 +1520,6 @@ def main():
         player_row.update(compute_score(player_row))
         player_row.update(compute_hrr_score(player_row))
         player_row.update(compute_tb_score(player_row))
-        # Real calibrated probabilities (see compute_hr_probability's
-        # docstring above), independent of the composite favorability
-        # scores just computed - lets the frontend compare our actual
-        # model probability against the market's real implied
-        # probability for a genuine "value" signal.
         hr_prob = compute_hr_probability(player_row)
         if hr_prob is not None:
             player_row["hrProb"] = round(hr_prob * 100, 1)
@@ -1783,15 +1530,10 @@ def main():
         if tb_prob is not None:
             player_row["tbProb"] = round(tb_prob * 100, 1)
 
-    # ---- PITCHERS: the K (strikeouts) board. Built as its own pass since
-    # pitchers aren't part of the batter/lineup pipeline above at all - one
-    # row per team per game (today's probable starter), deduped by pitcher
-    # ID in case of a doubleheader. Reuses the same `games` schedule and
-    # `pitching_stats` already fetched above.
     print("Fetching team strikeout rates (opposing-lineup matchup signal)...")
     team_k_rate = get_team_k_rate()
 
-    pitcher_rows = {}  # keyed by pitcher_id, dedupes doubleheader duplicates
+    pitcher_rows = {}
     for g in games:
         for side, opp_side in [("home", "away"), ("away", "home")]:
             pitcher = g[f"{side}_pitcher"]
@@ -1819,17 +1561,14 @@ def main():
                 "seasonK": pstat.get("seasonK"),
                 "ipPerStart": pstat.get("ipPerStart"),
                 "oppKRate": team_k_rate.get(opp_team_id),
-                "l3k": None,   # filled below
-                "l5k": None,   # filled below
+                "l3k": None,
+                "l5k": None,
             }
 
     print(f"Fetching per-pitcher recent form ({len(pitcher_rows)} starters, concurrently)...")
 
     def fetch_pitcher(item):
         pitcher_id, row = item
-        # Reuse the reliable per-pitcher season stats already fetched
-        # earlier in main() for the batter boards' matchup data - same
-        # pitchers (today's probable starters), no need to fetch twice.
         own_season = reliable_pitcher_stats.get(pitcher_id) or get_pitcher_season_stats(pitcher_id, YEAR)
         if own_season:
             row.update(own_season)
@@ -1837,17 +1576,6 @@ def main():
         row["l3k"] = sum(g["k"] for g in starts[-3:]) if starts else None
         row["l5k"] = sum(g["k"] for g in starts[-5:]) if starts else None
 
-        # Blend in RECENT form for the two projection inputs (ipPerStart,
-        # k9), rather than trusting the season-long average alone. A
-        # season average can be stale if workload or stuff has changed
-        # recently - a pitcher on a short leash after a rough stretch,
-        # or working back from an injury, throws fewer innings NOW than
-        # his full-season average suggests, and a real sportsbook line
-        # already prices in that kind of current-form context we
-        # otherwise can't see. 60/40 blend toward recent (last 5 starts),
-        # same recency-weighting philosophy as the batter boards' L15/L5
-        # blend - enough to actually move the projection, not so much
-        # that a single short outing whipsaws it.
         last5 = starts[-5:]
         if last5:
             recent_ip_total = sum(g["ip"] or 0 for g in last5)
@@ -1865,9 +1593,6 @@ def main():
                               if season_k9 is not None else round(recent_k9, 2))
 
         row.update(compute_k_score(row))
-        # Last 10 starts, for the player-detail bar chart on the frontend -
-        # same idea as a batter's gamelog, just K's-per-start instead of
-        # HR/hits-per-game.
         row["starts"] = starts[-10:]
         return row
 
@@ -1877,17 +1602,6 @@ def main():
     print(f"  {len(pitchers)} probable starters found")
     players.extend(pitchers)
 
-    # Carry forward each player's existing real sportsbook odds (bookOdds)
-    # from the PREVIOUS players.json, rather than losing them every time
-    # this script runs. fetch_hr_data.py rebuilds the whole file from
-    # scratch on every run and has no concept of odds at all - without
-    # this, ANY run of this script (even just to catch a lineup update)
-    # would silently wipe every player's odds until fetch_odds.py ran
-    # again, forcing a real API-credit spend just to undo the wipe. Real
-    # tradeoff worth knowing: carried-forward odds can go stale (a line
-    # moves, a player gets scratched) until the next actual fetch_odds.py
-    # run refreshes them - that's the accepted cost of not burning
-    # credits on every single fetch_hr_data.py run.
     if os.path.exists("players.json"):
         try:
             with open("players.json") as f:
@@ -1908,14 +1622,8 @@ def main():
             print(f"  WARNING: couldn't carry forward previous odds ({e}) - "
                   f"bookOdds will be empty until fetch_odds.py runs again.")
 
-    # Written sorted by the HR score for backward compatibility - the
-    # frontend re-sorts client-side by whichever score field the active
-    # board uses. .get(..., 0) since pitcher rows have kScore, not score.
     players.sort(key=lambda p: -p.get("score", 0))
 
-    # allow_nan=False makes Python raise a clear error HERE if any stat somehow
-    # came out as NaN/Infinity, instead of silently writing invalid JSON that
-    # would then fail to parse in the browser with a cryptic "syntax error".
     with open("players.json", "w") as f:
         json.dump(players, f, indent=2, allow_nan=False)
 
@@ -1925,22 +1633,13 @@ def main():
 
 
 def write_daily_snapshot(players):
-    """A small daily snapshot for the historical accuracy tracker - just
-    each player's projected score/line, not the full row (that would bloat
-    the repo fast at 3 runs/day, every day, forever). Overwritten on every
-    run of the day, so the snapshot that survives is from the LAST run
-    before games start - the most-confirmed lineup/matchup data of the
-    day, which is what we actually want to grade against final results.
-    check_results.py reads this the next day and compares it against
-    actual box scores to build a real track record instead of just
-    trusting the model blindly."""
+    """Daily snapshot for the historical accuracy tracker. EXPANDED in v3:
+    now also saves the raw inputs compute_score() actually used - not just
+    the final score. This is what makes a real future backtest possible:
+    re-running a DIFFERENT weighting formula against what a player's
+    inputs actually were on a given day, rather than only ever having the
+    one score that was actually shown."""
     os.makedirs("history", exist_ok=True)
-    # Use the same Eastern-time TODAY as the rest of the script (see the
-    # comment at its definition near the top of the file) - NOT raw
-    # datetime.date.today(), which on GitHub Actions runs in UTC. A run
-    # after ~7-8pm Eastern would otherwise save this snapshot under
-    # TOMORROW's date, silently breaking check_results.py's ability to
-    # ever find it under today's actual date.
     date_str = TODAY
     snapshot = []
     for p in players:
@@ -1955,6 +1654,25 @@ def write_daily_snapshot(players):
                 "playerId": p.get("playerId"), "player": p.get("player"),
                 "playerType": "batter", "team": p.get("team"),
                 "score": p.get("score"), "hrrScore": p.get("hrrScore"), "tbScore": p.get("tbScore"),
+                "barrel": p.get("barrel"), "ev": p.get("ev"), "hardhit": p.get("hardhit"),
+                "l15Barrel": p.get("l15Barrel"), "l15Ev": p.get("l15Ev"),
+                "l15Hardhit": p.get("l15Hardhit"), "l15PowerPa": p.get("l15PowerPa"),
+                "iso": p.get("iso"), "pa": p.get("pa"), "slg": p.get("slg"),
+                "avg": p.get("avg"), "obp": p.get("obp"),
+                "phr9": p.get("phr9"), "whip": p.get("whip"),
+                "phr9Season": p.get("phr9Season"), "whipSeason": p.get("whipSeason"),
+                "avgmix": p.get("avgmix"), "wind": p.get("wind"), "park": p.get("park"),
+                "l15hr": p.get("l15hr"), "l5hr": p.get("l5hr"),
+                "l15hrr": p.get("l15hrr"), "l15tb": p.get("l15tb"),
+                "risp": p.get("risp"), "lbonus": p.get("lbonus"),
+                "hrrLbonus": p.get("hrrLbonus"), "crush": p.get("crush"), "split": p.get("split"),
+                "pitchMixMatch": p.get("pitchMixMatch"),
+                "isDayGame": p.get("isDayGame"), "isHomeGame": p.get("isHomeGame"),
+                "homeHrRate": p.get("homeHrRate"), "homePa": p.get("homePa"),
+                "roadHrRate": p.get("roadHrRate"), "roadPa": p.get("roadPa"),
+                "dayHrRate": p.get("dayHrRate"), "dayPa": p.get("dayPa"),
+                "nightHrRate": p.get("nightHrRate"), "nightPa": p.get("nightPa"),
+                "seasonHrRate": p.get("seasonHrRate"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
