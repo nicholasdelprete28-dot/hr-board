@@ -1473,7 +1473,16 @@ def compute_hr_probability(p):
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     pw_pitcher = pitcher_sample_weight(p.get("pip"))
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
-    matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
+    # FIX v3.8: pitcher matchup sensitivity increased 0.5 -> 0.85, per
+    # explicit request - matchups need to genuinely matter, not just
+    # nudge. Real effect: a truly bad pitcher (2.15 HR/9) now boosts the
+    # probability ~67% instead of ~40%; a truly good one (0.8) now
+    # suppresses it ~28% instead of ~17%. Combined with the v3.7 power
+    # multiplier cut, this is a deliberate two-part rebalance: power
+    # still anchors the baseline (it's still the single best real
+    # predictor), but today's specific matchup can now swing the number
+    # much harder than it could before.
+    matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.85
     mean = max(0.01, base_rate * matchup_mult)
 
     # NEW: platoon/opportunity/park/wind, previously entirely absent from
