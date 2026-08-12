@@ -60,6 +60,7 @@ from fetch_odds import normalize_name
 
 YEAR = 2026
 TODAY = datetime.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
+TODAY_WEEKDAY = datetime.datetime.now(ZoneInfo("America/New_York")).weekday()  # 0=Mon..6=Sun, for day_of_week_split()
 
 PARKS = {
     "COL": {"factor": 2, "lat": 39.7559, "lon": -104.9942},
@@ -461,12 +462,18 @@ def get_day_night_split(batter_id):
     get_risp_avg()'s 'risp' code. Returns Nones on failure so callers fall
     back cleanly."""
     try:
+        # FIX: switched from full-word 'day'/'night' to single-letter 'd'/'n' -
+        # every OTHER real sitCode this file uses (vl, vr, risp) is a short
+        # code, not a spelled-out word, so 'day'/'night' was always the
+        # weakest guess in this file and likely why this was returning
+        # empty for everyone. Still not confirmed against a live response -
+        # same honesty standard as every other unverified endpoint here.
         day_data = statsapi_get(f"people/{batter_id}/stats", {
-            "stats": "statSplits", "sitCodes": "day",
+            "stats": "statSplits", "sitCodes": "d",
             "group": "hitting", "season": YEAR, "sportId": 1
         })
         night_data = statsapi_get(f"people/{batter_id}/stats", {
-            "stats": "statSplits", "sitCodes": "night",
+            "stats": "statSplits", "sitCodes": "n",
             "group": "hitting", "season": YEAR, "sportId": 1
         })
         day_splits = day_data.get("stats", [{}])[0].get("splits", [])
@@ -518,6 +525,27 @@ def get_gamelog(batter_id, season):
         return games
     except Exception:
         return []
+
+
+def day_of_week_split(games, target_weekday):
+    """NEW v3.6, per explicit request. This batter's HR rate on the SAME
+    day of the week as today, built entirely from the season gamelog
+    already fetched - zero new API calls. target_weekday is 0=Monday..
+    6=Sunday (Python's datetime.weekday() convention).
+
+    HONEST CAVEAT, keeping this documented even though it's being built:
+    MLB's API has no real "day of week" stat split - unlike home/road,
+    which is a genuine, commonly-tracked split, day-of-week isn't. A
+    single weekday only comes up ~15-25 times across a whole season for
+    any player, an unavoidably thin sample no matter how it's built. This
+    is why day_of_week_adjustment() below uses the smallest bound and
+    highest minimum-sample gate of any situational adjustment in this
+    file - treat it as the least-trusted signal here, by design."""
+    matching_games = [g for g in games
+                       if g.get("date") and datetime.date.fromisoformat(g["date"]).weekday() == target_weekday]
+    pa = sum(g["pa"] for g in matching_games)
+    hr = sum(g["hr"] for g in matching_games)
+    return (hr / pa if pa > 0 else None), pa
 
 
 def home_road_split(games):
@@ -1093,6 +1121,8 @@ HOME_ROAD_MAX_ADJ = 0.06
 HOME_ROAD_MIN_PA = 60
 DAY_NIGHT_MAX_ADJ = 0.04
 DAY_NIGHT_MIN_PA = 60
+DOW_MAX_ADJ = 0.03      # smallest cap of any situational adjustment - see honesty note on day_of_week_split()
+DOW_MIN_PA = 25          # highest minimum sample of any situational adjustment, same reasoning
 
 
 def power_sample_weight(pa):
@@ -1128,6 +1158,25 @@ def home_road_adjustment(p):
     raw_ratio = relevant_rate / overall_rate
     adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
     adj = max(-HOME_ROAD_MAX_ADJ, min(HOME_ROAD_MAX_ADJ, adj))
+    return 1 + adj
+
+
+def day_of_week_adjustment(p):
+    """NEW v3.6, per explicit request - same bounded-multiplier pattern
+    as every other situational adjustment, but with the smallest cap and
+    highest minimum sample of any of them, reflecting how much thinner
+    this specific signal genuinely is (see day_of_week_split()'s honesty
+    note above)."""
+    dow_rate = p.get("dowHrRate")
+    dow_pa = p.get("dowPa") or 0
+    overall_rate = p.get("seasonHrRate")
+    if dow_rate is None or overall_rate is None or overall_rate <= 0:
+        return 1.0
+    if dow_pa < DOW_MIN_PA:
+        return 1.0
+    raw_ratio = dow_rate / overall_rate
+    adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
+    adj = max(-DOW_MAX_ADJ, min(DOW_MAX_ADJ, adj))
     return 1 + adj
 
 
@@ -1266,6 +1315,7 @@ def compute_score(p):
     score *= home_road_adjustment(p)
     score *= day_night_adjustment(p)
     score *= bullpen_adjustment(p)
+    score *= day_of_week_adjustment(p)  # NEW v3.6
     score = max(0.0, min(100.0, score))
 
     return {
@@ -1427,6 +1477,7 @@ def compute_hr_probability(p):
     mean *= home_road_adjustment(p)
     mean *= day_night_adjustment(p)
     mean *= bullpen_adjustment(p)
+    mean *= day_of_week_adjustment(p)  # NEW v3.6
     mean = max(0.01, mean)
 
     raw_prob = poisson_over_prob(mean, 0.5)
@@ -1811,6 +1862,7 @@ def main():
         risp = get_risp_avg(batter_id)
 
         hr_road = home_road_split(games_this_year) if games_this_year else {}
+        dow_hr_rate, dow_pa = day_of_week_split(games_this_year, TODAY_WEEKDAY) if games_this_year else (None, 0)  # NEW v3.6
         day_night = get_day_night_split(batter_id)
         season_pa = sum(g["pa"] for g in games_this_year) if games_this_year else 0
         season_hr = sum(g["hr"] for g in games_this_year) if games_this_year else 0
@@ -1838,6 +1890,8 @@ def main():
         player_row["nightHrRate"] = day_night.get("nightHrRate")
         player_row["nightPa"] = day_night.get("nightPa")
         player_row["seasonHrRate"] = season_hr_rate
+        player_row["dowHrRate"] = dow_hr_rate  # NEW v3.6
+        player_row["dowPa"] = dow_pa  # NEW v3.6
         player_row["gamelog"] = {
             "games": last20,
             "l5": window_stats(last20[-5:]),
@@ -2014,6 +2068,7 @@ def write_daily_snapshot(players):
                 "dayHrRate": p.get("dayHrRate"), "dayPa": p.get("dayPa"),
                 "nightHrRate": p.get("nightHrRate"), "nightPa": p.get("nightPa"),
                 "seasonHrRate": p.get("seasonHrRate"),
+                "dowHrRate": p.get("dowHrRate"), "dowPa": p.get("dowPa"),  # NEW v3.6
                 "avgVsMix": p.get("avgVsMix"), "avgVsMixPa": p.get("avgVsMixPa"),  # NEW v3.2
                 "l15Iso": p.get("l15Iso"), "l15IsoPa": p.get("l15IsoPa"),  # NEW v3.4
                 "oppBullpenEra": p.get("oppBullpenEra"),  # NEW v3.2
