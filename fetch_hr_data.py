@@ -1614,14 +1614,33 @@ def compute_hr_probability(p):
     matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
     mean = max(0.01, base_rate * matchup_mult)
 
+    # v3.14: situational nudges (platoon/opportunity/park/wind) and the
+    # home-road/day-night/bullpen/day-of-week multipliers are now GATED
+    # by how much real power is actually behind the pick. Previously
+    # these applied in full to every player regardless of power_quality -
+    # so an average-power hitter with a great platoon matchup, a hot
+    # lineup spot, and helpful wind could stack several multiplicative
+    # tailwinds and land in PRIME territory on situational alignment
+    # alone, without the raw ability to actually drive a ball out. A
+    # tailwind only helps a ball that was hit hard enough to be helped.
+    # A real elite bat still gets these nudges at full strength; a
+    # well-below-average bat gets them at a fraction of that
+    # (POWER_GATE_MIN_STRENGTH), scaling linearly in between. This is
+    # the direct fix for "too many PRIME picks that were really just
+    # decent-power guys with a good matchup on paper."
+    POWER_GATE_FLOOR = 0.25
+    POWER_GATE_CEIL = 0.65
+    POWER_GATE_MIN_STRENGTH = 0.35
+    power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
+    situational_strength = POWER_GATE_MIN_STRENGTH + (1 - POWER_GATE_MIN_STRENGTH) * power_gate
+
     NUDGE_STRENGTH = 0.14
     for factor_val in (sf["platoon"], sf["opportunity"], sf["park_s"], sf["wind_s"]):
-        mean *= 1 + (factor_val - 0.5) * NUDGE_STRENGTH
+        mean *= 1 + (factor_val - 0.5) * NUDGE_STRENGTH * situational_strength
 
-    mean *= home_road_adjustment(p)
-    mean *= day_night_adjustment(p)
-    mean *= bullpen_adjustment(p)
-    mean *= day_of_week_adjustment(p)
+    for adj in (home_road_adjustment(p), day_night_adjustment(p),
+                bullpen_adjustment(p), day_of_week_adjustment(p)):
+        mean *= 1 + (adj - 1) * situational_strength
 
     # FIX #3 (v3.12): same situational-pileup guard added to compute_score()
     # is now applied here too - previously this stacking dampener only
