@@ -662,70 +662,146 @@ def fetch_batter_statcast():
 
 
 def fetch_batter_statcast_l15():
-    """NEW in v3. Same three stats as fetch_batter_statcast() (barrel%, EV,
-    hard-hit%), but from ONLY the last 15 days.
+    """NEW in v3 (FIXED): last-15-day barrel%, EV, and hard-hit%, built by
+    aggregating Baseball Savant's real event-level search export
+    ('statcast_search'), NOT the "custom leaderboard" endpoint the first
+    attempt used - that endpoint turned out to only return name/id/year by
+    default (confirmed via a live run: 'Savant L15 CSV columns:
+    [last_name, first_name, player_id, year]', no stat columns at all).
 
-    HONESTY NOTE (see module docstring): uses Savant's "custom leaderboard"
-    endpoint with an explicit date range, NOT confirmed against a live
-    response. If wrong, compute_score() falls back cleanly to season-only
-    power (see POWER_L15_WEIGHT) - a failed L15 fetch degrades gracefully."""
+    statcast_search returns ONE ROW PER PITCH (not pre-aggregated per
+    player), so this fetches every pitch across all of MLB for the last 15
+    days in one bulk request, filters down to actual batted-ball events
+    (type == 'X', a ball put in play), and aggregates barrel%/EV/hard-hit%
+    per batter client-side:
+      - EV: mean of launch_speed across that batter's batted balls
+      - Barrel%: share of batted balls where launch_speed_angle == '6' -
+        this is Savant's OWN numeric barrel classification field (1-6,
+        6 = Barrel), so this reuses their real classification instead of
+        re-implementing the EV/launch-angle barrel formula ourselves,
+        which would risk subtly disagreeing with Savant's own numbers.
+      - Hard-hit%: share of batted balls with launch_speed >= 95
+
+    HONESTY NOTE: the column names used here (batter, type, launch_speed,
+    launch_angle, launch_speed_angle, game_date) are the well-documented
+    statcast_search export schema (same schema pybaseball and other public
+    tools built against), which is a meaningfully more solid footing than
+    the previous guess - but this specific query STILL hasn't been run
+    against a live response by me. Same defensive column-checking and full
+    logging as every other Savant fetch in this file, so a schema
+    surprise is immediately visible in the Action log rather than silent.
+    This is also a much bigger fetch than the leaderboard endpoints (every
+    pitch league-wide for 15 days, not one row per player) - bumped
+    timeout to 90s and this will meaningfully add to the script's total
+    run time. If it's too slow in practice, the fallback if it fails or
+    times out is still the same clean one: compute_score() reverts to
+    season-only power for everyone, nothing breaks.
+    """
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=15)
-    url = (f"https://baseballsavant.mlb.com/leaderboard/custom"
-           f"?type=batter&year={YEAR}&position=&team=&min=1"
-           f"&start_date={start_date.isoformat()}&end_date={end_date.isoformat()}"
-           f"&csv=true")
+    url = (
+        "https://baseballsavant.mlb.com/statcast_search/csv"
+        "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
+        "&hfGT=R%7C&hfC=&hfSea=" + str(YEAR) + "%7C&hfSit="
+        "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
+        "&hfSA=&game_date_gt=" + start_date.isoformat()
+        + "&game_date_lt=" + end_date.isoformat()
+        + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
+        "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
+        "&group_by=name&sort_col=pitches&player_event_sort=api_p_release_speed"
+        "&sort_order=desc&min_pas=0&type=details"
+    )
     try:
-        resp = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+        resp = requests.get(url, timeout=90, headers={"User-Agent": "Mozilla/5.0"})
         resp.raise_for_status()
         text = resp.content.decode("utf-8-sig")
         reader = csv.DictReader(io.StringIO(text))
         rows = list(reader)
-        print(f"  Savant L15 CSV columns: {reader.fieldnames}")
-        print(f"  Savant L15 CSV row count: {len(rows)}")
+        print(f"  Savant L15 event-level CSV columns: {reader.fieldnames}")
+        print(f"  Savant L15 event-level CSV row count (all pitches): {len(rows)}")
         if rows:
-            print(f"  sample row: {rows[0]}")
+            print(f"  sample row keys with values: "
+                  f"{ {k: rows[0].get(k) for k in ['batter','type','launch_speed','launch_angle','launch_speed_angle','game_date']} }")
     except Exception as e:
-        print(f"  WARNING: L15 Statcast fetch failed ({e}) - power score will "
-              f"fall back to season-only for everyone.")
+        print(f"  WARNING: L15 Statcast event-level fetch failed ({e}) - power "
+              f"score will fall back to season-only for everyone.")
         return {}
 
-    id_columns = ["player_id", "batter", "xba_id", "id", "mlb_id", "mlbam_id"]
-    id_col_used = next((c for c in id_columns if rows and c in rows[0]), None)
-    ev_columns = ["avg_hit_speed", "exit_velocity_avg", "launch_speed_avg"]
-    barrel_columns = ["brl_percent", "barrel_percent", "barrel_batted_rate"]
-    hardhit_columns = ["ev95percent", "hard_hit_percent", "hardhit_percent", "z_hard_hit_percent"]
-    pa_columns = ["pa", "plate_appearances", "abs"]
-    ev_col = next((c for c in ev_columns if rows and c in rows[0]), None)
-    barrel_col = next((c for c in barrel_columns if rows and c in rows[0]), None)
-    hardhit_col = next((c for c in hardhit_columns if rows and c in rows[0]), None)
-    pa_col = next((c for c in pa_columns if rows and c in rows[0]), None)
-    print(f"  L15 using ID={id_col_used} EV={ev_col} barrel={barrel_col} "
-          f"hardhit={hardhit_col} PA={pa_col}")
-    if rows and (ev_col is None or barrel_col is None or hardhit_col is None):
-        print(f"  WARNING: L15 stat column(s) not found - falling back to "
-              f"season-only power for anyone missing L15 data.")
+    id_columns = ["batter", "player_id", "batter_id"]
+    id_col = next((c for c in id_columns if rows and c in rows[0]), None)
+    type_columns = ["type"]
+    type_col = next((c for c in type_columns if rows and c in rows[0]), None)
+    ls_columns = ["launch_speed"]
+    ls_col = next((c for c in ls_columns if rows and c in rows[0]), None)
+    lsa_columns = ["launch_speed_angle"]
+    lsa_col = next((c for c in lsa_columns if rows and c in rows[0]), None)
+    print(f"  L15 using batter_id={id_col} type={type_col} "
+          f"launch_speed={ls_col} launch_speed_angle={lsa_col}")
 
-    out = {}
+    if not (id_col and ls_col):
+        print(f"  WARNING: required L15 columns not found - check the printed "
+              f"CSV columns above. Falling back to season-only power for everyone.")
+        return {}
+
+    # Aggregate per-batter: only rows that are real batted-ball events
+    # (type == 'X' when that column exists; otherwise fall back to "has a
+    # real launch_speed value", since a ball not put in play has no exit
+    # velocity recorded at all).
+    per_batter = {}
     for row in rows:
-        pid_raw = row.get(id_col_used) if id_col_used else None
+        if type_col and row.get(type_col) != "X":
+            continue
+        ls_raw = row.get(ls_col)
+        if not ls_raw:
+            continue
+        pid_raw = row.get(id_col)
         if not pid_raw:
             continue
         try:
-            pid = int(pid_raw)
-            out[pid] = {
-                "ev": float((row.get(ev_col) if ev_col else None) or 0),
-                "barrel": float((row.get(barrel_col) if barrel_col else None) or 0) / 100,
-                "hardhit": float((row.get(hardhit_col) if hardhit_col else None) or 0) / 100,
-                "pa": int(float(row.get(pa_col) or 0)) if pa_col else None,
-            }
+            pid = int(float(pid_raw))
+            ls = float(ls_raw)
         except (TypeError, ValueError):
             continue
+        lsa_raw = row.get(lsa_col) if lsa_col else None
+        is_barrel = (lsa_raw == "6")
+        d = per_batter.setdefault(pid, {"ev_sum": 0.0, "n": 0, "barrels": 0, "hardhit": 0})
+        d["ev_sum"] += ls
+        d["n"] += 1
+        if is_barrel:
+            d["barrels"] += 1
+        if ls >= 95:
+            d["hardhit"] += 1
+
+    out = {}
+    for pid, d in per_batter.items():
+        if d["n"] <= 0:
+            continue
+        out[pid] = {
+            "ev": round(d["ev_sum"] / d["n"], 1),
+            "barrel": round(d["barrels"] / d["n"], 3),
+            "hardhit": round(d["hardhit"] / d["n"], 3),
+            "pa": d["n"],  # batted-ball-event count, used as the sample-size
+                            # gate in compute_score() (POWER_L15_MIN_PA) -
+                            # not a true PA count, but the right denominator
+                            # for "how much do we trust this L15 read."
+        }
+    print(f"  parsed L15 power data for {len(out)} batters from "
+          f"{sum(d['n'] for d in per_batter.values())} batted-ball events")
     return out
-
-
 def fetch_pitch_mix_data():
-    batter_pitch_data = {}
+    """UPDATED in v3.2: the batter side now also captures real batting
+    AVG ('ba') and plate-appearance count ('pa') per pitch type, not just
+    hard-hit% - this is what makes compute_avg_vs_mix() below possible: a
+    REAL "AVG vs this pitcher's actual arsenal" stat (not just a
+    handedness split), built WITH proper sample-size shrinkage (unlike
+    what a competitor's app was seen showing - a .056 AVG-vs-mix number
+    built off as few as 4 PA in one observed case, with no shrink at all).
+    The Savant pitch-arsenal-stats export already includes 'ba' and 'pa'
+    columns per pitch type (confirmed in a real fetch log), so this reuses
+    the exact same bulk request as before - no new API call.
+    """
+    batter_pitch_data = {}       # {batter_id: {pitch_type: hard_hit_pct}}
+    batter_pitch_avg = {}        # {batter_id: {pitch_type: {"ba":.., "pa":..}}} - NEW v3.2
     pitcher_pitch_mix = {}
 
     for kind, out_dict in [("batter", batter_pitch_data), ("pitcher", pitcher_pitch_mix)]:
@@ -754,8 +830,12 @@ def fetch_pitch_mix_data():
         usage_col = next((c for c in usage_columns if rows and c in rows[0]), None)
         metric_columns = ["hard_hit_percent", "ev95percent", "whiff_percent"]
         metric_col = next((c for c in metric_columns if rows and c in rows[0]), None)
+        ba_columns = ["ba"]  # NEW v3.2
+        ba_col = next((c for c in ba_columns if rows and c in rows[0]), None)
+        pa_columns = ["pa"]  # NEW v3.2
+        pa_col = next((c for c in pa_columns if rows and c in rows[0]), None)
         print(f"  ({kind}) using id={id_col} pitch_type={pitch_col} "
-              f"usage={usage_col} metric={metric_col}")
+              f"usage={usage_col} metric={metric_col} ba={ba_col} pa={pa_col}")
 
         if not (id_col and pitch_col):
             print(f"  WARNING: couldn't identify required columns for {kind} "
@@ -781,10 +861,17 @@ def fetch_pitch_mix_data():
                     out_dict[pid][pitch_type] = metric_raw / 100 if metric_raw > 1 else metric_raw
                 except (ValueError, TypeError):
                     pass
+            if kind == "batter" and ba_col and pa_col:
+                try:
+                    ba_raw = float(row[ba_col])
+                    pa_raw = int(float(row[pa_col]))
+                    batter_pitch_avg.setdefault(pid, {})[pitch_type] = {"ba": ba_raw, "pa": pa_raw}
+                except (ValueError, TypeError, KeyError):
+                    pass
 
     print(f"  parsed pitch-mix data for {len(batter_pitch_data)} batters, "
-          f"{len(pitcher_pitch_mix)} pitchers")
-    return batter_pitch_data, pitcher_pitch_mix
+          f"{len(pitcher_pitch_mix)} pitchers, {len(batter_pitch_avg)} with AVG-vs-pitch data")
+    return batter_pitch_data, pitcher_pitch_mix, batter_pitch_avg
 
 
 def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix):
@@ -801,6 +888,138 @@ def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pi
     if weight_total < 0.3:
         return None
     return weighted_sum / weight_total
+
+
+AVG_VS_MIX_SHRINK_K = 30  # PA of season-average-anchored prior mixed in -
+                           # same shrink philosophy as power_sample_weight(),
+                           # tuned a bit gentler since arsenal-matched PA
+                           # samples are inherently smaller than season PA.
+
+
+def compute_avg_vs_mix(batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mix, season_avg):
+    """NEW in v3.2. A REAL "AVG vs this pitcher's actual arsenal" number -
+    this batter's real batting average against each pitch type, weighted
+    by how often THIS SPECIFIC pitcher actually throws each one, then
+    shrunk toward the batter's own season AVG based on how much real
+    matched-PA sample backs it up.
+
+    This is the properly-built version of a stat a competitor's app was
+    observed showing UNSHRUNK - e.g. a .056 "AVG vs pitch mix" reading
+    built off as few as 4 real PA in one confirmed case, wildly diverging
+    from that same player's season AVG on the very same card. Small-sample
+    swings like that aren't a real signal, they're noise wearing a
+    precise-looking number. AVG_VS_MIX_SHRINK_K controls how much real
+    matched PA it takes before this stat is trusted over the season
+    anchor - same protection every other rate stat in this file already
+    gets.
+
+    Returns (shrunk_avg, matched_pa) or (None, 0) if there isn't enough
+    real data to compute anything at all.
+    """
+    batter_data = batter_pitch_avg.get(batter_id)
+    mix = pitcher_pitch_mix.get(pitcher_id)
+    if not batter_data or not mix:
+        return None, 0
+    weighted_ba_sum = 0.0
+    weighted_pa_sum = 0.0
+    matched_pa_total = 0
+    for pitch_type, usage in mix.items():
+        entry = batter_data.get(pitch_type)
+        if not entry:
+            continue
+        weighted_ba_sum += usage * entry["ba"]
+        weighted_pa_sum += usage
+        matched_pa_total += entry["pa"]
+    if weighted_pa_sum < 0.3:  # too little real arsenal overlap to trust, same
+                                # threshold compute_pitch_mix_match() already uses
+        return None, 0
+    raw_avg_vs_mix = weighted_ba_sum / weighted_pa_sum
+
+    anchor_avg = season_avg if season_avg is not None else LEAGUE_AVG_AVG
+    sw = matched_pa_total / (matched_pa_total + AVG_VS_MIX_SHRINK_K)
+    shrunk = raw_avg_vs_mix * sw + anchor_avg * (1 - sw)
+    return round(shrunk, 3), matched_pa_total
+
+
+def get_team_roster(team_id):
+    """Active roster for a team - standard MLB Stats API endpoint, used
+    only to find which pitchers are actually relievers for
+    get_team_bullpen_stats() below."""
+    try:
+        data = statsapi_get(f"teams/{team_id}/roster", {"rosterType": "active"})
+        return data.get("roster", [])
+    except Exception:
+        return []
+
+
+LEAGUE_AVG_BULLPEN_ERA = 4.20
+LEAGUE_AVG_BULLPEN_WHIP = 1.32
+BULLPEN_MIN_IP = 20  # below this much real relief innings for a team, don't trust its bullpen read
+
+
+def get_team_bullpen_stats(team_id, season):
+    """NEW in v3.2. This team's RELIEF corps quality (ERA/WHIP), separate
+    from the starting pitcher - a real gap the model had before, since
+    every board only ever modeled the probable starter, even though a
+    batter can easily face a bad bullpen in innings 6-9 too.
+
+    Classification: a pitcher counts as part of the "bullpen" for this
+    calculation if he has zero games started this season - a clean,
+    defensible definition (a pure reliever, by definition, hasn't
+    started), rather than trying to guess at a fuzzier "swingman" cutoff.
+    Aggregates ERA/WHIP weighted by real relief innings pitched across the
+    whole roster. Reuses get_pitcher_season_stats() (already
+    verified-working) for each individual pitcher - the only new piece
+    here is the roster lookup itself.
+
+    Real cost note: this is one roster fetch + one season-stats fetch per
+    pitcher, per team, per day (~12-13 pitchers x ~26-30 teams playing) -
+    a meaningful but bounded addition to the script's total run time,
+    cached once per team_id per run (not per batter)."""
+    roster = get_team_roster(team_id)
+    pitcher_ids = [p["person"]["id"] for p in roster
+                   if p.get("position", {}).get("abbreviation") == "P"]
+    total_ip = 0.0
+    total_er = 0.0
+    total_hits_walks = 0.0
+    for pid in pitcher_ids:
+        stat = get_pitcher_season_stats(pid, season)
+        if not stat or stat.get("gamesStarted", 0) > 0:
+            continue  # has at least one start this season - not a pure reliever
+        ip = stat.get("ip") or 0
+        if ip <= 0:
+            continue
+        total_ip += ip
+        total_er += stat["era"] * ip / 9  # back out earned runs from ERA*IP/9
+        total_hits_walks += stat["whip"] * ip  # back out hits+walks from WHIP*IP
+    if total_ip < BULLPEN_MIN_IP:
+        return {"bullpenEra": None, "bullpenWhip": None, "bullpenIp": round(total_ip, 1)}
+    return {
+        "bullpenEra": round(total_er * 9 / total_ip, 2),
+        "bullpenWhip": round(total_hits_walks / total_ip, 2),
+        "bullpenIp": round(total_ip, 1),
+    }
+
+
+BULLPEN_MAX_ADJ = 0.05  # same small-and-bounded philosophy as home/road and day/night
+
+
+def bullpen_adjustment(p):
+    """Bounded multiplier from the OPPOSING team's bullpen quality - a bad
+    bullpen (high ERA/WHIP) is good for the batter, applied the same
+    dampened, capped way every other situational adjustment in this file
+    is. Only applies with a real relief-innings sample (BULLPEN_MIN_IP)."""
+    era = p.get("oppBullpenEra")
+    whip = p.get("oppBullpenWhip")
+    ip = p.get("oppBullpenIp") or 0
+    if era is None or whip is None or ip < BULLPEN_MIN_IP:
+        return 1.0
+    era_ratio = era / LEAGUE_AVG_BULLPEN_ERA
+    whip_ratio = whip / LEAGUE_AVG_BULLPEN_WHIP
+    combined_ratio = (era_ratio + whip_ratio) / 2
+    adj = clamp01((combined_ratio - 1) * 0.3 + 0.5) - 0.5
+    adj = max(-BULLPEN_MAX_ADJ, min(BULLPEN_MAX_ADJ, adj))
+    return 1 + adj
 
 
 def wind_park_factor(speed, direction):
@@ -985,15 +1204,40 @@ def compute_score(p):
     else:
         pitch_mix_platoon = handedness_platoon
     avgmix_s = clamp01(avgmix / 0.5)
-    platoon = pitch_mix_platoon * 0.7 + avgmix_s * 0.3
+    # NEW in v3.2: avgVsMix is the REAL, sample-size-shrunk "AVG vs this
+    # pitcher's actual arsenal" (see compute_avg_vs_mix()) - a sharper,
+    # more specific signal than avgmix (which is only a handedness split).
+    # Folded in as a genuine penalty/bonus when we have it, not just
+    # averaged away - a real demonstrated weakness against this exact
+    # arsenal should visibly matter, which is the whole point of adding
+    # this. Falls back cleanly to the old blend when we don't have enough
+    # matched-PA sample to trust it.
+    avg_vs_mix = p.get("avgVsMix")
+    if avg_vs_mix is not None:
+        avg_vs_mix_s = clamp01(avg_vs_mix / 0.320)  # ~.320 = an elite AVG-vs-mix read
+        platoon = pitch_mix_platoon * 0.5 + avgmix_s * 0.2 + avg_vs_mix_s * 0.3
+    else:
+        platoon = pitch_mix_platoon * 0.7 + avgmix_s * 0.3
 
     opportunity = clamp01((lbonus - 1) / 5)
 
-    score = (power * 25 + pitcher_s * 20 + platoon * 15 + recent * 15
-             + opportunity * 15 + park_s * 5 + wind_s * 5)
+    # v3.1 REBALANCE: after live testing, Opportunity and Platoon (both of
+    # which plateau hard - opportunity maxes for ANY top-3-4 lineup slot,
+    # platoon clusters high for a large share of players) were giving a
+    # guaranteed score boost to roughly half the league once weighted at
+    # 15% each, letting mediocre-power players with a decent lineup spot
+    # and platoon matchup reach PRIME without real power backing it up.
+    # Pulled both back toward their original weight; put the freed weight
+    # back into Power (the one genuinely continuous, differentiating
+    # factor) and gave Park/Wind a little more room since they're mostly-
+    # neutral dials day to day anyway. Sums to 100: Power 30, Pitcher 20,
+    # Platoon 10, Recent 15, Opportunity 10, Park 8, Wind 7.
+    score = (power * 30 + pitcher_s * 20 + platoon * 10 + recent * 15
+             + opportunity * 10 + park_s * 8 + wind_s * 7)
 
     score *= home_road_adjustment(p)
     score *= day_night_adjustment(p)
+    score *= bullpen_adjustment(p)  # NEW in v3.2
     score = max(0.0, min(100.0, score))
 
     return {
@@ -1006,6 +1250,7 @@ def compute_score(p):
         "opportunityPct": round(opportunity * 100, 1),
         "parkPct": round(park_s * 100, 1),
         "windPct": round(wind_s * 100, 1),
+        "avgVsMixPct": round((avg_vs_mix_s * 100), 1) if avg_vs_mix is not None else None,  # NEW v3.2
     }
 
 
@@ -1318,7 +1563,26 @@ def main():
     print(f"  parsed {len(statcast_l15)} batters with L15 Statcast data")
 
     print("Fetching pitch-mix data (batter vs pitch type, pitcher usage)...")
-    batter_pitch_data, pitcher_pitch_mix = fetch_pitch_mix_data()
+    batter_pitch_data, pitcher_pitch_mix, batter_pitch_avg = fetch_pitch_mix_data()
+
+    # NEW in v3.2: each playing team's bullpen quality, fetched ONCE per
+    # team (not per batter) and cached - see get_team_bullpen_stats().
+    print("Fetching bullpen quality for today's teams...")
+    all_team_ids = set()
+    for g in games:
+        all_team_ids.add(g["home_team_id"])
+        all_team_ids.add(g["away_team_id"])
+
+    def fetch_one_bullpen(tid):
+        return tid, get_team_bullpen_stats(tid, YEAR)
+
+    bullpen_cache = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for tid, stats in executor.map(fetch_one_bullpen, all_team_ids):
+            bullpen_cache[tid] = stats
+    trusted_bullpens = sum(1 for s in bullpen_cache.values() if s.get("bullpenEra") is not None)
+    print(f"  got trusted bullpen reads for {trusted_bullpens} of {len(all_team_ids)} teams "
+          f"(rest fell below {BULLPEN_MIN_IP} IP relief sample and will show no adjustment)")
 
     rows = []
     sides_with_pitcher = 0
@@ -1335,9 +1599,9 @@ def main():
             team = g[f"{side}_team"]
             team_id = g[f"{side}_team_id"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
+            opp_team_id = g[f"{opp_side}_team_id"]  # NEW v3.2: needed unconditionally for bullpen lookup
             pitcher_confirmed = True
             if not opp_pitcher:
-                opp_team_id = g[f"{opp_side}_team_id"]
                 opp_pitcher = get_recent_starter(opp_team_id)
                 pitcher_confirmed = False
                 if opp_pitcher:
@@ -1389,6 +1653,8 @@ def main():
                 name = bstats.get("name") or ""
                 sc = statcast.get(batter_id, {})
                 sc_l15 = statcast_l15.get(batter_id, {})
+                avg_vs_mix_val, avg_vs_mix_pa = compute_avg_vs_mix(
+                    batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mix, bstats.get("avg"))
 
                 player_row = {
                     "playerType": "batter",
@@ -1406,6 +1672,11 @@ def main():
                     "playerId": batter_id,
                     "pitchMixMatch": compute_pitch_mix_match(
                         batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix),
+                    "avgVsMix": avg_vs_mix_val,  # NEW v3.2
+                    "avgVsMixPa": avg_vs_mix_pa,  # NEW v3.2
+                    "oppBullpenEra": bullpen_cache.get(opp_team_id, {}).get("bullpenEra"),   # NEW v3.2
+                    "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"), # NEW v3.2
+                    "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),     # NEW v3.2
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
@@ -1673,6 +1944,10 @@ def write_daily_snapshot(players):
                 "dayHrRate": p.get("dayHrRate"), "dayPa": p.get("dayPa"),
                 "nightHrRate": p.get("nightHrRate"), "nightPa": p.get("nightPa"),
                 "seasonHrRate": p.get("seasonHrRate"),
+                "avgVsMix": p.get("avgVsMix"), "avgVsMixPa": p.get("avgVsMixPa"),  # NEW v3.2
+                "oppBullpenEra": p.get("oppBullpenEra"),  # NEW v3.2
+                "oppBullpenWhip": p.get("oppBullpenWhip"),  # NEW v3.2
+                "oppBullpenIp": p.get("oppBullpenIp"),  # NEW v3.2
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
