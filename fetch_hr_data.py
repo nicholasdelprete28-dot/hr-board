@@ -317,8 +317,13 @@ def get_pitcher_recent_form(pitcher_id, season, season_hr9, season_whip):
     recent_hr9 = sum(g["hr"] for g in last3) * 9 / ip_total
     recent_whip = sum(g["hits"] + g["bb"] for g in last3) / ip_total
     pw = pitcher_sample_weight(ip_total)
-    blended_hr9 = recent_hr9 * pw + season_hr9 * (1 - pw)
-    blended_whip = recent_whip * pw + season_whip * (1 - pw)
+    # FIX: dampened to 60% of the raw linear blend - a 3-start/~14-inning
+    # window was swinging phr9/whip almost as hard as a real season-long
+    # trend, which was quietly making nearly every pitcher on a given day
+    # look like a bad matchup (see PITCHER_RECENT_DAMPEN below).
+    PITCHER_RECENT_DAMPEN = 0.6
+    blended_hr9 = season_hr9 + (recent_hr9 - season_hr9) * pw * PITCHER_RECENT_DAMPEN
+    blended_whip = season_whip + (recent_whip - season_whip) * pw * PITCHER_RECENT_DAMPEN
     return blended_hr9, blended_whip
 
 
@@ -1163,10 +1168,18 @@ def compute_score(p):
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
     if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
+        # FIX: EV and hard-hit% are now PURE last-15-day reads, not blended
+        # with season - per explicit request, these should reflect current
+        # form only. Barrel% keeps the existing season/L15 blend (barrel
+        # rate is noisier per-batted-ball than EV/hard-hit%, so leaving it
+        # blended is intentional, not an oversight).
         barrel_final = barrel_season * (1 - POWER_L15_WEIGHT) + l15_barrel * POWER_L15_WEIGHT
-        ev_final = ev_season * (1 - POWER_L15_WEIGHT) + l15_ev * POWER_L15_WEIGHT
-        hardhit_final = hardhit_season * (1 - POWER_L15_WEIGHT) + l15_hardhit * POWER_L15_WEIGHT
+        ev_final = l15_ev
+        hardhit_final = l15_hardhit
     else:
+        # Not enough L15 batted-ball sample to trust a pure L15 read -
+        # falls back to season for all three rather than showing a noisy
+        # few-event number as if it were reliable.
         barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
     iso_final = iso_season
 
@@ -1187,8 +1200,12 @@ def compute_score(p):
     power = (clamp01(barrel_adj / 0.25) + clamp01((ev_final - 85) / 15)
              + clamp01(iso_final / 0.4) + clamp01((hardhit_final - 0.3) / 0.4)) / 4
 
-    phr9_s = clamp01((phr9 - 0.3) / 1.7)
-    whip_s = clamp01((whip - 0.9) / 0.9)
+    # FIX: widened denominators (1.7->2.2, 0.9->1.15) so the pitcher bucket
+    # requires a genuinely extreme HR9/WHIP to hit its ceiling, rather than
+    # a merely-bad-but-common pitcher line maxing it out for a large share
+    # of every day's probable starters.
+    phr9_s = clamp01((phr9 - 0.3) / 2.2)
+    whip_s = clamp01((whip - 0.9) / 1.15)
     pitcher_s = (phr9_s + whip_s) / 2
 
     wind_s = clamp01((wind + 2) / 4)
