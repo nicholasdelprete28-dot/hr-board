@@ -10,6 +10,18 @@
 // npm package here - it's built for Node.js, and Cloudflare Workers runs
 // a different, more limited JS runtime, so Node-only packages can crash
 // at runtime even when the build succeeds. Plain fetch calls avoid that.
+//
+// INCIDENT NOTE (Aug 12, 2026): a customer with a CONFIRMED active
+// membership (verified directly in the Whop dashboard) was being denied
+// access. Step 4 below (the membership check) was the only step in this
+// file that did NOT return debug info on an unexpected result - every
+// other step (token exchange, userinfo) already did. Added the same
+// level of visibility here: if the memberships call fails, or succeeds
+// but produces no access, the response now shows the raw data instead of
+// silently redirecting to /subscribe?denied=1. This is almost certainly
+// a field-name or response-shape mismatch in the untested guesses below
+// (planId/status keys, or the shape of membershipsData itself) - the
+// debug output will show exactly which.
 
 import { createSessionToken, buildSetCookie, readCookie, COOKIE_NAME } from "../../_utils.js";
 
@@ -107,29 +119,81 @@ export async function onRequestGet({ request, env }) {
 
     // 4. If not on the allowlist, check the user's real memberships using
     // their own OAuth token (plain fetch, no SDK).
+    //
+    // INCIDENT FIX: this step now surfaces exactly what Whop returned
+    // instead of silently falling through to hasAccess=false on any
+    // unexpected shape or failure - see the incident note at the top of
+    // this file. Once the real field-name/shape issue is identified and
+    // fixed for good, this verbose branch can be trimmed back down, but
+    // for now it only fires on the failure path (a real subscriber never
+    // sees it - they hit the normal success path just like before).
+    let membershipDebug = null;
     if (!hasAccess) {
       try {
         const membershipsRes = await fetch("https://api.whop.com/api/v1/memberships", {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        if (membershipsRes.ok) {
-          const membershipsData = await membershipsRes.json();
-          const memberships = membershipsData.data || membershipsData.memberships || membershipsData || [];
-          hasAccess = Array.isArray(memberships) && memberships.some((m) => {
-            const planId = m.plan_id || m.plan?.id || m.planId;
-            const status = m.status;
-            return VALID_PLAN_IDS.includes(planId) && ACTIVE_STATUSES.includes(status);
-          });
+
+        if (!membershipsRes.ok) {
+          const errText = await membershipsRes.text();
+          return new Response(
+            `Login failed: the memberships lookup itself failed (this is different from ` +
+            `"no active membership" - this means Whop rejected or errored on the request).\n\n` +
+            `--- debug info ---\n` +
+            `HTTP status: ${membershipsRes.status}\n` +
+            `response body: ${errText}\n` +
+            `userId: ${userId}`,
+            { status: 200 }
+          );
+        }
+
+        const membershipsData = await membershipsRes.json();
+        const memberships = membershipsData.data || membershipsData.memberships || membershipsData || [];
+
+        hasAccess = Array.isArray(memberships) && memberships.some((m) => {
+          const planId = m.plan_id || m.plan?.id || m.planId;
+          const status = m.status;
+          return VALID_PLAN_IDS.includes(planId) && ACTIVE_STATUSES.includes(status);
+        });
+
+        if (!hasAccess) {
+          // Capture what we actually saw, so if this really is a
+          // no-access case (canceled, wrong product, etc.) OR a
+          // field-name mismatch, both are immediately visible instead
+          // of indistinguishable.
+          membershipDebug =
+            `--- debug info ---\n` +
+            `userId: ${userId}\n` +
+            `is memberships an array: ${Array.isArray(memberships)}\n` +
+            `membership count: ${Array.isArray(memberships) ? memberships.length : "n/a"}\n` +
+            `raw memberships data: ${JSON.stringify(memberships).slice(0, 3000)}\n` +
+            `VALID_PLAN_IDS: ${JSON.stringify(VALID_PLAN_IDS)}\n` +
+            `ACTIVE_STATUSES: ${JSON.stringify(ACTIVE_STATUSES)}`;
         }
       } catch (err) {
-        hasAccess = false;
+        return new Response(
+          `Login failed: error while checking memberships: ${err.message}\n\n` +
+          `--- debug info ---\n` +
+          `userId: ${userId}`,
+          { status: 200 }
+        );
       }
     }
 
     if (!hasAccess) {
-      const subscribeUrl = new URL("/subscribe", url.origin);
-      subscribeUrl.searchParams.set("denied", "1");
-      return Response.redirect(subscribeUrl.toString(), 302);
+      // Show the debug info directly instead of silently redirecting to
+      // /subscribe?denied=1 - a real subscriber getting bounced here with
+      // zero explanation is exactly the incident that prompted this
+      // change. Once the underlying cause is fixed, this can go back to
+      // a clean redirect.
+      return new Response(
+        `Login failed: no active Going Yard membership found for this account.\n\n` +
+        `If you HAVE paid and this is unexpected, this is very likely a bug in how ` +
+        `we're reading Whop's membership data, not a real access issue - screenshot ` +
+        `this whole page and send it over.\n\n` +
+        (membershipDebug || "(no additional debug info captured)"),
+        { status: 200 }
+      );
     }
 
     // 5. Issue our own session cookie, valid for 7 days.
