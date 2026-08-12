@@ -6,7 +6,7 @@
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -412,7 +412,7 @@
     "tbMatchupPct": 57.8,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 28.7,
+    "hrProb": 27.8,
     "hrrProb": 58.0,
     "tbProb": 53.0,
     "bookOdds": {
@@ -1224,7 +1224,7 @@
     "tbMatchupPct": 50.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 28.8,
+    "hrProb": 28.0,
     "hrrProb": 52.0,
     "tbProb": 45.4,
     "bookOdds": {
@@ -2036,7 +2036,7 @@
     "tbMatchupPct": 47.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 30.0,
+    "hrProb": 28.3,
     "hrrProb": 55.0,
     "tbProb": 50.6,
     "bookOdds": {
@@ -2847,7 +2847,7 @@
     "tbMatchupPct": 57.9,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.9,
+    "hrProb": 18.8,
     "hrrProb": 54.9,
     "tbProb": 49.3,
     "bookOdds": {
@@ -3211,7 +3211,7 @@
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -3617,7 +3617,7 @@
     "tbMatchupPct": 60.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 22.3,
+    "hrProb": 24.9,
     "hrrProb": 58.9,
     "tbProb": 52.2,
     "bookOdds": {
@@ -4408,7 +4408,7 @@
     "tbMatchupPct": 53.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 22.3,
+    "hrProb": 24.6,
     "hrrProb": 59.1,
     "tbProb": 44.6,
     "bookOdds": {
@@ -5178,7 +5178,7 @@
     "tbMatchupPct": 36.0,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 28.4,
+    "hrProb": 27.2,
     "hrrProb": 55.9,
     "tbProb": 47.4,
     "bookOdds": {
@@ -5990,7 +5990,7 @@
     "tbMatchupPct": 74.8,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 15.9,
+    "hrProb": 17.6,
     "hrrProb": 87.3,
     "tbProb": 80.4,
     "bookOdds": {
@@ -6392,6 +6392,783 @@
           "price": 1140,
           "alt": true,
           "displayName": "Brandon Nimmo"
+        }
+      ]
+    }
+  },
+  {
+    "playerType": "batter",
+    "player": "Victor Mesa Jr.",
+    "team": "TB",
+    "pitcher": "Jack Perkins",
+    "hand": "R",
+    "game": "TB @ ATH",
+    "lineupConfirmed": true,
+    "pitcherConfirmed": true,
+    "gameStatus": "Preview",
+    "gameTime": "2026-08-12T19:05:00Z",
+    "isDayGame": true,
+    "isHomeGame": false,
+    "playerId": 683748,
+    "pitchMixMatch": 0.43703500000000006,
+    "avgVsMix": 0.227,
+    "avgVsMixPa": 141,
+    "oppBullpenEra": 4.93,
+    "oppBullpenWhip": 1.63,
+    "oppBullpenIp": 177.0,
+    "barrel": 0.132,
+    "ev": 89.4,
+    "hardhit": 0.40399999999999997,
+    "l15Barrel": 0.2,
+    "l15Ev": 90.1,
+    "l15Hardhit": 0.4,
+    "l15PowerPa": 15,
+    "iso": null,
+    "pa": null,
+    "slg": null,
+    "avg": null,
+    "obp": null,
+    "phr9": 1.76,
+    "whip": 1.45,
+    "phr9Season": 1.76,
+    "whipSeason": 1.45,
+    "pip": 76.7,
+    "avgmix": 0.213,
+    "wind": 0,
+    "park": 0,
+    "l15hr": 2,
+    "l5hr": 2,
+    "l15hrr": 6,
+    "l15tb": 5,
+    "risp": 0.176,
+    "lbonus": 4,
+    "hrrLbonus": 7,
+    "crush": 0,
+    "split": 0,
+    "hrprob": null,
+    "l15Iso": 0.208,
+    "l15IsoPa": 53,
+    "l15hrCredit": 2.0,
+    "l5hrCredit": 2.0,
+    "l15hits": 11,
+    "homeHrRate": 0.043478260869565216,
+    "homePa": 69,
+    "roadHrRate": 0.07,
+    "roadPa": 100,
+    "dayHrRate": null,
+    "dayPa": 0,
+    "nightHrRate": null,
+    "nightPa": 0,
+    "seasonHrRate": 0.05917159763313609,
+    "gamelog": {
+      "games": [
+        {
+          "date": "2026-07-12",
+          "opp": "SEA",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-17",
+          "opp": "BOS",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 0,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-18",
+          "opp": "BOS",
+          "home": false,
+          "hr": 1,
+          "hits": 1,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 3,
+          "tb": 4
+        },
+        {
+          "date": "2026-07-19",
+          "opp": "BOS",
+          "home": false,
+          "hr": 1,
+          "hits": 1,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 3,
+          "tb": 4
+        },
+        {
+          "date": "2026-07-20",
+          "opp": "TOR",
+          "home": false,
+          "hr": 1,
+          "hits": 1,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 3,
+          "tb": 4
+        },
+        {
+          "date": "2026-07-22",
+          "opp": "TOR",
+          "home": false,
+          "hr": 0,
+          "hits": 2,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 2,
+          "hrr": 4,
+          "tb": 2
+        },
+        {
+          "date": "2026-07-23",
+          "opp": "TOR",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-25",
+          "opp": "CLE",
+          "home": true,
+          "hr": 0,
+          "hits": 1,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 0,
+          "hrr": 2,
+          "tb": 1
+        },
+        {
+          "date": "2026-07-28",
+          "opp": "TEX",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 2,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-29",
+          "opp": "TEX",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 0,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-30",
+          "opp": "TEX",
+          "home": true,
+          "hr": 0,
+          "hits": 1,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 1,
+          "tb": 1
+        },
+        {
+          "date": "2026-07-31",
+          "opp": "CWS",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-01",
+          "opp": "CWS",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-03",
+          "opp": "COL",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 5,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-04",
+          "opp": "COL",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 2,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-05",
+          "opp": "COL",
+          "home": false,
+          "hr": 0,
+          "hits": 2,
+          "xbh": 2,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 4,
+          "tb": 6
+        },
+        {
+          "date": "2026-08-07",
+          "opp": "SEA",
+          "home": false,
+          "hr": 0,
+          "hits": 2,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 2,
+          "tb": 3
+        },
+        {
+          "date": "2026-08-08",
+          "opp": "SEA",
+          "home": false,
+          "hr": 1,
+          "hits": 1,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 3,
+          "tb": 4
+        },
+        {
+          "date": "2026-08-09",
+          "opp": "SEA",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 5,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-11",
+          "opp": "ATH",
+          "home": false,
+          "hr": 1,
+          "hits": 2,
+          "xbh": 1,
+          "pa": 5,
+          "runs": 1,
+          "rbi": 2,
+          "hrr": 5,
+          "tb": 5
+        }
+      ],
+      "l5": {
+        "n": 5,
+        "hrPct": 40.0,
+        "hitsPct": 80.0,
+        "xbhPct": 80.0,
+        "hrrPct": 80.0,
+        "tbPct": 80.0,
+        "hitsAvg": 1.4,
+        "xbhAvg": 1.0,
+        "hrrAvg": 2.8,
+        "tbAvg": 3.6,
+        "paAvg": 4.4
+      },
+      "l10": {
+        "n": 10,
+        "hrPct": 20.0,
+        "hitsPct": 50.0,
+        "xbhPct": 40.0,
+        "hrrPct": 40.0,
+        "tbPct": 40.0,
+        "hitsAvg": 0.8,
+        "xbhAvg": 0.5,
+        "hrrAvg": 1.5,
+        "tbAvg": 1.9,
+        "paAvg": 4.0
+      },
+      "l20": {
+        "n": 20,
+        "hrPct": 25.0,
+        "hitsPct": 50.0,
+        "xbhPct": 35.0,
+        "hrrPct": 45.0,
+        "tbPct": 40.0,
+        "hitsAvg": 0.7,
+        "xbhAvg": 0.4,
+        "hrrAvg": 1.5,
+        "tbAvg": 1.7,
+        "paAvg": 3.45
+      },
+      "seasonCur": {
+        "n": 52,
+        "hrPct": 19.2,
+        "hitsPct": 46.2,
+        "xbhPct": 26.9,
+        "hrrPct": 40.4,
+        "tbPct": 28.8,
+        "hitsAvg": 0.63,
+        "xbhAvg": 0.29,
+        "hrrAvg": 1.42,
+        "tbAvg": 1.35,
+        "paAvg": 3.25
+      },
+      "seasonPrev": {
+        "n": 16,
+        "hrPct": 6.2,
+        "hitsAvg": 0.38,
+        "xbhAvg": 0.19,
+        "hrrAvg": 1.19,
+        "tbAvg": 0.69,
+        "paAvg": 2.38
+      },
+      "yearCur": 2026,
+      "yearPrev": 2025
+    },
+    "score": 58.9,
+    "conf": 0.7549999999999997,
+    "powerPct": 42.8,
+    "pitcherPct": 57.1,
+    "platoonPct": 63.8,
+    "recentPct": 60.0,
+    "opportunityPct": 60.0,
+    "parkPct": 50.0,
+    "windPct": 50.0,
+    "avgVsMixPct": 70.9,
+    "hrrScore": 40.8,
+    "hrrOnbasePct": 14.8,
+    "hrrMatchupPct": 51.9,
+    "hrrRecentPct": 60.0,
+    "hrrRispPct": 10.4,
+    "hrrOpportunityPct": 100.0,
+    "tbScore": 37.3,
+    "tbContactPct": 22.2,
+    "tbPowerPct": 26.0,
+    "tbMatchupPct": 51.9,
+    "tbRecentPct": 50.0,
+    "tbOpportunityPct": 60.0,
+    "hrProb": 19.2,
+    "hrrProb": 53.5,
+    "tbProb": 36.4,
+    "bookOdds": {
+      "hits": [
+        {
+          "book": "fanduel",
+          "line": 0.5,
+          "price": -210,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "fanduel",
+          "line": 1.5,
+          "price": 260,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 0.5,
+          "price": -210,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 1.5,
+          "price": 260,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 2.5,
+          "price": 1000,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 0.5,
+          "price": -224,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 1.5,
+          "price": 248,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 2.5,
+          "price": 1140,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 3.5,
+          "price": 4700,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 0.5,
+          "price": -210,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 3.5,
+          "price": 3500,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 1.5,
+          "price": 240,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 2.5,
+          "price": 1000,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        }
+      ],
+      "hrr": [
+        {
+          "book": "fanduel",
+          "line": 0.5,
+          "price": -330,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "fanduel",
+          "line": 1.5,
+          "price": -140,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 1.5,
+          "price": -130,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 1.5,
+          "price": -131,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 0.5,
+          "price": -316,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 2.5,
+          "price": 144,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 3.5,
+          "price": 259,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 4.5,
+          "price": 447,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 1.5,
+          "price": -130,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 4.5,
+          "price": 425,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 0.5,
+          "price": -295,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 3.5,
+          "price": 250,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 2.5,
+          "price": 140,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        }
+      ],
+      "hr": [
+        {
+          "book": "fanduel",
+          "line": 1.5,
+          "price": 4500,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "fanduel",
+          "line": 0.5,
+          "price": 430,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 0.5,
+          "price": 450,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 1.5,
+          "price": 5000,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 0.5,
+          "price": 427,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 1.5,
+          "price": 4700,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 1.5,
+          "price": 2500,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 0.5,
+          "price": 340,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        }
+      ],
+      "tb": [
+        {
+          "book": "fanduel",
+          "line": 1.5,
+          "price": 105,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "fanduel",
+          "line": 2.5,
+          "price": 220,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "fanduel",
+          "line": 4.5,
+          "price": 700,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "fanduel",
+          "line": 3.5,
+          "price": 320,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 1.5,
+          "price": 120,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "hardrockbet",
+          "line": 2.5,
+          "price": 230,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 1.5,
+          "price": 118,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 2.5,
+          "price": 237,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 3.5,
+          "price": 333,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 4.5,
+          "price": 670,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "draftkings",
+          "line": 5.5,
+          "price": 1280,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 1.5,
+          "price": 120,
+          "alt": false,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 4.5,
+          "price": 550,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 0.5,
+          "price": -210,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 3.5,
+          "price": 280,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
+        },
+        {
+          "book": "betmgm",
+          "line": 2.5,
+          "price": 210,
+          "alt": true,
+          "displayName": "Victor Mesa Jr."
         }
       ]
     }
@@ -6809,7 +7586,7 @@
     "tbMatchupPct": 76.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.4,
+    "hrProb": 16.2,
     "hrrProb": 81.3,
     "tbProb": 60.2,
     "bookOdds": {
@@ -7579,7 +8356,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 21.1,
+    "hrProb": 22.4,
     "hrrProb": 57.3,
     "tbProb": 48.2,
     "bookOdds": {
@@ -8383,7 +9160,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.9,
+    "hrProb": 15.4,
     "hrrProb": 58.7,
     "tbProb": 42.2,
     "bookOdds": {
@@ -9146,7 +9923,7 @@
     "tbMatchupPct": 70.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.0,
+    "hrProb": 13.7,
     "hrrProb": 81.3,
     "tbProb": 59.4,
     "bookOdds": {
@@ -9548,783 +10325,6 @@
           "price": -250,
           "alt": true,
           "displayName": "Corey Seager"
-        }
-      ]
-    }
-  },
-  {
-    "playerType": "batter",
-    "player": "Victor Mesa Jr.",
-    "team": "TB",
-    "pitcher": "Jack Perkins",
-    "hand": "R",
-    "game": "TB @ ATH",
-    "lineupConfirmed": false,
-    "pitcherConfirmed": true,
-    "gameStatus": "Preview",
-    "gameTime": "2026-08-12T19:05:00Z",
-    "isDayGame": true,
-    "isHomeGame": false,
-    "playerId": 683748,
-    "pitchMixMatch": 0.43703500000000006,
-    "avgVsMix": 0.227,
-    "avgVsMixPa": 141,
-    "oppBullpenEra": 4.93,
-    "oppBullpenWhip": 1.63,
-    "oppBullpenIp": 177.0,
-    "barrel": 0.132,
-    "ev": 89.4,
-    "hardhit": 0.40399999999999997,
-    "l15Barrel": 0.2,
-    "l15Ev": 90.1,
-    "l15Hardhit": 0.4,
-    "l15PowerPa": 15,
-    "iso": null,
-    "pa": null,
-    "slg": null,
-    "avg": null,
-    "obp": null,
-    "phr9": 1.76,
-    "whip": 1.45,
-    "phr9Season": 1.76,
-    "whipSeason": 1.45,
-    "pip": 76.7,
-    "avgmix": 0.213,
-    "wind": 0,
-    "park": 0,
-    "l15hr": 2,
-    "l5hr": 2,
-    "l15hrr": 6,
-    "l15tb": 5,
-    "risp": 0.176,
-    "lbonus": 3,
-    "hrrLbonus": 5,
-    "crush": 0,
-    "split": 0,
-    "hrprob": null,
-    "l15Iso": 0.208,
-    "l15IsoPa": 53,
-    "l15hrCredit": 2.0,
-    "l5hrCredit": 2.0,
-    "l15hits": 11,
-    "homeHrRate": 0.043478260869565216,
-    "homePa": 69,
-    "roadHrRate": 0.07,
-    "roadPa": 100,
-    "dayHrRate": null,
-    "dayPa": 0,
-    "nightHrRate": null,
-    "nightPa": 0,
-    "seasonHrRate": 0.05917159763313609,
-    "gamelog": {
-      "games": [
-        {
-          "date": "2026-07-12",
-          "opp": "SEA",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-17",
-          "opp": "BOS",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 0,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-18",
-          "opp": "BOS",
-          "home": false,
-          "hr": 1,
-          "hits": 1,
-          "xbh": 1,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 3,
-          "tb": 4
-        },
-        {
-          "date": "2026-07-19",
-          "opp": "BOS",
-          "home": false,
-          "hr": 1,
-          "hits": 1,
-          "xbh": 1,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 3,
-          "tb": 4
-        },
-        {
-          "date": "2026-07-20",
-          "opp": "TOR",
-          "home": false,
-          "hr": 1,
-          "hits": 1,
-          "xbh": 1,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 3,
-          "tb": 4
-        },
-        {
-          "date": "2026-07-22",
-          "opp": "TOR",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 2,
-          "hrr": 4,
-          "tb": 2
-        },
-        {
-          "date": "2026-07-23",
-          "opp": "TOR",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 3,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-25",
-          "opp": "CLE",
-          "home": true,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 0,
-          "hrr": 2,
-          "tb": 1
-        },
-        {
-          "date": "2026-07-28",
-          "opp": "TEX",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 2,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-29",
-          "opp": "TEX",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 0,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-30",
-          "opp": "TEX",
-          "home": true,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 1,
-          "tb": 1
-        },
-        {
-          "date": "2026-07-31",
-          "opp": "CWS",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-08-01",
-          "opp": "CWS",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 3,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-08-03",
-          "opp": "COL",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-08-04",
-          "opp": "COL",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 2,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-08-05",
-          "opp": "COL",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 2,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 4,
-          "tb": 6
-        },
-        {
-          "date": "2026-08-07",
-          "opp": "SEA",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 1,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 2,
-          "tb": 3
-        },
-        {
-          "date": "2026-08-08",
-          "opp": "SEA",
-          "home": false,
-          "hr": 1,
-          "hits": 1,
-          "xbh": 1,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 3,
-          "tb": 4
-        },
-        {
-          "date": "2026-08-09",
-          "opp": "SEA",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-08-11",
-          "opp": "ATH",
-          "home": false,
-          "hr": 1,
-          "hits": 2,
-          "xbh": 1,
-          "pa": 5,
-          "runs": 1,
-          "rbi": 2,
-          "hrr": 5,
-          "tb": 5
-        }
-      ],
-      "l5": {
-        "n": 5,
-        "hrPct": 40.0,
-        "hitsPct": 80.0,
-        "xbhPct": 80.0,
-        "hrrPct": 80.0,
-        "tbPct": 80.0,
-        "hitsAvg": 1.4,
-        "xbhAvg": 1.0,
-        "hrrAvg": 2.8,
-        "tbAvg": 3.6,
-        "paAvg": 4.4
-      },
-      "l10": {
-        "n": 10,
-        "hrPct": 20.0,
-        "hitsPct": 50.0,
-        "xbhPct": 40.0,
-        "hrrPct": 40.0,
-        "tbPct": 40.0,
-        "hitsAvg": 0.8,
-        "xbhAvg": 0.5,
-        "hrrAvg": 1.5,
-        "tbAvg": 1.9,
-        "paAvg": 4.0
-      },
-      "l20": {
-        "n": 20,
-        "hrPct": 25.0,
-        "hitsPct": 50.0,
-        "xbhPct": 35.0,
-        "hrrPct": 45.0,
-        "tbPct": 40.0,
-        "hitsAvg": 0.7,
-        "xbhAvg": 0.4,
-        "hrrAvg": 1.5,
-        "tbAvg": 1.7,
-        "paAvg": 3.45
-      },
-      "seasonCur": {
-        "n": 52,
-        "hrPct": 19.2,
-        "hitsPct": 46.2,
-        "xbhPct": 26.9,
-        "hrrPct": 40.4,
-        "tbPct": 28.8,
-        "hitsAvg": 0.63,
-        "xbhAvg": 0.29,
-        "hrrAvg": 1.42,
-        "tbAvg": 1.35,
-        "paAvg": 3.25
-      },
-      "seasonPrev": {
-        "n": 16,
-        "hrPct": 6.2,
-        "hitsAvg": 0.38,
-        "xbhAvg": 0.19,
-        "hrrAvg": 1.19,
-        "tbAvg": 0.69,
-        "paAvg": 2.38
-      },
-      "yearCur": 2026,
-      "yearPrev": 2025
-    },
-    "score": 56.7,
-    "conf": 0.7549999999999997,
-    "powerPct": 42.8,
-    "pitcherPct": 57.1,
-    "platoonPct": 63.8,
-    "recentPct": 60.0,
-    "opportunityPct": 40.0,
-    "parkPct": 50.0,
-    "windPct": 50.0,
-    "avgVsMixPct": 70.9,
-    "hrrScore": 38.8,
-    "hrrOnbasePct": 14.8,
-    "hrrMatchupPct": 51.9,
-    "hrrRecentPct": 60.0,
-    "hrrRispPct": 10.4,
-    "hrrOpportunityPct": 80.0,
-    "tbScore": 35.3,
-    "tbContactPct": 22.2,
-    "tbPowerPct": 26.0,
-    "tbMatchupPct": 51.9,
-    "tbRecentPct": 50.0,
-    "tbOpportunityPct": 40.0,
-    "hrProb": 13.4,
-    "hrrProb": 53.5,
-    "tbProb": 36.4,
-    "bookOdds": {
-      "hits": [
-        {
-          "book": "fanduel",
-          "line": 0.5,
-          "price": -210,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": 260,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 0.5,
-          "price": -210,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": 260,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 2.5,
-          "price": 1000,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 0.5,
-          "price": -224,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": 248,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 2.5,
-          "price": 1140,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 3.5,
-          "price": 4700,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": -210,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 3.5,
-          "price": 3500,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": 240,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 1000,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        }
-      ],
-      "hrr": [
-        {
-          "book": "fanduel",
-          "line": 0.5,
-          "price": -330,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": -140,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": -130,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": -131,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 0.5,
-          "price": -316,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 2.5,
-          "price": 144,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 3.5,
-          "price": 259,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 4.5,
-          "price": 447,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": -130,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 4.5,
-          "price": 425,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": -295,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 3.5,
-          "price": 250,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 140,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        }
-      ],
-      "hr": [
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": 4500,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "fanduel",
-          "line": 0.5,
-          "price": 430,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 0.5,
-          "price": 450,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": 5000,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 0.5,
-          "price": 427,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": 4700,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": 2500,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": 340,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        }
-      ],
-      "tb": [
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": 105,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "fanduel",
-          "line": 2.5,
-          "price": 220,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "fanduel",
-          "line": 4.5,
-          "price": 700,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "fanduel",
-          "line": 3.5,
-          "price": 320,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": 120,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "hardrockbet",
-          "line": 2.5,
-          "price": 230,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": 118,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 2.5,
-          "price": 237,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 3.5,
-          "price": 333,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 4.5,
-          "price": 670,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "draftkings",
-          "line": 5.5,
-          "price": 1280,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": 120,
-          "alt": false,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 4.5,
-          "price": 550,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": -210,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 3.5,
-          "price": 280,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 210,
-          "alt": true,
-          "displayName": "Victor Mesa Jr."
         }
       ]
     }
@@ -10742,7 +10742,7 @@
     "tbMatchupPct": 54.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.1,
+    "hrProb": 19.6,
     "hrrProb": 53.8,
     "tbProb": 42.0,
     "bookOdds": {
@@ -11512,7 +11512,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.2,
+    "hrProb": 18.1,
     "hrrProb": 53.4,
     "tbProb": 38.4,
     "bookOdds": {
@@ -12324,7 +12324,7 @@
     "tbMatchupPct": 51.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.8,
+    "hrProb": 18.5,
     "hrrProb": 55.9,
     "tbProb": 46.7,
     "bookOdds": {
@@ -13143,7 +13143,7 @@
     "tbMatchupPct": 28.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.3,
+    "hrProb": 18.3,
     "hrrProb": 40.0,
     "tbProb": 33.5,
     "bookOdds": {
@@ -13920,7 +13920,7 @@
     "tbMatchupPct": 53.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.0,
+    "hrProb": 14.4,
     "hrrProb": 52.5,
     "tbProb": 40.6,
     "bookOdds": {
@@ -14683,7 +14683,7 @@
     "tbMatchupPct": 54.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 23.8,
+    "hrProb": 25.4,
     "hrrProb": 53.2,
     "tbProb": 38.2,
     "bookOdds": {
@@ -15481,7 +15481,7 @@
     "tbMatchupPct": 54.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 23.5,
+    "hrProb": 24.1,
     "hrrProb": 50.3,
     "tbProb": 41.7,
     "bookOdds": {
@@ -16300,7 +16300,7 @@
     "tbMatchupPct": 46.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 17.9,
+    "hrProb": 21.1,
     "hrrProb": 60.8,
     "tbProb": 44.4,
     "bookOdds": {
@@ -17063,7 +17063,7 @@
     "tbMatchupPct": 52.8,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.4,
+    "hrProb": 17.7,
     "hrrProb": 57.4,
     "tbProb": 47.4,
     "bookOdds": {
@@ -17882,7 +17882,7 @@
     "tbMatchupPct": 23.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.8,
+    "hrProb": 17.5,
     "hrrProb": 40.3,
     "tbProb": 31.6,
     "bookOdds": {
@@ -18652,7 +18652,7 @@
     "tbMatchupPct": 45.8,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.5,
+    "hrProb": 16.1,
     "hrrProb": 44.3,
     "tbProb": 28.5,
     "bookOdds": {
@@ -19464,7 +19464,7 @@
     "tbMatchupPct": 26.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.4,
+    "hrProb": 19.3,
     "hrrProb": 49.3,
     "tbProb": 41.0
   },
@@ -19881,7 +19881,7 @@
     "tbMatchupPct": 29.2,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.5,
+    "hrProb": 14.7,
     "hrrProb": 44.9,
     "tbProb": 35.9,
     "bookOdds": {
@@ -20686,7 +20686,7 @@
     "tbMatchupPct": 56.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 18.1,
+    "hrProb": 17.8,
     "hrrProb": 51.1,
     "tbProb": 37.3,
     "bookOdds": {
@@ -21491,7 +21491,7 @@
     "tbMatchupPct": 49.1,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.1,
+    "hrProb": 18.4,
     "hrrProb": 60.5,
     "tbProb": 48.7,
     "bookOdds": {
@@ -22303,7 +22303,7 @@
     "tbMatchupPct": 49.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.1,
+    "hrProb": 17.6,
     "hrrProb": 60.5,
     "tbProb": 48.8,
     "bookOdds": {
@@ -23094,7 +23094,7 @@
     "tbMatchupPct": 36.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 13.8,
+    "hrProb": 15.3,
     "hrrProb": 46.4,
     "tbProb": 39.0,
     "bookOdds": {
@@ -23864,7 +23864,7 @@
     "tbMatchupPct": 59.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 13.1,
+    "hrProb": 16.2,
     "hrrProb": 55.2,
     "tbProb": 36.4
   },
@@ -24281,7 +24281,7 @@
     "tbMatchupPct": 43.1,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 19.8,
+    "hrProb": 20.4,
     "hrrProb": 58.8,
     "tbProb": 49.0,
     "bookOdds": {
@@ -24658,6 +24658,423 @@
         }
       ]
     }
+  },
+  {
+    "playerType": "batter",
+    "player": "Jonny DeLuca",
+    "team": "TB",
+    "pitcher": "Jack Perkins",
+    "hand": "R",
+    "game": "TB @ ATH",
+    "lineupConfirmed": true,
+    "pitcherConfirmed": true,
+    "gameStatus": "Preview",
+    "gameTime": "2026-08-12T19:05:00Z",
+    "isDayGame": true,
+    "isHomeGame": false,
+    "playerId": 676356,
+    "pitchMixMatch": 0.321658,
+    "avgVsMix": 0.262,
+    "avgVsMixPa": 219,
+    "oppBullpenEra": 4.93,
+    "oppBullpenWhip": 1.63,
+    "oppBullpenIp": 177.0,
+    "barrel": 0.046,
+    "ev": 84.9,
+    "hardhit": 0.303,
+    "l15Barrel": 0.167,
+    "l15Ev": 79.7,
+    "l15Hardhit": 0.333,
+    "l15PowerPa": 6,
+    "iso": null,
+    "pa": null,
+    "slg": null,
+    "avg": null,
+    "obp": null,
+    "phr9": 1.76,
+    "whip": 1.45,
+    "phr9Season": 1.76,
+    "whipSeason": 1.45,
+    "pip": 76.7,
+    "avgmix": 0.26,
+    "wind": 0,
+    "park": 0,
+    "l15hr": 3,
+    "l5hr": 1,
+    "l15hrr": 8,
+    "l15tb": 8,
+    "risp": 0.29,
+    "lbonus": 3,
+    "hrrLbonus": 5,
+    "crush": 0,
+    "split": 1,
+    "hrprob": null,
+    "l15Iso": 0.204,
+    "l15IsoPa": 54,
+    "l15hrCredit": 3.0,
+    "l5hrCredit": 1.0,
+    "l15hits": 17,
+    "homeHrRate": 0.023809523809523808,
+    "homePa": 126,
+    "roadHrRate": 0.046296296296296294,
+    "roadPa": 108,
+    "dayHrRate": null,
+    "dayPa": 0,
+    "nightHrRate": null,
+    "nightPa": 0,
+    "seasonHrRate": 0.03418803418803419,
+    "gamelog": {
+      "games": [
+        {
+          "date": "2026-07-06",
+          "opp": "NYY",
+          "home": true,
+          "hr": 0,
+          "hits": 1,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 1,
+          "tb": 1
+        },
+        {
+          "date": "2026-07-08",
+          "opp": "NYY",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-09",
+          "opp": "NYY",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 2,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-11",
+          "opp": "SEA",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-17",
+          "opp": "BOS",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-17",
+          "opp": "BOS",
+          "home": false,
+          "hr": 0,
+          "hits": 2,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 2,
+          "hrr": 4,
+          "tb": 2
+        },
+        {
+          "date": "2026-07-18",
+          "opp": "BOS",
+          "home": false,
+          "hr": 1,
+          "hits": 2,
+          "xbh": 2,
+          "pa": 5,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 4,
+          "tb": 6
+        },
+        {
+          "date": "2026-07-21",
+          "opp": "TOR",
+          "home": false,
+          "hr": 0,
+          "hits": 2,
+          "xbh": 0,
+          "pa": 6,
+          "runs": 1,
+          "rbi": 3,
+          "hrr": 6,
+          "tb": 2
+        },
+        {
+          "date": "2026-07-23",
+          "opp": "TOR",
+          "home": false,
+          "hr": 0,
+          "hits": 1,
+          "xbh": 1,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 1,
+          "tb": 2
+        },
+        {
+          "date": "2026-07-24",
+          "opp": "CLE",
+          "home": true,
+          "hr": 0,
+          "hits": 2,
+          "xbh": 0,
+          "pa": 5,
+          "runs": 3,
+          "rbi": 1,
+          "hrr": 6,
+          "tb": 2
+        },
+        {
+          "date": "2026-07-26",
+          "opp": "CLE",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-28",
+          "opp": "TEX",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 1,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-29",
+          "opp": "TEX",
+          "home": true,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-07-30",
+          "opp": "TEX",
+          "home": true,
+          "hr": 1,
+          "hits": 2,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 4,
+          "tb": 5
+        },
+        {
+          "date": "2026-08-01",
+          "opp": "CWS",
+          "home": true,
+          "hr": 0,
+          "hits": 1,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 1,
+          "rbi": 0,
+          "hrr": 2,
+          "tb": 1
+        },
+        {
+          "date": "2026-08-02",
+          "opp": "CWS",
+          "home": true,
+          "hr": 0,
+          "hits": 1,
+          "xbh": 0,
+          "pa": 4,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 1,
+          "tb": 1
+        },
+        {
+          "date": "2026-08-04",
+          "opp": "COL",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 3,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-07",
+          "opp": "SEA",
+          "home": false,
+          "hr": 1,
+          "hits": 1,
+          "xbh": 1,
+          "pa": 4,
+          "runs": 1,
+          "rbi": 1,
+          "hrr": 3,
+          "tb": 4
+        },
+        {
+          "date": "2026-08-08",
+          "opp": "SEA",
+          "home": false,
+          "hr": 0,
+          "hits": 0,
+          "xbh": 0,
+          "pa": 1,
+          "runs": 0,
+          "rbi": 0,
+          "hrr": 0,
+          "tb": 0
+        },
+        {
+          "date": "2026-08-10",
+          "opp": "ATH",
+          "home": false,
+          "hr": 0,
+          "hits": 3,
+          "xbh": 0,
+          "pa": 5,
+          "runs": 2,
+          "rbi": 0,
+          "hrr": 5,
+          "tb": 3
+        }
+      ],
+      "l5": {
+        "n": 5,
+        "hrPct": 20.0,
+        "hitsPct": 60.0,
+        "xbhPct": 20.0,
+        "hrrPct": 40.0,
+        "tbPct": 40.0,
+        "hitsAvg": 1.0,
+        "xbhAvg": 0.2,
+        "hrrAvg": 1.8,
+        "tbAvg": 1.6,
+        "paAvg": 3.4
+      },
+      "l10": {
+        "n": 10,
+        "hrPct": 20.0,
+        "hitsPct": 50.0,
+        "xbhPct": 20.0,
+        "hrrPct": 40.0,
+        "tbPct": 30.0,
+        "hitsAvg": 0.8,
+        "xbhAvg": 0.2,
+        "hrrAvg": 1.5,
+        "tbAvg": 1.4,
+        "paAvg": 3.1
+      },
+      "l20": {
+        "n": 20,
+        "hrPct": 15.0,
+        "hitsPct": 55.0,
+        "xbhPct": 20.0,
+        "hrrPct": 40.0,
+        "tbPct": 40.0,
+        "hitsAvg": 0.9,
+        "xbhAvg": 0.25,
+        "hrrAvg": 1.85,
+        "tbAvg": 1.45,
+        "paAvg": 3.55
+      },
+      "seasonCur": {
+        "n": 73,
+        "hrPct": 11.0,
+        "hitsPct": 54.8,
+        "xbhPct": 27.4,
+        "hrrPct": 42.5,
+        "tbPct": 37.0,
+        "hitsAvg": 0.81,
+        "xbhAvg": 0.32,
+        "hrrAvg": 1.71,
+        "tbAvg": 1.34,
+        "paAvg": 3.21
+      },
+      "seasonPrev": {
+        "n": 20,
+        "hrPct": 0.0,
+        "hitsAvg": 0.95,
+        "xbhAvg": 0.2,
+        "hrrAvg": 1.4,
+        "tbAvg": 1.3,
+        "paAvg": 2.95
+      },
+      "yearCur": 2026,
+      "yearPrev": 2025
+    },
+    "score": 50.1,
+    "conf": 1.0,
+    "powerPct": 26.1,
+    "pitcherPct": 57.1,
+    "platoonPct": 67.5,
+    "recentPct": 50.0,
+    "opportunityPct": 40.0,
+    "parkPct": 50.0,
+    "windPct": 50.0,
+    "avgVsMixPct": 81.9,
+    "hrrScore": 47.7,
+    "hrrOnbasePct": 14.8,
+    "hrrMatchupPct": 56.6,
+    "hrrRecentPct": 80.0,
+    "hrrRispPct": 56.0,
+    "hrrOpportunityPct": 80.0,
+    "tbScore": 38.0,
+    "tbContactPct": 22.2,
+    "tbPowerPct": 20.9,
+    "tbMatchupPct": 56.6,
+    "tbRecentPct": 80.0,
+    "tbOpportunityPct": 40.0,
+    "hrProb": 14.4,
+    "hrrProb": 55.2,
+    "tbProb": 32.9
   },
   {
     "playerType": "batter",
@@ -25072,7 +25489,7 @@
     "tbMatchupPct": 56.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.4,
+    "hrProb": 17.0,
     "hrrProb": 53.4,
     "tbProb": 39.6,
     "bookOdds": {
@@ -25842,7 +26259,7 @@
     "tbMatchupPct": 54.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 12.5,
+    "hrProb": 13.8,
     "hrrProb": 54.4,
     "tbProb": 38.8,
     "bookOdds": {
@@ -26192,7 +26609,7 @@
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -26598,7 +27015,7 @@
     "tbMatchupPct": 60.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.6,
+    "hrProb": 13.4,
     "hrrProb": 61.0,
     "tbProb": 41.2,
     "bookOdds": {
@@ -27389,7 +27806,7 @@
     "tbMatchupPct": 54.5,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.5,
+    "hrProb": 16.9,
     "hrrProb": 59.2,
     "tbProb": 46.8,
     "bookOdds": {
@@ -28166,7 +28583,7 @@
     "tbMatchupPct": 42.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 18.1,
+    "hrProb": 18.4,
     "hrrProb": 45.9,
     "tbProb": 35.9,
     "bookOdds": {
@@ -28915,7 +29332,7 @@
     "tbMatchupPct": 52.4,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.1,
+    "hrProb": 15.7,
     "hrrProb": 51.9,
     "tbProb": 35.2,
     "bookOdds": {
@@ -29685,7 +30102,7 @@
     "tbMatchupPct": 47.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 14.8,
+    "hrProb": 14.1,
     "hrrProb": 52.5,
     "tbProb": 43.8,
     "bookOdds": {
@@ -30525,7 +30942,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 16.5,
+    "hrProb": 15.9,
     "hrrProb": 52.9,
     "tbProb": 47.7,
     "bookOdds": {
@@ -31323,7 +31740,7 @@
     "tbMatchupPct": 42.4,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 17.6,
+    "hrProb": 17.9,
     "hrrProb": 57.2,
     "tbProb": 42.3,
     "bookOdds": {
@@ -32142,7 +32559,7 @@
     "tbMatchupPct": 53.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 15.0,
+    "hrProb": 14.8,
     "hrrProb": 48.8,
     "tbProb": 43.0,
     "bookOdds": {
@@ -32919,7 +33336,7 @@
     "tbMatchupPct": 43.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 13.5,
+    "hrProb": 15.5,
     "hrrProb": 51.3,
     "tbProb": 34.2,
     "bookOdds": {
@@ -33724,7 +34141,7 @@
     "tbMatchupPct": 50.8,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.7,
+    "hrProb": 11.1,
     "hrrProb": 56.2,
     "tbProb": 39.8,
     "bookOdds": {
@@ -34494,7 +34911,7 @@
     "tbMatchupPct": 35.0,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.0,
+    "hrProb": 14.0,
     "hrrProb": 47.5,
     "tbProb": 33.0,
     "bookOdds": {
@@ -35306,7 +35723,7 @@
     "tbMatchupPct": 56.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.8,
+    "hrProb": 11.1,
     "hrrProb": 50.9,
     "tbProb": 36.8,
     "bookOdds": {
@@ -36062,7 +36479,7 @@
     "tbMatchupPct": 49.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 14.4,
+    "hrProb": 16.3,
     "hrrProb": 51.9,
     "tbProb": 35.3,
     "bookOdds": {
@@ -36832,7 +37249,7 @@
     "tbMatchupPct": 53.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 22.4,
+    "hrProb": 19.6,
     "hrrProb": 59.1,
     "tbProb": 46.2,
     "bookOdds": {
@@ -37609,7 +38026,7 @@
     "tbMatchupPct": 60.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.0,
+    "hrProb": 9.2,
     "hrrProb": 62.1,
     "tbProb": 48.4,
     "bookOdds": {
@@ -38442,7 +38859,7 @@
     "tbMatchupPct": 65.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.8,
+    "hrProb": 11.0,
     "hrrProb": 54.4,
     "tbProb": 40.5,
     "bookOdds": {
@@ -39198,7 +39615,7 @@
     "tbMatchupPct": 37.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.5,
+    "hrProb": 15.8,
     "hrrProb": 39.3,
     "tbProb": 37.5,
     "bookOdds": {
@@ -40017,7 +40434,7 @@
     "tbMatchupPct": 61.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.6,
+    "hrProb": 8.7,
     "hrrProb": 64.5,
     "tbProb": 45.5,
     "bookOdds": {
@@ -40822,7 +41239,7 @@
     "tbMatchupPct": 47.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.5,
+    "hrProb": 10.7,
     "hrrProb": 51.5,
     "tbProb": 42.5,
     "bookOdds": {
@@ -41655,7 +42072,7 @@
     "tbMatchupPct": 51.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.1,
+    "hrProb": 8.5,
     "hrrProb": 58.5,
     "tbProb": 42.5,
     "bookOdds": {
@@ -42411,7 +42828,7 @@
     "tbMatchupPct": 52.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 19.1,
+    "hrProb": 17.9,
     "hrrProb": 58.0,
     "tbProb": 36.8,
     "bookOdds": {
@@ -43188,7 +43605,7 @@
     "tbMatchupPct": 37.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.1,
+    "hrProb": 17.4,
     "hrrProb": 46.9,
     "tbProb": 38.0,
     "bookOdds": {
@@ -43993,7 +44410,7 @@
     "tbMatchupPct": 61.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.3,
+    "hrProb": 17.0,
     "hrrProb": 61.2,
     "tbProb": 42.2,
     "bookOdds": {
@@ -44791,7 +45208,7 @@
     "tbMatchupPct": 49.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 20.5,
+    "hrProb": 20.6,
     "hrrProb": 52.8,
     "tbProb": 39.6,
     "bookOdds": {
@@ -45554,7 +45971,7 @@
     "tbMatchupPct": 47.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 11.8,
+    "hrProb": 12.9,
     "hrrProb": 45.4,
     "tbProb": 39.3,
     "bookOdds": {
@@ -46310,7 +46727,7 @@
     "tbMatchupPct": 51.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 10.5,
+    "hrProb": 11.6,
     "hrrProb": 51.9,
     "tbProb": 37.8,
     "bookOdds": {
@@ -47913,7 +48330,7 @@
     "tbMatchupPct": 26.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.0,
+    "hrProb": 11.9,
     "hrrProb": 45.7,
     "tbProb": 29.1,
     "bookOdds": {
@@ -48669,7 +49086,7 @@
     "tbMatchupPct": 57.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.1,
+    "hrProb": 12.1,
     "hrrProb": 53.6,
     "tbProb": 34.2,
     "bookOdds": {
@@ -49474,7 +49891,7 @@
     "tbMatchupPct": 51.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.7,
+    "hrProb": 15.8,
     "hrrProb": 44.5,
     "tbProb": 35.7,
     "bookOdds": {
@@ -50244,7 +50661,7 @@
     "tbMatchupPct": 54.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.7,
+    "hrProb": 10.4,
     "hrrProb": 55.8,
     "tbProb": 33.3,
     "bookOdds": {
@@ -50987,7 +51404,7 @@
     "tbMatchupPct": 45.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 15.8,
+    "hrProb": 14.2,
     "hrrProb": 49.7,
     "tbProb": 39.7,
     "bookOdds": {
@@ -52471,7 +52888,7 @@
     "tbMatchupPct": 24.6,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 12.6,
+    "hrProb": 13.4,
     "hrrProb": 33.7,
     "tbProb": 24.7,
     "bookOdds": {
@@ -53234,7 +53651,7 @@
     "tbMatchupPct": 57.0,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 14.8,
+    "hrProb": 15.1,
     "hrrProb": 62.1,
     "tbProb": 43.2,
     "bookOdds": {
@@ -54025,7 +54442,7 @@
     "tbMatchupPct": 55.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.5,
+    "hrProb": 10.6,
     "hrrProb": 53.4,
     "tbProb": 29.6,
     "bookOdds": {
@@ -54774,7 +55191,7 @@
     "tbMatchupPct": 47.5,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.1,
+    "hrProb": 15.3,
     "hrrProb": 61.9,
     "tbProb": 45.2,
     "bookOdds": {
@@ -55551,7 +55968,7 @@
     "tbMatchupPct": 47.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.5,
+    "hrProb": 15.0,
     "hrrProb": 50.6,
     "tbProb": 36.9,
     "bookOdds": {
@@ -56356,7 +56773,7 @@
     "tbMatchupPct": 50.0,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.3,
+    "hrProb": 10.4,
     "hrrProb": 53.4,
     "tbProb": 38.5,
     "bookOdds": {
@@ -57119,7 +57536,7 @@
     "tbMatchupPct": 55.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 11.0,
+    "hrProb": 12.2,
     "hrrProb": 52.6,
     "tbProb": 34.7,
     "bookOdds": {
@@ -57917,7 +58334,7 @@
     "tbMatchupPct": 76.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.2,
+    "hrProb": 8.0,
     "hrrProb": 78.7,
     "tbProb": 51.9,
     "bookOdds": {
@@ -58729,7 +59146,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.1,
+    "hrProb": 10.3,
     "hrrProb": 55.0,
     "tbProb": 39.5,
     "bookOdds": {
@@ -59540,7 +59957,7 @@
     "tbMatchupPct": 26.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 9.7,
+    "hrProb": 13.3,
     "hrrProb": 43.7,
     "tbProb": 31.1,
     "bookOdds": {
@@ -60331,7 +60748,7 @@
     "tbMatchupPct": 53.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.2,
+    "hrProb": 7.5,
     "hrrProb": 57.5,
     "tbProb": 41.1,
     "bookOdds": {
@@ -61129,7 +61546,7 @@
     "tbMatchupPct": 60.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 11.1,
+    "hrProb": 12.5,
     "hrrProb": 53.9,
     "tbProb": 36.6,
     "bookOdds": {
@@ -61934,7 +62351,7 @@
     "tbMatchupPct": 32.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.2,
+    "hrProb": 11.2,
     "hrrProb": 45.6,
     "tbProb": 35.2,
     "bookOdds": {
@@ -62738,7 +63155,7 @@
     "tbMatchupPct": 52.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.0,
+    "hrProb": 9.8,
     "hrrProb": 60.1,
     "tbProb": 44.8,
     "bookOdds": {
@@ -63521,7 +63938,7 @@
     "tbMatchupPct": 58.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.4,
+    "hrProb": 8.5,
     "hrrProb": 54.7,
     "tbProb": 33.7,
     "bookOdds": {
@@ -64319,7 +64736,7 @@
     "tbMatchupPct": 39.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.8,
+    "hrProb": 16.8,
     "hrrProb": 49.8,
     "tbProb": 40.2,
     "bookOdds": {
@@ -65096,7 +65513,7 @@
     "tbMatchupPct": 41.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.7,
+    "hrProb": 9.6,
     "hrrProb": 48.2,
     "tbProb": 28.1,
     "bookOdds": {
@@ -65901,7 +66318,7 @@
     "tbMatchupPct": 59.4,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.3,
+    "hrProb": 9.2,
     "hrrProb": 53.6,
     "tbProb": 37.9,
     "bookOdds": {
@@ -66657,7 +67074,7 @@
     "tbMatchupPct": 38.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 7.2,
+    "hrProb": 8.0,
     "hrrProb": 42.7,
     "tbProb": 36.3,
     "bookOdds": {
@@ -67469,7 +67886,7 @@
     "tbMatchupPct": 46.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 17.2,
+    "hrProb": 16.3,
     "hrrProb": 44.5,
     "tbProb": 33.9,
     "bookOdds": {
@@ -68239,7 +68656,7 @@
     "tbMatchupPct": 72.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.5,
+    "hrProb": 6.9,
     "hrrProb": 71.3,
     "tbProb": 54.7,
     "bookOdds": {
@@ -68854,7 +69271,7 @@
     "tbMatchupPct": 29.1,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 9.8,
+    "hrProb": 11.8,
     "hrrProb": 41.7,
     "tbProb": 26.1,
     "bookOdds": {
@@ -70373,7 +70790,7 @@
     "tbMatchupPct": 54.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.3,
+    "hrProb": 9.1,
     "hrrProb": 53.2,
     "tbProb": 38.6,
     "bookOdds": {
@@ -71121,7 +71538,7 @@
     "tbMatchupPct": 57.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.8,
+    "hrProb": 9.4,
     "hrrProb": 53.2,
     "tbProb": 32.7,
     "bookOdds": {
@@ -71877,7 +72294,7 @@
     "tbMatchupPct": 49.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.4,
+    "hrProb": 10.0,
     "hrrProb": 52.2,
     "tbProb": 33.2,
     "bookOdds": {
@@ -72668,7 +73085,7 @@
     "tbMatchupPct": 39.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 13.0,
+    "hrProb": 13.2,
     "hrrProb": 44.1,
     "tbProb": 38.0,
     "bookOdds": {
@@ -73480,7 +73897,7 @@
     "tbMatchupPct": 52.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.3,
+    "hrProb": 8.4,
     "hrrProb": 49.3,
     "tbProb": 30.3,
     "bookOdds": {
@@ -74264,7 +74681,7 @@
     "tbMatchupPct": 50.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.4,
+    "hrProb": 12.7,
     "hrrProb": 50.5,
     "tbProb": 40.2,
     "bookOdds": {
@@ -75055,7 +75472,7 @@
     "tbMatchupPct": 63.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 12.5,
+    "hrProb": 10.8,
     "hrrProb": 61.8,
     "tbProb": 42.5,
     "bookOdds": {
@@ -75811,7 +76228,7 @@
     "tbMatchupPct": 77.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 8.4,
+    "hrProb": 7.9,
     "hrrProb": 86.3,
     "tbProb": 49.3,
     "bookOdds": {
@@ -76601,7 +77018,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 10.3,
+    "hrProb": 11.4,
     "hrrProb": 52.5,
     "tbProb": 37.0,
     "bookOdds": {
@@ -77223,7 +77640,7 @@
     "tbMatchupPct": 29.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.9,
+    "hrProb": 8.2,
     "hrrProb": 38.1,
     "tbProb": 27.7,
     "bookOdds": {
@@ -78021,7 +78438,7 @@
     "tbMatchupPct": 40.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.8,
+    "hrProb": 8.2,
     "hrrProb": 46.1,
     "tbProb": 36.9,
     "bookOdds": {
@@ -78784,7 +79201,7 @@
     "tbMatchupPct": 58.4,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 13.9,
+    "hrProb": 13.3,
     "hrrProb": 50.6,
     "tbProb": 34.8,
     "bookOdds": {
@@ -79540,7 +79957,7 @@
     "tbMatchupPct": 45.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.5,
+    "hrProb": 10.5,
     "hrrProb": 51.9,
     "tbProb": 29.8,
     "bookOdds": {
@@ -80338,7 +80755,7 @@
     "tbMatchupPct": 52.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.4,
+    "hrProb": 7.0,
     "hrrProb": 52.1,
     "tbProb": 41.0,
     "bookOdds": {
@@ -81086,7 +81503,7 @@
     "tbMatchupPct": 57.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.6,
+    "hrProb": 10.0,
     "hrrProb": 55.2,
     "tbProb": 35.9,
     "bookOdds": {
@@ -81869,7 +82286,7 @@
     "tbMatchupPct": 42.0,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.3,
+    "hrProb": 14.4,
     "hrrProb": 54.0,
     "tbProb": 40.8,
     "bookOdds": {
@@ -82494,7 +82911,7 @@
     "tbMatchupPct": 30.8,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.3,
+    "hrProb": 8.5,
     "hrrProb": 45.8,
     "tbProb": 27.4,
     "bookOdds": {
@@ -82844,7 +83261,7 @@
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -83250,7 +83667,7 @@
     "tbMatchupPct": 61.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 6.1,
+    "hrProb": 6.2,
     "hrrProb": 52.9,
     "tbProb": 38.2,
     "bookOdds": {
@@ -84013,7 +84430,7 @@
     "tbMatchupPct": 28.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.3,
+    "hrProb": 9.0,
     "hrrProb": 41.7,
     "tbProb": 31.2,
     "bookOdds": {
@@ -84769,7 +85186,7 @@
     "tbMatchupPct": 49.9,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.0,
+    "hrProb": 3.2,
     "hrrProb": 42.4,
     "tbProb": 28.1,
     "bookOdds": {
@@ -85525,7 +85942,7 @@
     "tbMatchupPct": 38.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.7,
+    "hrProb": 5.1,
     "hrrProb": 47.3,
     "tbProb": 36.9,
     "bookOdds": {
@@ -86337,7 +86754,7 @@
     "tbMatchupPct": 39.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 12.1,
+    "hrProb": 10.2,
     "hrrProb": 54.2,
     "tbProb": 38.3,
     "bookOdds": {
@@ -87149,7 +87566,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.1,
+    "hrProb": 4.0,
     "hrrProb": 49.1,
     "tbProb": 31.2,
     "bookOdds": {
@@ -87513,7 +87930,7 @@
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -87919,7 +88336,7 @@
     "tbMatchupPct": 53.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.4,
+    "hrProb": 11.2,
     "hrrProb": 51.8,
     "tbProb": 27.2,
     "bookOdds": {
@@ -88682,7 +89099,7 @@
     "tbMatchupPct": 45.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 14.1,
+    "hrProb": 13.8,
     "hrrProb": 46.5,
     "tbProb": 27.7,
     "bookOdds": {
@@ -89473,7 +89890,7 @@
     "tbMatchupPct": 48.1,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 7.3,
+    "hrProb": 6.3,
     "hrrProb": 42.6,
     "tbProb": 33.0,
     "bookOdds": {
@@ -90313,7 +90730,7 @@
     "tbMatchupPct": 21.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.4,
+    "hrProb": 10.4,
     "hrrProb": 44.3,
     "tbProb": 30.4,
     "bookOdds": {
@@ -91118,7 +91535,7 @@
     "tbMatchupPct": 54.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.9,
+    "hrProb": 11.4,
     "hrrProb": 48.2,
     "tbProb": 28.1,
     "bookOdds": {
@@ -91789,7 +92206,7 @@
     "tbMatchupPct": 53.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.6,
+    "hrProb": 9.2,
     "hrrProb": 53.6,
     "tbProb": 33.0,
     "bookOdds": {
@@ -92537,7 +92954,7 @@
     "tbMatchupPct": 20.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 14.1,
+    "hrProb": 12.6,
     "hrrProb": 42.4,
     "tbProb": 34.1,
     "bookOdds": {
@@ -93285,7 +93702,7 @@
     "tbMatchupPct": 52.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 13.1,
+    "hrProb": 10.5,
     "hrrProb": 47.8,
     "tbProb": 40.0
   },
@@ -93702,7 +94119,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 13.2,
+    "hrProb": 11.6,
     "hrrProb": 51.8,
     "tbProb": 38.2,
     "bookOdds": {
@@ -94360,7 +94777,7 @@
     "tbMatchupPct": 63.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.9,
+    "hrProb": 10.5,
     "hrrProb": 51.7,
     "tbProb": 32.4,
     "bookOdds": {
@@ -95123,7 +95540,7 @@
     "tbMatchupPct": 41.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.3,
+    "hrProb": 8.0,
     "hrrProb": 47.6,
     "tbProb": 27.2,
     "bookOdds": {
@@ -95473,7 +95890,7 @@
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -95879,7 +96296,7 @@
     "tbMatchupPct": 55.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.4,
+    "hrProb": 10.4,
     "hrrProb": 51.8,
     "tbProb": 29.8,
     "bookOdds": {
@@ -96628,7 +97045,7 @@
     "tbMatchupPct": 40.6,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.4,
+    "hrProb": 8.5,
     "hrrProb": 48.6,
     "tbProb": 41.3,
     "bookOdds": {
@@ -97426,7 +97843,7 @@
     "tbMatchupPct": 44.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 10.7,
+    "hrProb": 9.6,
     "hrrProb": 50.6,
     "tbProb": 31.9,
     "bookOdds": {
@@ -98224,7 +98641,7 @@
     "tbMatchupPct": 53.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.7,
+    "hrProb": 11.6,
     "hrrProb": 53.9,
     "tbProb": 32.4
   },
@@ -98641,7 +99058,7 @@
     "tbMatchupPct": 49.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.0,
+    "hrProb": 9.8,
     "hrrProb": 49.6,
     "tbProb": 27.1,
     "bookOdds": {
@@ -99404,7 +99821,7 @@
     "tbMatchupPct": 32.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 11.9,
+    "hrProb": 12.7,
     "hrrProb": 41.5,
     "tbProb": 30.3,
     "bookOdds": {
@@ -100195,7 +100612,7 @@
     "tbMatchupPct": 50.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 10.1,
+    "hrProb": 8.6,
     "hrrProb": 53.6,
     "tbProb": 40.0,
     "bookOdds": {
@@ -101000,7 +101417,7 @@
     "tbMatchupPct": 51.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 11.3,
+    "hrProb": 10.5,
     "hrrProb": 51.7,
     "tbProb": 37.7,
     "bookOdds": {
@@ -101798,7 +102215,7 @@
     "tbMatchupPct": 53.2,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 6.2,
+    "hrProb": 8.2,
     "hrrProb": 50.9,
     "tbProb": 30.8,
     "bookOdds": {
@@ -102554,7 +102971,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 10.3,
+    "hrProb": 11.0,
     "hrrProb": 46.1,
     "tbProb": 31.6,
     "bookOdds": {
@@ -103345,7 +103762,7 @@
     "tbMatchupPct": 49.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.7,
+    "hrProb": 10.0,
     "hrrProb": 52.6,
     "tbProb": 35.7,
     "bookOdds": {
@@ -104143,7 +104560,7 @@
     "tbMatchupPct": 50.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 10.6,
+    "hrProb": 11.1,
     "hrrProb": 43.3,
     "tbProb": 29.0,
     "bookOdds": {
@@ -104941,7 +105358,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.9,
+    "hrProb": 8.2,
     "hrrProb": 50.1,
     "tbProb": 37.3,
     "bookOdds": {
@@ -106355,7 +106772,7 @@
     "tbMatchupPct": 55.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.9,
+    "hrProb": 8.7,
     "hrrProb": 52.3,
     "tbProb": 32.7,
     "bookOdds": {
@@ -107111,7 +107528,7 @@
     "tbMatchupPct": 47.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.7,
+    "hrProb": 11.0,
     "hrrProb": 52.7,
     "tbProb": 32.0,
     "bookOdds": {
@@ -107867,7 +108284,7 @@
     "tbMatchupPct": 53.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 4.9,
+    "hrProb": 5.1,
     "hrrProb": 49.3,
     "tbProb": 32.8,
     "bookOdds": {
@@ -108672,7 +109089,7 @@
     "tbMatchupPct": 55.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.8,
+    "hrProb": 8.6,
     "hrrProb": 57.0,
     "tbProb": 34.6,
     "bookOdds": {
@@ -109428,7 +109845,7 @@
     "tbMatchupPct": 53.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.3,
+    "hrProb": 9.4,
     "hrrProb": 50.9,
     "tbProb": 30.6
   },
@@ -109845,7 +110262,7 @@
     "tbMatchupPct": 49.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.4,
+    "hrProb": 5.2,
     "hrrProb": 44.5,
     "tbProb": 33.0,
     "bookOdds": {
@@ -110601,7 +111018,7 @@
     "tbMatchupPct": 31.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.9,
+    "hrProb": 7.8,
     "hrrProb": 41.0,
     "tbProb": 34.7,
     "bookOdds": {
@@ -111413,7 +111830,7 @@
     "tbMatchupPct": 54.8,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.3,
+    "hrProb": 8.1,
     "hrrProb": 58.5,
     "tbProb": 39.8,
     "bookOdds": {
@@ -112162,7 +112579,7 @@
     "tbMatchupPct": 49.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.3,
+    "hrProb": 10.5,
     "hrrProb": 51.3,
     "tbProb": 30.6,
     "bookOdds": {
@@ -112946,7 +113363,7 @@
     "tbMatchupPct": 49.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.8,
+    "hrProb": 7.6,
     "hrrProb": 52.3,
     "tbProb": 37.5,
     "bookOdds": {
@@ -113737,7 +114154,7 @@
     "tbMatchupPct": 37.7,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.4,
+    "hrProb": 6.3,
     "hrrProb": 44.8,
     "tbProb": 29.6,
     "bookOdds": {
@@ -114542,7 +114959,7 @@
     "tbMatchupPct": 42.8,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 7.9,
+    "hrProb": 8.7,
     "hrrProb": 49.5,
     "tbProb": 32.4,
     "bookOdds": {
@@ -115312,7 +115729,7 @@
     "tbMatchupPct": 46.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.5,
+    "hrProb": 11.1,
     "hrrProb": 48.2,
     "tbProb": 29.5,
     "bookOdds": {
@@ -115740,7 +116157,7 @@
     "tbMatchupPct": 39.6,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.3,
+    "hrProb": 9.8,
     "hrrProb": 43.8,
     "tbProb": 31.0,
     "bookOdds": {
@@ -116538,7 +116955,7 @@
     "tbMatchupPct": 49.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 4.4,
+    "hrProb": 4.2,
     "hrrProb": 62.1,
     "tbProb": 41.9,
     "bookOdds": {
@@ -117336,7 +117753,7 @@
     "tbMatchupPct": 39.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.2,
+    "hrProb": 8.9,
     "hrrProb": 47.6,
     "tbProb": 32.1,
     "bookOdds": {
@@ -118092,7 +118509,7 @@
     "tbMatchupPct": 30.9,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 11.8,
+    "hrProb": 11.3,
     "hrrProb": 44.4,
     "tbProb": 35.0,
     "bookOdds": {
@@ -118883,7 +119300,7 @@
     "tbMatchupPct": 46.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.6,
+    "hrProb": 6.9,
     "hrrProb": 49.8,
     "tbProb": 31.9,
     "bookOdds": {
@@ -119681,7 +120098,7 @@
     "tbMatchupPct": 50.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.7,
+    "hrProb": 6.5,
     "hrrProb": 51.5,
     "tbProb": 39.1,
     "bookOdds": {
@@ -120479,7 +120896,7 @@
     "tbMatchupPct": 81.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.2,
+    "hrProb": 6.5,
     "hrrProb": 76.1,
     "tbProb": 41.8
   },
@@ -120896,7 +121313,7 @@
     "tbMatchupPct": 48.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.1,
+    "hrProb": 8.7,
     "hrrProb": 51.7,
     "tbProb": 37.4,
     "bookOdds": {
@@ -121652,7 +122069,7 @@
     "tbMatchupPct": 70.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 5.4,
+    "hrProb": 5.8,
     "hrrProb": 80.0,
     "tbProb": 47.7,
     "bookOdds": {
@@ -122408,7 +122825,7 @@
     "tbMatchupPct": 41.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.6,
+    "hrProb": 4.0,
     "hrrProb": 48.1,
     "tbProb": 33.7,
     "bookOdds": {
@@ -123213,7 +123630,7 @@
     "tbMatchupPct": 57.4,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 3.1,
+    "hrProb": 2.4,
     "hrrProb": 54.2,
     "tbProb": 39.9,
     "bookOdds": {
@@ -123753,7 +124170,7 @@
     "tbMatchupPct": 57.3,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.5,
+    "hrProb": 8.4,
     "hrrProb": 50.1,
     "tbProb": 37.4,
     "bookOdds": {
@@ -124502,7 +124919,7 @@
     "tbMatchupPct": 40.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.2,
+    "hrProb": 9.9,
     "hrrProb": 50.2,
     "tbProb": 32.5,
     "bookOdds": {
@@ -125202,7 +125619,7 @@
     "tbMatchupPct": 32.5,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 12.3,
+    "hrProb": 9.1,
     "hrrProb": 49.9,
     "tbProb": 37.7,
     "bookOdds": {
@@ -126021,7 +126438,7 @@
     "tbMatchupPct": 54.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.5,
+    "hrProb": 2.4,
     "hrrProb": 51.2,
     "tbProb": 29.4,
     "bookOdds": {
@@ -126777,7 +127194,7 @@
     "tbMatchupPct": 53.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.0,
+    "hrProb": 6.1,
     "hrrProb": 50.6,
     "tbProb": 32.2
   },
@@ -127194,7 +127611,7 @@
     "tbMatchupPct": 32.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.7,
+    "hrProb": 9.6,
     "hrrProb": 44.6,
     "tbProb": 31.6
   },
@@ -127603,7 +128020,7 @@
     "tbMatchupPct": 40.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 7.1,
+    "hrProb": 7.8,
     "hrrProb": 50.7,
     "tbProb": 32.0,
     "bookOdds": {
@@ -128359,7 +128776,7 @@
     "tbMatchupPct": 57.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 4.5,
+    "hrProb": 4.4,
     "hrrProb": 56.4,
     "tbProb": 36.7,
     "bookOdds": {
@@ -129164,7 +129581,7 @@
     "tbMatchupPct": 50.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.9,
+    "hrProb": 5.2,
     "hrrProb": 45.0,
     "tbProb": 34.5,
     "bookOdds": {
@@ -129884,7 +130301,7 @@
     "tbMatchupPct": 43.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.9,
+    "hrProb": 7.7,
     "hrrProb": 51.6,
     "tbProb": 31.8
   },
@@ -130293,7 +130710,7 @@
     "tbMatchupPct": 51.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.6,
+    "hrProb": 8.3,
     "hrrProb": 50.1,
     "tbProb": 29.8,
     "bookOdds": {
@@ -131034,7 +131451,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.5,
+    "hrProb": 5.8,
     "hrrProb": 53.4,
     "tbProb": 35.8,
     "bookOdds": {
@@ -131824,7 +132241,7 @@
     "tbMatchupPct": 48.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 11.9,
+    "hrProb": 8.8,
     "hrrProb": 48.5,
     "tbProb": 39.2,
     "bookOdds": {
@@ -132587,7 +133004,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.8,
+    "hrProb": 8.5,
     "hrrProb": 51.1,
     "tbProb": 32.4,
     "bookOdds": {
@@ -133328,7 +133745,7 @@
     "tbMatchupPct": 62.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 3.7,
+    "hrProb": 2.1,
     "hrrProb": 51.2,
     "tbProb": 36.6
   },
@@ -133745,7 +134162,7 @@
     "tbMatchupPct": 52.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.8,
+    "hrProb": 8.3,
     "hrrProb": 53.4,
     "tbProb": 28.9,
     "bookOdds": {
@@ -134097,775 +134514,12 @@
   },
   {
     "playerType": "batter",
-    "player": "Chandler Simpson",
-    "team": "TB",
-    "pitcher": "Jack Perkins",
-    "hand": "R",
-    "game": "TB @ ATH",
-    "lineupConfirmed": false,
-    "pitcherConfirmed": true,
-    "gameStatus": "Preview",
-    "gameTime": "2026-08-12T19:05:00Z",
-    "isDayGame": true,
-    "isHomeGame": false,
-    "playerId": 802415,
-    "pitchMixMatch": 0.11334900000000002,
-    "avgVsMix": 0.28,
-    "avgVsMixPa": 404,
-    "oppBullpenEra": 4.93,
-    "oppBullpenWhip": 1.63,
-    "oppBullpenIp": 177.0,
-    "barrel": 0.0,
-    "ev": 83.9,
-    "hardhit": 0.136,
-    "l15Barrel": 0.0,
-    "l15Ev": 78.4,
-    "l15Hardhit": 0.0,
-    "l15PowerPa": 23,
-    "iso": 0.057999999999999996,
-    "pa": 450,
-    "slg": 0.365,
-    "avg": 0.307,
-    "obp": 0.334,
-    "phr9": 1.76,
-    "whip": 1.45,
-    "phr9Season": 1.76,
-    "whipSeason": 1.45,
-    "pip": 76.7,
-    "avgmix": 0.326,
-    "wind": 0,
-    "park": 0,
-    "l15hr": 0,
-    "l5hr": 0,
-    "l15hrr": 10,
-    "l15tb": 9,
-    "risp": 0.345,
-    "lbonus": 4,
-    "hrrLbonus": 7,
-    "crush": 1,
-    "split": 1,
-    "hrprob": null,
-    "l15Iso": 0.016,
-    "l15IsoPa": 63,
-    "l15hrCredit": 0.0,
-    "l5hrCredit": 0.0,
-    "l15hits": 24,
-    "homeHrRate": 0.0,
-    "homePa": 222,
-    "roadHrRate": 0.0,
-    "roadPa": 228,
-    "dayHrRate": null,
-    "dayPa": 0,
-    "nightHrRate": null,
-    "nightPa": 0,
-    "seasonHrRate": 0.0,
-    "gamelog": {
-      "games": [
-        {
-          "date": "2026-07-20",
-          "opp": "TOR",
-          "home": false,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 1,
-          "tb": 1
-        },
-        {
-          "date": "2026-07-21",
-          "opp": "TOR",
-          "home": false,
-          "hr": 0,
-          "hits": 4,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 6,
-          "tb": 4
-        },
-        {
-          "date": "2026-07-22",
-          "opp": "TOR",
-          "home": false,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 3,
-          "tb": 1
-        },
-        {
-          "date": "2026-07-23",
-          "opp": "TOR",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 3,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-24",
-          "opp": "CLE",
-          "home": true,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 1,
-          "pa": 5,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 4,
-          "tb": 3
-        },
-        {
-          "date": "2026-07-25",
-          "opp": "CLE",
-          "home": true,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 2,
-          "tb": 2
-        },
-        {
-          "date": "2026-07-26",
-          "opp": "CLE",
-          "home": true,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 3,
-          "runs": 1,
-          "rbi": 0,
-          "hrr": 3,
-          "tb": 2
-        },
-        {
-          "date": "2026-07-28",
-          "opp": "TEX",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-29",
-          "opp": "TEX",
-          "home": true,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 3,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-07-31",
-          "opp": "CWS",
-          "home": true,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 1,
-          "tb": 1
-        },
-        {
-          "date": "2026-08-01",
-          "opp": "CWS",
-          "home": true,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 1,
-          "tb": 1
-        },
-        {
-          "date": "2026-08-02",
-          "opp": "CWS",
-          "home": true,
-          "hr": 0,
-          "hits": 3,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 3,
-          "tb": 3
-        },
-        {
-          "date": "2026-08-03",
-          "opp": "COL",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 1,
-          "rbi": 2,
-          "hrr": 5,
-          "tb": 2
-        },
-        {
-          "date": "2026-08-04",
-          "opp": "COL",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 2,
-          "tb": 2
-        },
-        {
-          "date": "2026-08-05",
-          "opp": "COL",
-          "home": false,
-          "hr": 0,
-          "hits": 1,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 1,
-          "hrr": 2,
-          "tb": 1
-        },
-        {
-          "date": "2026-08-07",
-          "opp": "SEA",
-          "home": false,
-          "hr": 0,
-          "hits": 0,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 0,
-          "rbi": 0,
-          "hrr": 0,
-          "tb": 0
-        },
-        {
-          "date": "2026-08-08",
-          "opp": "SEA",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 4,
-          "runs": 1,
-          "rbi": 0,
-          "hrr": 3,
-          "tb": 2
-        },
-        {
-          "date": "2026-08-09",
-          "opp": "SEA",
-          "home": false,
-          "hr": 0,
-          "hits": 4,
-          "xbh": 1,
-          "pa": 5,
-          "runs": 1,
-          "rbi": 0,
-          "hrr": 5,
-          "tb": 5
-        },
-        {
-          "date": "2026-08-10",
-          "opp": "ATH",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 1,
-          "rbi": 1,
-          "hrr": 4,
-          "tb": 2
-        },
-        {
-          "date": "2026-08-11",
-          "opp": "ATH",
-          "home": false,
-          "hr": 0,
-          "hits": 2,
-          "xbh": 0,
-          "pa": 5,
-          "runs": 0,
-          "rbi": 1,
-          "hrr": 3,
-          "tb": 2
-        }
-      ],
-      "l5": {
-        "n": 5,
-        "hrPct": 0.0,
-        "hitsPct": 80.0,
-        "xbhPct": 20.0,
-        "hrrPct": 80.0,
-        "tbPct": 80.0,
-        "hitsAvg": 2.0,
-        "xbhAvg": 0.2,
-        "hrrAvg": 3.0,
-        "tbAvg": 2.2,
-        "paAvg": 4.6
-      },
-      "l10": {
-        "n": 10,
-        "hrPct": 0.0,
-        "hitsPct": 90.0,
-        "xbhPct": 10.0,
-        "hrrPct": 80.0,
-        "tbPct": 70.0,
-        "hitsAvg": 1.9,
-        "xbhAvg": 0.1,
-        "hrrAvg": 2.8,
-        "tbAvg": 2.0,
-        "paAvg": 4.5
-      },
-      "l20": {
-        "n": 20,
-        "hrPct": 0.0,
-        "hitsPct": 80.0,
-        "xbhPct": 10.0,
-        "hrrPct": 65.0,
-        "tbPct": 55.0,
-        "hitsAvg": 1.6,
-        "xbhAvg": 0.1,
-        "hrrAvg": 2.4,
-        "tbAvg": 1.7,
-        "paAvg": 4.2
-      },
-      "seasonCur": {
-        "n": 112,
-        "hrPct": 0.0,
-        "hitsPct": 68.8,
-        "xbhPct": 15.2,
-        "hrrPct": 50.9,
-        "tbPct": 39.3,
-        "hitsAvg": 1.14,
-        "xbhAvg": 0.16,
-        "hrrAvg": 1.8,
-        "tbAvg": 1.36,
-        "paAvg": 4.02
-      },
-      "seasonPrev": {
-        "n": 109,
-        "hrPct": 0.0,
-        "hitsAvg": 1.12,
-        "xbhAvg": 0.17,
-        "hrrAvg": 1.84,
-        "tbAvg": 1.31,
-        "paAvg": 4.05
-      },
-      "yearCur": 2026,
-      "yearPrev": 2025
-    },
-    "score": 33.1,
-    "conf": 1.0,
-    "powerPct": 1.0,
-    "pitcherPct": 57.1,
-    "platoonPct": 63.1,
-    "recentPct": 0.0,
-    "opportunityPct": 60.0,
-    "parkPct": 50.0,
-    "windPct": 50.0,
-    "avgVsMixPct": 87.5,
-    "hrrScore": 65.7,
-    "hrrOnbasePct": 39.9,
-    "hrrMatchupPct": 63.2,
-    "hrrRecentPct": 100.0,
-    "hrrRispPct": 78.0,
-    "hrrOpportunityPct": 100.0,
-    "tbScore": 45.8,
-    "tbContactPct": 51.5,
-    "tbPowerPct": 7.0,
-    "tbMatchupPct": 63.2,
-    "tbRecentPct": 90.0,
-    "tbOpportunityPct": 60.0,
-    "hrProb": 2.4,
-    "hrrProb": 63.3,
-    "tbProb": 43.8,
-    "bookOdds": {
-      "hits": [
-        {
-          "book": "fanduel",
-          "line": 0.5,
-          "price": -310,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": 165,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 0.5,
-          "price": -323,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": 170,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 2.5,
-          "price": 740,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 3.5,
-          "price": 3400,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": -350,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 575,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 3.5,
-          "price": 2200,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": 145,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 0.5,
-          "price": -325,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 2.5,
-          "price": 600,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": 160,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        }
-      ],
-      "hrr": [
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": -175,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "fanduel",
-          "line": 0.5,
-          "price": -500,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": -158,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 0.5,
-          "price": -441,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 2.5,
-          "price": 143,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 3.5,
-          "price": 293,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 4.5,
-          "price": 551,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": -165,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 3.5,
-          "price": 270,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 125,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": -500,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 4.5,
-          "price": 500,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": -165,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 2.5,
-          "price": 120,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        }
-      ],
-      "hr": [
-        {
-          "book": "fanduel",
-          "line": 0.5,
-          "price": 2000,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 0.5,
-          "price": 2200,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": 1600,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": 6600,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 0.5,
-          "price": 2000,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": 40000,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        }
-      ],
-      "tb": [
-        {
-          "book": "fanduel",
-          "line": 1.5,
-          "price": 105,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "fanduel",
-          "line": 2.5,
-          "price": 310,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "fanduel",
-          "line": 3.5,
-          "price": 750,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "fanduel",
-          "line": 4.5,
-          "price": 1900,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 1.5,
-          "price": 119,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 2.5,
-          "price": 321,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "draftkings",
-          "line": 3.5,
-          "price": 730,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 1.5,
-          "price": 105,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 3.5,
-          "price": 575,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 2.5,
-          "price": 270,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 4.5,
-          "price": 1050,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "betmgm",
-          "line": 0.5,
-          "price": -350,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 1.5,
-          "price": 115,
-          "alt": false,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 0.5,
-          "price": -375,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        },
-        {
-          "book": "hardrockbet",
-          "line": 2.5,
-          "price": 275,
-          "alt": true,
-          "displayName": "Chandler Simpson"
-        }
-      ]
-    }
-  },
-  {
-    "playerType": "batter",
     "player": "Cedric Mullins",
     "team": "TB",
     "pitcher": "Jack Perkins",
     "hand": "R",
     "game": "TB @ ATH",
-    "lineupConfirmed": false,
+    "lineupConfirmed": true,
     "pitcherConfirmed": true,
     "gameStatus": "Preview",
     "gameTime": "2026-08-12T19:05:00Z",
@@ -135271,7 +134925,7 @@
     "tbMatchupPct": 51.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.7,
+    "hrProb": 6.5,
     "hrrProb": 50.7,
     "tbProb": 30.5,
     "bookOdds": {
@@ -136034,7 +135688,7 @@
     "tbMatchupPct": 32.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.2,
+    "hrProb": 6.8,
     "hrrProb": 52.7,
     "tbProb": 40.6,
     "bookOdds": {
@@ -136797,7 +136451,7 @@
     "tbMatchupPct": 23.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.2,
+    "hrProb": 10.4,
     "hrrProb": 42.4,
     "tbProb": 29.3,
     "bookOdds": {
@@ -137553,7 +137207,7 @@
     "tbMatchupPct": 48.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.3,
+    "hrProb": 7.2,
     "hrrProb": 49.7,
     "tbProb": 30.3,
     "bookOdds": {
@@ -138329,7 +137983,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.1,
+    "hrProb": 9.0,
     "hrrProb": 54.6,
     "tbProb": 31.0,
     "bookOdds": {
@@ -139120,7 +138774,7 @@
     "tbMatchupPct": 25.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.3,
+    "hrProb": 9.4,
     "hrrProb": 42.4,
     "tbProb": 29.5,
     "bookOdds": {
@@ -139868,7 +139522,7 @@
     "tbMatchupPct": 52.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.6,
+    "hrProb": 3.2,
     "hrrProb": 49.4,
     "tbProb": 30.3,
     "bookOdds": {
@@ -140617,7 +140271,7 @@
     "tbMatchupPct": 48.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.1,
+    "hrProb": 7.8,
     "hrrProb": 51.9,
     "tbProb": 32.2,
     "bookOdds": {
@@ -141373,7 +141027,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.5,
+    "hrProb": 4.6,
     "hrrProb": 51.6,
     "tbProb": 35.7,
     "bookOdds": {
@@ -142171,7 +141825,7 @@
     "tbMatchupPct": 51.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.1,
+    "hrProb": 8.7,
     "hrrProb": 51.1,
     "tbProb": 31.0,
     "bookOdds": {
@@ -142563,7 +142217,7 @@
     "tbMatchupPct": 61.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.0,
+    "hrProb": 4.6,
     "hrrProb": 48.5,
     "tbProb": 25.4,
     "bookOdds": {
@@ -143263,7 +142917,7 @@
     "tbMatchupPct": 49.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 5.8,
+    "hrProb": 5.1,
     "hrrProb": 48.5,
     "tbProb": 38.0,
     "bookOdds": {
@@ -144061,7 +143715,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.8,
+    "hrProb": 5.1,
     "hrrProb": 50.0,
     "tbProb": 29.8,
     "bookOdds": {
@@ -144859,7 +144513,7 @@
     "tbMatchupPct": 54.7,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 3.6,
+    "hrProb": 5.9,
     "hrrProb": 50.3,
     "tbProb": 26.6,
     "bookOdds": {
@@ -145615,7 +145269,7 @@
     "tbMatchupPct": 31.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.9,
+    "hrProb": 7.5,
     "hrrProb": 44.9,
     "tbProb": 29.2,
     "bookOdds": {
@@ -146413,7 +146067,7 @@
     "tbMatchupPct": 47.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.0,
+    "hrProb": 8.1,
     "hrrProb": 51.1,
     "tbProb": 33.9,
     "bookOdds": {
@@ -147162,7 +146816,7 @@
     "tbMatchupPct": 46.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.5,
+    "hrProb": 7.1,
     "hrrProb": 51.1,
     "tbProb": 27.8,
     "bookOdds": {
@@ -147911,7 +147565,7 @@
     "tbMatchupPct": 55.6,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 3.9,
+    "hrProb": 1.9,
     "hrrProb": 54.5,
     "tbProb": 41.0,
     "bookOdds": {
@@ -148666,7 +148320,7 @@
     "tbMatchupPct": 45.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.2,
+    "hrProb": 6.8,
     "hrrProb": 50.3,
     "tbProb": 28.1,
     "bookOdds": {
@@ -149422,7 +149076,7 @@
     "tbMatchupPct": 33.5,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.3,
+    "hrProb": 5.5,
     "hrrProb": 40.9,
     "tbProb": 23.0,
     "bookOdds": {
@@ -150164,7 +149818,7 @@
     "tbMatchupPct": 38.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.0,
+    "hrProb": 2.3,
     "hrrProb": 45.4,
     "tbProb": 34.7,
     "bookOdds": {
@@ -150969,7 +150623,7 @@
     "tbMatchupPct": 22.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.8,
+    "hrProb": 9.7,
     "hrrProb": 42.9,
     "tbProb": 30.8,
     "bookOdds": {
@@ -151732,7 +151386,7 @@
     "tbMatchupPct": 38.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 5.1,
+    "hrProb": 4.6,
     "hrrProb": 47.4,
     "tbProb": 28.4,
     "bookOdds": {
@@ -152516,7 +152170,7 @@
     "tbMatchupPct": 53.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.5,
+    "hrProb": 6.7,
     "hrrProb": 52.7,
     "tbProb": 32.5,
     "bookOdds": {
@@ -153279,7 +152933,7 @@
     "tbMatchupPct": 45.0,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.7,
+    "hrProb": 8.2,
     "hrrProb": 47.4,
     "tbProb": 28.7,
     "bookOdds": {
@@ -154063,7 +153717,7 @@
     "tbMatchupPct": 25.5,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 6.4,
+    "hrProb": 7.1,
     "hrrProb": 41.6,
     "tbProb": 26.0,
     "bookOdds": {
@@ -154819,7 +154473,7 @@
     "tbMatchupPct": 54.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.8,
+    "hrProb": 7.6,
     "hrrProb": 50.5,
     "tbProb": 32.0
   },
@@ -155236,7 +154890,7 @@
     "tbMatchupPct": 50.5,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.9,
+    "hrProb": 5.9,
     "hrrProb": 50.1,
     "tbProb": 31.2,
     "bookOdds": {
@@ -155985,7 +155639,7 @@
     "tbMatchupPct": 29.2,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.6,
+    "hrProb": 8.5,
     "hrrProb": 44.9,
     "tbProb": 28.8,
     "bookOdds": {
@@ -156733,7 +156387,7 @@
     "tbMatchupPct": 61.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.9,
+    "hrProb": 5.2,
     "hrrProb": 53.2,
     "tbProb": 35.1,
     "bookOdds": {
@@ -157306,7 +156960,7 @@
     "tbMatchupPct": 41.6,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.2,
+    "hrProb": 6.5,
     "hrrProb": 47.7,
     "tbProb": 25.1,
     "bookOdds": {
@@ -158648,7 +158302,7 @@
     "tbMatchupPct": 36.4,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.9,
+    "hrProb": 7.8,
     "hrrProb": 46.5,
     "tbProb": 29.0,
     "bookOdds": {
@@ -159320,7 +158974,7 @@
     "tbMatchupPct": 41.2,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.2,
+    "hrProb": 7.5,
     "hrrProb": 48.5,
     "tbProb": 26.3,
     "bookOdds": {
@@ -160076,7 +159730,7 @@
     "tbMatchupPct": 50.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.8,
+    "hrProb": 6.3,
     "hrrProb": 48.5,
     "tbProb": 31.5,
     "bookOdds": {
@@ -160846,7 +160500,7 @@
     "tbMatchupPct": 38.0,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 6.0,
+    "hrProb": 5.8,
     "hrrProb": 44.6,
     "tbProb": 27.6,
     "bookOdds": {
@@ -161310,7 +160964,7 @@
     "tbMatchupPct": 25.6,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.5,
+    "hrProb": 8.3,
     "hrrProb": 40.9,
     "tbProb": 26.4
   },
@@ -161589,7 +161243,7 @@
     "tbMatchupPct": 39.8,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.2,
+    "hrProb": 6.7,
     "hrrProb": 46.9,
     "tbProb": 25.5,
     "bookOdds": {
@@ -162330,7 +161984,7 @@
     "tbMatchupPct": 50.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.0,
+    "hrProb": 6.9,
     "hrrProb": 50.9,
     "tbProb": 32.7,
     "bookOdds": {
@@ -163086,7 +162740,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.4,
+    "hrProb": 5.3,
     "hrrProb": 48.5,
     "tbProb": 31.7,
     "bookOdds": {
@@ -163863,7 +163517,7 @@
     "tbMatchupPct": 46.9,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 6.7,
+    "hrProb": 4.3,
     "hrrProb": 53.5,
     "tbProb": 35.8,
     "bookOdds": {
@@ -164632,7 +164286,7 @@
     "tbMatchupPct": 50.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.6,
+    "hrProb": 6.5,
     "hrrProb": 52.0,
     "tbProb": 32.0,
     "bookOdds": {
@@ -165423,7 +165077,7 @@
     "tbMatchupPct": 46.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.6,
+    "hrProb": 5.2,
     "hrrProb": 53.0,
     "tbProb": 33.5,
     "bookOdds": {
@@ -166207,7 +165861,7 @@
     "tbMatchupPct": 28.4,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 5.3,
+    "hrProb": 6.4,
     "hrrProb": 45.0,
     "tbProb": 25.7,
     "bookOdds": {
@@ -166977,7 +166631,7 @@
     "tbMatchupPct": 77.9,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.9,
+    "hrProb": 4.5,
     "hrrProb": 77.4,
     "tbProb": 40.0,
     "bookOdds": {
@@ -167719,7 +167373,7 @@
     "tbMatchupPct": 27.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.3,
+    "hrProb": 4.2,
     "hrrProb": 46.2,
     "tbProb": 32.9,
     "bookOdds": {
@@ -168510,7 +168164,7 @@
     "tbMatchupPct": 52.9,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.7,
+    "hrProb": 6.7,
     "hrrProb": 50.1,
     "tbProb": 30.7,
     "bookOdds": {
@@ -169203,7 +168857,7 @@
     "tbMatchupPct": 47.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 8.8,
+    "hrProb": 8.2,
     "hrrProb": 55.7,
     "tbProb": 36.5,
     "bookOdds": {
@@ -169966,7 +169620,7 @@
     "tbMatchupPct": 43.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 4.4,
+    "hrProb": 4.3,
     "hrrProb": 51.8,
     "tbProb": 33.5,
     "bookOdds": {
@@ -170547,7 +170201,7 @@
     "tbMatchupPct": 29.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 2.3,
+    "hrProb": 3.3,
     "hrrProb": 45.8,
     "tbProb": 24.5,
     "bookOdds": {
@@ -171331,7 +170985,7 @@
     "tbMatchupPct": 42.9,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 8.5,
+    "hrProb": 6.8,
     "hrrProb": 41.2,
     "tbProb": 24.3
   },
@@ -171748,7 +171402,7 @@
     "tbMatchupPct": 45.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.1,
+    "hrProb": 5.4,
     "hrrProb": 53.7,
     "tbProb": 33.6,
     "bookOdds": {
@@ -172497,7 +172151,7 @@
     "tbMatchupPct": 49.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 5.5,
+    "hrProb": 5.1,
     "hrrProb": 52.2,
     "tbProb": 30.1,
     "bookOdds": {
@@ -173295,7 +172949,7 @@
     "tbMatchupPct": 39.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.2,
+    "hrProb": 6.6,
     "hrrProb": 49.2,
     "tbProb": 29.4
   },
@@ -173712,7 +173366,7 @@
     "tbMatchupPct": 44.6,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.2,
+    "hrProb": 7.6,
     "hrrProb": 49.0,
     "tbProb": 36.1,
     "bookOdds": {
@@ -174411,7 +174065,7 @@
     "tbMatchupPct": 47.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.7,
+    "hrProb": 4.8,
     "hrrProb": 50.0,
     "tbProb": 27.6,
     "bookOdds": {
@@ -175321,7 +174975,7 @@
     "tbMatchupPct": 55.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.3,
+    "hrProb": 6.1,
     "hrrProb": 50.9,
     "tbProb": 35.5
   },
@@ -175738,7 +175392,7 @@
     "tbMatchupPct": 22.7,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.5,
+    "hrProb": 6.5,
     "hrrProb": 40.9,
     "tbProb": 28.6,
     "bookOdds": {
@@ -176550,7 +176204,7 @@
     "tbMatchupPct": 39.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.5,
+    "hrProb": 6.6,
     "hrrProb": 48.3,
     "tbProb": 26.8,
     "bookOdds": {
@@ -177194,7 +176848,7 @@
     "tbMatchupPct": 43.8,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.6,
+    "hrProb": 6.1,
     "hrrProb": 50.1,
     "tbProb": 32.4,
     "bookOdds": {
@@ -177901,7 +177555,7 @@
     "tbMatchupPct": 41.6,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.2,
+    "hrProb": 6.5,
     "hrrProb": 46.5,
     "tbProb": 29.9,
     "bookOdds": {
@@ -178671,7 +178325,7 @@
     "tbMatchupPct": 37.3,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 2.8,
+    "hrProb": 2.6,
     "hrrProb": 46.2,
     "tbProb": 27.7,
     "bookOdds": {
@@ -179455,7 +179109,7 @@
     "tbMatchupPct": 39.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 4.1,
+    "hrProb": 3.3,
     "hrrProb": 50.3,
     "tbProb": 29.2,
     "bookOdds": {
@@ -180211,7 +179865,7 @@
     "tbMatchupPct": 56.4,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.3,
+    "hrProb": 5.1,
     "hrrProb": 50.6,
     "tbProb": 30.0,
     "bookOdds": {
@@ -180946,7 +180600,7 @@
     "tbMatchupPct": 44.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 3.7,
+    "hrProb": 3.4,
     "hrrProb": 48.4,
     "tbProb": 32.6,
     "bookOdds": {
@@ -181688,7 +181342,7 @@
     "tbMatchupPct": 38.9,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.8,
+    "hrProb": 4.9,
     "hrrProb": 50.1,
     "tbProb": 29.1,
     "bookOdds": {
@@ -182465,7 +182119,7 @@
     "tbMatchupPct": 44.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.0,
+    "hrProb": 6.8,
     "hrrProb": 51.4,
     "tbProb": 30.2,
     "bookOdds": {
@@ -183228,7 +182882,7 @@
     "tbMatchupPct": 40.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 7.0,
+    "hrProb": 6.3,
     "hrrProb": 51.2,
     "tbProb": 26.9,
     "bookOdds": {
@@ -184026,7 +183680,7 @@
     "tbMatchupPct": 26.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.8,
+    "hrProb": 6.5,
     "hrrProb": 43.6,
     "tbProb": 24.3,
     "bookOdds": {
@@ -184817,7 +184471,7 @@
     "tbMatchupPct": 41.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 3.5,
+    "hrProb": 2.6,
     "hrrProb": 50.8,
     "tbProb": 29.4,
     "bookOdds": {
@@ -185615,7 +185269,7 @@
     "tbMatchupPct": 42.5,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.1,
+    "hrProb": 5.3,
     "hrrProb": 43.6,
     "tbProb": 32.1,
     "bookOdds": {
@@ -186241,7 +185895,7 @@
     "tbMatchupPct": 16.4,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 4.8,
+    "hrProb": 6.2,
     "hrrProb": 40.1,
     "tbProb": 23.0,
     "bookOdds": {
@@ -186892,7 +186546,7 @@
     "tbMatchupPct": 47.8,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.0,
+    "hrProb": 5.4,
     "hrrProb": 50.3,
     "tbProb": 27.8,
     "bookOdds": {
@@ -187676,7 +187330,7 @@
     "tbMatchupPct": 36.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.1,
+    "hrProb": 4.2,
     "hrrProb": 44.2,
     "tbProb": 27.8,
     "bookOdds": {
@@ -188481,7 +188135,7 @@
     "tbMatchupPct": 42.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.1,
+    "hrProb": 4.8,
     "hrrProb": 45.4,
     "tbProb": 24.1,
     "bookOdds": {
@@ -189223,7 +188877,7 @@
     "tbMatchupPct": 52.3,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.6,
+    "hrProb": 2.3,
     "hrrProb": 36.5,
     "tbProb": 22.8,
     "bookOdds": {
@@ -189972,7 +189626,7 @@
     "tbMatchupPct": 35.5,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.9,
+    "hrProb": 4.9,
     "hrrProb": 49.1,
     "tbProb": 28.4,
     "bookOdds": {
@@ -190721,7 +190375,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.3,
+    "hrProb": 2.3,
     "hrrProb": 52.1,
     "tbProb": 32.3,
     "bookOdds": {
@@ -191497,7 +191151,7 @@
     "tbMatchupPct": 51.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.8,
+    "hrProb": 4.8,
     "hrrProb": 50.1,
     "tbProb": 27.5,
     "bookOdds": {
@@ -192232,7 +191886,7 @@
     "tbMatchupPct": 44.5,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.4,
+    "hrProb": 4.2,
     "hrrProb": 47.3,
     "tbProb": 25.5,
     "bookOdds": {
@@ -192757,7 +192411,7 @@
     "tbMatchupPct": 47.6,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.8,
+    "hrProb": 3.6,
     "hrrProb": 49.8,
     "tbProb": 25.7,
     "bookOdds": {
@@ -193562,7 +193216,7 @@
     "tbMatchupPct": 42.2,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.2,
+    "hrProb": 2.5,
     "hrrProb": 43.9,
     "tbProb": 28.1,
     "bookOdds": {
@@ -194311,7 +193965,7 @@
     "tbMatchupPct": 40.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.7,
+    "hrProb": 4.7,
     "hrrProb": 48.5,
     "tbProb": 26.6,
     "bookOdds": {
@@ -195059,7 +194713,7 @@
     "tbMatchupPct": 33.2,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.8,
+    "hrProb": 4.5,
     "hrrProb": 43.9,
     "tbProb": 26.3
   },
@@ -195476,7 +195130,7 @@
     "tbMatchupPct": 56.6,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 1.7,
+    "hrProb": 1.3,
     "hrrProb": 43.0,
     "tbProb": 21.0,
     "bookOdds": {
@@ -196232,7 +195886,7 @@
     "tbMatchupPct": 41.4,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.9,
+    "hrProb": 3.2,
     "hrrProb": 48.0,
     "tbProb": 28.0,
     "bookOdds": {
@@ -196740,7 +196394,7 @@
     "tbMatchupPct": 35.9,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.8,
+    "hrProb": 5.0,
     "hrrProb": 46.3,
     "tbProb": 23.5
   },
@@ -196962,7 +196616,7 @@
     "tbMatchupPct": 18.1,
     "tbRecentPct": 0.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.7,
+    "hrProb": 4.7,
     "hrrProb": 40.7,
     "tbProb": 21.6
   },
@@ -197379,7 +197033,7 @@
     "tbMatchupPct": 25.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 2.5,
+    "hrProb": 4.1,
     "hrrProb": 41.4,
     "tbProb": 22.6
   },
@@ -197788,7 +197442,7 @@
     "tbMatchupPct": 21.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 3.6,
+    "hrProb": 3.0,
     "hrrProb": 41.6,
     "tbProb": 24.0,
     "bookOdds": {
