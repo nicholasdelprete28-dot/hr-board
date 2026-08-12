@@ -1298,6 +1298,7 @@ function render(){
       : '';
     const cardScore = p[scoreField()];
     const avgVsMixVal = p.avgVsMix != null ? p.avgVsMix : p.avgmix;
+    const l15BarrelVal = p.l15Barrel != null ? p.l15Barrel : p.barrel;  // FIX: was showing season value under an L15 label
     const statboxes = boardMode === 'hr' ? renderStatboxes([
         { label: 'AVG vs Mix', display: fmtNum(avgVsMixVal, 3),
           tier: statTier(avgVsMixVal, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
@@ -1313,8 +1314,8 @@ function render(){
           tier: statTier(p.wind, { good: 1, bad: -1, veryBad: -2 }) },
         { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
-        { label: 'Barrel% (L15)', display: fmtPct(p.barrel),
-          tier: statTier(p.barrel, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
+        { label: 'Barrel% (L15)', display: fmtPct(l15BarrelVal),
+          tier: statTier(l15BarrelVal, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
         { label: 'Hard Hit% (L15)', display: fmtPct(p.hardhit),
           tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
         { label: 'Season ISO', display: fmtNum(p.iso, 3),
