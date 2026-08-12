@@ -12,13 +12,17 @@ free, public data sources:
   - Open-Meteo weather API            -> live wind speed/direction per park
 
 WHAT CHANGED IN v3 (see the project's weighting-reform discussion):
-  - compute_score() reweighted from 5 buckets to 7: Power 30%, Pitcher 20%,
-    Platoon 10%, Recent 15%, Opportunity 10%, Park 8%, Wind 7% (CORRECTED -
-    this docstring previously said 25/20/15/15/15/5/5, which drifted out of
-    sync with the actual weights in compute_score() at some point). Pitcher used
+  - compute_score() reweighted from 5 buckets to 7: Power 35%, Pitcher 15%,
+    Platoon 10%, Recent 15%, Opportunity 10%, Park 8%, Wind 7% (UPDATED
+    v3.11: Pitcher moved 20%->15%, Power 30%->35% - pitcher_s is a
+    per-game factor identical for every batter facing that pitcher, and
+    at 20% it was a real contributor to same-team players stacking
+    together in board order; see the v3.11 notes on compute_score() and
+    compute_hr_probability()'s PITCHER_MATCHUP_SENSITIVITY for the full
+    reasoning). Pitcher used
     to be diluted inside a blended "matchup" bucket (worth ~19% of that
     bucket's 30%, i.e. ~6% of the whole score) - it's now a standalone,
-    genuinely meaningful 20% lever, without being allowed to outweigh Power.
+    genuinely meaningful lever, without being allowed to outweigh Power.
   - Power now blends SEASON Statcast power (barrel%/EV/hard-hit%, still the
     anchor) with a LAST-15-DAYS version of the same three stats, so a real
     recent power surge (or decline) that hasn't fully shown up in the
@@ -1337,17 +1341,29 @@ def compute_hr_subfactors(p):
 
 
 def compute_score(p):
-    """HR Board composite score - Power 30% / Pitcher 20% / Platoon 10% /
+    """HR Board composite score - Power 35% / Pitcher 15% / Platoon 10% /
     Recent 15% / Opportunity 10% / Park 8% / Wind 7%, plus the stacking
     dampener and the bounded home/road, day/night, bullpen multipliers.
-    Same numbers as before this refactor - just now built from the shared
-    compute_hr_subfactors() so it can never drift from hrProb again."""
+    Built from the shared compute_hr_subfactors() so it can never drift
+    from hrProb again.
+
+    FIX (per formula review, v3.11): Pitcher moved 20% -> 15%, Power moved
+    30% -> 35%. This is the field players.json is actually SORTED by
+    (see main()'s players.sort()), and pitcher_s - like park_s/wind_s - is
+    a property of the GAME, identical for every batter facing that
+    pitcher that day, not a property of the individual batter. At 20% it
+    was a second place (alongside the hrProb matchup multiplier already
+    dialed back) where a single bad-pitcher matchup could pull several
+    same-team hitters up together in board order regardless of how
+    different their own power actually was. Power picks up the
+    difference since it's the most genuinely batter-specific, differentiating
+    signal in the file."""
     sf = compute_hr_subfactors(p)
     power, pitcher_s, platoon, recent, opportunity, park_s, wind_s = (
         sf["power"], sf["pitcher_s"], sf["platoon"], sf["recent"],
         sf["opportunity"], sf["park_s"], sf["wind_s"])
 
-    score = (power * 30 + pitcher_s * 20 + platoon * 10 + recent * 15
+    score = (power * 35 + pitcher_s * 15 + platoon * 10 + recent * 15
              + opportunity * 10 + park_s * 8 + wind_s * 7)
 
     STACK_THRESHOLD = 0.75
@@ -1538,7 +1554,32 @@ def compute_hr_probability(p):
     # still anchors the baseline (it's still the single best real
     # predictor), but today's specific matchup can now swing the number
     # much harder than it could before.
-    matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.85
+    # FIX v3.8: pitcher matchup sensitivity increased 0.5 -> 0.85, per
+    # explicit request - matchups need to genuinely matter, not just
+    # nudge. Real effect: a truly bad pitcher (2.15 HR/9) now boosts the
+    # probability ~67% instead of ~40%; a truly good one (0.8) now
+    # suppresses it ~28% instead of ~17%. Combined with the v3.7 power
+    # multiplier cut, this is a deliberate two-part rebalance: power
+    # still anchors the baseline (it's still the single best real
+    # predictor), but today's specific matchup can now swing the number
+    # much harder than it could before.
+    #
+    # FIX (per formula review, v3.11): 0.85 turned out to be too strong in
+    # a way v3.8 didn't anticipate - phr9/park/wind/bullpen are ALL
+    # properties of the GAME, identical for every batter in that lineup,
+    # not properties of the individual batter. At 0.85, a genuinely bad
+    # starter could single-handedly swing every one of his opponents'
+    # probabilities up ~67% BEFORE any individual power difference between
+    # them was applied - strong enough to carry a mediocre-power hitter
+    # into the same PRIME tier as a legitimately elite bat just because
+    # they share a lineup that day, which is what was actually producing
+    # 3 same-team players stacking consecutively at the top of the board.
+    # Split the difference back down to 0.6 - matchups still matter
+    # meaningfully more than the original 0.5, just not so much that the
+    # shared game-level factor can swamp real per-batter power
+    # differentiation and homogenize an entire lineup's ranking.
+    PITCHER_MATCHUP_SENSITIVITY = 0.6
+    matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
     mean = max(0.01, base_rate * matchup_mult)
 
     # NEW: platoon/opportunity/park/wind, previously entirely absent from
