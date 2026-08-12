@@ -523,7 +523,7 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
   <div class="titlebar">
     <div>
       <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>GOING<span class="dot">·</span>YARD</div>
-      <div class="subtitle" id="subtitle">Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted</div>
+      <div class="subtitle" id="subtitle">Real calibrated HR probability &middot; power, pitcher, platoon, opportunity, park/wind, bullpen all blended into one number</div>
     </div>
     <div class="count" id="count">60 players</div>
   </div>
@@ -569,11 +569,12 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
   <div class="list" id="list"></div>
   <div class="empty" id="empty" style="display:none;">No players match that search.</div>
   <footer>
-    Every stat is shown directly on each card, no tapping needed. The favorability % reflects how close a player's full profile
-    sits to elite benchmarks across power, matchup, recent form, platoon edge, and lineup opportunity &mdash;
-    it is NOT a literal home-run probability. Scores use fixed benchmarks, not batch-relative ranking, so
-    adding more players later won't shift anyone already here. Home runs are low-probability single-game
-    events; treat this as a set of plays worth spreading exposure across, not a single lock.
+    Every stat is shown directly on each card, no tapping needed. On the HR board, the % shown is a real,
+    calibrated probability (power, pitcher, platoon, opportunity, park/wind, and bullpen all blended into one
+    genuine estimate) - not a generic favorability score. HRR and TB still use a fixed-benchmark composite
+    score reflecting how close a profile sits to elite thresholds across several factors, not a literal
+    probability. Either way, home runs and similar props are low-probability single-game events; treat this
+    as a set of plays worth spreading exposure across, not a single lock.
   </footer>
 </div>
 
@@ -611,9 +612,9 @@ let selectedGame = null;
 
 const BOARD_CONFIG = {
   hr: {
-    scoreField: 'score',
-    subtitle: 'Fixed-scale favorability % &middot; pitcher quality blended &middot; barrel/wind confidence-adjusted',
-    sorts: { score: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV', value: 'VALUE' },
+    scoreField: 'hrProb',
+    subtitle: 'Real calibrated HR probability &middot; power, pitcher, platoon, opportunity, park/wind, bullpen all blended into one number',
+    sorts: { hrProb: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV', value: 'VALUE' },
   },
   hrr: {
     scoreField: 'hrrScore',
@@ -970,7 +971,10 @@ function fmtPct(x){ return x == null ? 'N/A' : (x*100).toFixed(1) + '%'; }
 const DISPLAY_PCT_FLOOR = 3;
 const DISPLAY_PCT_CEILING = 32;
 function displayPct(rawScore, mode){
-  if(mode === 'k' || rawScore == null) return rawScore;
+  // hr and k are both now real calibrated probabilities - shown as-is,
+  // no rescaling. hrr/tb still use the hand-weighted composite score,
+  // which still needs the realistic-range rescale below.
+  if(mode === 'k' || mode === 'hr' || rawScore == null) return rawScore;
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (DISPLAY_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
 
@@ -1190,6 +1194,15 @@ function favTierName(score){
     if(score >= 39) return '&#9651; IN PLAY';
     return '&#9633; LONG SHOT';
   }
+  if(boardMode === 'hr'){
+    // Real hrProb cutoffs (0-30% realistic range, capped by the backend's
+    // own real-world-grounded ceiling) - NOT the old 55/40/35 composite
+    // cutoffs, which meant nothing on this scale.
+    if(score >= 20) return '&#9670; PRIME';
+    if(score >= 14) return '&#9733; STRONG';
+    if(score >= 9) return '&#9651; IN PLAY';
+    return '&#9633; LONG SHOT';
+  }
   if(score >= 55) return '&#9670; PRIME';
   if(score >= 40) return '&#9733; STRONG';
   if(score >= 35) return '&#9651; IN PLAY';
@@ -1201,6 +1214,12 @@ function favTierClass(score){
     if(score >= 51) return 'prime';
     if(score >= 45) return 'strong';
     if(score >= 39) return 'inplay';
+    return 'longshot';
+  }
+  if(boardMode === 'hr'){
+    if(score >= 20) return 'prime';
+    if(score >= 14) return 'strong';
+    if(score >= 9) return 'inplay';
     return 'longshot';
   }
   if(score >= 55) return 'prime';
@@ -1365,7 +1384,7 @@ function render(){
         <div class="scorebox">
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
           <div class="scoreval">${fmtNum(displayPct(cardScore, boardMode), 1)}%</div>
-          <div class="scorelabel ${p.playerType === 'pitcher' ? 'scorelabel-pitcher' : ''}">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : `${boardMode.toUpperCase()} favorability`}</div>
+          <div class="scorelabel ${p.playerType === 'pitcher' ? 'scorelabel-pitcher' : ''}">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : boardMode === 'hr' ? 'HR probability' : `${boardMode.toUpperCase()} favorability`}</div>
         </div>
       </div>
       <div class="chips">
