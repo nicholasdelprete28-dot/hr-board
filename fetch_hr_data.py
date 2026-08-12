@@ -1251,8 +1251,25 @@ def compute_hr_subfactors(p):
     conf = barrel_confidence(barrel_final, ev_final)
     barrel_adj = barrel_final * conf
 
+    # NEW v3.10, per explicit request: real season HR total/rate is now a
+    # genuine 5th input to power, not just an implicit side effect of
+    # ISO. Every other power input here (barrel/EV/hard-hit%/ISO) is a
+    # PROXY for power - a real, well-established one, but still a proxy.
+    # Season HR rate is the actual realized outcome: how many home runs
+    # this player has actually hit this year, at what rate. A player
+    # with mediocre Statcast proxies but a genuinely proven, high-volume
+    # season total should get real credit for that; a player with good
+    # proxies but a low actual season total shouldn't get a full power
+    # score just because the proxy stats look nice on paper.
+    # ELITE_SEASON_HR_RATE ~0.055 HR/PA corresponds to roughly a 32-35 HR
+    # season pace over a full ~600 PA year - full credit at or above that.
+    ELITE_SEASON_HR_RATE = 0.055
+    season_hr_rate = p.get("seasonHrRate")
+    season_hr_quality = clamp01(season_hr_rate / ELITE_SEASON_HR_RATE) if season_hr_rate is not None else 0.4
+
     power = (clamp01(barrel_adj / 0.25) + clamp01((ev_final - 85) / 15)
-             + clamp01(iso_final / 0.4) + clamp01((hardhit_final - 0.3) / 0.4)) / 4
+             + clamp01(iso_final / 0.4) + clamp01((hardhit_final - 0.3) / 0.4)
+             + season_hr_quality) / 5
 
     phr9_s = clamp01((phr9 - 0.3) / 2.2)
     whip_s = clamp01((whip - 0.9) / 1.15)
