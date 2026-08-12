@@ -543,7 +543,7 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
     <input class="search" id="search" type="text" placeholder="Search player or team...">
   </div>
   <div class="controls" style="margin-top:8px;">
-    <div class="sortbtn active" data-key="score">FAVORABILITY ↓</div>
+    <div class="sortbtn active" data-key="hrProb">FAVORABILITY ↓</div>
     <div class="sortbtn" data-key="l15hr">RECENT FORM</div>
     <div class="sortbtn" data-key="ev">EV</div>
     <div class="sortbtn" data-key="value">VALUE</div>
@@ -605,7 +605,7 @@ const TRACK_URL = "./history/accuracy_summary.json";
 
 let players = [];
 let boardMode = 'hr';
-let sortKey = 'score';
+let sortKey = 'hrProb';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
