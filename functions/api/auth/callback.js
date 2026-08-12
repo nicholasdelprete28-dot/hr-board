@@ -108,9 +108,20 @@ export async function onRequestGet({ request, env }) {
     const userId = userInfo.sub || userInfo.id;
 
     // 3. Check the allowlist first (comped/free access, no payment needed).
+    // Checks BOTH the Whop user ID and the account email as keys - the
+    // user ID is the "real" key this was designed around, but it's not
+    // always easy to find quickly from the Whop dashboard UI, and email
+    // is right there on every user/payment page. Either key working
+    // means one less place to get stuck during an active incident.
+    const userEmail = userInfo.email || null;
     let allowlisted = null;
     try {
-      allowlisted = env.GY_ALLOWLIST ? await env.GY_ALLOWLIST.get(userId) : null;
+      if (env.GY_ALLOWLIST) {
+        allowlisted = await env.GY_ALLOWLIST.get(userId);
+        if (!allowlisted && userEmail) {
+          allowlisted = await env.GY_ALLOWLIST.get(userEmail.toLowerCase());
+        }
+      }
     } catch (err) {
       allowlisted = null;
     }
