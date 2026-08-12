@@ -1149,11 +1149,17 @@ def day_night_adjustment(p):
     return 1 + adj
 
 
-def compute_score(p):
-    """HR Board scoring - REWEIGHTED in v3.
-    Power 25% / Pitcher 20% / Platoon 15% / Recent 15% / Opportunity 15% /
-    Park 5% / Wind 5%, plus small bounded home/road + day/night multipliers
-    applied on top. See module docstring for the full rationale."""
+def compute_hr_subfactors(p):
+    """NEW v3.5: extracted from compute_score() so both the composite
+    score AND hrProb (the real calibrated probability model) build from
+    the SAME underlying reads - power, pitcher, platoon, recent,
+    opportunity, park, wind. Before this refactor, hrProb had its own
+    thinner, partially-duplicated version of some of this logic (season-
+    only power, no platoon/opportunity/park/wind at all) - the two
+    numbers could drift out of sync, and a fix applied to one (like the
+    v3.4 pure-L15 power fix) didn't automatically apply to the other.
+    Returns a dict of 0-1 normalized sub-scores plus a couple of raw
+    values (conf, avg_vs_mix) needed for display."""
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
     iso = p["iso"] or 0
@@ -1169,22 +1175,12 @@ def compute_score(p):
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
     if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
-        # FIX v3.4: barrel% now PURE last-15-day too, same as EV/hard-hit% -
-        # no season blend on any of the three real Statcast batted-ball
-        # inputs anymore. Falls back to season if the L15 sample is too
-        # thin to trust (below POWER_L15_MIN_PA), same safety net as before.
         barrel_final = l15_barrel
         ev_final = l15_ev
         hardhit_final = l15_hardhit
     else:
         barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
 
-    # FIX v3.4: real L15 ISO, built from the batter last-15-game log
-    # (already fetched for l15hr/l5hr - zero new API calls). Divides by
-    # PA (not true AB) since that's what's stored per game - a defensible
-    # extra-bases-per-PA approximation, not textbook ISO, but a real
-    # current-form power read rather than a season-stale one. Falls back
-    # to season ISO below a real minimum PA sample (L15_ISO_MIN_PA).
     l15_iso = p.get("l15Iso")
     l15_iso_pa = p.get("l15IsoPa") or 0
     if l15_iso is not None and l15_iso_pa >= L15_ISO_MIN_PA:
@@ -1209,10 +1205,6 @@ def compute_score(p):
     power = (clamp01(barrel_adj / 0.25) + clamp01((ev_final - 85) / 15)
              + clamp01(iso_final / 0.4) + clamp01((hardhit_final - 0.3) / 0.4)) / 4
 
-    # FIX: widened denominators (1.7->2.2, 0.9->1.15) so the pitcher bucket
-    # requires a genuinely extreme HR9/WHIP to hit its ceiling, rather than
-    # a merely-bad-but-common pitcher line maxing it out for a large share
-    # of every day's probable starters.
     phr9_s = clamp01((phr9 - 0.3) / 2.2)
     whip_s = clamp01((whip - 0.9) / 1.15)
     pitcher_s = (phr9_s + whip_s) / 2
@@ -1230,50 +1222,41 @@ def compute_score(p):
     else:
         pitch_mix_platoon = handedness_platoon
     avgmix_s = clamp01(avgmix / 0.5)
-    # NEW in v3.2: avgVsMix is the REAL, sample-size-shrunk "AVG vs this
-    # pitcher's actual arsenal" (see compute_avg_vs_mix()) - a sharper,
-    # more specific signal than avgmix (which is only a handedness split).
-    # Folded in as a genuine penalty/bonus when we have it, not just
-    # averaged away - a real demonstrated weakness against this exact
-    # arsenal should visibly matter, which is the whole point of adding
-    # this. Falls back cleanly to the old blend when we don't have enough
-    # matched-PA sample to trust it.
     avg_vs_mix = p.get("avgVsMix")
     if avg_vs_mix is not None:
-        avg_vs_mix_s = clamp01(avg_vs_mix / 0.320)  # ~.320 = an elite AVG-vs-mix read
+        avg_vs_mix_s = clamp01(avg_vs_mix / 0.320)
         platoon = pitch_mix_platoon * 0.5 + avgmix_s * 0.2 + avg_vs_mix_s * 0.3
     else:
+        avg_vs_mix_s = None
         platoon = pitch_mix_platoon * 0.7 + avgmix_s * 0.3
 
     opportunity = clamp01((lbonus - 1) / 5)
 
-    # v3.1 REBALANCE: after live testing, Opportunity and Platoon (both of
-    # which plateau hard - opportunity maxes for ANY top-3-4 lineup slot,
-    # platoon clusters high for a large share of players) were giving a
-    # guaranteed score boost to roughly half the league once weighted at
-    # 15% each, letting mediocre-power players with a decent lineup spot
-    # and platoon matchup reach PRIME without real power backing it up.
-    # Pulled both back toward their original weight; put the freed weight
-    # back into Power (the one genuinely continuous, differentiating
-    # factor) and gave Park/Wind a little more room since they're mostly-
-    # neutral dials day to day anyway. Sums to 100: Power 30, Pitcher 20,
-    # Platoon 10, Recent 15, Opportunity 10, Park 8, Wind 7.
+    return {
+        "power": power, "pitcher_s": pitcher_s, "platoon": platoon,
+        "recent": recent, "opportunity": opportunity,
+        "park_s": park_s, "wind_s": wind_s,
+        "conf": conf, "avg_vs_mix": avg_vs_mix, "avg_vs_mix_s": avg_vs_mix_s,
+    }
+
+
+def compute_score(p):
+    """HR Board composite score - Power 30% / Pitcher 20% / Platoon 10% /
+    Recent 15% / Opportunity 10% / Park 8% / Wind 7%, plus the stacking
+    dampener and the bounded home/road, day/night, bullpen multipliers.
+    Same numbers as before this refactor - just now built from the shared
+    compute_hr_subfactors() so it can never drift from hrProb again."""
+    sf = compute_hr_subfactors(p)
+    power, pitcher_s, platoon, recent, opportunity, park_s, wind_s = (
+        sf["power"], sf["pitcher_s"], sf["platoon"], sf["recent"],
+        sf["opportunity"], sf["park_s"], sf["wind_s"])
+
     score = (power * 30 + pitcher_s * 20 + platoon * 10 + recent * 15
              + opportunity * 10 + park_s * 8 + wind_s * 7)
 
-    # NEW v3.4: stacking dampener. When Power, Pitcher, and Recent (the
-    # three factors most tied to a specific, possibly-lucky combination
-    # rather than a stable profile) are ALL simultaneously in their own
-    # top quartile, that combination is being treated as more predictive
-    # than it really is - a player who's elite in one dimension and
-    # average elsewhere is often a safer, more repeatable bet than one
-    # whose score is built entirely from several things maxing out
-    # together at once. This does NOT touch any single bucket's weight -
-    # it applies a small, capped penalty only when multiple of these
-    # three are simultaneously extreme, moderate/default settings below.
-    STACK_THRESHOLD = 0.75      # top-quartile cutoff per bucket
-    STACK_PENALTY_PER_EXTRA = 2.5   # points off per additional maxed bucket beyond the first
-    STACK_PENALTY_MAX = 6.0         # hard cap - never a bigger swing than a real park/wind effect
+    STACK_THRESHOLD = 0.75
+    STACK_PENALTY_PER_EXTRA = 2.5
+    STACK_PENALTY_MAX = 6.0
     stack_buckets = [power, pitcher_s, recent]
     n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
     if n_maxed > 1:
@@ -1282,12 +1265,12 @@ def compute_score(p):
 
     score *= home_road_adjustment(p)
     score *= day_night_adjustment(p)
-    score *= bullpen_adjustment(p)  # NEW in v3.2
+    score *= bullpen_adjustment(p)
     score = max(0.0, min(100.0, score))
 
     return {
         "score": round(score, 1),
-        "conf": conf,
+        "conf": sf["conf"],
         "powerPct": round(power * 100, 1),
         "pitcherPct": round(pitcher_s * 100, 1),
         "platoonPct": round(platoon * 100, 1),
@@ -1295,7 +1278,7 @@ def compute_score(p):
         "opportunityPct": round(opportunity * 100, 1),
         "parkPct": round(park_s * 100, 1),
         "windPct": round(wind_s * 100, 1),
-        "avgVsMixPct": round((avg_vs_mix_s * 100), 1) if avg_vs_mix is not None else None,  # NEW v3.2
+        "avgVsMixPct": round(sf["avg_vs_mix_s"] * 100, 1) if sf["avg_vs_mix_s"] is not None else None,
     }
 
 
@@ -1394,6 +1377,13 @@ LEAGUE_AVG_TB_CLEAR_RATE = 0.43
 
 
 def compute_hr_probability(p):
+    """NEW v3.5: comprehensive version - built from the SAME
+    compute_hr_subfactors() the composite score uses, so power
+    automatically includes pure-L15 barrel/EV/hard-hit% and real L15 ISO,
+    and platoon/opportunity/park/wind now genuinely factor in here too
+    (previously missing entirely). This is intended to become the
+    board's PRIMARY ranking number - a real calibrated probability
+    instead of a hand-weighted composite score."""
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
@@ -1405,13 +1395,8 @@ def compute_hr_probability(p):
     else:
         recent_rate = l15hr_for_rate / 15
 
-    barrel = p.get("barrel") or 0
-    ev = p.get("ev") or 85
-    iso = p.get("iso") or 0
-    hardhit = p.get("hardhit") or 0.30
-    barrel_adj = barrel * barrel_confidence(barrel, ev)
-    power_quality = (clamp01(barrel_adj / 0.25) + clamp01((ev - 85) / 15)
-                      + clamp01(iso / 0.4) + clamp01((hardhit - 0.3) / 0.4)) / 4
+    sf = compute_hr_subfactors(p)
+    power_quality = sf["power"]  # now L15-aware, same read compute_score uses
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 2.0)
 
     RECENT_TRUST = 0.6
@@ -1425,6 +1410,25 @@ def compute_hr_probability(p):
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
     matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * 0.5
     mean = max(0.01, base_rate * matchup_mult)
+
+    # NEW: platoon/opportunity/park/wind, previously entirely absent from
+    # this model, now apply as small bounded multiplicative nudges - each
+    # sub-factor is 0-1 (0.5 = neutral/average), so a nudge of
+    # (subfactor - 0.5) * NUDGE_STRENGTH keeps every individual factor's
+    # max swing modest (+/-7% at NUDGE_STRENGTH=0.14), matching the same
+    # "real but not dominant" philosophy as home/road and day/night.
+    NUDGE_STRENGTH = 0.14
+    for factor_val in (sf["platoon"], sf["opportunity"], sf["park_s"], sf["wind_s"]):
+        mean *= 1 + (factor_val - 0.5) * NUDGE_STRENGTH
+
+    # Same bounded situational adjustments the composite score uses -
+    # keeps hrProb and the composite score reacting to the same real-world
+    # signals, even though hrProb is now the primary number.
+    mean *= home_road_adjustment(p)
+    mean *= day_night_adjustment(p)
+    mean *= bullpen_adjustment(p)
+    mean = max(0.01, mean)
+
     raw_prob = poisson_over_prob(mean, 0.5)
     return min(raw_prob, 0.30) if raw_prob is not None else raw_prob
 
