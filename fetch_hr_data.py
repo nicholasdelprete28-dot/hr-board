@@ -1430,7 +1430,26 @@ def compute_hr_probability(p):
     mean = max(0.01, mean)
 
     raw_prob = poisson_over_prob(mean, 0.5)
-    return min(raw_prob, 0.30) if raw_prob is not None else raw_prob
+    if raw_prob is None:
+        return None
+    # FIX v3.5: soft ceiling instead of a hard clip. min(raw_prob, 0.30)
+    # meant ANY player whose real computed value exceeded 30% - whether
+    # it was 31% or 60% - got flattened to the exact same 30.0%. Once
+    # multiple players hit that identical number (easy now that hrProb
+    # is comprehensive and several bounded adjustments can all stack in
+    # the same direction at once), there's nothing left to actually rank
+    # them against each other by - that's what was showing up as "cards
+    # not in order." Below HR_PROB_SOFT_START, nothing changes at all -
+    # only the genuinely extreme tail gets smoothly compressed toward the
+    # ceiling instead of hard-chopped, so real differentiation survives
+    # exactly where ranking matters most: at the very top of the board.
+    HR_PROB_SOFT_START = 0.22
+    HR_PROB_CEILING = 0.30
+    if raw_prob <= HR_PROB_SOFT_START:
+        return raw_prob
+    excess = raw_prob - HR_PROB_SOFT_START
+    room = HR_PROB_CEILING - HR_PROB_SOFT_START
+    return HR_PROB_SOFT_START + room * (1 - math.exp(-excess / room))
 
 
 LEAGUE_AVG_AVG = 0.245
