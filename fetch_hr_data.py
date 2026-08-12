@@ -1,5 +1,5 @@
 """
-fetch_hr_data.py  (v3.12 - reweighted formula + situational signals + park/wind fix)
+fetch_hr_data.py  (v3.13 - power subfactor recalibration + probability formula fix)
 
 Builds today's HR favorability board with NO manual screenshots, using only
 free, public data sources:
@@ -10,6 +10,84 @@ free, public data sources:
   - Baseball Savant CSV export        -> season AND last-15-day barrel%,
     exit velocity, hard-hit%
   - Open-Meteo weather API            -> live wind speed/direction per park
+
+WHAT CHANGED IN v3.13 (per formula review - PRIME/STRONG discrimination):
+
+  Both compute_hr_subfactors() and compute_hr_probability() were rewritten.
+  compute_score() (the 0-100 composite) and compute_hr_probability()
+  (hrProb, what actually drives the live PRIME/STRONG tiers) both build
+  from compute_hr_subfactors() - fixing it once here fixes both, same as
+  the file's existing design intent.
+
+  1. POWER DENOMINATORS WERE CALIBRATED AGAINST RANGES THAT DON'T EXIST
+     IN REAL BASEBALL.
+     - Exit velocity: old formula was (ev-85)/15, meaning a hitter needed
+       a 100mph AVERAGE exit velocity to max this component out. No
+       hitter has ever done that - the most extreme peak seasons on
+       record average around 93-95mph. So even a historically dominant
+       EV season scored ~70-80%, never near the top of its own scale.
+     - Hard-hit%: old formula was (hardhit-0.3)/0.4, requiring a 70%
+       hard-hit rate to max out. The all-time record is around 55-58%.
+       Same problem, worse - real elite seasons capped near 50-65% of
+       this component's scale.
+     Net effect: "power" (35% of compute_score, and the main driver of
+     hrProb's season_implied_rate) could never fully credit a
+     legitimately dominant hitter. That compresses everything built on
+     top of it - which is exactly why PRIME/STRONG couldn't tell a
+     merely-good spot from a truly elite one.
+
+  2. FIVE-WAY FLAT AVERAGE OF REDUNDANT MEASURES.
+     Barrel%, EV, and hard-hit% are all quality-of-contact PROCESS
+     stats measuring roughly the same underlying thing. ISO and season
+     HR rate are both power OUTCOME stats, also measuring roughly the
+     same thing as each other. Flat-averaging all 5 together doesn't
+     give 5 independent opinions - it means any single one having a
+     lagging day (e.g. a guy in a short HR drought despite still
+     squaring the ball up exactly as hard as ever) silently drags the
+     average down even though the other 4 measures disagree.
+     FIX: group into `quality_of_contact` (barrel/EV/hard-hit - what
+     SHOULD be happening) and `converted_power` (ISO/season HR rate -
+     what IS actually happening), average within each group, then blend
+     the two groups 55/45. Same inputs, but redundancy inside a group no
+     longer swamps the signal across groups.
+
+  3. SEASON_IMPLIED_RATE'S OWN CEILING WAS TOO LOW.
+     Even with a maxed-out power_quality (1.0), the old
+     POWER_QUALITY_MULTIPLIER=1.3 only pushed season_implied_rate to
+     1.6x league average. Widened to 1.7x now that power_quality can
+     legitimately approach 1.0 for real elite profiles (previously it
+     almost never could, per #1/#2 above).
+
+  4. RECENT PRODUCTION WAS UNDERWEIGHTED.
+     RECENT_TRUST=0.4 meant actual demonstrated recent homers only got
+     40% weight vs 60% for the power-quality-implied rate. Moved to an
+     even 50/50 - a guy legitimately hot right now should move the
+     needle as much as his underlying Statcast profile does.
+
+  5. REDUNDANT TAIL COMPRESSION.
+     The old exponential soft-cap (0.22 -> 0.30) flattened every player
+     above a 22% raw estimate toward roughly the same number, on top of
+     the stacking dampener a few lines below it that already exists to
+     keep unrealistic multi-factor pileups in check. Replaced with one
+     hard sanity ceiling (0.45) that only clips truly extreme outputs
+     instead of squeezing the entire top half of the range.
+
+  DOWNSTREAM IMPACT - read before relying on tier cutoffs: real elite
+  power profiles will now score meaningfully higher on both `score`
+  (0-100) and `hrProb` than before - that's the point. It also means:
+    - The stacking dampener (STACK_THRESHOLD=0.75 on power/pitcher_s/
+      recent) will now actually engage on real elite hitters more often,
+      since power can legitimately reach that threshold now. That's
+      working as designed, not a bug.
+    - The live PRIME/STRONG cutoffs in index.html's favTierClass()/
+      favTierName() (currently >=20 / >=14 on hrProb) were tuned against
+      the OLD compressed scale and will need to move up once a few days
+      of real post-fix output are visible - don't guess the new numbers
+      blind, let the distribution settle first.
+    - check_results.py's BATTER_TIERS (55/40/35) grades the OLD `score`
+      field with OLD thresholds and was already out of sync with the
+      live site regardless of this change (separate bug, flagged
+      earlier) - this rewrite doesn't fix that on its own.
 
 WHAT CHANGED IN v3.12 (per formula review):
   - FIX #1: PARKS was only covering 15 of 30 teams. Any game hosted by the
@@ -1236,7 +1314,16 @@ def compute_hr_subfactors(p):
     hrProb build from the SAME underlying reads - power, pitcher,
     platoon, recent, opportunity, park, wind. Returns a dict of 0-1
     normalized sub-scores plus a couple of raw values (conf, avg_vs_mix)
-    needed for display."""
+    needed for display.
+
+    v3.13 RECALIBRATION (see the module docstring for the full why):
+    `power` is now built from two conceptually distinct groups instead of
+    a flat 5-way average of highly-correlated measures - quality_of_contact
+    (barrel%/EV/hard-hit%, the Statcast process stats) and converted_power
+    (ISO/season HR rate, the actual outcome stats) - blended 55/45. Every
+    denominator is now anchored to a realistic MLB floor->rare-peak-season
+    range instead of a round number that (for EV and hard-hit% especially)
+    no real hitter has ever actually reached."""
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
     iso = p["iso"] or 0
@@ -1279,13 +1366,24 @@ def compute_hr_subfactors(p):
     conf = barrel_confidence(barrel_final, ev_final)
     barrel_adj = barrel_final * conf
 
-    ELITE_SEASON_HR_RATE = 0.055
-    season_hr_rate = p.get("seasonHrRate")
-    season_hr_quality = clamp01(season_hr_rate / ELITE_SEASON_HR_RATE) if season_hr_rate is not None else 0.4
+    # --- RECALIBRATED POWER (v3.13, see docstring above) ---
+    # Denominators anchored to realistic MLB floor->rare-peak-season
+    # ranges instead of round numbers no real hitter ever reaches.
+    barrel_n = clamp01((barrel_adj - 0.05) / 0.15)       # floor 5%, peak-season ceiling 20%
+    ev_n = clamp01((ev_final - 87.0) / 7.0)               # floor 87mph, peak-season ceiling 94mph
+    hardhit_n = clamp01((hardhit_final - 0.30) / 0.22)    # floor 30%, peak-season ceiling 52%
+    quality_of_contact = (barrel_n + ev_n + hardhit_n) / 3
 
-    power = (clamp01(barrel_adj / 0.25) + clamp01((ev_final - 85) / 15)
-             + clamp01(iso_final / 0.4) + clamp01((hardhit_final - 0.3) / 0.4)
-             + season_hr_quality) / 5
+    iso_n = clamp01((iso_final - 0.08) / 0.27)            # floor .080, peak-season ceiling .350
+    HR_RATE_FLOOR = 0.01
+    HR_RATE_CEIL = 0.07                                    # ~peak Judge/Ohtani-level season rate
+    season_hr_rate = p.get("seasonHrRate")
+    hr_rate_n = (clamp01((season_hr_rate - HR_RATE_FLOOR) / (HR_RATE_CEIL - HR_RATE_FLOOR))
+                 if season_hr_rate is not None else 0.3)
+    converted_power = (iso_n + hr_rate_n) / 2
+
+    power = quality_of_contact * 0.55 + converted_power * 0.45
+    # --- end recalibrated power ---
 
     phr9_s = clamp01((phr9 - 0.3) / 2.2)
     whip_s = clamp01((whip - 0.9) / 1.15)
@@ -1474,7 +1572,19 @@ def compute_hr_probability(p):
     """Built from the SAME compute_hr_subfactors() the composite score
     uses, so power automatically includes pure-L15 barrel/EV/hard-hit%
     and real L15 ISO, and platoon/opportunity/park/wind factor in here
-    too."""
+    too.
+
+    v3.13 CHANGES (see module docstring for full why):
+      - POWER_QUALITY_MULTIPLIER 1.3 -> 1.7 (power_quality can now
+        legitimately approach 1.0 for real elite profiles, so the rate
+        ceiling it implies needed to widen to match).
+      - RECENT_TRUST 0.4 -> 0.5 (actual demonstrated recent production
+        trusted evenly with the power-quality-implied rate, not
+        discounted below it).
+      - Old exponential soft-cap (0.22 -> 0.30) REMOVED, replaced with a
+        single hard sanity ceiling (0.45) - the stacking dampener a few
+        lines below already exists to keep unrealistic pileups in check;
+        this avoids doing that job twice."""
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
@@ -1488,10 +1598,10 @@ def compute_hr_probability(p):
 
     sf = compute_hr_subfactors(p)
     power_quality = sf["power"]
-    POWER_QUALITY_MULTIPLIER = 1.3
+    POWER_QUALITY_MULTIPLIER = 1.7  # was 1.3
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
-    RECENT_TRUST = 0.4
+    RECENT_TRUST = 0.5  # was 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     pw = power_sample_weight(p.get("pa"))
@@ -1533,13 +1643,12 @@ def compute_hr_probability(p):
     raw_prob = poisson_over_prob(mean, 0.5)
     if raw_prob is None:
         return None
-    HR_PROB_SOFT_START = 0.22
-    HR_PROB_CEILING = 0.30
-    if raw_prob <= HR_PROB_SOFT_START:
-        return raw_prob
-    excess = raw_prob - HR_PROB_SOFT_START
-    room = HR_PROB_CEILING - HR_PROB_SOFT_START
-    return HR_PROB_SOFT_START + room * (1 - math.exp(-excess / room))
+
+    # v3.13: single hard sanity ceiling instead of the old exponential
+    # soft-cap. Only clips truly extreme outputs, doesn't compress the
+    # normal PRIME/STRONG range the way the old 0.22->0.30 squeeze did.
+    HR_PROB_HARD_CAP = 0.45
+    return min(raw_prob, HR_PROB_HARD_CAP)
 
 
 LEAGUE_AVG_AVG = 0.245
