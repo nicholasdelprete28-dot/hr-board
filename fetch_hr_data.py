@@ -1087,6 +1087,7 @@ LEAGUE_AVG_HARDHIT = 0.36
 # it nudges the power score rather than overriding it.
 POWER_L15_WEIGHT = 0.35
 POWER_L15_MIN_PA = 15  # below this many L15 batted-ball events, ignore L15 entirely
+L15_ISO_MIN_PA = 30  # ISO needs more real PA than a batted-ball-count threshold to be trustworthy
 
 HOME_ROAD_MAX_ADJ = 0.06
 HOME_ROAD_MIN_PA = 60
@@ -1168,20 +1169,28 @@ def compute_score(p):
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
     if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
-        # FIX: EV and hard-hit% are now PURE last-15-day reads, not blended
-        # with season - per explicit request, these should reflect current
-        # form only. Barrel% keeps the existing season/L15 blend (barrel
-        # rate is noisier per-batted-ball than EV/hard-hit%, so leaving it
-        # blended is intentional, not an oversight).
-        barrel_final = barrel_season * (1 - POWER_L15_WEIGHT) + l15_barrel * POWER_L15_WEIGHT
+        # FIX v3.4: barrel% now PURE last-15-day too, same as EV/hard-hit% -
+        # no season blend on any of the three real Statcast batted-ball
+        # inputs anymore. Falls back to season if the L15 sample is too
+        # thin to trust (below POWER_L15_MIN_PA), same safety net as before.
+        barrel_final = l15_barrel
         ev_final = l15_ev
         hardhit_final = l15_hardhit
     else:
-        # Not enough L15 batted-ball sample to trust a pure L15 read -
-        # falls back to season for all three rather than showing a noisy
-        # few-event number as if it were reliable.
         barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
-    iso_final = iso_season
+
+    # FIX v3.4: real L15 ISO, built from the batter last-15-game log
+    # (already fetched for l15hr/l5hr - zero new API calls). Divides by
+    # PA (not true AB) since that's what's stored per game - a defensible
+    # extra-bases-per-PA approximation, not textbook ISO, but a real
+    # current-form power read rather than a season-stale one. Falls back
+    # to season ISO below a real minimum PA sample (L15_ISO_MIN_PA).
+    l15_iso = p.get("l15Iso")
+    l15_iso_pa = p.get("l15IsoPa") or 0
+    if l15_iso is not None and l15_iso_pa >= L15_ISO_MIN_PA:
+        iso_final = l15_iso
+    else:
+        iso_final = iso_season
 
     phr9 = p["phr9"] if p["phr9"] is not None else 1.2
     whip = p["whip"] if p["whip"] is not None else 1.30
@@ -1251,6 +1260,25 @@ def compute_score(p):
     # Platoon 10, Recent 15, Opportunity 10, Park 8, Wind 7.
     score = (power * 30 + pitcher_s * 20 + platoon * 10 + recent * 15
              + opportunity * 10 + park_s * 8 + wind_s * 7)
+
+    # NEW v3.4: stacking dampener. When Power, Pitcher, and Recent (the
+    # three factors most tied to a specific, possibly-lucky combination
+    # rather than a stable profile) are ALL simultaneously in their own
+    # top quartile, that combination is being treated as more predictive
+    # than it really is - a player who's elite in one dimension and
+    # average elsewhere is often a safer, more repeatable bet than one
+    # whose score is built entirely from several things maxing out
+    # together at once. This does NOT touch any single bucket's weight -
+    # it applies a small, capped penalty only when multiple of these
+    # three are simultaneously extreme, moderate/default settings below.
+    STACK_THRESHOLD = 0.75      # top-quartile cutoff per bucket
+    STACK_PENALTY_PER_EXTRA = 2.5   # points off per additional maxed bucket beyond the first
+    STACK_PENALTY_MAX = 6.0         # hard cap - never a bigger swing than a real park/wind effect
+    stack_buckets = [power, pitcher_s, recent]
+    n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
+    if n_maxed > 1:
+        stack_penalty = min(STACK_PENALTY_MAX, (n_maxed - 1) * STACK_PENALTY_PER_EXTRA)
+        score -= stack_penalty
 
     score *= home_road_adjustment(p)
     score *= day_night_adjustment(p)
@@ -1554,19 +1582,16 @@ def main():
           f"{len(todays_pitcher_ids)} probable starters "
           f"({len(todays_pitcher_ids) - len(reliable_pitcher_stats)} still falling back to the bulk list/default)")
 
-    print("Fetching recent (last-3-starts) form for today's probable starters...")
-    pitcher_recent_form = {}
-
-    def fetch_one_recent_form(pid):
-        season_stat = reliable_pitcher_stats.get(pid, {"hr9": 1.20, "whip": 1.30})
-        recent_hr9, recent_whip = get_pitcher_recent_form(
-            pid, YEAR, season_stat.get("hr9", 1.20), season_stat.get("whip", 1.30))
-        return pid, (recent_hr9, recent_whip)
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        for pid, result in executor.map(fetch_one_recent_form, todays_pitcher_ids):
-            pitcher_recent_form[pid] = result
-    print(f"  computed recent-form blend for {len(pitcher_recent_form)} pitchers")
+    # REMOVED in v3.3: the last-3-starts recent-form blend for phr9/whip.
+    # Even dampened (0.6x) and widened, it was still nudging pitcher HR9/
+    # WHIP away from their real season numbers (confirmed live: a pitcher
+    # showing 1.96 blended HR9 when his actual season rate was 1.77) -
+    # a real, factual inaccuracy on the card, not just a tuning question.
+    # phr9/whip are now the pitcher's REAL season rate, full stop - no
+    # recency adjustment. get_pitcher_recent_form() is left defined below
+    # in case a properly-isolated, clearly-labeled "recent trend" display
+    # stat is wanted later, but it is NOT used in any scoring calculation
+    # anymore.
 
     print("Fetching season batting stats (ISO)...")
     batting_stats = get_season_batting_stats()
@@ -1636,12 +1661,9 @@ def main():
             pitcher_stat = reliable_pitcher_stats.get(
                 pitcher_id, pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20}))
 
-            recent_form = pitcher_recent_form.get(pitcher_id)
-            if recent_form:
-                effective_hr9, effective_whip = recent_form
-            else:
-                effective_hr9 = pitcher_stat.get("hr9", 1.20)
-                effective_whip = pitcher_stat.get("whip", 1.30)
+            # REMOVED in v3.3: no recent-form blend - pure real season rate.
+            effective_hr9 = pitcher_stat.get("hr9", 1.20)
+            effective_whip = pitcher_stat.get("whip", 1.30)
 
             park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None})
             wind_speed, wind_dir = (None, None)
@@ -1747,6 +1769,12 @@ def main():
         last20 = games_this_year[-20:]
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
+        # NEW v3.4: real L15 ISO (extra bases per PA), built from the same
+        # last-15-game window already sliced above - no new API call.
+        l15_games_for_iso = games_this_year[-15:] if games_this_year else []
+        l15_iso_pa = sum(g["pa"] for g in l15_games_for_iso)
+        l15_iso_val = (round((sum(g["tb"] for g in l15_games_for_iso) - sum(g["hits"] for g in l15_games_for_iso)) / l15_iso_pa, 3)
+                       if l15_iso_pa > 0 else None)
         l15hr_credit = (diminishing_hr_credit(games_this_year[-15:])
                          if games_this_year else None)
         l5hr_credit = (diminishing_hr_credit(games_this_year[-5:])
@@ -1767,6 +1795,8 @@ def main():
 
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
+        player_row["l15Iso"] = l15_iso_val  # NEW v3.4
+        player_row["l15IsoPa"] = l15_iso_pa  # NEW v3.4
         player_row["l5hr"] = l5hr
         player_row["l15hrCredit"] = l15hr_credit
         player_row["l5hrCredit"] = l5hr_credit
@@ -1962,6 +1992,7 @@ def write_daily_snapshot(players):
                 "nightHrRate": p.get("nightHrRate"), "nightPa": p.get("nightPa"),
                 "seasonHrRate": p.get("seasonHrRate"),
                 "avgVsMix": p.get("avgVsMix"), "avgVsMixPa": p.get("avgVsMixPa"),  # NEW v3.2
+                "l15Iso": p.get("l15Iso"), "l15IsoPa": p.get("l15IsoPa"),  # NEW v3.4
                 "oppBullpenEra": p.get("oppBullpenEra"),  # NEW v3.2
                 "oppBullpenWhip": p.get("oppBullpenWhip"),  # NEW v3.2
                 "oppBullpenIp": p.get("oppBullpenIp"),  # NEW v3.2
