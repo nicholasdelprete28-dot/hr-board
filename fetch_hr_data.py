@@ -12,8 +12,10 @@ free, public data sources:
   - Open-Meteo weather API            -> live wind speed/direction per park
 
 WHAT CHANGED IN v3 (see the project's weighting-reform discussion):
-  - compute_score() reweighted from 5 buckets to 7: Power 25%, Pitcher 20%,
-    Platoon 15%, Recent 15%, Opportunity 15%, Park 5%, Wind 5%. Pitcher used
+  - compute_score() reweighted from 5 buckets to 7: Power 30%, Pitcher 20%,
+    Platoon 10%, Recent 15%, Opportunity 10%, Park 8%, Wind 7% (CORRECTED -
+    this docstring previously said 25/20/15/15/15/5/5, which drifted out of
+    sync with the actual weights in compute_score() at some point). Pitcher used
     to be diluted inside a blended "matchup" bucket (worth ~19% of that
     bucket's 30%, i.e. ~6% of the whole score) - it's now a standalone,
     genuinely meaningful 20% lever, without being allowed to outweigh Power.
@@ -44,6 +46,19 @@ fetch_batter_statcast() and fetch_pitch_mix_data() use, so a wrong
 assumption is immediately visible in the Action's run log instead of
 silently producing nothing. Test locally before trusting the automated
 schedule, same advice the v2 docstring already gave.
+
+KNOWN LIMITATION - SEASON TOTAL/RATE, NOT WITHIN-SEASON TREND: every
+"recent" signal this file computes (the L15 power blend in compute_score(),
+the L15 HR-rate opportunity bonus, the pitcher last-3-starts blend) is a
+fixed recent window measured against a season baseline. None of it tracks
+WHERE within the season a player's production happened. A batter who hit
+most of his homers in April and has gone cold since will score the same,
+on season total/rate, as a batter with the identical season total who is
+heating up right now - the L15 window catches "hot at this moment" to some
+degree, but not the shape of the trend leading up to it (accelerating vs.
+decelerating within the season). A real trend/trajectory feature - e.g. a
+rolling weekly HR rate with a slope or acceleration term - is a separate,
+buildable addition and is NOT implemented anywhere in this file.
 """
 
 import csv
@@ -1223,17 +1238,26 @@ def compute_hr_subfactors(p):
     l15_ev = p.get("l15Ev")
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
+    # FIX (per formula review): this used to fully OVERRIDE season power
+    # with L15 power once l15_pa >= POWER_L15_MIN_PA - POWER_L15_WEIGHT was
+    # defined ("deliberately well under 50%... nudges the power score
+    # rather than overriding it") but never actually applied anywhere.
+    # Once a regular starter cleared ~15 batted-ball events (a few games),
+    # their ENTIRE power read became 100% last-15-days and the properly
+    # shrunk season number was computed and then discarded. Now it's a
+    # real blend at POWER_L15_WEIGHT, same shrink-toward-anchor philosophy
+    # every other rate stat in this file already gets.
     if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
-        barrel_final = l15_barrel
-        ev_final = l15_ev
-        hardhit_final = l15_hardhit
+        barrel_final = l15_barrel * POWER_L15_WEIGHT + barrel_season * (1 - POWER_L15_WEIGHT)
+        ev_final = l15_ev * POWER_L15_WEIGHT + ev_season * (1 - POWER_L15_WEIGHT)
+        hardhit_final = l15_hardhit * POWER_L15_WEIGHT + hardhit_season * (1 - POWER_L15_WEIGHT)
     else:
         barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
 
     l15_iso = p.get("l15Iso")
     l15_iso_pa = p.get("l15IsoPa") or 0
     if l15_iso is not None and l15_iso_pa >= L15_ISO_MIN_PA:
-        iso_final = l15_iso
+        iso_final = l15_iso * POWER_L15_WEIGHT + iso_season * (1 - POWER_L15_WEIGHT)
     else:
         iso_final = iso_season
 
@@ -1278,7 +1302,13 @@ def compute_hr_subfactors(p):
     wind_s = clamp01((wind + 2) / 4)
     park_s = clamp01((park + 2) / 4)
 
-    recent = clamp01(l15hr / 6) * 0.6 + clamp01(l5hr / 2) * 0.4
+    # FIX (per formula review): l5hr/2 meant 2 HR in 5 games alone hit the
+    # full 1.0 ceiling on 40% of this bucket, with zero sample-size
+    # discount - unlike avgmix_confidence_blend()/risp_confidence_blend()/
+    # barrel_confidence(), which all shrink small samples toward an anchor.
+    # Widened denominators (6->9, 2->3) so hitting the ceiling requires a
+    # more sustained stretch, not one good week.
+    recent = clamp01(l15hr / 9) * 0.6 + clamp01(l5hr / 3) * 0.4
 
     handedness_platoon = (crush + split) / 2
     pitch_mix_raw = p.get("pitchMixMatch")
@@ -1481,7 +1511,16 @@ def compute_hr_probability(p):
     POWER_QUALITY_MULTIPLIER = 1.3
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
-    RECENT_TRUST = 0.6
+    # FIX (per formula review): RECENT_TRUST was 0.6 - the board's PRIMARY
+    # ranking number (hrProb) gave a tiny 5/15-game HR-count window 60%
+    # weight against the season-quality-derived rate's 40%. A player with
+    # 2 HR in their last 5 games (a real but small sample) could swing
+    # recent_rate to ~0.4-per-game on its own, more than doubling the
+    # season-implied rate before any matchup/situational factor even
+    # applied. Dropped to 0.4 so season quality anchors the model the way
+    # every other rate stat in this file is already shrunk toward its
+    # anchor - recent form still matters, just not more than the season.
+    RECENT_TRUST = 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     pw = power_sample_weight(p.get("pa"))
