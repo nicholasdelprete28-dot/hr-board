@@ -1313,7 +1313,7 @@ function render(){
           tier: statTier(p.wind, { good: 1, bad: -1, veryBad: -2 }) },
         { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
-        { label: 'Barrel%', display: fmtPct(p.barrel),
+        { label: 'Barrel% (L15)', display: fmtPct(p.barrel),
           tier: statTier(p.barrel, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
         { label: 'Hard Hit% (L15)', display: fmtPct(p.hardhit),
           tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
