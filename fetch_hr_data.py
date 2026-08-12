@@ -1447,7 +1447,22 @@ def compute_hr_probability(p):
 
     sf = compute_hr_subfactors(p)
     power_quality = sf["power"]  # now L15-aware, same read compute_score uses
-    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * 2.0)
+    # FIX v3.7: the 2.0 power multiplier meant an elite slugger's baseline
+    # (~25%) was already nearly 2x an average hitter's (~13%) BEFORE any
+    # situational factor was even applied - a gap bigger than every
+    # situational adjustment combined (pitcher/platoon/opportunity/park/
+    # wind/home-road/day-night/bullpen/day-of-week) could ever close,
+    # since those are deliberately capped small. That's the real reason
+    # the same elite power bats kept topping the board regardless of
+    # matchup quality - not a bug in any one factor, but this multiplier
+    # structurally outweighing all of them combined. Reduced 2.0 -> 1.3,
+    # a real, deliberate tradeoff: power still matters most (as it should
+    # - it's the single best real predictor of HR outcomes), but a
+    # genuinely great matchup + situational profile can now actually
+    # compete with and occasionally outrank elite power, instead of only
+    # ever nudging around its edges.
+    POWER_QUALITY_MULTIPLIER = 1.3
+    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
     RECENT_TRUST = 0.6
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
