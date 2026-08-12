@@ -1,5 +1,5 @@
 """
-fetch_hr_data.py  (v3 - reweighted formula + situational signals)
+fetch_hr_data.py  (v3.12 - reweighted formula + situational signals + park/wind fix)
 
 Builds today's HR favorability board with NO manual screenshots, using only
 free, public data sources:
@@ -10,6 +10,40 @@ free, public data sources:
   - Baseball Savant CSV export        -> season AND last-15-day barrel%,
     exit velocity, hard-hit%
   - Open-Meteo weather API            -> live wind speed/direction per park
+
+WHAT CHANGED IN v3.12 (per formula review):
+  - FIX #1: PARKS was only covering 15 of 30 teams. Any game hosted by the
+    other 15 (LAA, AZ, DET, KC, LAD, WSH, NYM, ATH, SEA, STL, TB, TOR, MIN,
+    CWS, MIA) silently fell back to {"factor": 0, "lat": None, "lon": None},
+    which meant wind was never even fetched for those games (lat is None)
+    and park_s/wind_s collapsed to neutral (0.5) regardless of the real
+    park - including real, well-known extreme parks like Seattle
+    (pitcher-friendly) and Coors-adjacent hitter parks like Dodger
+    Stadium. All 30 teams are now present. HONESTY NOTE: the `factor`
+    values for the 15 newly-added parks (and the `orient` values for ALL
+    30 parks, see FIX #2) are reasonable placeholders based on each
+    park's general reputation, NOT derived from real Statcast park-factor
+    data. They should be replaced with real published park factors
+    (Fangraphs/ESPN) and verified stadium orientations before being fully
+    trusted - this fix closes the "half the league silently neutral" gap,
+    it does not certify the specific numbers.
+  - FIX #2: wind_park_factor() took a `direction` parameter and never used
+    it - wind could only ever help a batter (0/1/2), never hurt, no matter
+    which way it was blowing. Each park now carries an `orient` field
+    (approximate compass bearing, home plate -> center field, degrees from
+    north - same "needs real verification" caveat as the factor values
+    above) and wind_park_factor() now computes the in/out component via
+    the angle between actual wind direction and that bearing, so
+    wind_score (and therefore wind_s) can now go negative for in-blowing
+    wind, not just 0 or positive.
+  - FIX #3: the stacking dampener in both compute_score() and
+    compute_hr_probability() only ever looked at [power, pitcher_s,
+    recent] - every other multiplier (home/road, day/night, bullpen,
+    day-of-week, and the platoon/opportunity/park/wind nudges in
+    compute_hr_probability) could still all stack favorably on the same
+    player completely unchecked. Both functions now also fold in how much
+    the situational multipliers alone are boosting a player, and count
+    that toward the same "too many favorable factors piling up" trigger.
 
 WHAT CHANGED IN v3 (see the project's weighting-reform discussion):
   - compute_score() reweighted from 5 buckets to 7: Power 35%, Pitcher 15%,
@@ -81,22 +115,52 @@ YEAR = 2026
 TODAY = datetime.datetime.now(ZoneInfo("America/New_York")).strftime("%Y-%m-%d")
 TODAY_WEEKDAY = datetime.datetime.now(ZoneInfo("America/New_York")).weekday()  # 0=Mon..6=Sun, for day_of_week_split()
 
+# FIX #1 (v3.12): all 30 teams now present - previously only 15 were listed
+# and any game at the other 15 parks silently fell back to a neutral
+# factor with lat/lon = None, which also meant wind was never fetched for
+# those games at all. `orient` (FIX #2) is the approximate compass bearing
+# from home plate toward center field, degrees from true north, used to
+# resolve whether a given wind direction is blowing "out" or "in".
+#
+# HONESTY NOTE: both `factor` (for the 15 newly-added parks) and `orient`
+# (for all 30 parks) are reasonable placeholders based on each park's
+# general reputation and rough stadium geometry - NOT pulled from a
+# verified data source. Replace `factor` with real published park factors
+# (Fangraphs/ESPN) and verify `orient` against real stadium diagrams
+# before fully trusting either. The goal of this fix is that every game
+# now gets a real, non-neutral, non-skipped park/wind read instead of a
+# silent neutral default - not that these exact numbers are final.
 PARKS = {
-    "COL": {"factor": 2, "lat": 39.7559, "lon": -104.9942},
-    "NYY": {"factor": 2, "lat": 40.8296, "lon": -73.9262},
-    "CIN": {"factor": 1, "lat": 39.0975, "lon": -84.5068},
-    "MIL": {"factor": 1, "lat": 43.0280, "lon": -87.9712},
-    "HOU": {"factor": 0, "lat": 29.7573, "lon": -95.3555},
-    "CHC": {"factor": 0, "lat": 41.9484, "lon": -87.6553},
-    "BOS": {"factor": 0, "lat": 42.3467, "lon": -71.0972},
-    "ATL": {"factor": 0, "lat": 33.8908, "lon": -84.4678},
-    "PHI": {"factor": 1, "lat": 39.9061, "lon": -75.1665},
-    "BAL": {"factor": -1, "lat": 39.2839, "lon": -76.6218},
-    "SF":  {"factor": -1, "lat": 37.7786, "lon": -122.3893},
-    "TEX": {"factor": -1, "lat": 32.7473, "lon": -97.0842},
-    "CLE": {"factor": -1, "lat": 41.4962, "lon": -81.6852},
-    "PIT": {"factor": -1, "lat": 40.4469, "lon": -80.0057},
-    "SD":  {"factor": -1, "lat": 32.7073, "lon": -117.1566},
+    "COL": {"factor": 2,  "lat": 39.7559, "lon": -104.9942, "orient": 30},
+    "NYY": {"factor": 2,  "lat": 40.8296, "lon": -73.9262,  "orient": 75},
+    "CIN": {"factor": 1,  "lat": 39.0975, "lon": -84.5068,  "orient": 100},
+    "MIL": {"factor": 1,  "lat": 43.0280, "lon": -87.9712,  "orient": 130},
+    "PHI": {"factor": 1,  "lat": 39.9061, "lon": -75.1665,  "orient": 5},
+    "AZ":  {"factor": 1,  "lat": 33.4453, "lon": -112.0667, "orient": 55},
+    "LAD": {"factor": 1,  "lat": 34.0739, "lon": -118.2400, "orient": 25},
+    "HOU": {"factor": 0,  "lat": 29.7573, "lon": -95.3555,  "orient": 55},
+    "CHC": {"factor": 0,  "lat": 41.9484, "lon": -87.6553,  "orient": 30},
+    "BOS": {"factor": 0,  "lat": 42.3467, "lon": -71.0972,  "orient": 45},
+    "ATL": {"factor": 0,  "lat": 33.8908, "lon": -84.4678,  "orient": 15},
+    "KC":  {"factor": 0,  "lat": 39.0517, "lon": -94.4803,  "orient": 60},
+    "TOR": {"factor": 0,  "lat": 43.6414, "lon": -79.3894,  "orient": 60},
+    "MIN": {"factor": 0,  "lat": 44.9817, "lon": -93.2776,  "orient": 90},
+    "LAA": {"factor": 0,  "lat": 33.8003, "lon": -117.8827, "orient": 20},
+    "WSH": {"factor": 0,  "lat": 38.8730, "lon": -77.0074,  "orient": 55},
+    "STL": {"factor": 0,  "lat": 38.6226, "lon": -90.1928,  "orient": 45},
+    "CWS": {"factor": 0,  "lat": 41.8299, "lon": -87.6338,  "orient": 135},
+    "BAL": {"factor": -1, "lat": 39.2839, "lon": -76.6218,  "orient": 30},
+    "SF":  {"factor": -1, "lat": 37.7786, "lon": -122.3893, "orient": 95},
+    "TEX": {"factor": -1, "lat": 32.7473, "lon": -97.0842,  "orient": 30},
+    "CLE": {"factor": -1, "lat": 41.4962, "lon": -81.6852,  "orient": 5},
+    "PIT": {"factor": -1, "lat": 40.4469, "lon": -80.0057,  "orient": 65},
+    "SD":  {"factor": -1, "lat": 32.7073, "lon": -117.1566, "orient": 5},
+    "NYM": {"factor": -1, "lat": 40.7571, "lon": -73.8458,  "orient": 30},
+    "ATH": {"factor": -1, "lat": 37.7516, "lon": -122.2005, "orient": 45},
+    "SEA": {"factor": -1, "lat": 47.5914, "lon": -122.3325, "orient": 45},
+    "TB":  {"factor": -1, "lat": 27.7683, "lon": -82.6534,  "orient": 90},
+    "DET": {"factor": -1, "lat": 42.3390, "lon": -83.0485,  "orient": 25},
+    "MIA": {"factor": -1, "lat": 25.7781, "lon": -80.2196,  "orient": 30},
 }
 
 
@@ -325,10 +389,12 @@ def get_pitcher_gamelog(pitcher_id, season):
 
 
 def get_pitcher_recent_form(pitcher_id, season, season_hr9, season_whip):
-    """NEW in v3. This pitcher's last-3-starts hr9/whip, shrunk toward his
-    OWN season rate based on how many real innings those 3 starts actually
-    covered. Reuses get_pitcher_gamelog(), the same verified-working fetch
-    the K board already relies on - no new API call, no new endpoint risk."""
+    """This pitcher's last-3-starts hr9/whip, shrunk toward his OWN season
+    rate based on how many real innings those 3 starts actually covered.
+    Reuses get_pitcher_gamelog() - no new API call. NOTE: as of v3.3 this
+    is NOT used in any scoring calculation (see the v3.3 note in main());
+    left defined in case a clearly-labeled "recent trend" display stat is
+    wanted later."""
     starts = get_pitcher_gamelog(pitcher_id, season)
     last3 = starts[-3:]
     ip_total = sum(g["ip"] or 0 for g in last3)
@@ -337,10 +403,6 @@ def get_pitcher_recent_form(pitcher_id, season, season_hr9, season_whip):
     recent_hr9 = sum(g["hr"] for g in last3) * 9 / ip_total
     recent_whip = sum(g["hits"] + g["bb"] for g in last3) / ip_total
     pw = pitcher_sample_weight(ip_total)
-    # FIX: dampened to 60% of the raw linear blend - a 3-start/~14-inning
-    # window was swinging phr9/whip almost as hard as a real season-long
-    # trend, which was quietly making nearly every pitcher on a given day
-    # look like a bad matchup (see PITCHER_RECENT_DAMPEN below).
     PITCHER_RECENT_DAMPEN = 0.6
     blended_hr9 = season_hr9 + (recent_hr9 - season_hr9) * pw * PITCHER_RECENT_DAMPEN
     blended_whip = season_whip + (recent_whip - season_whip) * pw * PITCHER_RECENT_DAMPEN
@@ -473,20 +535,11 @@ def get_risp_avg(batter_id):
 
 
 def get_day_night_split(batter_id):
-    """NEW in v3. This batter's HR rate (per-PA) in day games vs night
-    games this season.
-
-    HONESTY NOTE: 'day'/'night' are the best-guess sitCodes for this split -
-    not confirmed against a live response, same unverified status as
-    get_risp_avg()'s 'risp' code. Returns Nones on failure so callers fall
-    back cleanly."""
+    """This batter's HR rate (per-PA) in day games vs night games this
+    season. HONESTY NOTE: 'd'/'n' are the best-guess sitCodes for this
+    split - not confirmed against a live response. Returns Nones on
+    failure so callers fall back cleanly."""
     try:
-        # FIX: switched from full-word 'day'/'night' to single-letter 'd'/'n' -
-        # every OTHER real sitCode this file uses (vl, vr, risp) is a short
-        # code, not a spelled-out word, so 'day'/'night' was always the
-        # weakest guess in this file and likely why this was returning
-        # empty for everyone. Still not confirmed against a live response -
-        # same honesty standard as every other unverified endpoint here.
         day_data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "statSplits", "sitCodes": "d",
             "group": "hitting", "season": YEAR, "sportId": 1
@@ -547,19 +600,18 @@ def get_gamelog(batter_id, season):
 
 
 def day_of_week_split(games, target_weekday):
-    """NEW v3.6, per explicit request. This batter's HR rate on the SAME
-    day of the week as today, built entirely from the season gamelog
-    already fetched - zero new API calls. target_weekday is 0=Monday..
-    6=Sunday (Python's datetime.weekday() convention).
+    """This batter's HR rate on the SAME day of the week as today, built
+    entirely from the season gamelog already fetched - zero new API
+    calls. target_weekday is 0=Monday..6=Sunday.
 
-    HONEST CAVEAT, keeping this documented even though it's being built:
-    MLB's API has no real "day of week" stat split - unlike home/road,
-    which is a genuine, commonly-tracked split, day-of-week isn't. A
-    single weekday only comes up ~15-25 times across a whole season for
-    any player, an unavoidably thin sample no matter how it's built. This
-    is why day_of_week_adjustment() below uses the smallest bound and
-    highest minimum-sample gate of any situational adjustment in this
-    file - treat it as the least-trusted signal here, by design."""
+    HONEST CAVEAT: MLB's API has no real "day of week" stat split -
+    unlike home/road, which is a genuine, commonly-tracked split,
+    day-of-week isn't. A single weekday only comes up ~15-25 times across
+    a whole season for any player, an unavoidably thin sample no matter
+    how it's built. This is why day_of_week_adjustment() below uses the
+    smallest bound and highest minimum-sample gate of any situational
+    adjustment in this file - treat it as the least-trusted signal here,
+    by design."""
     matching_games = [g for g in games
                        if g.get("date") and datetime.date.fromisoformat(g["date"]).weekday() == target_weekday]
     pa = sum(g["pa"] for g in matching_games)
@@ -568,11 +620,11 @@ def day_of_week_split(games, target_weekday):
 
 
 def home_road_split(games):
-    """NEW in v3. This batter's HR rate at home vs on the road, built
-    entirely from the season gamelog already fetched - zero new API calls.
-    Returns per-PA rates with the underlying PA counts, so compute_score
-    can shrink small samples the same cautious way every other rate stat
-    in this file already does."""
+    """This batter's HR rate at home vs on the road, built entirely from
+    the season gamelog already fetched - zero new API calls. Returns
+    per-PA rates with the underlying PA counts, so compute_score can
+    shrink small samples the same cautious way every other rate stat in
+    this file already does."""
     home_games = [g for g in games if g.get("home")]
     road_games = [g for g in games if not g.get("home")]
 
@@ -714,40 +766,14 @@ def fetch_batter_statcast():
 
 
 def fetch_batter_statcast_l15():
-    """NEW in v3 (FIXED): last-15-day barrel%, EV, and hard-hit%, built by
-    aggregating Baseball Savant's real event-level search export
-    ('statcast_search'), NOT the "custom leaderboard" endpoint the first
-    attempt used - that endpoint turned out to only return name/id/year by
-    default (confirmed via a live run: 'Savant L15 CSV columns:
-    [last_name, first_name, player_id, year]', no stat columns at all).
-
-    statcast_search returns ONE ROW PER PITCH (not pre-aggregated per
-    player), so this fetches every pitch across all of MLB for the last 15
-    days in one bulk request, filters down to actual batted-ball events
-    (type == 'X', a ball put in play), and aggregates barrel%/EV/hard-hit%
-    per batter client-side:
+    """Last-15-day barrel%, EV, and hard-hit%, built by aggregating
+    Baseball Savant's real event-level search export ('statcast_search').
+    Returns one row per pitch league-wide for the last 15 days, filtered
+    down to real batted-ball events (type == 'X'), aggregated per batter
+    client-side:
       - EV: mean of launch_speed across that batter's batted balls
-      - Barrel%: share of batted balls where launch_speed_angle == '6' -
-        this is Savant's OWN numeric barrel classification field (1-6,
-        6 = Barrel), so this reuses their real classification instead of
-        re-implementing the EV/launch-angle barrel formula ourselves,
-        which would risk subtly disagreeing with Savant's own numbers.
+      - Barrel%: share of batted balls where launch_speed_angle == '6'
       - Hard-hit%: share of batted balls with launch_speed >= 95
-
-    HONESTY NOTE: the column names used here (batter, type, launch_speed,
-    launch_angle, launch_speed_angle, game_date) are the well-documented
-    statcast_search export schema (same schema pybaseball and other public
-    tools built against), which is a meaningfully more solid footing than
-    the previous guess - but this specific query STILL hasn't been run
-    against a live response by me. Same defensive column-checking and full
-    logging as every other Savant fetch in this file, so a schema
-    surprise is immediately visible in the Action log rather than silent.
-    This is also a much bigger fetch than the leaderboard endpoints (every
-    pitch league-wide for 15 days, not one row per player) - bumped
-    timeout to 90s and this will meaningfully add to the script's total
-    run time. If it's too slow in practice, the fallback if it fails or
-    times out is still the same clean one: compute_score() reverts to
-    season-only power for everyone, nothing breaks.
     """
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=15)
@@ -795,10 +821,6 @@ def fetch_batter_statcast_l15():
               f"CSV columns above. Falling back to season-only power for everyone.")
         return {}
 
-    # Aggregate per-batter: only rows that are real batted-ball events
-    # (type == 'X' when that column exists; otherwise fall back to "has a
-    # real launch_speed value", since a ball not put in play has no exit
-    # velocity recorded at all).
     per_batter = {}
     for row in rows:
         if type_col and row.get(type_col) != "X":
@@ -832,28 +854,20 @@ def fetch_batter_statcast_l15():
             "ev": round(d["ev_sum"] / d["n"], 1),
             "barrel": round(d["barrels"] / d["n"], 3),
             "hardhit": round(d["hardhit"] / d["n"], 3),
-            "pa": d["n"],  # batted-ball-event count, used as the sample-size
-                            # gate in compute_score() (POWER_L15_MIN_PA) -
-                            # not a true PA count, but the right denominator
-                            # for "how much do we trust this L15 read."
+            "pa": d["n"],
         }
     print(f"  parsed L15 power data for {len(out)} batters from "
           f"{sum(d['n'] for d in per_batter.values())} batted-ball events")
     return out
+
+
 def fetch_pitch_mix_data():
-    """UPDATED in v3.2: the batter side now also captures real batting
-    AVG ('ba') and plate-appearance count ('pa') per pitch type, not just
-    hard-hit% - this is what makes compute_avg_vs_mix() below possible: a
-    REAL "AVG vs this pitcher's actual arsenal" stat (not just a
-    handedness split), built WITH proper sample-size shrinkage (unlike
-    what a competitor's app was seen showing - a .056 AVG-vs-mix number
-    built off as few as 4 PA in one observed case, with no shrink at all).
-    The Savant pitch-arsenal-stats export already includes 'ba' and 'pa'
-    columns per pitch type (confirmed in a real fetch log), so this reuses
-    the exact same bulk request as before - no new API call.
-    """
-    batter_pitch_data = {}       # {batter_id: {pitch_type: hard_hit_pct}}
-    batter_pitch_avg = {}        # {batter_id: {pitch_type: {"ba":.., "pa":..}}} - NEW v3.2
+    """The batter side captures real batting AVG ('ba') and plate-appearance
+    count ('pa') per pitch type, not just hard-hit% - this is what makes
+    compute_avg_vs_mix() below possible: a real "AVG vs this pitcher's
+    actual arsenal" stat, built WITH proper sample-size shrinkage."""
+    batter_pitch_data = {}
+    batter_pitch_avg = {}
     pitcher_pitch_mix = {}
 
     for kind, out_dict in [("batter", batter_pitch_data), ("pitcher", pitcher_pitch_mix)]:
@@ -882,9 +896,9 @@ def fetch_pitch_mix_data():
         usage_col = next((c for c in usage_columns if rows and c in rows[0]), None)
         metric_columns = ["hard_hit_percent", "ev95percent", "whiff_percent"]
         metric_col = next((c for c in metric_columns if rows and c in rows[0]), None)
-        ba_columns = ["ba"]  # NEW v3.2
+        ba_columns = ["ba"]
         ba_col = next((c for c in ba_columns if rows and c in rows[0]), None)
-        pa_columns = ["pa"]  # NEW v3.2
+        pa_columns = ["pa"]
         pa_col = next((c for c in pa_columns if rows and c in rows[0]), None)
         print(f"  ({kind}) using id={id_col} pitch_type={pitch_col} "
               f"usage={usage_col} metric={metric_col} ba={ba_col} pa={pa_col}")
@@ -942,32 +956,15 @@ def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pi
     return weighted_sum / weight_total
 
 
-AVG_VS_MIX_SHRINK_K = 30  # PA of season-average-anchored prior mixed in -
-                           # same shrink philosophy as power_sample_weight(),
-                           # tuned a bit gentler since arsenal-matched PA
-                           # samples are inherently smaller than season PA.
+AVG_VS_MIX_SHRINK_K = 30
 
 
 def compute_avg_vs_mix(batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mix, season_avg):
-    """NEW in v3.2. A REAL "AVG vs this pitcher's actual arsenal" number -
-    this batter's real batting average against each pitch type, weighted
-    by how often THIS SPECIFIC pitcher actually throws each one, then
-    shrunk toward the batter's own season AVG based on how much real
-    matched-PA sample backs it up.
-
-    This is the properly-built version of a stat a competitor's app was
-    observed showing UNSHRUNK - e.g. a .056 "AVG vs pitch mix" reading
-    built off as few as 4 real PA in one confirmed case, wildly diverging
-    from that same player's season AVG on the very same card. Small-sample
-    swings like that aren't a real signal, they're noise wearing a
-    precise-looking number. AVG_VS_MIX_SHRINK_K controls how much real
-    matched PA it takes before this stat is trusted over the season
-    anchor - same protection every other rate stat in this file already
-    gets.
-
-    Returns (shrunk_avg, matched_pa) or (None, 0) if there isn't enough
-    real data to compute anything at all.
-    """
+    """A real "AVG vs this pitcher's actual arsenal" number - this
+    batter's real batting average against each pitch type, weighted by
+    how often THIS SPECIFIC pitcher actually throws each one, then shrunk
+    toward the batter's own season AVG based on how much real matched-PA
+    sample backs it up."""
     batter_data = batter_pitch_avg.get(batter_id)
     mix = pitcher_pitch_mix.get(pitcher_id)
     if not batter_data or not mix:
@@ -982,8 +979,7 @@ def compute_avg_vs_mix(batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mi
         weighted_ba_sum += usage * entry["ba"]
         weighted_pa_sum += usage
         matched_pa_total += entry["pa"]
-    if weighted_pa_sum < 0.3:  # too little real arsenal overlap to trust, same
-                                # threshold compute_pitch_mix_match() already uses
+    if weighted_pa_sum < 0.3:
         return None, 0
     raw_avg_vs_mix = weighted_ba_sum / weighted_pa_sum
 
@@ -1006,28 +1002,14 @@ def get_team_roster(team_id):
 
 LEAGUE_AVG_BULLPEN_ERA = 4.20
 LEAGUE_AVG_BULLPEN_WHIP = 1.32
-BULLPEN_MIN_IP = 20  # below this much real relief innings for a team, don't trust its bullpen read
+BULLPEN_MIN_IP = 20
 
 
 def get_team_bullpen_stats(team_id, season):
-    """NEW in v3.2. This team's RELIEF corps quality (ERA/WHIP), separate
-    from the starting pitcher - a real gap the model had before, since
-    every board only ever modeled the probable starter, even though a
-    batter can easily face a bad bullpen in innings 6-9 too.
-
-    Classification: a pitcher counts as part of the "bullpen" for this
-    calculation if he has zero games started this season - a clean,
-    defensible definition (a pure reliever, by definition, hasn't
-    started), rather than trying to guess at a fuzzier "swingman" cutoff.
-    Aggregates ERA/WHIP weighted by real relief innings pitched across the
-    whole roster. Reuses get_pitcher_season_stats() (already
-    verified-working) for each individual pitcher - the only new piece
-    here is the roster lookup itself.
-
-    Real cost note: this is one roster fetch + one season-stats fetch per
-    pitcher, per team, per day (~12-13 pitchers x ~26-30 teams playing) -
-    a meaningful but bounded addition to the script's total run time,
-    cached once per team_id per run (not per batter)."""
+    """This team's RELIEF corps quality (ERA/WHIP), separate from the
+    starting pitcher. A pitcher counts as part of the "bullpen" if he has
+    zero games started this season. Aggregates ERA/WHIP weighted by real
+    relief innings pitched across the whole roster."""
     roster = get_team_roster(team_id)
     pitcher_ids = [p["person"]["id"] for p in roster
                    if p.get("position", {}).get("abbreviation") == "P"]
@@ -1037,13 +1019,13 @@ def get_team_bullpen_stats(team_id, season):
     for pid in pitcher_ids:
         stat = get_pitcher_season_stats(pid, season)
         if not stat or stat.get("gamesStarted", 0) > 0:
-            continue  # has at least one start this season - not a pure reliever
+            continue
         ip = stat.get("ip") or 0
         if ip <= 0:
             continue
         total_ip += ip
-        total_er += stat["era"] * ip / 9  # back out earned runs from ERA*IP/9
-        total_hits_walks += stat["whip"] * ip  # back out hits+walks from WHIP*IP
+        total_er += stat["era"] * ip / 9
+        total_hits_walks += stat["whip"] * ip
     if total_ip < BULLPEN_MIN_IP:
         return {"bullpenEra": None, "bullpenWhip": None, "bullpenIp": round(total_ip, 1)}
     return {
@@ -1053,7 +1035,7 @@ def get_team_bullpen_stats(team_id, season):
     }
 
 
-BULLPEN_MAX_ADJ = 0.05  # same small-and-bounded philosophy as home/road and day/night
+BULLPEN_MAX_ADJ = 0.05
 
 
 def bullpen_adjustment(p):
@@ -1074,13 +1056,33 @@ def bullpen_adjustment(p):
     return 1 + adj
 
 
-def wind_park_factor(speed, direction):
+def wind_park_factor(speed, direction, park_orientation=None):
+    """FIX #2 (v3.12): previously took `direction` and never used it, so
+    wind could only ever help (0/1/2), never hurt, regardless of which
+    way it was actually blowing. Now resolves the angle between the real
+    wind direction and this park's approximate home-plate-to-center-field
+    bearing (`park_orientation`, degrees from north) to get an in/out
+    component: +1 = blowing straight out, -1 = blowing straight in, 0 =
+    blowing crosswise. That component scales the same speed-tiered base
+    magnitude as before, so a strong wind blowing IN now correctly
+    produces a negative wind_score instead of being indistinguishable
+    from calm air or a wind blowing out.
+
+    Falls back to the old speed-only, never-negative behavior if we don't
+    have a real direction or a real park orientation to compare it to
+    (e.g. wind fetch failed, or - before FIX #1 - the park wasn't in
+    PARKS at all)."""
     if speed is None or speed < 5:
         return 0
+    if direction is None or park_orientation is None:
+        base = 2 if speed >= 15 else (1 if speed >= 8 else 0)
+        return base
+    diff = abs((direction - park_orientation + 180) % 360 - 180)
+    out_component = math.cos(math.radians(diff))  # +1 straight out, -1 straight in
     if speed >= 15:
-        return 2
+        return round(2 * out_component, 2)
     if speed >= 8:
-        return 1
+        return round(1 * out_component, 2)
     return 0
 
 
@@ -1128,20 +1130,16 @@ LEAGUE_AVG_BARREL = 0.075
 LEAGUE_AVG_EV = 88.5
 LEAGUE_AVG_HARDHIT = 0.36
 
-# How much the L15 (last-15-day) power read is trusted relative to season
-# power, INSIDE the power bucket - not a top-level weight, a blend ratio.
-# Deliberately well under 50%: L15 is a much smaller, noisier sample, so
-# it nudges the power score rather than overriding it.
 POWER_L15_WEIGHT = 0.35
-POWER_L15_MIN_PA = 15  # below this many L15 batted-ball events, ignore L15 entirely
-L15_ISO_MIN_PA = 30  # ISO needs more real PA than a batted-ball-count threshold to be trustworthy
+POWER_L15_MIN_PA = 15
+L15_ISO_MIN_PA = 30
 
 HOME_ROAD_MAX_ADJ = 0.06
 HOME_ROAD_MIN_PA = 60
 DAY_NIGHT_MAX_ADJ = 0.04
 DAY_NIGHT_MIN_PA = 60
-DOW_MAX_ADJ = 0.03      # smallest cap of any situational adjustment - see honesty note on day_of_week_split()
-DOW_MIN_PA = 25          # highest minimum sample of any situational adjustment, same reasoning
+DOW_MAX_ADJ = 0.03
+DOW_MIN_PA = 25
 
 
 def power_sample_weight(pa):
@@ -1181,11 +1179,10 @@ def home_road_adjustment(p):
 
 
 def day_of_week_adjustment(p):
-    """NEW v3.6, per explicit request - same bounded-multiplier pattern
-    as every other situational adjustment, but with the smallest cap and
-    highest minimum sample of any of them, reflecting how much thinner
-    this specific signal genuinely is (see day_of_week_split()'s honesty
-    note above)."""
+    """Same bounded-multiplier pattern as every other situational
+    adjustment, but with the smallest cap and highest minimum sample of
+    any of them, reflecting how much thinner this specific signal
+    genuinely is (see day_of_week_split()'s honesty note above)."""
     dow_rate = p.get("dowHrRate")
     dow_pa = p.get("dowPa") or 0
     overall_rate = p.get("seasonHrRate")
@@ -1217,17 +1214,29 @@ def day_night_adjustment(p):
     return 1 + adj
 
 
+def situational_multiplier_boost(p):
+    """FIX #3 (v3.12) helper, shared by compute_score() and
+    compute_hr_probability(). The old stacking dampener in both functions
+    only ever looked at [power, pitcher_s, recent] - every OTHER
+    multiplier (home/road, day/night, bullpen, day-of-week) could still
+    all line up favorably on the same player completely unchecked, since
+    each one alone is capped small. This sums how much those situational
+    multipliers, TOGETHER, are boosting a player above neutral (1.0), so
+    a pileup of several small favorable factors can trigger the same
+    dampening a single dominant factor would."""
+    mults = [
+        home_road_adjustment(p), day_night_adjustment(p),
+        bullpen_adjustment(p), day_of_week_adjustment(p),
+    ]
+    return sum(m - 1 for m in mults if m > 1)
+
+
 def compute_hr_subfactors(p):
-    """NEW v3.5: extracted from compute_score() so both the composite
-    score AND hrProb (the real calibrated probability model) build from
-    the SAME underlying reads - power, pitcher, platoon, recent,
-    opportunity, park, wind. Before this refactor, hrProb had its own
-    thinner, partially-duplicated version of some of this logic (season-
-    only power, no platoon/opportunity/park/wind at all) - the two
-    numbers could drift out of sync, and a fix applied to one (like the
-    v3.4 pure-L15 power fix) didn't automatically apply to the other.
-    Returns a dict of 0-1 normalized sub-scores plus a couple of raw
-    values (conf, avg_vs_mix) needed for display."""
+    """Extracted from compute_score() so both the composite score AND
+    hrProb build from the SAME underlying reads - power, pitcher,
+    platoon, recent, opportunity, park, wind. Returns a dict of 0-1
+    normalized sub-scores plus a couple of raw values (conf, avg_vs_mix)
+    needed for display."""
     barrel = p["barrel"] or 0
     ev = p["ev"] or 85
     iso = p["iso"] or 0
@@ -1242,15 +1251,6 @@ def compute_hr_subfactors(p):
     l15_ev = p.get("l15Ev")
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
-    # FIX (per formula review): this used to fully OVERRIDE season power
-    # with L15 power once l15_pa >= POWER_L15_MIN_PA - POWER_L15_WEIGHT was
-    # defined ("deliberately well under 50%... nudges the power score
-    # rather than overriding it") but never actually applied anywhere.
-    # Once a regular starter cleared ~15 batted-ball events (a few games),
-    # their ENTIRE power read became 100% last-15-days and the properly
-    # shrunk season number was computed and then discarded. Now it's a
-    # real blend at POWER_L15_WEIGHT, same shrink-toward-anchor philosophy
-    # every other rate stat in this file already gets.
     if l15_barrel is not None and l15_pa >= POWER_L15_MIN_PA:
         barrel_final = l15_barrel * POWER_L15_WEIGHT + barrel_season * (1 - POWER_L15_WEIGHT)
         ev_final = l15_ev * POWER_L15_WEIGHT + ev_season * (1 - POWER_L15_WEIGHT)
@@ -1279,18 +1279,6 @@ def compute_hr_subfactors(p):
     conf = barrel_confidence(barrel_final, ev_final)
     barrel_adj = barrel_final * conf
 
-    # NEW v3.10, per explicit request: real season HR total/rate is now a
-    # genuine 5th input to power, not just an implicit side effect of
-    # ISO. Every other power input here (barrel/EV/hard-hit%/ISO) is a
-    # PROXY for power - a real, well-established one, but still a proxy.
-    # Season HR rate is the actual realized outcome: how many home runs
-    # this player has actually hit this year, at what rate. A player
-    # with mediocre Statcast proxies but a genuinely proven, high-volume
-    # season total should get real credit for that; a player with good
-    # proxies but a low actual season total shouldn't get a full power
-    # score just because the proxy stats look nice on paper.
-    # ELITE_SEASON_HR_RATE ~0.055 HR/PA corresponds to roughly a 32-35 HR
-    # season pace over a full ~600 PA year - full credit at or above that.
     ELITE_SEASON_HR_RATE = 0.055
     season_hr_rate = p.get("seasonHrRate")
     season_hr_quality = clamp01(season_hr_rate / ELITE_SEASON_HR_RATE) if season_hr_rate is not None else 0.4
@@ -1303,15 +1291,12 @@ def compute_hr_subfactors(p):
     whip_s = clamp01((whip - 0.9) / 1.15)
     pitcher_s = (phr9_s + whip_s) / 2
 
+    # FIX #2 (v3.12): wind_s now reflects wind_score's real range (can be
+    # negative for in-blowing wind), same clamp01/normalize shape as
+    # before - the fix lives in wind_park_factor()/wind_score, not here.
     wind_s = clamp01((wind + 2) / 4)
     park_s = clamp01((park + 2) / 4)
 
-    # FIX (per formula review): l5hr/2 meant 2 HR in 5 games alone hit the
-    # full 1.0 ceiling on 40% of this bucket, with zero sample-size
-    # discount - unlike avgmix_confidence_blend()/risp_confidence_blend()/
-    # barrel_confidence(), which all shrink small samples toward an anchor.
-    # Widened denominators (6->9, 2->3) so hitting the ceiling requires a
-    # more sustained stretch, not one good week.
     recent = clamp01(l15hr / 9) * 0.6 + clamp01(l5hr / 3) * 0.4
 
     handedness_platoon = (crush + split) / 2
@@ -1347,17 +1332,12 @@ def compute_score(p):
     Built from the shared compute_hr_subfactors() so it can never drift
     from hrProb again.
 
-    FIX (per formula review, v3.11): Pitcher moved 20% -> 15%, Power moved
-    30% -> 35%. This is the field players.json is actually SORTED by
-    (see main()'s players.sort()), and pitcher_s - like park_s/wind_s - is
-    a property of the GAME, identical for every batter facing that
-    pitcher that day, not a property of the individual batter. At 20% it
-    was a second place (alongside the hrProb matchup multiplier already
-    dialed back) where a single bad-pitcher matchup could pull several
-    same-team hitters up together in board order regardless of how
-    different their own power actually was. Power picks up the
-    difference since it's the most genuinely batter-specific, differentiating
-    signal in the file."""
+    FIX #3 (v3.12): the stacking dampener previously only watched
+    [power, pitcher_s, recent]. It now also counts a large combined
+    situational boost (home/road + day/night + bullpen + day-of-week all
+    lining up favorably) as equivalent to one more "maxed" bucket, so a
+    pileup of small favorable factors can't sail through unchecked just
+    because none of them individually cleared STACK_THRESHOLD."""
     sf = compute_hr_subfactors(p)
     power, pitcher_s, platoon, recent, opportunity, park_s, wind_s = (
         sf["power"], sf["pitcher_s"], sf["platoon"], sf["recent"],
@@ -1369,8 +1349,11 @@ def compute_score(p):
     STACK_THRESHOLD = 0.75
     STACK_PENALTY_PER_EXTRA = 2.5
     STACK_PENALTY_MAX = 6.0
+    SITUATIONAL_BOOST_TRIGGER = 0.10  # combined situational mult boost this large counts as one more "maxed" bucket
     stack_buckets = [power, pitcher_s, recent]
     n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
+    if situational_multiplier_boost(p) >= SITUATIONAL_BOOST_TRIGGER:
+        n_maxed += 1
     if n_maxed > 1:
         stack_penalty = min(STACK_PENALTY_MAX, (n_maxed - 1) * STACK_PENALTY_PER_EXTRA)
         score -= stack_penalty
@@ -1378,7 +1361,7 @@ def compute_score(p):
     score *= home_road_adjustment(p)
     score *= day_night_adjustment(p)
     score *= bullpen_adjustment(p)
-    score *= day_of_week_adjustment(p)  # NEW v3.6
+    score *= day_of_week_adjustment(p)
     score = max(0.0, min(100.0, score))
 
     return {
@@ -1396,10 +1379,9 @@ def compute_score(p):
 
 
 def compute_hrr_score(p):
-    """HRR Board scoring - UNCHANGED weighting in v3 (OnBase 35 / Matchup
-    30 / Recent 15 / RISP 10 / Opportunity 10). Implicitly benefits from
-    the pitcher-recent-form WHIP blend since main() overwrites p["whip"]
-    before this runs - a side effect, not a deliberate reweighting."""
+    """HRR Board scoring - OnBase 35 / Matchup 30 / Recent 15 / RISP 10 /
+    Opportunity 10. Implicitly benefits from the pitcher-recent-form WHIP
+    blend since main() overwrites p["whip"] before this runs."""
     avg = p.get("avg") if p.get("avg") is not None else 0.240
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     iso = p["iso"] or 0
@@ -1433,8 +1415,7 @@ def compute_hrr_score(p):
 
 
 def compute_tb_score(p):
-    """TB Board scoring - UNCHANGED weighting in v3, same implicit-benefit
-    note as HRR above (reads p["whip"] too)."""
+    """TB Board scoring - same implicit-benefit note as HRR above."""
     avg = p.get("avg") if p.get("avg") is not None else 0.240
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     slg = p.get("slg") if p.get("slg") is not None else 0.390
@@ -1490,13 +1471,10 @@ LEAGUE_AVG_TB_CLEAR_RATE = 0.43
 
 
 def compute_hr_probability(p):
-    """NEW v3.5: comprehensive version - built from the SAME
-    compute_hr_subfactors() the composite score uses, so power
-    automatically includes pure-L15 barrel/EV/hard-hit% and real L15 ISO,
-    and platoon/opportunity/park/wind now genuinely factor in here too
-    (previously missing entirely). This is intended to become the
-    board's PRIMARY ranking number - a real calibrated probability
-    instead of a hand-weighted composite score."""
+    """Built from the SAME compute_hr_subfactors() the composite score
+    uses, so power automatically includes pure-L15 barrel/EV/hard-hit%
+    and real L15 ISO, and platoon/opportunity/park/wind factor in here
+    too."""
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
@@ -1509,33 +1487,10 @@ def compute_hr_probability(p):
         recent_rate = l15hr_for_rate / 15
 
     sf = compute_hr_subfactors(p)
-    power_quality = sf["power"]  # now L15-aware, same read compute_score uses
-    # FIX v3.7: the 2.0 power multiplier meant an elite slugger's baseline
-    # (~25%) was already nearly 2x an average hitter's (~13%) BEFORE any
-    # situational factor was even applied - a gap bigger than every
-    # situational adjustment combined (pitcher/platoon/opportunity/park/
-    # wind/home-road/day-night/bullpen/day-of-week) could ever close,
-    # since those are deliberately capped small. That's the real reason
-    # the same elite power bats kept topping the board regardless of
-    # matchup quality - not a bug in any one factor, but this multiplier
-    # structurally outweighing all of them combined. Reduced 2.0 -> 1.3,
-    # a real, deliberate tradeoff: power still matters most (as it should
-    # - it's the single best real predictor of HR outcomes), but a
-    # genuinely great matchup + situational profile can now actually
-    # compete with and occasionally outrank elite power, instead of only
-    # ever nudging around its edges.
+    power_quality = sf["power"]
     POWER_QUALITY_MULTIPLIER = 1.3
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
-    # FIX (per formula review): RECENT_TRUST was 0.6 - the board's PRIMARY
-    # ranking number (hrProb) gave a tiny 5/15-game HR-count window 60%
-    # weight against the season-quality-derived rate's 40%. A player with
-    # 2 HR in their last 5 games (a real but small sample) could swing
-    # recent_rate to ~0.4-per-game on its own, more than doubling the
-    # season-implied rate before any matchup/situational factor even
-    # applied. Dropped to 0.4 so season quality anchors the model the way
-    # every other rate stat in this file is already shrunk toward its
-    # anchor - recent form still matters, just not more than the season.
     RECENT_TRUST = 0.4
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
@@ -1545,73 +1500,30 @@ def compute_hr_probability(p):
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     pw_pitcher = pitcher_sample_weight(p.get("pip"))
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
-    # FIX v3.8: pitcher matchup sensitivity increased 0.5 -> 0.85, per
-    # explicit request - matchups need to genuinely matter, not just
-    # nudge. Real effect: a truly bad pitcher (2.15 HR/9) now boosts the
-    # probability ~67% instead of ~40%; a truly good one (0.8) now
-    # suppresses it ~28% instead of ~17%. Combined with the v3.7 power
-    # multiplier cut, this is a deliberate two-part rebalance: power
-    # still anchors the baseline (it's still the single best real
-    # predictor), but today's specific matchup can now swing the number
-    # much harder than it could before.
-    # FIX v3.8: pitcher matchup sensitivity increased 0.5 -> 0.85, per
-    # explicit request - matchups need to genuinely matter, not just
-    # nudge. Real effect: a truly bad pitcher (2.15 HR/9) now boosts the
-    # probability ~67% instead of ~40%; a truly good one (0.8) now
-    # suppresses it ~28% instead of ~17%. Combined with the v3.7 power
-    # multiplier cut, this is a deliberate two-part rebalance: power
-    # still anchors the baseline (it's still the single best real
-    # predictor), but today's specific matchup can now swing the number
-    # much harder than it could before.
-    #
-    # FIX (per formula review, v3.11): 0.85 turned out to be too strong in
-    # a way v3.8 didn't anticipate - phr9/park/wind/bullpen are ALL
-    # properties of the GAME, identical for every batter in that lineup,
-    # not properties of the individual batter. At 0.85, a genuinely bad
-    # starter could single-handedly swing every one of his opponents'
-    # probabilities up ~67% BEFORE any individual power difference between
-    # them was applied - strong enough to carry a mediocre-power hitter
-    # into the same PRIME tier as a legitimately elite bat just because
-    # they share a lineup that day, which is what was actually producing
-    # 3 same-team players stacking consecutively at the top of the board.
-    # Split the difference back down to 0.6 - matchups still matter
-    # meaningfully more than the original 0.5, just not so much that the
-    # shared game-level factor can swamp real per-batter power
-    # differentiation and homogenize an entire lineup's ranking.
     PITCHER_MATCHUP_SENSITIVITY = 0.6
     matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
     mean = max(0.01, base_rate * matchup_mult)
 
-    # NEW: platoon/opportunity/park/wind, previously entirely absent from
-    # this model, now apply as small bounded multiplicative nudges - each
-    # sub-factor is 0-1 (0.5 = neutral/average), so a nudge of
-    # (subfactor - 0.5) * NUDGE_STRENGTH keeps every individual factor's
-    # max swing modest (+/-7% at NUDGE_STRENGTH=0.14), matching the same
-    # "real but not dominant" philosophy as home/road and day/night.
     NUDGE_STRENGTH = 0.14
     for factor_val in (sf["platoon"], sf["opportunity"], sf["park_s"], sf["wind_s"]):
         mean *= 1 + (factor_val - 0.5) * NUDGE_STRENGTH
 
-    # Same bounded situational adjustments the composite score uses -
-    # keeps hrProb and the composite score reacting to the same real-world
-    # signals, even though hrProb is now the primary number.
     mean *= home_road_adjustment(p)
     mean *= day_night_adjustment(p)
     mean *= bullpen_adjustment(p)
-    mean *= day_of_week_adjustment(p)  # NEW v3.6
+    mean *= day_of_week_adjustment(p)
 
-    # FIX v3.9: the stacking dampener that already exists in compute_score()
-    # (penalizing power+pitcher+recent ALL being simultaneously maxed) was
-    # never carried over here when hrProb became the board's primary
-    # number - a real gap, not a tuning question. Expressed as a
-    # multiplicative reduction on the mean instead of a point deduction,
-    # since hrProb works in probability space, not a 0-100 score, but the
-    # same threshold and same three factors as compute_score()'s version.
+    # FIX #3 (v3.12): same situational-pileup guard added to compute_score()
+    # is now applied here too - previously this stacking dampener only
+    # checked [power, pitcher_s, recent], same gap as compute_score() had.
     STACK_THRESHOLD = 0.75
-    STACK_REDUCTION_PER_EXTRA = 0.08   # ~8% relative reduction per additional maxed factor
-    STACK_REDUCTION_MAX = 0.20          # capped at a 20% relative reduction, never more
+    STACK_REDUCTION_PER_EXTRA = 0.08
+    STACK_REDUCTION_MAX = 0.20
+    SITUATIONAL_BOOST_TRIGGER = 0.10
     stack_buckets = [sf["power"], sf["pitcher_s"], sf["recent"]]
     n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
+    if situational_multiplier_boost(p) >= SITUATIONAL_BOOST_TRIGGER:
+        n_maxed += 1
     if n_maxed > 1:
         reduction = min(STACK_REDUCTION_MAX, (n_maxed - 1) * STACK_REDUCTION_PER_EXTRA)
         mean *= (1 - reduction)
@@ -1621,17 +1533,6 @@ def compute_hr_probability(p):
     raw_prob = poisson_over_prob(mean, 0.5)
     if raw_prob is None:
         return None
-    # FIX v3.5: soft ceiling instead of a hard clip. min(raw_prob, 0.30)
-    # meant ANY player whose real computed value exceeded 30% - whether
-    # it was 31% or 60% - got flattened to the exact same 30.0%. Once
-    # multiple players hit that identical number (easy now that hrProb
-    # is comprehensive and several bounded adjustments can all stack in
-    # the same direction at once), there's nothing left to actually rank
-    # them against each other by - that's what was showing up as "cards
-    # not in order." Below HR_PROB_SOFT_START, nothing changes at all -
-    # only the genuinely extreme tail gets smoothly compressed toward the
-    # ceiling instead of hard-chopped, so real differentiation survives
-    # exactly where ranking matters most: at the very top of the board.
     HR_PROB_SOFT_START = 0.22
     HR_PROB_CEILING = 0.30
     if raw_prob <= HR_PROB_SOFT_START:
@@ -1794,17 +1695,6 @@ def main():
           f"{len(todays_pitcher_ids)} probable starters "
           f"({len(todays_pitcher_ids) - len(reliable_pitcher_stats)} still falling back to the bulk list/default)")
 
-    # REMOVED in v3.3: the last-3-starts recent-form blend for phr9/whip.
-    # Even dampened (0.6x) and widened, it was still nudging pitcher HR9/
-    # WHIP away from their real season numbers (confirmed live: a pitcher
-    # showing 1.96 blended HR9 when his actual season rate was 1.77) -
-    # a real, factual inaccuracy on the card, not just a tuning question.
-    # phr9/whip are now the pitcher's REAL season rate, full stop - no
-    # recency adjustment. get_pitcher_recent_form() is left defined below
-    # in case a properly-isolated, clearly-labeled "recent trend" display
-    # stat is wanted later, but it is NOT used in any scoring calculation
-    # anymore.
-
     print("Fetching season batting stats (ISO)...")
     batting_stats = get_season_batting_stats()
 
@@ -1819,8 +1709,6 @@ def main():
     print("Fetching pitch-mix data (batter vs pitch type, pitcher usage)...")
     batter_pitch_data, pitcher_pitch_mix, batter_pitch_avg = fetch_pitch_mix_data()
 
-    # NEW in v3.2: each playing team's bullpen quality, fetched ONCE per
-    # team (not per batter) and cached - see get_team_bullpen_stats().
     print("Fetching bullpen quality for today's teams...")
     all_team_ids = set()
     for g in games:
@@ -1853,7 +1741,7 @@ def main():
             team = g[f"{side}_team"]
             team_id = g[f"{side}_team_id"]
             opp_pitcher = g[f"{opp_side}_pitcher"]
-            opp_team_id = g[f"{opp_side}_team_id"]  # NEW v3.2: needed unconditionally for bullpen lookup
+            opp_team_id = g[f"{opp_side}_team_id"]
             pitcher_confirmed = True
             if not opp_pitcher:
                 opp_pitcher = get_recent_starter(opp_team_id)
@@ -1873,15 +1761,20 @@ def main():
             pitcher_stat = reliable_pitcher_stats.get(
                 pitcher_id, pitching_stats.get(pitcher_id, {"whip": 1.30, "hr9": 1.20}))
 
-            # REMOVED in v3.3: no recent-form blend - pure real season rate.
             effective_hr9 = pitcher_stat.get("hr9", 1.20)
             effective_whip = pitcher_stat.get("whip", 1.30)
 
-            park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None})
+            # FIX #1 (v3.12): every home team now has a real PARKS entry
+            # (all 30 present), so this .get() fallback should no longer
+            # actually trigger for a real MLB team - left in place only as
+            # a genuine defensive fallback (e.g. an unrecognized abbrev).
+            park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None, "orient": None})
             wind_speed, wind_dir = (None, None)
-            if park["lat"] is not None:
+            if park.get("lat") is not None:
                 wind_speed, wind_dir = get_wind(park["lat"], park["lon"])
-            wind_score = wind_park_factor(wind_speed, wind_dir)
+            # FIX #2 (v3.12): pass wind direction + park orientation through
+            # so wind can now suppress, not just boost.
+            wind_score = wind_park_factor(wind_speed, wind_dir, park.get("orient"))
 
             lineup = get_lineup(g["game_pk"], side)
             lineup_confirmed = True
@@ -1923,11 +1816,11 @@ def main():
                     "playerId": batter_id,
                     "pitchMixMatch": compute_pitch_mix_match(
                         batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix),
-                    "avgVsMix": avg_vs_mix_val,  # NEW v3.2
-                    "avgVsMixPa": avg_vs_mix_pa,  # NEW v3.2
-                    "oppBullpenEra": bullpen_cache.get(opp_team_id, {}).get("bullpenEra"),   # NEW v3.2
-                    "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"), # NEW v3.2
-                    "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),     # NEW v3.2
+                    "avgVsMix": avg_vs_mix_val,
+                    "avgVsMixPa": avg_vs_mix_pa,
+                    "oppBullpenEra": bullpen_cache.get(opp_team_id, {}).get("bullpenEra"),
+                    "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"),
+                    "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
@@ -1981,8 +1874,6 @@ def main():
         last20 = games_this_year[-20:]
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
-        # NEW v3.4: real L15 ISO (extra bases per PA), built from the same
-        # last-15-game window already sliced above - no new API call.
         l15_games_for_iso = games_this_year[-15:] if games_this_year else []
         l15_iso_pa = sum(g["pa"] for g in l15_games_for_iso)
         l15_iso_val = (round((sum(g["tb"] for g in l15_games_for_iso) - sum(g["hits"] for g in l15_games_for_iso)) / l15_iso_pa, 3)
@@ -2000,7 +1891,7 @@ def main():
         risp = get_risp_avg(batter_id)
 
         hr_road = home_road_split(games_this_year) if games_this_year else {}
-        dow_hr_rate, dow_pa = day_of_week_split(games_this_year, TODAY_WEEKDAY) if games_this_year else (None, 0)  # NEW v3.6
+        dow_hr_rate, dow_pa = day_of_week_split(games_this_year, TODAY_WEEKDAY) if games_this_year else (None, 0)
         day_night = get_day_night_split(batter_id)
         season_pa = sum(g["pa"] for g in games_this_year) if games_this_year else 0
         season_hr = sum(g["hr"] for g in games_this_year) if games_this_year else 0
@@ -2008,8 +1899,8 @@ def main():
 
         player_row["avgmix"] = platoon_avg
         player_row["l15hr"] = l15hr
-        player_row["l15Iso"] = l15_iso_val  # NEW v3.4
-        player_row["l15IsoPa"] = l15_iso_pa  # NEW v3.4
+        player_row["l15Iso"] = l15_iso_val
+        player_row["l15IsoPa"] = l15_iso_pa
         player_row["l5hr"] = l5hr
         player_row["l15hrCredit"] = l15hr_credit
         player_row["l5hrCredit"] = l5hr_credit
@@ -2028,8 +1919,8 @@ def main():
         player_row["nightHrRate"] = day_night.get("nightHrRate")
         player_row["nightPa"] = day_night.get("nightPa")
         player_row["seasonHrRate"] = season_hr_rate
-        player_row["dowHrRate"] = dow_hr_rate  # NEW v3.6
-        player_row["dowPa"] = dow_pa  # NEW v3.6
+        player_row["dowHrRate"] = dow_hr_rate
+        player_row["dowPa"] = dow_pa
         player_row["gamelog"] = {
             "games": last20,
             "l5": window_stats(last20[-5:]),
@@ -2166,12 +2057,9 @@ def main():
 
 
 def write_daily_snapshot(players):
-    """Daily snapshot for the historical accuracy tracker. EXPANDED in v3:
-    now also saves the raw inputs compute_score() actually used - not just
-    the final score. This is what makes a real future backtest possible:
-    re-running a DIFFERENT weighting formula against what a player's
-    inputs actually were on a given day, rather than only ever having the
-    one score that was actually shown."""
+    """Daily snapshot for the historical accuracy tracker - saves the raw
+    inputs compute_score() actually used, not just the final score, so a
+    real future backtest is possible."""
     os.makedirs("history", exist_ok=True)
     date_str = TODAY
     snapshot = []
@@ -2206,12 +2094,12 @@ def write_daily_snapshot(players):
                 "dayHrRate": p.get("dayHrRate"), "dayPa": p.get("dayPa"),
                 "nightHrRate": p.get("nightHrRate"), "nightPa": p.get("nightPa"),
                 "seasonHrRate": p.get("seasonHrRate"),
-                "dowHrRate": p.get("dowHrRate"), "dowPa": p.get("dowPa"),  # NEW v3.6
-                "avgVsMix": p.get("avgVsMix"), "avgVsMixPa": p.get("avgVsMixPa"),  # NEW v3.2
-                "l15Iso": p.get("l15Iso"), "l15IsoPa": p.get("l15IsoPa"),  # NEW v3.4
-                "oppBullpenEra": p.get("oppBullpenEra"),  # NEW v3.2
-                "oppBullpenWhip": p.get("oppBullpenWhip"),  # NEW v3.2
-                "oppBullpenIp": p.get("oppBullpenIp"),  # NEW v3.2
+                "dowHrRate": p.get("dowHrRate"), "dowPa": p.get("dowPa"),
+                "avgVsMix": p.get("avgVsMix"), "avgVsMixPa": p.get("avgVsMixPa"),
+                "l15Iso": p.get("l15Iso"), "l15IsoPa": p.get("l15IsoPa"),
+                "oppBullpenEra": p.get("oppBullpenEra"),
+                "oppBullpenWhip": p.get("oppBullpenWhip"),
+                "oppBullpenIp": p.get("oppBullpenIp"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
