@@ -1856,7 +1856,16 @@ def compute_hr_probability(p):
     # once - a whole lineup inherits it simultaneously. This tuning
     # keeps the signal directionally strong while narrowing how much any
     # one pitcher can single-handedly stack a chunk of the board.
-    PITCHER_MATCHUP_SENSITIVITY = 0.45
+    #
+    # v3.25: nudged back up 0.45 -> 0.5, splitting the difference with
+    # the original 0.6. 0.45 pulled back too far in the other direction -
+    # a real, strong pitcher matchup (elite or terrible) should still
+    # meaningfully separate two hitters, and the v3.20 power-gating fix
+    # already protects against the original problem (a bad-matchup boost
+    # inflating a low-power hitter) independently of this constant, so
+    # there's room to trust matchup quality more without reopening that
+    # issue.
+    PITCHER_MATCHUP_SENSITIVITY = 0.5
     raw_matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
     matchup_mult = 1 + (raw_matchup_mult - 1) * matchup_strength
     mean = max(0.01, base_rate * matchup_mult)
