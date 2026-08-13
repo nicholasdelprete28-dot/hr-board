@@ -1434,6 +1434,38 @@ def compute_hr_subfactors(p):
     l15_hardhit = p.get("l15Hardhit")
     l15_pa = p.get("l15PowerPa") or 0
     lw = l15_weight(l15_pa, POWER_L15_MIN_PA)
+
+    # v3.23: MULTI-METRIC AGREEMENT. The shrinkage above treats every L15
+    # sample the same regardless of whether barrel%/EV/hard-hit% are
+    # moving together or independently - but a real, coordinated decline
+    # (or surge) across all three is much stronger evidence of a genuine
+    # change than any single metric wobbling on its own, which is exactly
+    # the kind of noise the base shrinkage exists to guard against. This
+    # boosts trust in the L15 read ONLY when at least 2 of the 3 metrics
+    # have moved a real amount off season AND agree on direction - a lone
+    # metric moving (even a big move) gets no boost, since that's the
+    # single-metric-noise case shrinkage is already built for. Capped
+    # well short of fully overriding the season anchor even with total
+    # agreement - this is extra trust, not a replacement for it.
+    if lw > 0 and l15_barrel is not None and l15_ev is not None and l15_hardhit is not None:
+        AGREEMENT_MIN_BARREL = 0.02    # 2 percentage points
+        AGREEMENT_MIN_EV = 1.0         # 1 mph
+        AGREEMENT_MIN_HARDHIT = 0.03   # 3 percentage points
+        AGREEMENT_CAP = 0.55
+        barrel_diff = l15_barrel - barrel_season
+        ev_diff = l15_ev - ev_season
+        hardhit_diff = l15_hardhit - hardhit_season
+        moves = []
+        if abs(barrel_diff) >= AGREEMENT_MIN_BARREL:
+            moves.append(1 if barrel_diff > 0 else -1)
+        if abs(ev_diff) >= AGREEMENT_MIN_EV:
+            moves.append(1 if ev_diff > 0 else -1)
+        if abs(hardhit_diff) >= AGREEMENT_MIN_HARDHIT:
+            moves.append(1 if hardhit_diff > 0 else -1)
+        if len(moves) >= 2 and len(set(moves)) == 1:
+            boost = 2.0 if len(moves) == 3 else 1.5
+            lw = min(AGREEMENT_CAP, lw * boost)
+
     if l15_barrel is not None and lw > 0:
         barrel_final = l15_barrel * lw + barrel_season * (1 - lw)
         ev_final = l15_ev * lw + ev_season * (1 - lw)
