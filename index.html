@@ -378,6 +378,7 @@
     letter-spacing:0.4px; display:block; margin-bottom:4px; white-space:nowrap;
   }
   .statbox .sbval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--text);}
+  .statbox .sbsub{font-family:var(--mono); font-size:8px; color:var(--muted2); display:block; margin-top:2px;}
   .statbox.good .sbval{color:var(--stat-good); text-shadow:0 0 10px rgba(66,232,150,0.45);}
   .statbox.bad .sbval{color:var(--stat-bad); text-shadow:0 0 10px rgba(255,150,56,0.4);}
   .statbox.verybad .sbval{color:var(--stat-verybad); text-shadow:0 0 10px rgba(255,66,66,0.45);}
@@ -1254,7 +1255,7 @@ function renderStatboxes(items){
   return items.map((it, i) => {
     const isTrailing = trailing !== 0 && i >= items.length - trailing;
     const span = trailing === 1 && isTrailing ? 6 : (trailing === 2 && isTrailing ? 3 : 2);
-    return `<div class="statbox ${it.tier || ''}" style="grid-column:span ${span};"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span></div>`;
+    return `<div class="statbox ${it.tier || ''}" style="grid-column:span ${span};"><span class="sblabel">${it.label}</span><span class="sbval">${it.display}</span>${it.sub ? `<span class="sbsub">${it.sub}</span>` : ''}</div>`;
   }).join('');
 }
 
@@ -1369,17 +1370,24 @@ function render(){
         { label: 'Pitcher HR/9', display: fmtNum(p.phr9, 2),
           tier: statTier(p.phr9, { good: 1.3, bad: 0.8, veryBad: 0.5 }) },
         { label: 'L15 HR', display: p.l15hr == null ? 'N/A' : p.l15hr,
-          tier: statTier(p.l15hr, { good: 3 }) },
+          tier: statTier(p.l15hr, { good: 3 }),
+          sub: p.l15IsoPa != null ? `${p.l15IsoPa} PA` : null },
         { label: 'L5 HR', display: p.l5hr == null ? 'N/A' : p.l5hr,
-          tier: statTier(p.l5hr, { good: 2 }) },
-        { label: 'Wind', display: (p.wind > 0 ? '+' : '') + p.wind,
-          tier: statTier(p.wind, { good: 1, bad: -1, veryBad: -2 }) },
+          tier: statTier(p.l5hr, { good: 2 }),
+          sub: p.l5Pa != null ? `${p.l5Pa} PA` : null },
+        { label: 'Wind / Temp', display: p.windDesc || ((p.wind > 0 ? '+' : '') + p.wind),
+          tier: statTier(p.wind, { good: 1, bad: -1, veryBad: -2 }),
+          sub: p.temp != null ? `${Math.round(p.temp)}\u00b0F` : null },
         { label: 'Pitcher WHIP', display: fmtNum(p.whip, 2),
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
         { label: 'Barrel% (L15)', display: fmtPct(l15BarrelVal),
-          tier: statTier(l15BarrelVal, { good: 0.12, bad: 0.05, veryBad: 0.02 }) },
+          tier: statTier(l15BarrelVal, { good: 0.12, bad: 0.05, veryBad: 0.02 }),
+          sub: p.l15PowerPa != null ? `${p.l15PowerPa} BBE` : null },
         { label: 'Hard Hit% (L15)', display: fmtPct(p.hardhit),
-          tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }) },
+          tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }),
+          sub: p.l15PowerPa != null ? `${p.l15PowerPa} BBE` : null },
+        { label: 'Launch Angle (L15)', display: p.l15LaunchAngle == null ? 'N/A' : fmtNum(p.l15LaunchAngle, 1) + '\u00b0',
+          tier: statTier(p.l15LaunchAngle, { good: 22, bad: 8, veryBad: 0 }) },
         { label: 'Season ISO', display: fmtNum(p.iso, 3),
           tier: statTier(p.iso, { good: 0.200, bad: 0.120, veryBad: 0.080 }) },
       ]) : boardMode === 'hrr' ? renderStatboxes([
