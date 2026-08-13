@@ -1362,11 +1362,21 @@ function render(){
     const cardScore = p[scoreField()];
     const avgVsMixVal = p.avgVsMix != null ? p.avgVsMix : p.avgmix;
     const l15BarrelVal = p.l15Barrel != null ? p.l15Barrel : p.barrel;  // FIX: was showing season value under an L15 label
+    // v3.22: same fix extended to EV and hard-hit%, which had the exact
+    // same bug (season value shown under an "(L15)" label) that barrel%
+    // was already fixed for above - just never propagated to these two.
+    // A real recent power fade/surge (the chip) could be completely
+    // invisible in these numbers before, since an established hitter's
+    // strong season EV/hard-hit% would mask a real recent cold stretch,
+    // and vice versa for someone heating up.
+    const l15EvVal = p.l15Ev != null ? p.l15Ev : p.ev;
+    const l15HardhitVal = p.l15Hardhit != null ? p.l15Hardhit : p.hardhit;
     const statboxes = boardMode === 'hr' ? renderStatboxes([
         { label: 'AVG vs Mix', display: fmtNum(avgVsMixVal, 3),
           tier: statTier(avgVsMixVal, { good: 0.300, bad: 0.230, veryBad: 0.180 }) },
-        { label: 'Exit Velo (L15)', display: fmtNum(p.ev, 1),
-          tier: statTier(p.ev, { good: 91, bad: 86, veryBad: 83 }) },
+        { label: 'Exit Velo (L15)', display: fmtNum(l15EvVal, 1),
+          tier: statTier(l15EvVal, { good: 91, bad: 86, veryBad: 83 }),
+          sub: p.ev != null ? `Season ${fmtNum(p.ev, 1)}` : null },
         { label: 'Pitcher HR/9', display: fmtNum(p.phr9, 2),
           tier: statTier(p.phr9, { good: 1.3, bad: 0.8, veryBad: 0.5 }) },
         { label: 'L15 HR', display: p.l15hr == null ? 'N/A' : p.l15hr,
@@ -1382,10 +1392,10 @@ function render(){
           tier: statTier(p.whip, { good: 1.35, bad: 1.05, veryBad: 0.90 }) },
         { label: 'Barrel% (L15)', display: fmtPct(l15BarrelVal),
           tier: statTier(l15BarrelVal, { good: 0.12, bad: 0.05, veryBad: 0.02 }),
-          sub: p.l15PowerPa != null ? `${p.l15PowerPa} BBE` : null },
-        { label: 'Hard Hit% (L15)', display: fmtPct(p.hardhit),
-          tier: statTier(p.hardhit, { good: 0.45, bad: 0.25, veryBad: 0.15 }),
-          sub: p.l15PowerPa != null ? `${p.l15PowerPa} BBE` : null },
+          sub: (p.l15PowerPa != null ? `${p.l15PowerPa} BBE` : '') + (p.barrel != null ? ` \u00b7 Szn ${fmtPct(p.barrel)}` : '') },
+        { label: 'Hard Hit% (L15)', display: fmtPct(l15HardhitVal),
+          tier: statTier(l15HardhitVal, { good: 0.45, bad: 0.25, veryBad: 0.15 }),
+          sub: (p.l15PowerPa != null ? `${p.l15PowerPa} BBE` : '') + (p.hardhit != null ? ` \u00b7 Szn ${fmtPct(p.hardhit)}` : '') },
         { label: 'Launch Angle (L15)', display: p.l15LaunchAngle == null ? 'N/A' : fmtNum(p.l15LaunchAngle, 1) + '\u00b0',
           tier: statTier(p.l15LaunchAngle, { good: 22, bad: 8, veryBad: 0 }) },
         { label: 'Season ISO', display: fmtNum(p.iso, 3),
