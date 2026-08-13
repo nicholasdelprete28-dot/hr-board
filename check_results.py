@@ -7,10 +7,28 @@ actually happened, and tallies how often each favorability tier (PRIME/
 STRONG/IN PLAY/LONG SHOT) actually hit its line - a real, honest track
 record instead of just trusting the model blindly.
 
+WHAT CHANGED (per-player outcomes file, for the frontend day-switcher):
+Everything below the results/accuracy_summary.json logic already existed
+and is unchanged. What's new is history/outcomes/{date}.json - previously
+this script only ever kept AGGREGATE hit/total counts per tier, and threw
+away the actual per-player result (get_actual_batter_line /
+get_actual_pitcher_k) the moment it was used to grade a tier. There was
+nowhere that recorded "did THIS specific player actually hit a HR that
+day." The new outcomes file fixes that:
+
+    {"batter": {"<playerId>": {"hr": 0, "hrr": 1, "tb": 1}, ...},
+     "pitcher": {"<playerId>": {"k": 6}, ...}}
+
+so the site's day-switcher can mark historical cards with real results,
+not just show the model's original prediction with no way to check it.
+
 Meant to run once daily, well after all games nationwide are final (e.g.
 overnight) - checking a date whose games are still in progress will just
 show a lot of players with no result yet, since get_actual_*() only finds
-a game log entry once MLB has posted final stats for it.
+a game log entry once MLB has posted final stats for it. Note that West
+Coast games can run past 1 AM Eastern, so "overnight" should mean genuinely
+late (or just rely on the default "yesterday" behavior from a scheduled
+run early the following morning) rather than right at midnight.
 
 Usage:
     python3 check_results.py                # checks yesterday
@@ -169,12 +187,21 @@ def check_date(date_str):
     checked = 0
     skipped_no_result = 0
 
+    # NEW: per-player actual outcomes, keyed by playerId (as a string, to
+    # match JSON object key requirements and the frontend's lookup) - this
+    # is what history/outcomes/{date}.json gets built from below. Separate
+    # from `results` (which only ever holds tier-level hit/total counts) -
+    # this keeps the individual real result for every player actually
+    # graded, batters and pitchers each in their own bucket.
+    player_outcomes = {"batter": {}, "pitcher": {}}
+
     for p in snapshot:
         if p.get("playerType") == "pitcher":
             actual_k = get_actual_pitcher_k(p["playerId"], date_str)
             if actual_k is None:
                 skipped_no_result += 1
                 continue
+            player_outcomes["pitcher"][str(p["playerId"])] = {"k": actual_k}
             if p.get("kScore") is None or p.get("kLine") is None:
                 continue
             tier = tier_for(p["kScore"], K_TIERS)
@@ -185,6 +212,9 @@ def check_date(date_str):
             if actual is None:
                 skipped_no_result += 1
                 continue
+            player_outcomes["batter"][str(p["playerId"])] = {
+                "hr": actual["hr"], "hrr": actual["hrr"], "tb": actual["tb"],
+            }
             for board, score_key, threshold in [
                 ("hr", "score", 1), ("hrr", "hrrScore", 2), ("tb", "tbScore", 2)
             ]:
@@ -196,6 +226,17 @@ def check_date(date_str):
             checked += 1
 
     print(f"Checked {date_str}: {checked} players graded, {skipped_no_result} skipped (no game/result found).")
+
+    # NEW: write the per-player outcomes file. Written regardless of
+    # whether any tier-grading happened above (e.g. even if a player was
+    # missing score/kScore/kLine, we still record his real result here if
+    # we found one) - this file is meant to be the complete real record of
+    # what happened, independent of the model's own tier cutoffs.
+    os.makedirs("history/outcomes", exist_ok=True)
+    with open(f"history/outcomes/{date_str}.json", "w") as f:
+        json.dump(player_outcomes, f, indent=2)
+    print(f"Wrote per-player outcomes to history/outcomes/{date_str}.json "
+          f"({len(player_outcomes['batter'])} batters, {len(player_outcomes['pitcher'])} pitchers)")
 
     # Real league-wide coverage: of everyone who ACTUALLY hit the mark
     # today, across all of MLB - not just our tracked list - how many
