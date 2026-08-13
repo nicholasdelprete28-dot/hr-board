@@ -167,6 +167,23 @@
 
   .list{padding-top:14px; display:flex; flex-direction:column; gap:12px;}
 
+  /* Responsive card grid: below this width the cards stay a single
+     stacked column (unchanged) - this design's stat grid, chip row, and
+     sportsbook odds box need real room to stay legible, so cramming 3
+     across on a phone-width screen would just make everything
+     unreadable. At 880px+ there's enough room for 3 genuinely legible
+     ~370px+ cards, and the whole page (header/search/filters/list) widens
+     together via --content-width so nothing above the grid looks
+     narrower than the grid itself. */
+  @media (min-width: 880px){
+    :root{ --content-width: 1180px; }
+    .list{
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:16px;
+    }
+  }
+
   .card{
     background:var(--surface2); border:1px solid var(--line); border-radius:16px;
     padding:20px 22px; transition:border-color .2s ease, transform .2s ease, box-shadow .2s ease;
@@ -380,7 +397,7 @@
     z-index:200; display:flex; align-items:center; justify-content:center; padding:24px 14px;
   }
   .modal-panel{
-    background:var(--bg); width:100%; max-width:var(--content-width);
+    background:var(--bg); width:100%; max-width:600px;
     max-height:88vh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch;
     border-radius:20px; border:1px solid var(--line);
     padding:16px 16px 30px; box-shadow:0 20px 60px rgba(0,0,0,0.6);
