@@ -1444,14 +1444,24 @@ def compute_hr_subfactors(p):
     # boosts trust in the L15 read ONLY when at least 2 of the 3 metrics
     # have moved a real amount off season AND agree on direction - a lone
     # metric moving (even a big move) gets no boost, since that's the
-    # single-metric-noise case shrinkage is already built for. Capped
-    # well short of fully overriding the season anchor even with total
-    # agreement - this is extra trust, not a replacement for it.
+    # single-metric-noise case shrinkage is already built for.
+    #
+    # v3.24: 3-of-3 agreement now trusted MUCH more than 2-of-3. Real
+    # case that exposed the old 1.5x/2.0x split as too conservative: a
+    # hitter with ALL THREE metrics agreeing on a real decline (EV -4.6,
+    # barrel -9.6pp, hard-hit% -18.8pp) barely moved, because the boosted
+    # weight (~0.21) still wasn't enough to meaningfully cut into an
+    # elite season anchor - the cap (0.55) was never actually the
+    # constraint, the multiplier was too small to get anywhere near it.
+    # All 3 metrics agreeing is qualitatively stronger evidence than 2 of
+    # 3 (which could still be one coincidental pair) - the trust gap
+    # between them should be bigger than it was.
     if lw > 0 and l15_barrel is not None and l15_ev is not None and l15_hardhit is not None:
         AGREEMENT_MIN_BARREL = 0.02    # 2 percentage points
         AGREEMENT_MIN_EV = 1.0         # 1 mph
         AGREEMENT_MIN_HARDHIT = 0.03   # 3 percentage points
-        AGREEMENT_CAP = 0.55
+        AGREEMENT_CAP_2OF3 = 0.40
+        AGREEMENT_CAP_3OF3 = 0.60
         barrel_diff = l15_barrel - barrel_season
         ev_diff = l15_ev - ev_season
         hardhit_diff = l15_hardhit - hardhit_season
@@ -1463,8 +1473,10 @@ def compute_hr_subfactors(p):
         if abs(hardhit_diff) >= AGREEMENT_MIN_HARDHIT:
             moves.append(1 if hardhit_diff > 0 else -1)
         if len(moves) >= 2 and len(set(moves)) == 1:
-            boost = 2.0 if len(moves) == 3 else 1.5
-            lw = min(AGREEMENT_CAP, lw * boost)
+            if len(moves) == 3:
+                lw = min(AGREEMENT_CAP_3OF3, lw * 4.0)
+            else:
+                lw = min(AGREEMENT_CAP_2OF3, lw * 1.5)
 
     if l15_barrel is not None and lw > 0:
         barrel_final = l15_barrel * lw + barrel_season * (1 - lw)
