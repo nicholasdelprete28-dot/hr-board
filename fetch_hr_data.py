@@ -1207,6 +1207,7 @@ LEAGUE_AVG_ISO = 0.150
 LEAGUE_AVG_BARREL = 0.075
 LEAGUE_AVG_EV = 88.5
 LEAGUE_AVG_HARDHIT = 0.36
+LEAGUE_AVG_HR_RATE_PA = 0.033  # league-average HR rate per PA (~3.3%), for shrinking small samples
 
 POWER_L15_WEIGHT = 0.35
 POWER_L15_MIN_PA = 15
@@ -1218,6 +1219,8 @@ DAY_NIGHT_MAX_ADJ = 0.04
 DAY_NIGHT_MIN_PA = 60
 DOW_MAX_ADJ = 0.03
 DOW_MIN_PA = 25
+TREND_MAX_ADJ = 0.06
+TREND_MIN_PA = 40  # need a genuinely real L30 sample before trusting a trend read at all
 
 
 def power_sample_weight(pa):
@@ -1289,6 +1292,34 @@ def day_night_adjustment(p):
     raw_ratio = relevant_rate / overall_rate
     adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
     adj = max(-DAY_NIGHT_MAX_ADJ, min(DAY_NIGHT_MAX_ADJ, adj))
+    return 1 + adj
+
+
+def trend_adjustment(p):
+    """v3.17: bounded multiplier comparing this player's L15 HR rate
+    against his OWN longer L30 window - a stable, PA-larger baseline
+    rather than a flat season aggregate. This is real within-season trend
+    detection (heating up / cooling down) that a season-long rate can't
+    see, without the noise risk of splitting an already-thin L15 sample
+    in half to fit a slope (see the KNOWN LIMITATION note at the top of
+    this file - this directly addresses that gap, the cheap and low-
+    noise way rather than the aggressive one).
+
+    This is treated as genuine player-specific signal (like `recent`),
+    NOT situational noise - it does not participate in the stacking
+    dampener the way home/road, day/night, bullpen, and day-of-week do
+    (see situational_multiplier_boost() and the v3.15 notes on why those
+    four are kept separate from real performance signal)."""
+    l15_rate = p.get("l15hrRate")
+    l30_rate = p.get("l30hrRate")
+    l30_pa = p.get("l30Pa") or 0
+    if l15_rate is None or l30_rate is None or l30_rate <= 0:
+        return 1.0
+    if l30_pa < TREND_MIN_PA:
+        return 1.0
+    raw_ratio = l15_rate / l30_rate
+    adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
+    adj = max(-TREND_MAX_ADJ, min(TREND_MAX_ADJ, adj))
     return 1 + adj
 
 
@@ -1395,11 +1426,22 @@ def compute_hr_subfactors(p):
     quality_of_contact = (barrel_n + ev_n + hardhit_n) / 3
 
     iso_n = clamp01((iso_final - 0.08) / 0.27)            # floor .080, peak-season ceiling .350
+
+    # v3.15: season HR rate now gets the SAME sample-size shrinkage every
+    # other power component already gets (barrel/EV/hard-hit/ISO all
+    # blend toward league average via `pw` above) - this was the one
+    # component still using a raw, unshrunk rate. Without shrinkage, a
+    # guy with 3 HR in 25 PA (12% rate, pure small-sample noise) would
+    # max this component out completely - scoring HIGHER than a real
+    # 25-HR, 500-PA season (5.5% rate), which is backwards. `pw` is
+    # already computed above from the same PA count used for the other
+    # components, so this is just applying the existing pattern here too.
     HR_RATE_FLOOR = 0.01
     HR_RATE_CEIL = 0.07                                    # ~peak Judge/Ohtani-level season rate
-    season_hr_rate = p.get("seasonHrRate")
-    hr_rate_n = (clamp01((season_hr_rate - HR_RATE_FLOOR) / (HR_RATE_CEIL - HR_RATE_FLOOR))
-                 if season_hr_rate is not None else 0.3)
+    season_hr_rate_raw = p.get("seasonHrRate")
+    season_hr_rate_shrunk = (season_hr_rate_raw * pw + LEAGUE_AVG_HR_RATE_PA * (1 - pw)
+                              if season_hr_rate_raw is not None else LEAGUE_AVG_HR_RATE_PA)
+    hr_rate_n = clamp01((season_hr_rate_shrunk - HR_RATE_FLOOR) / (HR_RATE_CEIL - HR_RATE_FLOOR))
     converted_power = (iso_n + hr_rate_n) / 2
 
     power = quality_of_contact * 0.55 + converted_power * 0.45
@@ -1415,7 +1457,24 @@ def compute_hr_subfactors(p):
     wind_s = clamp01((wind + 2) / 4)
     park_s = clamp01((park + 2) / 4)
 
-    recent = clamp01(l15hr / 9) * 0.6 + clamp01(l5hr / 3) * 0.4
+    # v3.16: recent HR bucket now REGRESSED toward this player's own
+    # power level, weighted by real recent PA sample size - separately
+    # for the L15 and L5 windows, since a burst that's really just his
+    # last 2 games can inflate the L5 rate hugely even though it's PA-
+    # thin. Previously this used raw HR counts against a fixed cap with
+    # zero regard for how many actual plate appearances backed them up -
+    # exactly the small-sample problem already fixed everywhere else in
+    # this file (barrel%/EV/hard-hit%/ISO/season HR rate), just not here
+    # yet. A modest-power hitter's 2-game hot streak now gets pulled back
+    # toward what he actually is instead of standing on its own.
+    RECENT_SHRINK_K = 20
+    l15_recent_pa = p.get("l15IsoPa") or 0
+    l5_recent_pa = p.get("l5Pa") or 0
+    l15_trust = l15_recent_pa / (l15_recent_pa + RECENT_SHRINK_K) if l15_recent_pa > 0 else 0.0
+    l5_trust = l5_recent_pa / (l5_recent_pa + RECENT_SHRINK_K) if l5_recent_pa > 0 else 0.0
+    recent_l15 = clamp01(l15hr / 9) * l15_trust + power * (1 - l15_trust)
+    recent_l5 = clamp01(l5hr / 3) * l5_trust + power * (1 - l5_trust)
+    recent = recent_l15 * 0.6 + recent_l5 * 0.4
 
     handedness_platoon = (crush + split) / 2
     pitch_mix_raw = p.get("pitchMixMatch")
@@ -1464,22 +1523,33 @@ def compute_score(p):
     score = (power * 35 + pitcher_s * 15 + platoon * 10 + recent * 15
              + opportunity * 10 + park_s * 8 + wind_s * 7)
 
-    STACK_THRESHOLD = 0.75
-    STACK_PENALTY_PER_EXTRA = 2.5
+    # v3.15: dampener REWORKED. Previously any 2+ of [power, pitcher_s,
+    # recent] individually clearing STACK_THRESHOLD triggered a penalty -
+    # but these are genuine PRIMARY performance signals, not small
+    # independent nudges. A hitter who is legitimately elite in power AND
+    # legitimately hot right now AND legitimately facing a bad pitcher is
+    # exactly the profile that SHOULD score highest, not get penalized
+    # for it - especially now that the power subfactor (v3.13) can
+    # actually reach real elite territory, this was punishing genuinely
+    # great matchups as if they were suspicious stacking.
+    #
+    # The dampener now targets what it was actually meant to catch: many
+    # small, semi-independent SITUATIONAL factors (home/road, day/night,
+    # bullpen, day-of-week) coincidentally lining up favorably at once -
+    # that kind of alignment is much more plausibly noise than a hitter
+    # simply being great, hot, and well-matched all at the same time.
+    SITUATIONAL_BOOST_TRIGGER = 0.10
     STACK_PENALTY_MAX = 6.0
-    SITUATIONAL_BOOST_TRIGGER = 0.10  # combined situational mult boost this large counts as one more "maxed" bucket
-    stack_buckets = [power, pitcher_s, recent]
-    n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
-    if situational_multiplier_boost(p) >= SITUATIONAL_BOOST_TRIGGER:
-        n_maxed += 1
-    if n_maxed > 1:
-        stack_penalty = min(STACK_PENALTY_MAX, (n_maxed - 1) * STACK_PENALTY_PER_EXTRA)
+    sit_boost = situational_multiplier_boost(p)
+    if sit_boost >= SITUATIONAL_BOOST_TRIGGER:
+        stack_penalty = min(STACK_PENALTY_MAX, sit_boost * 20)
         score -= stack_penalty
 
     score *= home_road_adjustment(p)
     score *= day_night_adjustment(p)
     score *= bullpen_adjustment(p)
     score *= day_of_week_adjustment(p)
+    score *= trend_adjustment(p)
     score = max(0.0, min(100.0, score))
 
     return {
@@ -1611,17 +1681,33 @@ def compute_hr_probability(p):
     l5hr = p.get("l5hr")
     l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
     l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
-    if l5hr is not None:
-        recent_rate = (l15hr_for_rate / 15) * 0.6 + (l5hr_for_rate / 5) * 0.4
-    else:
-        recent_rate = l15hr_for_rate / 15
 
     sf = compute_hr_subfactors(p)
     power_quality = sf["power"]
     POWER_QUALITY_MULTIPLIER = 1.7  # was 1.3
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
-    RECENT_TRUST = 0.5  # was 0.4
+    # v3.16: recent HR rate now REGRESSED toward this player's own
+    # established (power-quality-implied) rate, weighted by real recent
+    # PA sample size - separately for L15 and L5, since e.g. 2 HR in a
+    # player's last 2 games inflates the L5 rate hugely even though it's
+    # PA-thin. Previously recent_rate was blended at a flat 50% trust
+    # regardless of whether "recent" meant a real 15-day sample or a tiny
+    # 2-game hot streak - this is exactly what let a short burst from a
+    # modest-power hitter climb the board on raw recency alone instead of
+    # being pulled back toward what he actually is.
+    RECENT_SHRINK_K = 20
+    l15_pa = p.get("l15IsoPa") or 0
+    l5_pa = p.get("l5Pa") or 0
+    l15_rate_raw = l15hr_for_rate / 15
+    l5_rate_raw = (l5hr_for_rate / 5) if l5hr_for_rate is not None else l15_rate_raw
+    l15_trust = l15_pa / (l15_pa + RECENT_SHRINK_K) if l15_pa > 0 else 0.0
+    l5_trust = l5_pa / (l5_pa + RECENT_SHRINK_K) if l5_pa > 0 else 0.0
+    l15_rate_regressed = l15_rate_raw * l15_trust + season_implied_rate * (1 - l15_trust)
+    l5_rate_regressed = l5_rate_raw * l5_trust + season_implied_rate * (1 - l5_trust)
+    recent_rate = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
+
+    RECENT_TRUST = 0.5
     blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
 
     pw = power_sample_weight(p.get("pa"))
@@ -1662,19 +1748,25 @@ def compute_hr_probability(p):
                 bullpen_adjustment(p), day_of_week_adjustment(p)):
         mean *= 1 + (adj - 1) * situational_strength
 
+    # v3.17: trend applied directly, NOT power-gated like the four
+    # situational adjustments above - this is about the player's OWN
+    # recent trajectory, same category as `recent` and `power`, not an
+    # external tailwind unrelated to his own performance.
+    mean *= trend_adjustment(p)
+
     # FIX #3 (v3.12): same situational-pileup guard added to compute_score()
     # is now applied here too - previously this stacking dampener only
     # checked [power, pitcher_s, recent], same gap as compute_score() had.
-    STACK_THRESHOLD = 0.75
-    STACK_REDUCTION_PER_EXTRA = 0.08
-    STACK_REDUCTION_MAX = 0.20
+    # v3.15: same dampener rework as compute_score() - see the detailed
+    # comment there. No longer penalizes power/pitcher_s/recent for being
+    # simultaneously strong (those are real signal, not stacking noise);
+    # only fires on genuinely situational alignment (home/road, day/night,
+    # bullpen, day-of-week).
     SITUATIONAL_BOOST_TRIGGER = 0.10
-    stack_buckets = [sf["power"], sf["pitcher_s"], sf["recent"]]
-    n_maxed = sum(1 for b in stack_buckets if b >= STACK_THRESHOLD)
-    if situational_multiplier_boost(p) >= SITUATIONAL_BOOST_TRIGGER:
-        n_maxed += 1
-    if n_maxed > 1:
-        reduction = min(STACK_REDUCTION_MAX, (n_maxed - 1) * STACK_REDUCTION_PER_EXTRA)
+    STACK_REDUCTION_MAX = 0.20
+    sit_boost = situational_multiplier_boost(p)
+    if sit_boost >= SITUATIONAL_BOOST_TRIGGER:
+        reduction = min(STACK_REDUCTION_MAX, sit_boost * 0.7)
         mean *= (1 - reduction)
 
     mean = max(0.01, mean)
@@ -2022,10 +2114,29 @@ def main():
         last20 = games_this_year[-20:]
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
+        # v3.17: L30 window - a stable, PA-larger baseline to compare L15
+        # against for real trend detection (heating up / cooling down),
+        # without splitting the already-thin L15 sample in half. Rates
+        # use the ACTUAL window length (not a fixed 15/30) so early-
+        # season players with fewer games played don't get an
+        # artificially deflated baseline.
+        l30_games = games_this_year[-30:] if games_this_year else []
+        l30hr = sum(g["hr"] for g in l30_games)
+        l30_pa = sum(g["pa"] for g in l30_games)
+        l15_games_for_trend = games_this_year[-15:] if games_this_year else []
+        l15hr_rate = (l15hr / len(l15_games_for_trend)) if l15_games_for_trend else None
+        l30hr_rate = (l30hr / len(l30_games)) if l30_games else None
         l15_games_for_iso = games_this_year[-15:] if games_this_year else []
         l15_iso_pa = sum(g["pa"] for g in l15_games_for_iso)
         l15_iso_val = (round((sum(g["tb"] for g in l15_games_for_iso) - sum(g["hits"] for g in l15_games_for_iso)) / l15_iso_pa, 3)
                        if l15_iso_pa > 0 else None)
+        # v3.16: real PA count over the last 5 games specifically - lets
+        # the recent-HR regression in compute_hr_subfactors()/
+        # compute_hr_probability() tell a genuinely sustained short hot
+        # streak apart from a 2-game blip that just happens to land in a
+        # 5-game window.
+        l5_games_for_pa = games_this_year[-5:] if games_this_year else []
+        l5_pa = sum(g["pa"] for g in l5_games_for_pa)
         l15hr_credit = (diminishing_hr_credit(games_this_year[-15:])
                          if games_this_year else None)
         l5hr_credit = (diminishing_hr_credit(games_this_year[-5:])
@@ -2049,9 +2160,14 @@ def main():
         player_row["l15hr"] = l15hr
         player_row["l15Iso"] = l15_iso_val
         player_row["l15IsoPa"] = l15_iso_pa
+        player_row["l5Pa"] = l5_pa
         player_row["l5hr"] = l5hr
         player_row["l15hrCredit"] = l15hr_credit
         player_row["l5hrCredit"] = l5hr_credit
+        player_row["l30hr"] = l30hr
+        player_row["l30Pa"] = l30_pa
+        player_row["l15hrRate"] = l15hr_rate
+        player_row["l30hrRate"] = l30hr_rate
         player_row["l15hrr"] = l15hrr
         player_row["l15tb"] = l15tb
         player_row["l15hits"] = l15hits
@@ -2244,7 +2360,9 @@ def write_daily_snapshot(players):
                 "seasonHrRate": p.get("seasonHrRate"),
                 "dowHrRate": p.get("dowHrRate"), "dowPa": p.get("dowPa"),
                 "avgVsMix": p.get("avgVsMix"), "avgVsMixPa": p.get("avgVsMixPa"),
-                "l15Iso": p.get("l15Iso"), "l15IsoPa": p.get("l15IsoPa"),
+                "l15Iso": p.get("l15Iso"), "l15IsoPa": p.get("l15IsoPa"), "l5Pa": p.get("l5Pa"),
+                "l30hr": p.get("l30hr"), "l30Pa": p.get("l30Pa"),
+                "l15hrRate": p.get("l15hrRate"), "l30hrRate": p.get("l30hrRate"),
                 "oppBullpenEra": p.get("oppBullpenEra"),
                 "oppBullpenWhip": p.get("oppBullpenWhip"),
                 "oppBullpenIp": p.get("oppBullpenIp"),
