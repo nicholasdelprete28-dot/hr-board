@@ -25,7 +25,7 @@
     --mono: 'JetBrains Mono', monospace;
     --display: 'Space Grotesk', sans-serif;
     --body: 'Manrope', sans-serif;
-    --content-width: 600px;
+    --content-width: 1240px;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
@@ -83,7 +83,7 @@
     pointer-events:none; padding:0 14px;
   }
   .homer-toast{
-    max-width:var(--content-width); width:100%; box-sizing:border-box;
+    max-width:600px; width:100%; box-sizing:border-box;
     background:rgba(18,22,20,0.97); backdrop-filter:blur(8px);
     border:1.5px solid var(--gold); border-radius:12px; padding:12px 16px;
     display:flex; align-items:center; gap:10px;
@@ -165,23 +165,21 @@
   .legend span{display:flex; align-items:center; gap:4px;}
   .swatch{width:8px; height:8px; border-radius:2px; display:inline-block;}
 
-  .list{padding-top:14px; display:flex; flex-direction:column; gap:12px;}
-
-  /* Responsive card grid: below this width the cards stay a single
-     stacked column (unchanged) - this design's stat grid, chip row, and
-     sportsbook odds box need real room to stay legible, so cramming 3
-     across on a phone-width screen would just make everything
-     unreadable. At 880px+ there's enough room for 3 genuinely legible
-     ~370px+ cards, and the whole page (header/search/filters/list) widens
-     together via --content-width so nothing above the grid looks
-     narrower than the grid itself. */
-  @media (min-width: 880px){
-    :root{ --content-width: 1180px; }
-    .list{
-      display:grid;
-      grid-template-columns:repeat(3, 1fr);
-      gap:16px;
-    }
+  /* Fluid card grid - uses CSS auto-fit/minmax instead of a fixed
+     breakpoint+column-count combo. This naturally collapses to a single
+     column on narrow/phone screens (no room for a second 320px+ column
+     to fit), and naturally grows to 2, then 3+ columns as more real
+     width becomes available - capped overall by --content-width above,
+     so it never keeps adding columns forever on an ultra-wide monitor.
+     Deliberately NOT a fixed "exactly 3 columns above exactly 880px"
+     rule - that doesn't actually adapt correctly across the full range
+     of real browser/monitor widths people use. This does, with zero
+     per-breakpoint tuning required. */
+  .list{
+    padding-top:14px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));
+    gap:14px;
   }
 
   .card{
