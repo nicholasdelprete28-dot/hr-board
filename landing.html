@@ -85,20 +85,27 @@
   .proof-coverage{font-size:11.5px; color:var(--stat-good); margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-weight:600;}
   .proof-note{font-size:13px; color:var(--muted); margin-top:16px;}
 
-  /* Tiered proof breakdown (replaces the old single blended-number stat) */
-  .proof-board{margin-bottom:18px; grid-column:1/-1;}
-  .proof-board:last-child{margin-bottom:0;}
-  .proof-board-title{font-family:var(--display); font-weight:700; font-size:14px; margin-bottom:8px;}
-  .proof-tier-row{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
-  .proof-tier{background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 6px; text-align:center;}
-  .proof-tier.t-prime{border-color:rgba(66,232,150,0.5);}
-  .proof-tier .val{font-family:var(--mono); font-weight:700; font-size:17px;}
-  .proof-tier.t-prime .val{color:var(--stat-good);}
-  .proof-tier.t-strong .val{color:var(--text);}
-  .proof-tier.t-inplay .val, .proof-tier.t-longshot .val{color:var(--muted);}
-  .proof-tier .lbl{font-family:var(--mono); font-size:8.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px; margin-top:3px;}
-  .proof-board-note{font-size:12.5px; color:var(--muted); margin-top:8px; line-height:1.4;}
-  .proof-board-note b{color:var(--stat-good);}
+  /* Compact per-board summary cards - replaces the old full 4-tier grid.
+     Leads with just the number that's actually a clean, unambiguous
+     story on every board (PRIME hit rate vs. random baseline) plus the
+     coverage stat, instead of exposing the full STRONG/IN PLAY/LONG SHOT
+     breakdown, which is easy to misread out of context (lower tiers are
+     SUPPOSED to hit less often - that's confidence tiering working, not
+     a problem - but a cold visitor doesn't have that context yet). */
+  .proof-boards{grid-column:1/-1; display:flex; flex-direction:column; gap:10px;}
+  .proof-board-mini{
+    background:var(--bg); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  }
+  .proof-board-mini-name{font-family:var(--display); font-weight:700; font-size:14px; flex:1 1 110px; min-width:110px;}
+  .proof-board-mini-main{text-align:right;}
+  .proof-board-mini-val{font-family:var(--mono); font-weight:700; font-size:25px; color:var(--stat-good);}
+  .proof-board-mini-sub{font-family:var(--mono); font-size:10px; color:var(--muted2); margin-top:1px;}
+  .proof-board-mini-coverage{
+    width:100%; font-size:11.5px; color:var(--muted);
+    border-top:1px solid var(--line); padding-top:8px; margin-top:2px;
+  }
+  .proof-board-mini-coverage b{color:var(--stat-good);}
 
   .features{margin:34px 0;}
   .section-title{font-family:var(--display); font-weight:700; font-size:22px; margin-bottom:18px; text-align:center;}
@@ -185,7 +192,7 @@ whop.track("page");
     <div class="proof-grid" id="proofGrid">
       <div class="proof-stat"><div class="val">—</div><div class="lbl">Loading...</div></div>
     </div>
-    <div class="proof-note">We publish our tier-by-tier hit rate daily, win or lose. This is the same data feeding <a href="/subscribe" style="color:var(--stat-good);">the boards</a>.</div>
+    <div class="proof-note">We publish our top-tier hit rate daily, win or lose. This is the same data feeding <a href="/subscribe" style="color:var(--stat-good);">the boards</a>.</div>
   </section>
 
   <section class="features">
@@ -229,13 +236,18 @@ whop.track("page");
 
 <script>
 // ---------------------------------------------------------------------
-// 1) Public track record — now shown as an honest tier-by-tier breakdown
-//    instead of one blended number. Blending every tier together made a
-//    working, well-calibrated model look worse than random chance,
-//    because low-confidence LONG SHOT picks dragged the average down.
-//    Showing PRIME/STRONG/IN PLAY/LONG SHOT separately proves the tiering
-//    itself works (hit rate climbs with confidence), which is the real
-//    and much stronger story.
+// 1) Public track record - compact per-board summary cards. Previously
+//    showed a full PRIME/STRONG/IN PLAY/LONG SHOT grid per board - real
+//    and honest, but easy for a cold visitor to misread: lower tiers are
+//    SUPPOSED to hit less often (that's confidence tiering working
+//    correctly), but out of context a STRONG number sitting well below
+//    PRIME just looks like a problem. This leads with the one number
+//    that's a clean, unambiguous story on every board - PRIME hit rate
+//    vs. a random-guess baseline - plus the real coverage stat. The full
+//    tier breakdown is still real and still worth showing somewhere
+//    (e.g. inside the app for subscribers who want the detail) - it's
+//    just not the first thing a visitor who's never seen the product
+//    needs to parse.
 // ---------------------------------------------------------------------
 fetch('/history/accuracy_summary.json')
   .then(r => { if(!r.ok) throw new Error(); return r.json(); })
@@ -243,11 +255,9 @@ fetch('/history/accuracy_summary.json')
     const grid = document.getElementById('proofGrid');
     const boards = ['hr','hrr','tb','k'];
     const labels = {hr:'Home runs', hrr:'Hits + runs + RBI', tb:'Total bases', k:'Pitcher strikeouts'};
-    const tierOrder = [['prime','PRIME'], ['strong','STRONG'], ['inplay','IN PLAY'], ['longshot','LONG SHOT']];
-    // What a totally random pick, no model at all, hits on average.
-    // Shown ONLY next to the PRIME number now (the one figure it's
-    // actually meant to be compared against) — never blended into a
-    // combined stat again.
+    // What a totally random pick, no model at all, hits on average -
+    // shown only next to PRIME, the one figure it's actually meant to
+    // be compared against.
     const boardBaseline = {hr:12, hrr:52, tb:43};
     const coverage = data._coverage || {};
     let html = '';
@@ -256,39 +266,34 @@ fetch('/history/accuracy_summary.json')
     boards.forEach(b => {
       const tiers = data[b];
       if (!tiers) return;
-      const rows = tierOrder
-        .map(([key, label]) => {
-          const t = tiers[key];
-          if (!t || t.total < 5) return null; // hide tiers too small to mean anything yet
-          return { key, label, hit: t.hit, total: t.total, pct: Math.round((t.hit / t.total) * 100) };
-        })
-        .filter(Boolean);
-      if (!rows.length) return;
+      const primeRow = tiers.prime;
+      if (!primeRow || primeRow.total < 5) return; // hide until there's a real sample
       anyData = true;
 
-      const primeRow = rows.find(r => r.key === 'prime');
+      const pct = Math.round((primeRow.hit / primeRow.total) * 100);
       const baseline = boardBaseline[b];
-      let note = '';
-      if (primeRow && baseline != null) {
-        note = `<div class="proof-board-note">PRIME picks hit <b>${primeRow.pct}%</b> of the time (${primeRow.hit}/${primeRow.total}) &mdash; a random guess with no model hits about ${baseline}%.</div>`;
-      }
+      const subLine = baseline != null
+        ? `PRIME hit rate &middot; ~${baseline}% random baseline`
+        : `PRIME hit rate &middot; ${primeRow.total} picks`;
+
       const cov = coverage[b];
-      const covNote = (cov && cov.real_total > 0)
-        ? `<div class="proof-board-note">We had ${cov.matched} of the ${cov.real_total} real ${labels[b].toLowerCase()} qualifiers on our board that day.</div>`
+      const covLine = (cov && cov.real_total > 0)
+        ? `<div class="proof-board-mini-coverage">We had <b>${cov.matched} of ${cov.real_total}</b> real ${labels[b].toLowerCase()} qualifiers on our board that day.</div>`
         : '';
 
-      html += `<div class="proof-board">
-        <div class="proof-board-title">${labels[b]}</div>
-        <div class="proof-tier-row">
-          ${rows.map(r => `<div class="proof-tier t-${r.key}"><div class="val">${r.pct}%</div><div class="lbl">${r.label}<br>${r.hit}/${r.total}</div></div>`).join('')}
+      html += `<div class="proof-board-mini">
+        <div class="proof-board-mini-name">${labels[b]}</div>
+        <div class="proof-board-mini-main">
+          <div class="proof-board-mini-val">${pct}%</div>
+          <div class="proof-board-mini-sub">${subLine}</div>
         </div>
-        ${note}${covNote}
+        ${covLine}
       </div>`;
     });
 
     if (anyData) {
-      grid.innerHTML = html;
-      grid.insertAdjacentHTML('afterend', '<div class="proof-explainer">Hit rate should climb as tier confidence goes up &mdash; that\'s the model working as intended, not a flaw. Lower tiers are explicitly lower-confidence picks, shown here anyway rather than hidden.</div>');
+      grid.innerHTML = `<div class="proof-boards">${html}</div>`;
+      grid.insertAdjacentHTML('afterend', '<div class="proof-explainer">PRIME is our highest-confidence tier on each board - shown here because it\'s the cleanest single number to judge us by. Full tier-by-tier detail is available to subscribers inside the app.</div>');
     } else {
       grid.innerHTML = '<div class="proof-stat" style="grid-column:1/-1;"><div class="lbl" style="font-size:12px;">Track record is still building &mdash; check back soon, or watch it grow live in our Discord.</div></div>';
     }
