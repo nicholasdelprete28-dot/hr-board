@@ -598,6 +598,64 @@ def get_platoon_split(batter_id, vs_hand):
     return None
 
 
+_batside_cache = {}
+
+
+def get_player_bat_side(player_id):
+    """v3.28: this batter's handedness ('L'/'R'/'S' for switch) - needed
+    to look up the OPPOSING PITCHER's HR/9 specifically against his side,
+    not just the pitcher's overall rate. Cached per player_id, same
+    pattern as get_player_name(), since this only needs to be fetched
+    once per player regardless of how many boards/runs use it."""
+    if player_id in _batside_cache:
+        return _batside_cache[player_id]
+    try:
+        data = statsapi_get(f"people/{player_id}")
+        side = data.get("people", [{}])[0].get("batSide", {}).get("code", "R")
+    except Exception:
+        side = "R"
+    _batside_cache[player_id] = side
+    return side
+
+
+_pitcher_platoon_cache = {}
+
+
+def get_pitcher_platoon_split(pitcher_id, vs_hand):
+    """v3.28: this pitcher's HR/9 specifically against batters of vs_hand
+    ('L' or 'R') this season - same statSplits/sitCodes pattern already
+    working for get_platoon_split() on the batter side, applied here to
+    pitching. HONESTY NOTE: sitCodes 'vl'/'vr' are confirmed working for
+    the hitting group already in this file - assumed to work the same
+    way for the pitching group (MLB's API generally does), but not
+    independently re-verified here specifically. Returns (hr9, ip) so
+    callers can shrink toward it by real sample size, same as every other
+    split in this file. Cached per (pitcher_id, vs_hand) - only 2 real
+    splits exist per pitcher no matter how many batters of that hand
+    face him."""
+    cache_key = (pitcher_id, vs_hand)
+    if cache_key in _pitcher_platoon_cache:
+        return _pitcher_platoon_cache[cache_key]
+    sit_code = "vl" if vs_hand == "L" else "vr"
+    result = (None, 0)
+    try:
+        data = statsapi_get(f"people/{pitcher_id}/stats", {
+            "stats": "statSplits", "sitCodes": sit_code,
+            "group": "pitching", "season": YEAR, "sportId": 1
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        if splits:
+            stat = splits[0]["stat"]
+            ip = _parse_innings(stat.get("inningsPitched"))
+            hr = int(stat.get("homeRuns", 0) or 0)
+            if ip and ip > 0:
+                result = (round(hr * 9 / ip, 2), ip)
+    except Exception:
+        pass
+    _pitcher_platoon_cache[cache_key] = result
+    return result
+
+
 def get_risp_avg(batter_id):
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
@@ -1132,11 +1190,34 @@ def get_team_bullpen_stats(team_id, season):
 BULLPEN_MAX_ADJ = 0.05
 
 
+LEAGUE_AVG_IP_PER_START = 5.2
+
+
+def bullpen_exposure_weight(opp_ip_per_start):
+    """v3.27: how much of this game's plate appearances plausibly fall
+    against the bullpen rather than the starter - a short-outing starter
+    means real bullpen exposure for every batter he faces that day; a
+    workhorse who regularly goes deep means most PAs stay against the
+    starter and the bullpen read matters less. Bounded 0.6-1.5x so this
+    scales bullpen_adjustment's real signal rather than zeroing it out or
+    amplifying it unrealistically."""
+    if opp_ip_per_start is None or opp_ip_per_start <= 0:
+        return 1.0
+    ratio = LEAGUE_AVG_IP_PER_START / opp_ip_per_start
+    return max(0.6, min(1.5, ratio))
+
+
 def bullpen_adjustment(p):
     """Bounded multiplier from the OPPOSING team's bullpen quality - a bad
     bullpen (high ERA/WHIP) is good for the batter, applied the same
     dampened, capped way every other situational adjustment in this file
-    is. Only applies with a real relief-innings sample (BULLPEN_MIN_IP)."""
+    is. Only applies with a real relief-innings sample (BULLPEN_MIN_IP).
+
+    v3.27: now scaled by bullpen_exposure_weight() - previously applied
+    the same strength regardless of whether the opposing starter usually
+    goes 7 innings (batter barely sees the bullpen that day) or gets
+    pulled after 4.5 (a real chunk of the batter's plate appearances that
+    game will actually be against relievers)."""
     era = p.get("oppBullpenEra")
     whip = p.get("oppBullpenWhip")
     ip = p.get("oppBullpenIp") or 0
@@ -1146,6 +1227,8 @@ def bullpen_adjustment(p):
     whip_ratio = whip / LEAGUE_AVG_BULLPEN_WHIP
     combined_ratio = (era_ratio + whip_ratio) / 2
     adj = clamp01((combined_ratio - 1) * 0.3 + 0.5) - 0.5
+    exposure = bullpen_exposure_weight(p.get("oppIpPerStart"))
+    adj *= exposure
     adj = max(-BULLPEN_MAX_ADJ, min(BULLPEN_MAX_ADJ, adj))
     return 1 + adj
 
@@ -1485,6 +1568,14 @@ def compute_hr_subfactors(p):
     else:
         barrel_final, ev_final, hardhit_final = barrel_season, ev_season, hardhit_season
 
+    # v3.26: raw L15-vs-season diffs exposed for reuse elsewhere (the
+    # outcome-vs-process divergence check in compute_hr_probability) -
+    # computed once here so it never drifts from what the agreement-boost
+    # logic above already used to decide these same directions.
+    barrel_diff = (l15_barrel - barrel_season) if l15_barrel is not None else None
+    ev_diff = (l15_ev - ev_season) if l15_ev is not None else None
+    hardhit_diff = (l15_hardhit - hardhit_season) if l15_hardhit is not None else None
+
     l15_iso = p.get("l15Iso")
     l15_iso_pa = p.get("l15IsoPa") or 0
     iso_lw = l15_weight(l15_iso_pa, L15_ISO_MIN_PA)
@@ -1600,6 +1691,7 @@ def compute_hr_subfactors(p):
         "recent": recent, "opportunity": opportunity,
         "park_s": park_s, "wind_s": wind_s,
         "conf": conf, "avg_vs_mix": avg_vs_mix, "avg_vs_mix_s": avg_vs_mix_s,
+        "barrel_diff": barrel_diff, "ev_diff": ev_diff, "hardhit_diff": hardhit_diff,
     }
 
 
@@ -1804,6 +1896,44 @@ def compute_hr_probability(p):
     l5_rate_raw = (l5hr_for_rate / 5) if l5hr_for_rate is not None else l15_rate_raw
     l15_trust = l15_pa / (l15_pa + RECENT_SHRINK_K) if l15_pa > 0 else 0.0
     l5_trust = l5_pa / (l5_pa + RECENT_SHRINK_K) if l5_pa > 0 else 0.0
+
+    # v3.26: OUTCOME-VS-PROCESS DIVERGENCE. A hot recent HR streak means
+    # something very different depending on whether it's backed by real
+    # quality-of-contact gains (barrel%/EV/hard-hit% actually improving)
+    # or not - a guy running hot on outcomes with flat-or-declining
+    # process stats is much more likely riding short fly balls or
+    # favorable bounces than a real skill uptick. Reuses the exact same
+    # L15-vs-season direction data the v3.23 power-blend agreement check
+    # already computes (sf["barrel_diff"] etc.), so this never drifts out
+    # of sync with it - just applies the same "does the process actually
+    # back this up" question to the HR-RATE regression too, not only the
+    # power blend.
+    HOT_OUTCOME_MULT = 1.3
+    if l15_rate_raw > season_implied_rate * HOT_OUTCOME_MULT:
+        proc_moves = []
+        for diff, min_move in (
+            (sf.get("barrel_diff"), 0.02),
+            (sf.get("ev_diff"), 1.0),
+            (sf.get("hardhit_diff"), 0.03),
+        ):
+            if diff is not None and abs(diff) >= min_move:
+                proc_moves.append(1 if diff > 0 else -1)
+        if len(proc_moves) >= 2 and len(set(proc_moves)) == 1:
+            if proc_moves[0] < 0:
+                # Real HR count is up, but contact quality is genuinely
+                # declining at the same time - this streak looks lucky,
+                # not repeatable. Trust it a lot less.
+                l15_trust *= 0.5
+                l5_trust *= 0.5
+            # else: process genuinely agrees with the hot streak - full
+            # trust, this looks like a real surge, not luck.
+        else:
+            # No clear 2-of-3 process confirmation either way - a hot
+            # outcome with an unconfirmed process read still deserves
+            # some caution, just less than the confirmed-fake-streak case.
+            l15_trust *= 0.8
+            l5_trust *= 0.8
+
     l15_rate_regressed = l15_rate_raw * l15_trust + season_implied_rate * (1 - l15_trust)
     l5_rate_regressed = l5_rate_raw * l5_trust + season_implied_rate * (1 - l5_trust)
     recent_rate = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
@@ -2208,6 +2338,8 @@ def main():
                     "oppBullpenEra": bullpen_cache.get(opp_team_id, {}).get("bullpenEra"),
                     "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"),
                     "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),
+                    "oppIpPerStart": pitcher_stat.get("ipPerStart"),
+                    "oppPitcherId": pitcher_id,
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
@@ -2258,6 +2390,30 @@ def main():
         if not player_row["player"]:
             player_row["player"] = get_player_name(batter_id)
         platoon_avg = get_platoon_split(batter_id, pitcher_hand)
+
+        # v3.28: pitcher HR/9 split by THIS batter's own handedness, not
+        # just the pitcher's overall rate - some pitchers are meaningfully
+        # more homer-prone to one side than the other. Switch-hitters bat
+        # from the side opposite the pitcher's throwing hand, by standard
+        # convention. Overwrites player_row["phr9"] (the season/reliable
+        # overall rate set earlier in main()) with the hand-adjusted
+        # blend, shrunk toward the overall rate by how much real innings
+        # sample backs the split - player_row["phr9Season"] stays the
+        # pure unblended season number, untouched, so the existing
+        # "soft matchup"/"tough matchup" chips (which compare phr9 to
+        # phr9Season) keep working exactly the same way, just now also
+        # picking up a real handedness-driven mismatch if one exists.
+        bat_side = get_player_bat_side(batter_id)
+        effective_vs_hand = ("R" if pitcher_hand == "L" else "L") if bat_side == "S" else bat_side
+        opp_pitcher_id = player_row.get("oppPitcherId")
+        if opp_pitcher_id:
+            platoon_hr9, platoon_ip = get_pitcher_platoon_split(opp_pitcher_id, effective_vs_hand)
+            if platoon_hr9 is not None and player_row.get("phr9") is not None:
+                PLATOON_HR9_SHRINK_K = 25
+                weight = platoon_ip / (platoon_ip + PLATOON_HR9_SHRINK_K) if platoon_ip > 0 else 0.0
+                player_row["phr9"] = round(
+                    player_row["phr9"] * (1 - weight) + platoon_hr9 * weight, 2)
+        player_row["batSide"] = bat_side
 
         games_this_year = get_gamelog(batter_id, YEAR)
         totals_prev_year = get_season_totals_hitting(batter_id, YEAR - 1)
@@ -2528,6 +2684,8 @@ def write_daily_snapshot(players):
                 "oppBullpenEra": p.get("oppBullpenEra"),
                 "oppBullpenWhip": p.get("oppBullpenWhip"),
                 "oppBullpenIp": p.get("oppBullpenIp"),
+                "oppIpPerStart": p.get("oppIpPerStart"),
+                "batSide": p.get("batSide"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
