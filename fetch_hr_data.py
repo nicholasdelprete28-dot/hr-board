@@ -784,17 +784,20 @@ def season_totals_to_window(totals):
 
 
 def get_wind(lat, lon):
+    """v3.19: now also fetches temperature in the same API call (no extra
+    request) - returns (speed, direction, temp_f)."""
     try:
         resp = requests.get("https://api.open-meteo.com/v1/forecast", params={
             "latitude": lat, "longitude": lon,
-            "current": "wind_speed_10m,wind_direction_10m",
+            "current": "wind_speed_10m,wind_direction_10m,temperature_2m",
             "wind_speed_unit": "mph",
+            "temperature_unit": "fahrenheit",
         }, timeout=15)
         resp.raise_for_status()
         cur = resp.json().get("current", {})
-        return cur.get("wind_speed_10m"), cur.get("wind_direction_10m")
+        return cur.get("wind_speed_10m"), cur.get("wind_direction_10m"), cur.get("temperature_2m")
     except Exception:
-        return None, None
+        return None, None, None
 
 
 def fetch_batter_statcast():
@@ -891,8 +894,10 @@ def fetch_batter_statcast_l15():
     ls_col = next((c for c in ls_columns if rows and c in rows[0]), None)
     lsa_columns = ["launch_speed_angle"]
     lsa_col = next((c for c in lsa_columns if rows and c in rows[0]), None)
+    la_columns = ["launch_angle"]
+    la_col = next((c for c in la_columns if rows and c in rows[0]), None)
     print(f"  L15 using batter_id={id_col} type={type_col} "
-          f"launch_speed={ls_col} launch_speed_angle={lsa_col}")
+          f"launch_speed={ls_col} launch_speed_angle={lsa_col} launch_angle={la_col}")
 
     if not (id_col and ls_col):
         print(f"  WARNING: required L15 columns not found - check the printed "
@@ -916,13 +921,23 @@ def fetch_batter_statcast_l15():
             continue
         lsa_raw = row.get(lsa_col) if lsa_col else None
         is_barrel = (lsa_raw == "6")
-        d = per_batter.setdefault(pid, {"ev_sum": 0.0, "n": 0, "barrels": 0, "hardhit": 0})
+        d = per_batter.setdefault(pid, {"ev_sum": 0.0, "n": 0, "barrels": 0, "hardhit": 0,
+                                         "la_sum": 0.0, "la_n": 0})
         d["ev_sum"] += ls
         d["n"] += 1
         if is_barrel:
             d["barrels"] += 1
         if ls >= 95:
             d["hardhit"] += 1
+        # v3.19: launch angle, aggregated from the same event-level rows -
+        # no new API call, this data was already being fetched for EV.
+        la_raw = row.get(la_col) if la_col else None
+        if la_raw not in (None, ""):
+            try:
+                d["la_sum"] += float(la_raw)
+                d["la_n"] += 1
+            except (TypeError, ValueError):
+                pass
 
     out = {}
     for pid, d in per_batter.items():
@@ -933,6 +948,7 @@ def fetch_batter_statcast_l15():
             "barrel": round(d["barrels"] / d["n"], 3),
             "hardhit": round(d["hardhit"] / d["n"], 3),
             "pa": d["n"],
+            "launchAngle": round(d["la_sum"] / d["la_n"], 1) if d["la_n"] > 0 else None,
         }
     print(f"  parsed L15 power data for {len(out)} batters from "
           f"{sum(d['n'] for d in per_batter.values())} batted-ball events")
@@ -1162,6 +1178,36 @@ def wind_park_factor(speed, direction, park_orientation=None):
     if speed >= 8:
         return round(1 * out_component, 2)
     return 0
+
+
+def describe_wind(speed, direction, park_orientation):
+    """v3.19: plain-English wind description for display. Deliberately
+    does NOT claim a specific field direction (e.g. "Out To RF") - the
+    park orientation values in PARKS are explicitly flagged elsewhere in
+    this file as reasonable placeholders, NOT verified against real
+    stadium diagrams (see the v3.12 docstring note). Claiming a specific
+    compass direction on top of admittedly-unverified orientation data
+    would be false precision. This sticks to what the inputs actually
+    support with real confidence: speed and in/out/cross direction, using
+    the exact same diff/out_component math as wind_park_factor() so the
+    label always matches whatever wind_score the model actually used. A
+    true compass-specific version ("Out To RF") is a reasonable future
+    upgrade once PARKS orientations are verified against real stadium
+    diagrams - not before."""
+    if speed is None:
+        return None
+    if speed < 5:
+        return "Calm"
+    if direction is None or park_orientation is None:
+        return f"{round(speed)} mph"
+    diff = abs((direction - park_orientation + 180) % 360 - 180)
+    out_component = math.cos(math.radians(diff))
+    tier = "Strong" if speed >= 15 else "Light"
+    if out_component >= 0.5:
+        return f"{tier} - Blowing Out ({round(speed)} mph)"
+    if out_component <= -0.5:
+        return f"{tier} - Blowing In ({round(speed)} mph)"
+    return f"{tier} Crosswind ({round(speed)} mph)"
 
 
 def clamp01(x):
@@ -1724,11 +1770,51 @@ def compute_hr_probability(p):
     pw = power_sample_weight(p.get("pa"))
     base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
 
+    # v3.20: power_gate computed HERE (moved up from the nudge section
+    # below) so it can also gate the pitcher matchup multiplier, not just
+    # the situational nudges. Previously a bad pitcher matchup applied at
+    # FULL strength no matter how little power the batter had - the
+    # reasoning was "a bad pitcher gives up more homers to everyone," but
+    # a near-zero-power contact hitter facing a homer-prone pitcher isn't
+    # actually much more likely to go deep just because OTHER, real power
+    # hitters would punish that pitcher. A real example that exposed
+    # this: a hitter with barrel% and EV both below the power floor (both
+    # clamp to 0) still got a ~78% multiplicative boost from a bad
+    # starter's HR/9, which was the single biggest driver of his number -
+    # bigger than every situational nudge combined, which WERE already
+    # correctly gated down for him.
+    #
+    # Matchup quality still gets a HIGHER minimum strength than the pure
+    # situational nudges (0.55 vs 0.35) - unlike park/wind/lineup spot,
+    # pitcher quality is a more genuine signal that isn't purely about
+    # the batter's own power (a bad pitcher's control/contact quality
+    # affects outcomes beyond just raw homer power), so it shouldn't be
+    # suppressed as aggressively as a lineup-slot or platoon nudge would
+    # be for the same low-power hitter.
+    POWER_GATE_FLOOR = 0.25
+    POWER_GATE_CEIL = 0.65
+    POWER_GATE_MIN_STRENGTH = 0.35
+    MATCHUP_GATE_MIN_STRENGTH = 0.55
+    power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
+    situational_strength = POWER_GATE_MIN_STRENGTH + (1 - POWER_GATE_MIN_STRENGTH) * power_gate
+    matchup_strength = MATCHUP_GATE_MIN_STRENGTH + (1 - MATCHUP_GATE_MIN_STRENGTH) * power_gate
+
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     pw_pitcher = pitcher_sample_weight(p.get("pip"))
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
-    PITCHER_MATCHUP_SENSITIVITY = 0.6
-    matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
+    # v3.21: sensitivity dialed back 0.6 -> 0.45. Even after the v3.20
+    # power-gating fix, the RAW size of this swing was still large - up
+    # to ~90% boost for a truly bad matchup, ~35% suppression for a truly
+    # great one, roughly a 2.9x total range on its own. That's real
+    # signal, not noise, but it was large enough to let one bad starter
+    # visually dominate the board, since (unlike a single great power
+    # hitter) the SAME multiplier applies to every batter facing him at
+    # once - a whole lineup inherits it simultaneously. This tuning
+    # keeps the signal directionally strong while narrowing how much any
+    # one pitcher can single-handedly stack a chunk of the board.
+    PITCHER_MATCHUP_SENSITIVITY = 0.45
+    raw_matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
+    matchup_mult = 1 + (raw_matchup_mult - 1) * matchup_strength
     mean = max(0.01, base_rate * matchup_mult)
 
     # v3.14: situational nudges (platoon/opportunity/park/wind) and the
@@ -1745,11 +1831,6 @@ def compute_hr_probability(p):
     # (POWER_GATE_MIN_STRENGTH), scaling linearly in between. This is
     # the direct fix for "too many PRIME picks that were really just
     # decent-power guys with a good matchup on paper."
-    POWER_GATE_FLOOR = 0.25
-    POWER_GATE_CEIL = 0.65
-    POWER_GATE_MIN_STRENGTH = 0.35
-    power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
-    situational_strength = POWER_GATE_MIN_STRENGTH + (1 - POWER_GATE_MIN_STRENGTH) * power_gate
 
     NUDGE_STRENGTH = 0.14
     for factor_val in (sf["platoon"], sf["opportunity"], sf["park_s"], sf["wind_s"]):
@@ -2020,12 +2101,14 @@ def main():
             # actually trigger for a real MLB team - left in place only as
             # a genuine defensive fallback (e.g. an unrecognized abbrev).
             park = PARKS.get(g["home_team"], {"factor": 0, "lat": None, "lon": None, "orient": None})
-            wind_speed, wind_dir = (None, None)
+            wind_speed, wind_dir, temp_f = (None, None, None)
             if park.get("lat") is not None:
-                wind_speed, wind_dir = get_wind(park["lat"], park["lon"])
+                wind_speed, wind_dir, temp_f = get_wind(park["lat"], park["lon"])
             # FIX #2 (v3.12): pass wind direction + park orientation through
             # so wind can now suppress, not just boost.
             wind_score = wind_park_factor(wind_speed, wind_dir, park.get("orient"))
+            # v3.19: plain-English description for display, same inputs.
+            wind_desc = describe_wind(wind_speed, wind_dir, park.get("orient"))
 
             lineup = get_lineup(g["game_pk"], side)
             lineup_confirmed = True
@@ -2079,6 +2162,7 @@ def main():
                     "l15Ev": sc_l15.get("ev"),
                     "l15Hardhit": sc_l15.get("hardhit"),
                     "l15PowerPa": sc_l15.get("pa"),
+                    "l15LaunchAngle": sc_l15.get("launchAngle"),
                     "iso": bstats.get("iso"),
                     "pa": bstats.get("pa"),
                     "slg": bstats.get("slg"),
@@ -2091,6 +2175,8 @@ def main():
                     "pip": pitcher_stat.get("ip"),
                     "avgmix": None,
                     "wind": wind_score,
+                    "temp": temp_f,
+                    "windDesc": wind_desc,
                     "park": park["factor"],
                     "l15hr": None,
                     "l5hr": None,
@@ -2368,6 +2454,8 @@ def write_daily_snapshot(players):
                 "phr9": p.get("phr9"), "whip": p.get("whip"),
                 "phr9Season": p.get("phr9Season"), "whipSeason": p.get("whipSeason"),
                 "avgmix": p.get("avgmix"), "wind": p.get("wind"), "park": p.get("park"),
+                "temp": p.get("temp"), "windDesc": p.get("windDesc"),
+                "l15LaunchAngle": p.get("l15LaunchAngle"),
                 "l15hr": p.get("l15hr"), "l5hr": p.get("l5hr"),
                 "l15hrr": p.get("l15hrr"), "l15tb": p.get("l15tb"), "l15hits": p.get("l15hits"),
                 "risp": p.get("risp"), "lbonus": p.get("lbonus"),
