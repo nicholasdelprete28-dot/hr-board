@@ -238,7 +238,8 @@
   .badge-homer{
     font-family:var(--mono); font-size:10px; font-weight:700; color:#0a0d0b;
     background:linear-gradient(100deg, var(--gold), #ffd27a);
-    border-radius:5px; padding:2px 7px; letter-spacing:0.3px; vertical-align:middle;
+    border-radius:5px; padding:2px 7px; letter-spacing:0.3px;
+    display:inline-block; margin-bottom:5px;
     box-shadow:0 0 10px rgba(227,165,72,0.5);
   }
   .card-live{opacity:0.55;}
@@ -1309,7 +1310,7 @@ function render(){
       : '';
     const rankBadge = i < 5 ? `<div class="rank-badge">${i + 1}</div>` : '';
     const homerBadge = (p.actualHR && p.actualHR > 0)
-      ? `<span class="badge-homer">&#9917; ${p.actualHR} HR TODAY</span>`
+      ? `<span class="badge-homer">&#9918; ${p.actualHR} HR TODAY</span>`
       : '';
     const cardScore = p[scoreField()];
     const avgVsMixVal = p.avgVsMix != null ? p.avgVsMix : p.avgmix;
@@ -1404,10 +1405,11 @@ function render(){
           ${rankBadge}
         </div>
         <div class="info">
-          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''} ${homerBadge}</div>
+          <div class="name">${p.player} ${isProjected ? '<span class="badge-projected">PROJECTED</span>' : ''} ${isLive ? '<span class="badge-live">LIVE</span>' : ''}</div>
           <div class="meta">${p.playerType === 'pitcher' ? `${matchupWithLogos(p.game, 14)} &middot; vs ${p.opponent} (${p.hand}HP)` : `${matchupWithLogos(p.game, 14)} &middot; vs ${p.pitcher} (${p.hand})`}${formatGameTime(p.gameTime) ? ` &middot; ${formatGameTime(p.gameTime)}` : ''}</div>
         </div>
         <div class="scorebox">
+          ${homerBadge ? `<div>${homerBadge}</div>` : ''}
           <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
           <div class="scoreval">${fmtNum(displayPct(cardScore, boardMode), 1)}%</div>
           <div class="scorelabel ${p.playerType === 'pitcher' ? 'scorelabel-pitcher' : ''}">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : boardMode === 'hr' ? 'HR probability' : `${boardMode.toUpperCase()} favorability`}</div>
