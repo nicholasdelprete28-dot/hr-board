@@ -1423,7 +1423,18 @@ def compute_hr_subfactors(p):
     barrel_n = clamp01((barrel_adj - 0.05) / 0.15)       # floor 5%, peak-season ceiling 20%
     ev_n = clamp01((ev_final - 87.0) / 7.0)               # floor 87mph, peak-season ceiling 94mph
     hardhit_n = clamp01((hardhit_final - 0.30) / 0.22)    # floor 30%, peak-season ceiling 52%
-    quality_of_contact = (barrel_n + ev_n + hardhit_n) / 3
+    # v3.18: barrel% now weighted HEAVIER than EV/hard-hit% within
+    # quality_of_contact, instead of a flat 3-way average. Hard-hit% only
+    # requires exit velo >=95mph - a line-drive or ground-ball hitter can
+    # post a genuinely elite hard-hit% while barely ever actually
+    # producing HR-shaped contact, because hard-hit% has zero regard for
+    # launch angle. Barrel% requires BOTH real exit velo AND the launch
+    # angle that actually turns hard contact into a home run - it's the
+    # single most HR-specific Statcast metric here, and shouldn't be
+    # diluted 1-for-1 by a much weaker, angle-blind signal. A hitter with
+    # a mediocre barrel% but inflated hard-hit% (hits the ball hard, just
+    # not in the air) no longer gets nearly as much power credit for it.
+    quality_of_contact = barrel_n * 0.50 + ev_n * 0.25 + hardhit_n * 0.25
 
     iso_n = clamp01((iso_final - 0.08) / 0.27)            # floor .080, peak-season ceiling .350
 
