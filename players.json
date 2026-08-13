@@ -422,7 +422,7 @@
     "tbMatchupPct": 47.5,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 23.7,
+    "hrProb": 24.1,
     "hrrProb": 56.0,
     "tbProb": 47.1,
     "bookOdds": {
@@ -1244,7 +1244,7 @@
     "tbMatchupPct": 48.4,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 21.3,
+    "hrProb": 21.6,
     "hrrProb": 51.9,
     "tbProb": 46.8,
     "bookOdds": {
@@ -2052,7 +2052,7 @@
     "tbMatchupPct": 48.1,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 18.4,
+    "hrProb": 18.2,
     "hrrProb": 54.9,
     "tbProb": 50.3,
     "bookOdds": {
@@ -2895,7 +2895,7 @@
     "tbMatchupPct": 31.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.1,
+    "hrProb": 16.2,
     "hrrProb": 41.1,
     "tbProb": 34.4,
     "bookOdds": {
@@ -4859,8 +4859,8 @@
     "pip": 131.7,
     "avgmix": 0.227,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 2,
     "l5hr": 2,
@@ -5242,7 +5242,7 @@
     "tbMatchupPct": 42.1,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.0,
+    "hrProb": 15.9,
     "hrrProb": 48.1,
     "tbProb": 39.7,
     "bookOdds": {
@@ -6482,8 +6482,8 @@
     "pip": 131.7,
     "avgmix": 0.285,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 3,
     "l5hr": 1,
@@ -6865,7 +6865,7 @@
     "tbMatchupPct": 47.9,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.0,
+    "hrProb": 15.9,
     "hrrProb": 55.6,
     "tbProb": 45.9,
     "bookOdds": {
@@ -7694,7 +7694,7 @@
     "tbMatchupPct": 53.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 17.4,
+    "hrProb": 17.7,
     "hrrProb": 49.1,
     "tbProb": 37.6,
     "bookOdds": {
@@ -8502,7 +8502,7 @@
     "tbMatchupPct": 63.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 17.5,
+    "hrProb": 17.9,
     "hrrProb": 49.7,
     "tbProb": 39.2,
     "bookOdds": {
@@ -9352,7 +9352,7 @@
     "tbMatchupPct": 46.3,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.5,
+    "hrProb": 13.2,
     "hrrProb": 51.5,
     "tbProb": 47.3,
     "bookOdds": {
@@ -10181,7 +10181,7 @@
     "tbMatchupPct": 47.3,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 17.3,
+    "hrProb": 17.2,
     "hrrProb": 61.1,
     "tbProb": 44.9,
     "bookOdds": {
@@ -11733,7 +11733,7 @@
     "tbMatchupPct": 49.5,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 15.6,
+    "hrProb": 15.5,
     "hrrProb": 62.9,
     "tbProb": 51.2,
     "bookOdds": {
@@ -12534,7 +12534,7 @@
     "tbMatchupPct": 55.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.1,
+    "hrProb": 16.4,
     "hrrProb": 55.9,
     "tbProb": 41.5,
     "bookOdds": {
@@ -13391,7 +13391,7 @@
     "tbMatchupPct": 57.5,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 21.2,
+    "hrProb": 21.7,
     "hrrProb": 63.2,
     "tbProb": 46.7,
     "bookOdds": {
@@ -14220,7 +14220,7 @@
     "tbMatchupPct": 35.1,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 14.6,
+    "hrProb": 14.7,
     "hrrProb": 47.3,
     "tbProb": 39.7,
     "bookOdds": {
@@ -15000,7 +15000,7 @@
     "tbMatchupPct": 31.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.4,
+    "hrProb": 13.0,
     "hrrProb": 45.7,
     "tbProb": 35.8,
     "bookOdds": {
@@ -15780,7 +15780,7 @@
     "tbMatchupPct": 64.0,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 16.2,
+    "hrProb": 16.5,
     "hrrProb": 64.2,
     "tbProb": 51.1,
     "bookOdds": {
@@ -17417,7 +17417,7 @@
     "tbMatchupPct": 48.0,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 13.3,
+    "hrProb": 13.2,
     "hrrProb": 62.0,
     "tbProb": 47.7,
     "bookOdds": {
@@ -18962,7 +18962,7 @@
     "tbMatchupPct": 48.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.1,
+    "hrProb": 11.9,
     "hrrProb": 56.4,
     "tbProb": 38.3,
     "bookOdds": {
@@ -19749,7 +19749,7 @@
     "tbMatchupPct": 47.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.1,
+    "hrProb": 10.9,
     "hrrProb": 50.4,
     "tbProb": 36.5,
     "bookOdds": {
@@ -21295,7 +21295,7 @@
     "tbMatchupPct": 54.6,
     "tbRecentPct": 100.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.5,
+    "hrProb": 12.7,
     "hrrProb": 57.7,
     "tbProb": 42.3,
     "bookOdds": {
@@ -22145,7 +22145,7 @@
     "tbMatchupPct": 42.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.1,
+    "hrProb": 10.0,
     "hrrProb": 50.4,
     "tbProb": 36.8,
     "bookOdds": {
@@ -22974,7 +22974,7 @@
     "tbMatchupPct": 35.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 12.6,
+    "hrProb": 12.4,
     "hrrProb": 48.2,
     "tbProb": 38.9,
     "bookOdds": {
@@ -23761,7 +23761,7 @@
     "tbMatchupPct": 46.0,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.8,
+    "hrProb": 9.7,
     "hrrProb": 50.4,
     "tbProb": 38.9,
     "bookOdds": {
@@ -24575,7 +24575,7 @@
     "tbMatchupPct": 31.3,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 11.4,
+    "hrProb": 11.3,
     "hrrProb": 50.9,
     "tbProb": 36.5,
     "bookOdds": {
@@ -25348,7 +25348,7 @@
     "tbMatchupPct": 50.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.2,
+    "hrProb": 9.3,
     "hrrProb": 58.9,
     "tbProb": 40.2,
     "bookOdds": {
@@ -26156,7 +26156,7 @@
     "tbMatchupPct": 46.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.7,
+    "hrProb": 10.5,
     "hrrProb": 43.0,
     "tbProb": 34.4,
     "bookOdds": {
@@ -28129,7 +28129,7 @@
     "tbMatchupPct": 46.8,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 9.2,
+    "hrProb": 9.3,
     "hrrProb": 51.8,
     "tbProb": 32.3,
     "bookOdds": {
@@ -29703,7 +29703,7 @@
     "tbMatchupPct": 27.5,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 13.2,
+    "hrProb": 13.1,
     "hrrProb": 41.4,
     "tbProb": 36.2,
     "bookOdds": {
@@ -31235,7 +31235,7 @@
     "tbMatchupPct": 44.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 10.2,
+    "hrProb": 10.1,
     "hrrProb": 45.1,
     "tbProb": 38.1,
     "bookOdds": {
@@ -32057,7 +32057,7 @@
     "tbMatchupPct": 29.2,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 8.6,
+    "hrProb": 8.4,
     "hrrProb": 44.1,
     "tbProb": 32.2,
     "bookOdds": {
@@ -32837,7 +32837,7 @@
     "tbMatchupPct": 30.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 12.8,
+    "hrProb": 12.4,
     "hrrProb": 44.2,
     "tbProb": 32.2,
     "bookOdds": {
@@ -33617,7 +33617,7 @@
     "tbMatchupPct": 47.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 8.3,
+    "hrProb": 8.4,
     "hrrProb": 48.0,
     "tbProb": 38.3,
     "bookOdds": {
@@ -36779,7 +36779,7 @@
     "tbMatchupPct": 55.0,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 13.3,
+    "hrProb": 13.6,
     "hrrProb": 51.5,
     "tbProb": 44.7,
     "bookOdds": {
@@ -38359,7 +38359,7 @@
     "tbMatchupPct": 48.3,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 10.2,
+    "hrProb": 10.1,
     "hrrProb": 54.7,
     "tbProb": 42.2,
     "bookOdds": {
@@ -38763,8 +38763,8 @@
     "pip": 131.7,
     "avgmix": 0.262,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 3,
     "l5hr": 1,
@@ -39947,7 +39947,7 @@
     "tbMatchupPct": 61.1,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.9,
+    "hrProb": 8.0,
     "hrrProb": 55.0,
     "tbProb": 35.3,
     "bookOdds": {
@@ -40755,7 +40755,7 @@
     "tbMatchupPct": 45.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 9.2,
+    "hrProb": 9.1,
     "hrrProb": 50.4,
     "tbProb": 33.0,
     "bookOdds": {
@@ -43707,7 +43707,7 @@
     "tbMatchupPct": 52.7,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 15.5,
+    "hrProb": 15.4,
     "hrrProb": 58.8,
     "tbProb": 43.7
   },
@@ -44775,7 +44775,7 @@
     "tbMatchupPct": 60.6,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.8,
+    "hrProb": 8.0,
     "hrrProb": 55.9,
     "tbProb": 35.6
   },
@@ -45202,7 +45202,7 @@
     "tbMatchupPct": 57.3,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 11.4,
+    "hrProb": 11.6,
     "hrrProb": 57.9,
     "tbProb": 40.2,
     "bookOdds": {
@@ -46790,7 +46790,7 @@
     "tbMatchupPct": 43.4,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.1,
+    "hrProb": 9.0,
     "hrrProb": 48.8,
     "tbProb": 33.5
   },
@@ -47217,7 +47217,7 @@
     "tbMatchupPct": 37.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 7.8,
+    "hrProb": 7.7,
     "hrrProb": 46.9,
     "tbProb": 27.1,
     "bookOdds": {
@@ -47806,7 +47806,7 @@
     "tbMatchupPct": 32.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 9.5,
+    "hrProb": 9.6,
     "hrrProb": 43.3,
     "tbProb": 27.4,
     "bookOdds": {
@@ -48196,8 +48196,8 @@
     "pip": 131.7,
     "avgmix": 0.288,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 0,
     "l5hr": 0,
@@ -49394,7 +49394,7 @@
     "tbMatchupPct": 41.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.7,
+    "hrProb": 5.8,
     "hrrProb": 50.6,
     "tbProb": 29.0,
     "bookOdds": {
@@ -51009,7 +51009,7 @@
     "tbMatchupPct": 36.9,
     "tbRecentPct": 80.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.2,
+    "hrProb": 8.1,
     "hrrProb": 47.2,
     "tbProb": 40.1,
     "bookOdds": {
@@ -52625,7 +52625,7 @@
     "tbMatchupPct": 44.8,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 9.2,
+    "hrProb": 9.1,
     "hrrProb": 49.5,
     "tbProb": 33.4,
     "bookOdds": {
@@ -53405,7 +53405,7 @@
     "tbMatchupPct": 44.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.4,
+    "hrProb": 6.3,
     "hrrProb": 41.6,
     "tbProb": 31.3,
     "bookOdds": {
@@ -54212,7 +54212,7 @@
     "tbMatchupPct": 34.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 8.5,
+    "hrProb": 8.4,
     "hrrProb": 49.9,
     "tbProb": 34.1
   },
@@ -54639,7 +54639,7 @@
     "tbMatchupPct": 59.3,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 8.1,
+    "hrProb": 8.2,
     "hrrProb": 51.8,
     "tbProb": 31.0,
     "bookOdds": {
@@ -58126,7 +58126,7 @@
     "tbMatchupPct": 37.6,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 8.1,
+    "hrProb": 8.0,
     "hrrProb": 49.8,
     "tbProb": 31.0,
     "bookOdds": {
@@ -61962,7 +61962,7 @@
     "tbMatchupPct": 42.7,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 10.9,
+    "hrProb": 10.8,
     "hrrProb": 43.8,
     "tbProb": 32.4,
     "bookOdds": {
@@ -63405,7 +63405,7 @@
     "tbMatchupPct": 38.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 9.2,
+    "hrProb": 9.1,
     "hrrProb": 43.5,
     "tbProb": 35.3
   },
@@ -63832,7 +63832,7 @@
     "tbMatchupPct": 58.8,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.1,
+    "hrProb": 6.2,
     "hrrProb": 60.0,
     "tbProb": 37.1,
     "bookOdds": {
@@ -64626,7 +64626,7 @@
     "tbMatchupPct": 28.7,
     "tbRecentPct": 90.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.7,
+    "hrProb": 7.6,
     "hrrProb": 53.5,
     "tbProb": 41.7,
     "bookOdds": {
@@ -65016,8 +65016,8 @@
     "pip": 131.7,
     "avgmix": 0.328,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 1,
     "l5hr": 0,
@@ -66214,7 +66214,7 @@
     "tbMatchupPct": 39.0,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 9.5,
+    "hrProb": 9.6,
     "hrrProb": 51.0,
     "tbProb": 32.5,
     "bookOdds": {
@@ -67008,7 +67008,7 @@
     "tbMatchupPct": 47.0,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 8.4,
+    "hrProb": 8.3,
     "hrrProb": 51.1,
     "tbProb": 29.8
   },
@@ -67435,7 +67435,7 @@
     "tbMatchupPct": 43.0,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 7.0,
+    "hrProb": 6.9,
     "hrrProb": 48.0,
     "tbProb": 36.9
   },
@@ -67862,7 +67862,7 @@
     "tbMatchupPct": 52.0,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.0,
+    "hrProb": 6.1,
     "hrrProb": 49.4,
     "tbProb": 27.1,
     "bookOdds": {
@@ -69415,7 +69415,7 @@
     "tbMatchupPct": 47.2,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 8.5,
+    "hrProb": 8.4,
     "hrrProb": 49.8,
     "tbProb": 31.3
   },
@@ -69842,7 +69842,7 @@
     "tbMatchupPct": 54.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.7,
+    "hrProb": 6.8,
     "hrrProb": 51.8,
     "tbProb": 34.1,
     "bookOdds": {
@@ -70260,8 +70260,8 @@
     "pip": 131.7,
     "avgmix": 0.252,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 0,
     "l5hr": 0,
@@ -74196,7 +74196,7 @@
     "tbMatchupPct": 42.7,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.2,
+    "hrProb": 8.1,
     "hrrProb": 51.1,
     "tbProb": 31.1,
     "bookOdds": {
@@ -75381,7 +75381,7 @@
     "tbMatchupPct": 30.7,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 5.3,
+    "hrProb": 5.2,
     "hrrProb": 44.3,
     "tbProb": 32.7,
     "bookOdds": {
@@ -76913,7 +76913,7 @@
     "tbMatchupPct": 56.7,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 7.7,
+    "hrProb": 7.8,
     "hrrProb": 50.9,
     "tbProb": 32.2,
     "bookOdds": {
@@ -77714,7 +77714,7 @@
     "tbMatchupPct": 48.5,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 80.0,
-    "hrProb": 5.8,
+    "hrProb": 5.7,
     "hrrProb": 50.9,
     "tbProb": 28.0,
     "bookOdds": {
@@ -80054,7 +80054,7 @@
     "tbMatchupPct": 27.7,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 3.3,
+    "hrProb": 3.2,
     "hrrProb": 36.1,
     "tbProb": 23.9,
     "bookOdds": {
@@ -81586,7 +81586,7 @@
     "tbMatchupPct": 45.5,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 8.1,
+    "hrProb": 8.2,
     "hrrProb": 50.2,
     "tbProb": 30.4,
     "bookOdds": {
@@ -82261,7 +82261,7 @@
     "tbMatchupPct": 44.9,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.2,
+    "hrProb": 6.3,
     "hrrProb": 49.4,
     "tbProb": 27.2,
     "bookOdds": {
@@ -83821,7 +83821,7 @@
     "tbMatchupPct": 61.2,
     "tbRecentPct": 60.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.2,
+    "hrProb": 6.3,
     "hrrProb": 60.3,
     "tbProb": 36.3,
     "bookOdds": {
@@ -84390,7 +84390,7 @@
     "tbMatchupPct": 25.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 100.0,
-    "hrProb": 4.5,
+    "hrProb": 4.4,
     "hrrProb": 44.5,
     "tbProb": 23.8,
     "bookOdds": {
@@ -85957,7 +85957,7 @@
     "tbMatchupPct": 51.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.9,
+    "hrProb": 7.0,
     "hrrProb": 52.6,
     "tbProb": 31.3,
     "bookOdds": {
@@ -86765,7 +86765,7 @@
     "tbMatchupPct": 46.7,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 60.0,
-    "hrProb": 5.2,
+    "hrProb": 5.1,
     "hrrProb": 53.4,
     "tbProb": 35.8,
     "bookOdds": {
@@ -87552,7 +87552,7 @@
     "tbMatchupPct": 28.9,
     "tbRecentPct": 70.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 7.4,
+    "hrProb": 7.2,
     "hrrProb": 46.7,
     "tbProb": 34.0
   },
@@ -88406,7 +88406,7 @@
     "tbMatchupPct": 33.5,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 6.8,
+    "hrProb": 6.9,
     "hrrProb": 45.0,
     "tbProb": 28.8
   },
@@ -90349,7 +90349,7 @@
     "tbMatchupPct": 30.0,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.8,
+    "hrProb": 6.7,
     "hrrProb": 42.6,
     "tbProb": 26.9
   },
@@ -92337,8 +92337,8 @@
     "pip": 131.7,
     "avgmix": 0.27,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 0,
     "l5hr": 0,
@@ -93513,7 +93513,7 @@
     "tbMatchupPct": 56.9,
     "tbRecentPct": 40.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 6.5,
+    "hrProb": 6.6,
     "hrrProb": 54.7,
     "tbProb": 31.4,
     "bookOdds": {
@@ -94335,7 +94335,7 @@
     "tbMatchupPct": 62.4,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.3,
+    "hrProb": 5.4,
     "hrrProb": 55.0,
     "tbProb": 28.4,
     "bookOdds": {
@@ -94767,8 +94767,8 @@
     "pip": 131.7,
     "avgmix": 0.217,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 1,
     "l5hr": 0,
@@ -97678,7 +97678,7 @@
     "tbMatchupPct": 41.1,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.7,
+    "hrProb": 5.6,
     "hrrProb": 48.8,
     "tbProb": 30.6
   },
@@ -99581,7 +99581,7 @@
     "tbMatchupPct": 21.0,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 6.5,
+    "hrProb": 6.4,
     "hrrProb": 42.0,
     "tbProb": 27.5,
     "bookOdds": {
@@ -101951,8 +101951,8 @@
     "pip": 131.7,
     "avgmix": 0.23,
     "wind": 0,
-    "temp": 74.6,
-    "windDesc": "Calm",
+    "temp": null,
+    "windDesc": null,
     "park": 0,
     "l15hr": 0,
     "l5hr": 0,
@@ -103120,7 +103120,7 @@
     "tbMatchupPct": 22.9,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.7,
+    "hrProb": 5.5,
     "hrrProb": 42.7,
     "tbProb": 23.9,
     "bookOdds": {
@@ -103709,7 +103709,7 @@
     "tbMatchupPct": 36.4,
     "tbRecentPct": 10.0,
     "tbOpportunityPct": 40.0,
-    "hrProb": 4.7,
+    "hrProb": 4.6,
     "hrrProb": 46.3,
     "tbProb": 24.4,
     "bookOdds": {
@@ -105233,7 +105233,7 @@
     "tbMatchupPct": 44.9,
     "tbRecentPct": 50.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 5.8,
+    "hrProb": 5.7,
     "hrrProb": 49.6,
     "tbProb": 30.6
   },
@@ -105660,7 +105660,7 @@
     "tbMatchupPct": 33.1,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 4.4,
+    "hrProb": 4.3,
     "hrrProb": 42.0,
     "tbProb": 23.3,
     "bookOdds": {
@@ -107661,7 +107661,7 @@
     "tbMatchupPct": 42.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.2,
+    "hrProb": 5.1,
     "hrrProb": 49.6,
     "tbProb": 28.8,
     "bookOdds": {
@@ -110093,7 +110093,7 @@
     "tbMatchupPct": 34.3,
     "tbRecentPct": 30.0,
     "tbOpportunityPct": 20.0,
-    "hrProb": 5.6,
+    "hrProb": 5.5,
     "hrrProb": 45.5,
     "tbProb": 24.8,
     "bookOdds": {
@@ -112451,7 +112451,7 @@
     "tbMatchupPct": 49.4,
     "tbRecentPct": 20.0,
     "tbOpportunityPct": 0.0,
-    "hrProb": 4.1,
+    "hrProb": 4.0,
     "hrrProb": 47.2,
     "tbProb": 24.8,
     "bookOdds": {
