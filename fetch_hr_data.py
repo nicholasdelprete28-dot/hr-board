@@ -1908,7 +1908,18 @@ def compute_hr_probability(p):
     # of sync with it - just applies the same "does the process actually
     # back this up" question to the HR-RATE regression too, not only the
     # power blend.
-    HOT_OUTCOME_MULT = 1.3
+    #
+    # v3.29: loosened. HOT_OUTCOME_MULT 1.3 -> 1.5 - a 30% hot streak was
+    # too low a bar and triggered this check for most legitimately good
+    # picks, not just the genuinely suspicious ones. The default
+    # "unconfirmed" discount (no clear process signal either way) was
+    # softened from 0.8 to 0.9 - that catch-all case was firing more
+    # often than the two decisive cases (confirmed real surge, confirmed
+    # fake streak) and didn't deserve as much skepticism as it was
+    # getting. The confirmed-fake-streak discount also eased slightly,
+    # 0.5 -> 0.6 - still real skepticism for the strongest evidence case,
+    # just less severe.
+    HOT_OUTCOME_MULT = 1.5
     if l15_rate_raw > season_implied_rate * HOT_OUTCOME_MULT:
         proc_moves = []
         for diff, min_move in (
@@ -1922,17 +1933,17 @@ def compute_hr_probability(p):
             if proc_moves[0] < 0:
                 # Real HR count is up, but contact quality is genuinely
                 # declining at the same time - this streak looks lucky,
-                # not repeatable. Trust it a lot less.
-                l15_trust *= 0.5
-                l5_trust *= 0.5
+                # not repeatable. Trust it less.
+                l15_trust *= 0.6
+                l5_trust *= 0.6
             # else: process genuinely agrees with the hot streak - full
             # trust, this looks like a real surge, not luck.
         else:
             # No clear 2-of-3 process confirmation either way - a hot
-            # outcome with an unconfirmed process read still deserves
-            # some caution, just less than the confirmed-fake-streak case.
-            l15_trust *= 0.8
-            l5_trust *= 0.8
+            # outcome with an unconfirmed process read still deserves a
+            # little caution, just much less than the confirmed-fake case.
+            l15_trust *= 0.9
+            l5_trust *= 0.9
 
     l15_rate_regressed = l15_rate_raw * l15_trust + season_implied_rate * (1 - l15_trust)
     l5_rate_regressed = l5_rate_raw * l5_trust + season_implied_rate * (1 - l5_trust)
