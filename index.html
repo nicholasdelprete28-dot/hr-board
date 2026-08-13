@@ -1046,7 +1046,15 @@ function valuePct(rawScore, mode){
   if(mode === 'k' || rawScore == null) return rawScore;
   return DISPLAY_PCT_FLOOR + (rawScore / 100) * (VALUE_PCT_CEILING - DISPLAY_PCT_FLOOR);
 }
-const MIN_VALUE_EDGE = 4;
+// v3.29-fe: lowered 4 -> 2.5. This was calibrated against the older,
+// more aggressive formula - tonight's fetch_hr_data.py changes made the
+// model meaningfully more conservative (power gating, outcome-vs-process
+// discounting, agreement-based trust), which naturally shrinks the real
+// gap between our probability and the market's price even for genuinely
+// good picks. A real edge is still required - this isn't removing the
+// check, just recalibrating it to the model's new, more honest baseline
+// instead of the old inflated one.
+const MIN_VALUE_EDGE = 2.5;
 const STRONG_VALUE_EDGE = 12;
 function fmtNum(x, digits){ return x == null ? 'N/A' : x.toFixed(digits); }
 
