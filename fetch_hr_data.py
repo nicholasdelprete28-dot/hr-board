@@ -2343,13 +2343,23 @@ def write_daily_snapshot(players):
             snapshot.append({
                 "playerId": p.get("playerId"), "player": p.get("player"),
                 "playerType": "pitcher", "team": p.get("team"), "opponent": p.get("opponent"),
-                "kScore": p.get("kScore"), "kLine": p.get("kLine"),
+                "game": p.get("game"), "gameStatus": p.get("gameStatus"), "gameTime": p.get("gameTime"),
+                "hand": p.get("hand"),
+                "kScore": p.get("kScore"), "kLine": p.get("kLine"), "projK": p.get("projK"),
+                "k9": p.get("k9"), "era": p.get("era"), "whip": p.get("whip"), "bb9": p.get("bb9"),
+                "oppKRate": p.get("oppKRate"), "ipPerStart": p.get("ipPerStart"),
+                "seasonK": p.get("seasonK"), "l3k": p.get("l3k"), "l5k": p.get("l5k"),
+                "gamesStarted": p.get("gamesStarted"),
             })
         else:
             snapshot.append({
                 "playerId": p.get("playerId"), "player": p.get("player"),
                 "playerType": "batter", "team": p.get("team"),
+                "game": p.get("game"), "gameStatus": p.get("gameStatus"), "gameTime": p.get("gameTime"),
+                "pitcher": p.get("pitcher"), "hand": p.get("hand"),
+                "lineupConfirmed": p.get("lineupConfirmed"), "pitcherConfirmed": p.get("pitcherConfirmed"),
                 "score": p.get("score"), "hrrScore": p.get("hrrScore"), "tbScore": p.get("tbScore"),
+                "hrProb": p.get("hrProb"), "hrrProb": p.get("hrrProb"), "tbProb": p.get("tbProb"),
                 "barrel": p.get("barrel"), "ev": p.get("ev"), "hardhit": p.get("hardhit"),
                 "l15Barrel": p.get("l15Barrel"), "l15Ev": p.get("l15Ev"),
                 "l15Hardhit": p.get("l15Hardhit"), "l15PowerPa": p.get("l15PowerPa"),
@@ -2359,7 +2369,7 @@ def write_daily_snapshot(players):
                 "phr9Season": p.get("phr9Season"), "whipSeason": p.get("whipSeason"),
                 "avgmix": p.get("avgmix"), "wind": p.get("wind"), "park": p.get("park"),
                 "l15hr": p.get("l15hr"), "l5hr": p.get("l5hr"),
-                "l15hrr": p.get("l15hrr"), "l15tb": p.get("l15tb"),
+                "l15hrr": p.get("l15hrr"), "l15tb": p.get("l15tb"), "l15hits": p.get("l15hits"),
                 "risp": p.get("risp"), "lbonus": p.get("lbonus"),
                 "hrrLbonus": p.get("hrrLbonus"), "crush": p.get("crush"), "split": p.get("split"),
                 "pitchMixMatch": p.get("pitchMixMatch"),
