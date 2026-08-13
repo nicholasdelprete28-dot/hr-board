@@ -341,38 +341,32 @@
   }
   .bookodds-line{font-family:var(--mono); color:var(--text); font-weight:700; font-size:14px;}
   .bookodds-price{font-family:var(--mono); color:var(--muted); font-size:11px;}
-  .trackrecordbtn{
-    max-width:var(--content-width); width:100%; margin:10px auto 0; display:block;
+  .dayswitcher{
+    max-width:var(--content-width); margin:10px auto 0; display:flex; align-items:center; gap:8px;
+  }
+  .dayswitcher-arrow{
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
-    color:var(--muted); font-family:var(--display); font-weight:700; font-size:13px;
-    padding:10px; cursor:pointer; text-align:center;
+    color:var(--muted); font-family:var(--mono); font-size:16px; font-weight:700;
+    width:38px; height:38px; flex-shrink:0; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
   }
-  .trackrecordbtn:hover{border-color:var(--gold); color:var(--gold);}
-  .trackrecord-panel{
-    max-width:var(--content-width); margin:8px auto 0; background:var(--surface2);
-    border:1px solid var(--line); border-radius:12px; padding:14px;
+  .dayswitcher-arrow:hover:not(:disabled){border-color:var(--gold); color:var(--gold);}
+  .dayswitcher-arrow:disabled{opacity:0.35; cursor:default;}
+  .dayswitcher-input{
+    flex:1; background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+    color:var(--text); font-family:var(--mono); font-size:13px; font-weight:600;
+    padding:9px 10px; text-align:center; outline:none; color-scheme:dark;
   }
-  .tr-board{margin-bottom:16px;}
-  .tr-board:last-child{margin-bottom:0;}
-  .tr-board-title{
-    font-family:var(--display); font-weight:700; font-size:13px; color:var(--gold);
-    margin-bottom:8px; letter-spacing:0.3px;
+  .dayswitcher-input:focus{border-color:var(--gold);}
+  .dayswitcher-today{
+    background:var(--green); border:none; border-radius:10px; color:#0a0d0b;
+    font-family:var(--display); font-weight:700; font-size:12px;
+    padding:0 12px; height:38px; flex-shrink:0; cursor:pointer; white-space:nowrap;
   }
-  .tr-row{padding:8px 0; border-bottom:1px solid var(--line);}
-  .tr-row:last-child{border-bottom:none;}
-  .tr-row-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:5px;}
-  .tr-tier{font-weight:700; letter-spacing:0.3px; font-family:var(--body); font-size:13px;}
-  .tr-tier-prime{color:var(--stat-good);}
-  .tr-tier-strong{color:var(--gold);}
-  .tr-tier-inplay{color:var(--muted);}
-  .tr-tier-longshot{color:var(--stat-bad);}
-  .tr-pct{font-weight:700; color:var(--text); font-family:var(--mono); font-size:15px;}
-  .tr-bar-track{background:var(--bg); border-radius:5px; height:8px; overflow:hidden; margin-bottom:5px;}
-  .tr-bar-fill{height:100%; border-radius:5px; background:var(--stat-good);}
-  .tr-sample{color:var(--muted2); font-size:11px; font-family:var(--body);}
-  .tr-baseline{color:var(--muted2); font-size:11px; font-family:var(--body); font-style:italic;}
-  .tr-explainer{color:var(--muted); font-size:11.5px; line-height:1.5; margin-top:8px; padding-top:10px; border-top:1px solid var(--line); font-family:var(--body);}
-  .tr-empty{color:var(--muted); font-size:12px; text-align:center; padding:10px 0;}
+  .dayswitcher-status{
+    max-width:var(--content-width); margin:8px auto 0; text-align:center;
+    font-family:var(--mono); font-size:11px; color:var(--muted2);
+  }
   .statboxwrap{
     display:grid; grid-template-columns:repeat(6, 1fr); gap:1px;
     margin-top:14px; background:var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden;
@@ -549,8 +543,13 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
     <div class="boardtab" data-board="tb">TB</div>
     <div class="boardtab" data-board="k">Pitcher Ks</div>
   </div>
-  <button class="trackrecordbtn" id="trackRecordBtn">&#128202; Track Record</button>
-  <div class="trackrecord-panel" id="trackRecordPanel" style="display:none;"></div>
+  <div class="dayswitcher" id="daySwitcher">
+    <button class="dayswitcher-arrow" id="dayPrevBtn" aria-label="Previous day">&#8592;</button>
+    <input type="date" class="dayswitcher-input" id="dayInput">
+    <button class="dayswitcher-arrow" id="dayNextBtn" aria-label="Next day">&#8594;</button>
+    <button class="dayswitcher-today" id="dayTodayBtn" style="display:none;">Today</button>
+  </div>
+  <div class="dayswitcher-status" id="daySwitcherStatus" style="display:none;"></div>
   <div class="hrcounter" id="hrcounter" style="display:none;">
     <span class="hrcounter-dot"></span>
     <span id="hrcounter-text">Today's HRs: &ndash;</span>
@@ -577,7 +576,7 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
       <option value="allstatus">All Statuses</option>
     </select>
   </div>
-  <div class="gamefilter-label">Upcoming Games</div>
+  <div class="gamefilter-label" id="gamefilterLabel">Upcoming Games</div>
   <div class="gamefilter" id="gamefilter"></div>
 </header>
 
@@ -625,6 +624,9 @@ let sortKey = 'hrProb';
 let sortDesc = true;
 let query = '';
 let selectedGame = null;
+const HISTORY_BASE = "./history";
+let viewDate = null;
+let refreshInterval = null;
 
 const BOARD_CONFIG = {
   hr: {
@@ -682,6 +684,7 @@ function teamLogo(abbr, size){
   return `<img src="https://www.mlbstatic.com/team-logos/${id}.svg" alt="${abbr}" style="width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle;" onerror="this.style.display='none'">`;
 }
 function matchupWithLogos(gameStr, size){
+  if(!gameStr) return '';
   const parts = gameStr.split(' @ ');
   if(parts.length !== 2) return gameStr;
   return `${teamLogo(parts[0], size)} ${parts[0]} @ ${teamLogo(parts[1], size)} ${parts[1]}`;
@@ -699,86 +702,129 @@ function setSortButtonsForMode(){
   });
 }
 
-async function loadPlayers() {
+function isViewingToday(){ return viewDate === getLocalDateString(); }
+
+function shiftDateStr(dateStr, deltaDays){
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  dt.setDate(dt.getDate() + deltaDays);
+  const ny = dt.getFullYear();
+  const nm = String(dt.getMonth() + 1).padStart(2, '0');
+  const nd = String(dt.getDate()).padStart(2, '0');
+  return `${ny}-${nm}-${nd}`;
+}
+
+function updateDaySwitcherControls(){
+  const today = getLocalDateString();
+  document.getElementById('dayInput').value = viewDate;
+  document.getElementById('dayInput').max = today;
+  document.getElementById('dayNextBtn').disabled = (viewDate >= today);
+  document.getElementById('dayTodayBtn').style.display = (viewDate === today) ? 'none' : 'inline-block';
+}
+
+async function loadDay(dateStr){
+  viewDate = dateStr;
+  updateDaySwitcherControls();
+  selectedGame = null;
   const list = document.getElementById('list');
-  list.innerHTML = '<div class="empty">Loading latest data&hellip;</div>';
-  try {
-    const res = await fetch(DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    players = await res.json();
-    await applyLiveGameStatus();
-    buildGameFilter();
-    render();
-    setInterval(async () => {
+  const labelEl = document.getElementById('gamefilterLabel');
+  const statusEl = document.getElementById('daySwitcherStatus');
+  statusEl.style.display = 'none';
+
+  if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
+  if (homerPollInterval) { clearInterval(homerPollInterval); homerPollInterval = null; }
+
+  if (isViewingToday()) {
+    labelEl.textContent = 'Upcoming Games';
+    document.getElementById('statusselect').value = '';
+    selectedStatus = '';
+    list.innerHTML = '<div class="empty">Loading latest data&hellip;</div>';
+    try {
+      const res = await fetch(DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now());
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      players = await res.json();
       await applyLiveGameStatus();
       buildGameFilter();
       render();
-    }, 120000);
-  } catch (err) {
-    list.innerHTML = '<div class="empty">Could not load live data (' + err.message + ').<br>Check that DATA_URL near the top of the script is set to your GitHub raw URL.</div>';
-  }
-}
-
-let trackRecordData = null;
-
-async function loadTrackRecord(){
-  try {
-    const res = await fetch(TRACK_URL + '?t=' + Date.now());
-    if(!res.ok) throw new Error('not available yet');
-    trackRecordData = await res.json();
-  } catch (err) {
-    trackRecordData = null;
-  }
-}
-
-function renderTrackRecord(){
-  const panel = document.getElementById('trackRecordPanel');
-  const boardLabels = { hr: 'HR', hrr: 'HRR', tb: 'TB', k: 'Pitcher Ks' };
-  const tierOrder = ['prime', 'strong', 'inplay', 'longshot'];
-  const tierLabels = { prime: 'PRIME', strong: 'STRONG', inplay: 'IN PLAY', longshot: 'LONG SHOT' };
-  const boardBaseline = { hr: 12, hrr: 52, tb: 43 };
-
-  if(!trackRecordData){
-    panel.innerHTML = '<div class="tr-empty">No accuracy data yet - check_results.py needs to run at least once, after a full day of games is final, before there\'s anything real to show here.</div>';
+      refreshInterval = setInterval(async () => {
+        await applyLiveGameStatus();
+        buildGameFilter();
+        render();
+      }, 120000);
+    } catch (err) {
+      list.innerHTML = '<div class="empty">Could not load live data (' + err.message + ').<br>Check that DATA_URL near the top of the script is set to your GitHub raw URL.</div>';
+    }
     return;
   }
 
-  let html = '';
-  const tiers = trackRecordData[boardMode];
-  if(tiers){
-    let boardHtml = '';
-    for(const tier of tierOrder){
-      const r = tiers[tier];
-      if(!r || r.total === 0) continue;
-      const pct = Math.round(100 * r.hit / r.total);
-      const baseline = boardBaseline[boardMode];
-      const baselineNote = baseline != null
-        ? `<span class="tr-baseline">vs ~${baseline}% for a random pick with no model at all</span>`
-        : '';
-      boardHtml += `
-        <div class="tr-row">
-          <div class="tr-row-top">
-            <span class="tr-tier tr-tier-${tier}">${tierLabels[tier]} picks</span>
-            <span class="tr-pct">${pct}% correct</span>
-          </div>
-          <div class="tr-bar-track"><div class="tr-bar-fill" style="width:${pct}%; background:${tier === 'longshot' ? 'var(--stat-bad)' : tier === 'strong' ? 'var(--gold)' : 'var(--stat-good)'};"></div></div>
-          <div class="tr-sample">Right ${r.hit} out of ${r.total} times ${baselineNote}</div>
-        </div>`;
+  // Historical day - no live polling, no HR counter (that's a "right now"
+  // stat), and default to showing everything since nothing is ever
+  // "upcoming" in the past - the Upcoming Only filter would otherwise
+  // hide every single card.
+  document.getElementById('hrcounter').style.display = 'none';
+  labelEl.textContent = 'Games That Day';
+  document.getElementById('statusselect').value = 'allstatus';
+  selectedStatus = 'allstatus';
+
+  list.innerHTML = '<div class="empty">Loading ' + dateStr + '&hellip;</div>';
+  try {
+    const snapRes = await fetch(`${HISTORY_BASE}/${dateStr}.json?t=${Date.now()}`);
+    if (!snapRes.ok) throw new Error('no data saved for this date');
+    const snapshot = await snapRes.json();
+
+    let outcomes = { batter: {}, pitcher: {} };
+    try {
+      const outRes = await fetch(`${HISTORY_BASE}/outcomes/${dateStr}.json?t=${Date.now()}`);
+      if (outRes.ok) outcomes = await outRes.json();
+    } catch (e) {
+      // No outcomes file yet for this date (e.g. check_results.py hasn't
+      // run for it) - cards will just show the model's numbers with no
+      // actual-result badge, rather than failing to load at all.
     }
-    if(boardHtml){
-      const explainer = boardMode !== 'k'
-        ? `<div class="tr-explainer">These are real rates, not promises of "more likely than not." Home runs and similar props are rare even for great hitters - a tier that consistently beats the no-model baseline above is genuinely finding an edge, even when the raw percentage looks low. What matters is PRIME beating STRONG beating IN PLAY beating LONG SHOT, in order - that ranking is the real signal.</div>`
-        : '';
-      html += `<div class="tr-board"><div class="tr-board-title">${boardLabels[boardMode]}</div>${boardHtml}${explainer}</div>`;
-    }
+
+    players = snapshot.map(p => {
+      const bucket = p.playerType === 'pitcher' ? outcomes.pitcher : outcomes.batter;
+      const result = bucket ? bucket[String(p.playerId)] : null;
+      if (p.playerType === 'pitcher') {
+        return { ...p, actualK: result ? result.k : null };
+      }
+      return {
+        ...p,
+        actualHR: result ? result.hr : null,
+        actualHRR: result ? result.hrr : null,
+        actualTB: result ? result.tb : null,
+      };
+    });
+
+    buildGameFilter();
+    render();
+  } catch (err) {
+    players = [];
+    list.innerHTML = '';
+    statusEl.textContent = `No data available for ${dateStr}.`;
+    statusEl.style.display = 'block';
+    render();
   }
-  panel.innerHTML = html || `<div class="tr-empty">No graded picks yet for the ${boardLabels[boardMode]} board.</div>`;
 }
 
-document.getElementById('trackRecordBtn').addEventListener('click', () => {
-  const panel = document.getElementById('trackRecordPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-});
+function initDaySwitcher(){
+  viewDate = getLocalDateString();
+  document.getElementById('dayInput').max = viewDate;
+  document.getElementById('dayInput').addEventListener('change', (e) => {
+    if (e.target.value) loadDay(e.target.value);
+  });
+  document.getElementById('dayPrevBtn').addEventListener('click', () => {
+    loadDay(shiftDateStr(viewDate, -1));
+  });
+  document.getElementById('dayNextBtn').addEventListener('click', () => {
+    if (viewDate >= getLocalDateString()) return;
+    loadDay(shiftDateStr(viewDate, 1));
+  });
+  document.getElementById('dayTodayBtn').addEventListener('click', () => {
+    loadDay(getLocalDateString());
+  });
+  loadDay(viewDate);
+}
 
 async function applyLiveGameStatus(){
   try {
@@ -1259,7 +1305,7 @@ function render(){
   const emptyEl = document.getElementById('empty');
   let filtered = players.filter(p => {
     const q = query.toLowerCase();
-    const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || p.game.toLowerCase().includes(q) || (p.pitcher || p.opponent || '').toLowerCase().includes(q);
+    const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || (p.game || '').toLowerCase().includes(q) || (p.pitcher || p.opponent || '').toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
     const matchesTier = !selectedTier || favTierClass(p[scoreField()]) === selectedTier;
     const matchesType = p.playerType === (boardMode === 'k' ? 'pitcher' : 'batter');
@@ -1482,7 +1528,6 @@ document.querySelectorAll('.boardtab').forEach(tab => {
     document.getElementById('subtitle').innerHTML = BOARD_CONFIG[boardMode].subtitle;
     setSortButtonsForMode();
     render();
-    renderTrackRecord();
   });
 });
 
@@ -1538,8 +1583,7 @@ document.getElementById('list').addEventListener('click', (e) => {
   else openPlayerModal(p);
 });
 
-loadPlayers();
-loadTrackRecord().then(renderTrackRecord);
+initDaySwitcher();
 </script>
 
 <script>
