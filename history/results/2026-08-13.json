@@ -1,0 +1,84 @@
+{
+  "hr": {
+    "prime": {
+      "hit": 1,
+      "total": 8
+    },
+    "strong": {
+      "hit": 4,
+      "total": 40
+    },
+    "inplay": {
+      "hit": 2,
+      "total": 26
+    },
+    "longshot": {
+      "hit": 7,
+      "total": 88
+    }
+  },
+  "hrr": {
+    "prime": {
+      "hit": 18,
+      "total": 31
+    },
+    "strong": {
+      "hit": 27,
+      "total": 67
+    },
+    "inplay": {
+      "hit": 1,
+      "total": 14
+    },
+    "longshot": {
+      "hit": 17,
+      "total": 50
+    }
+  },
+  "tb": {
+    "prime": {
+      "hit": 3,
+      "total": 6
+    },
+    "strong": {
+      "hit": 17,
+      "total": 44
+    },
+    "inplay": {
+      "hit": 10,
+      "total": 35
+    },
+    "longshot": {
+      "hit": 14,
+      "total": 77
+    }
+  },
+  "k": {
+    "inplay": {
+      "hit": 0,
+      "total": 6
+    },
+    "strong": {
+      "hit": 3,
+      "total": 6
+    },
+    "prime": {
+      "hit": 5,
+      "total": 6
+    }
+  },
+  "_coverage": {
+    "hr": {
+      "real_total": 15,
+      "matched": 14
+    },
+    "hrr": {
+      "real_total": 65,
+      "matched": 63
+    },
+    "tb": {
+      "real_total": 45,
+      "matched": 44
+    }
+  }
+}
