@@ -2420,8 +2420,18 @@ def main():
         if opp_pitcher_id:
             platoon_hr9, platoon_ip = get_pitcher_platoon_split(opp_pitcher_id, effective_vs_hand)
             if platoon_hr9 is not None and player_row.get("phr9") is not None:
-                PLATOON_HR9_SHRINK_K = 25
-                weight = platoon_ip / (platoon_ip + PLATOON_HR9_SHRINK_K) if platoon_ip > 0 else 0.0
+                # v3.30: pulled back hard. K=25 let a routine within-season
+                # split sample (40-70 IP) swing 45-60%+ of the final
+                # number toward the split - too aggressive to still call
+                # this "the pitcher's natural HR/9." K=60 plus an explicit
+                # 0.40 cap means the overall/season rate always keeps the
+                # clear majority say, and the split can only ever nudge
+                # it, not dominate it, no matter how much split sample
+                # exists.
+                PLATOON_HR9_SHRINK_K = 60
+                PLATOON_HR9_MAX_WEIGHT = 0.40
+                weight = (min(PLATOON_HR9_MAX_WEIGHT, platoon_ip / (platoon_ip + PLATOON_HR9_SHRINK_K))
+                          if platoon_ip > 0 else 0.0)
                 player_row["phr9"] = round(
                     player_row["phr9"] * (1 - weight) + platoon_hr9 * weight, 2)
         player_row["batSide"] = bat_side
