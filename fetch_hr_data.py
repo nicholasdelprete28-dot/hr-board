@@ -2414,26 +2414,25 @@ def main():
         # "soft matchup"/"tough matchup" chips (which compare phr9 to
         # phr9Season) keep working exactly the same way, just now also
         # picking up a real handedness-driven mismatch if one exists.
+        # v3.31: REVERTED from affecting phr9. Two rounds of real
+        # examples (including the exact same pitcher showing 1.92 for one
+        # teammate and 1.48 for another) made clear this was still moving
+        # the number more than "the pitcher's natural HR/9" should mean,
+        # even after the v3.30 tightening. player_row["phr9"] is left
+        # completely alone now - one number per pitcher, same for every
+        # batter he faces, full stop. The handedness-split data is still
+        # fetched and kept (phr9VsHand/phr9VsHandIp) rather than deleted,
+        # in case this is worth revisiting later with real outcomes data
+        # backing the calibration - it just doesn't touch phr9 or the
+        # model right now.
         bat_side = get_player_bat_side(batter_id)
         effective_vs_hand = ("R" if pitcher_hand == "L" else "L") if bat_side == "S" else bat_side
         opp_pitcher_id = player_row.get("oppPitcherId")
+        phr9_vs_hand, phr9_vs_hand_ip = (None, 0)
         if opp_pitcher_id:
-            platoon_hr9, platoon_ip = get_pitcher_platoon_split(opp_pitcher_id, effective_vs_hand)
-            if platoon_hr9 is not None and player_row.get("phr9") is not None:
-                # v3.30: pulled back hard. K=25 let a routine within-season
-                # split sample (40-70 IP) swing 45-60%+ of the final
-                # number toward the split - too aggressive to still call
-                # this "the pitcher's natural HR/9." K=60 plus an explicit
-                # 0.40 cap means the overall/season rate always keeps the
-                # clear majority say, and the split can only ever nudge
-                # it, not dominate it, no matter how much split sample
-                # exists.
-                PLATOON_HR9_SHRINK_K = 60
-                PLATOON_HR9_MAX_WEIGHT = 0.40
-                weight = (min(PLATOON_HR9_MAX_WEIGHT, platoon_ip / (platoon_ip + PLATOON_HR9_SHRINK_K))
-                          if platoon_ip > 0 else 0.0)
-                player_row["phr9"] = round(
-                    player_row["phr9"] * (1 - weight) + platoon_hr9 * weight, 2)
+            phr9_vs_hand, phr9_vs_hand_ip = get_pitcher_platoon_split(opp_pitcher_id, effective_vs_hand)
+        player_row["phr9VsHand"] = phr9_vs_hand
+        player_row["phr9VsHandIp"] = phr9_vs_hand_ip
         player_row["batSide"] = bat_side
 
         games_this_year = get_gamelog(batter_id, YEAR)
@@ -2707,6 +2706,7 @@ def write_daily_snapshot(players):
                 "oppBullpenIp": p.get("oppBullpenIp"),
                 "oppIpPerStart": p.get("oppIpPerStart"),
                 "batSide": p.get("batSide"),
+                "phr9VsHand": p.get("phr9VsHand"), "phr9VsHandIp": p.get("phr9VsHandIp"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
