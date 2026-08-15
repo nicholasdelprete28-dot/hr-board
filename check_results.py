@@ -48,6 +48,20 @@ from fetch_hr_data import statsapi_get
 # against the wrong boundaries.
 BATTER_TIERS = [("prime", 55), ("strong", 40), ("inplay", 35), ("longshot", 0)]
 K_TIERS = [("prime", 51), ("strong", 45), ("inplay", 39), ("longshot", 0)]
+# v3.32 FIX: the HR board's live tiers on the site are based on hrProb
+# (a real calibrated 0-30ish% probability) with cutoffs 20/14/9 - NOT
+# the old 0-100 composite `score` field with BATTER_TIERS' 55/40/35.
+# That switch happened on the frontend a while back; this file was never
+# updated to match, so every HR accuracy number this script has ever
+# produced was silently grading a DIFFERENT tier system than the one
+# subscribers actually see on their cards. HRR/TB/K are unaffected -
+# their frontend tiers still genuinely match BATTER_TIERS/K_TIERS.
+# Real hrProb cutoffs (0-30% realistic range, capped by the backend's
+# own real-world-grounded ceiling) - NOT the old 55/40/35 composite
+# cutoffs, which meant nothing on this scale. Reverted back to 20/14/9 -
+# the 16/11/6 experiment was undone. Kept in sync with index.html's
+# favTierName()/favTierClass() - update both together if this changes.
+HR_PROB_TIERS = [("prime", 16), ("strong", 11), ("inplay", 6), ("longshot", 0)]
 
 
 def tier_for(score, tiers):
@@ -174,6 +188,37 @@ def fetch_league_wide_qualifiers(date_str):
     return qualifiers
 
 
+def compute_rank_stats(snapshot, score_key, hit_fn, actual_lookup):
+    """v3.33: what actually matters for someone picking from the top of
+    the board - not which tier a score falls under, but WHERE the real
+    hitters that day actually landed when everyone is ranked by the real
+    number, best to worst. Ranks every graded player by score_key
+    (descending) and finds the rank of every player who actually cleared
+    hit_fn that day, regardless of what tier label their score happened
+    to fall into. This is a direct, tier-agnostic answer to "if a
+    subscriber just took the top of the list, would they actually be
+    looking at the real hitters?" """
+    ranked = [p for p in snapshot if p.get(score_key) is not None]
+    ranked.sort(key=lambda p: -p[score_key])
+    hit_ranks = []
+    for i, p in enumerate(ranked):
+        actual = actual_lookup.get(str(p.get("playerId")))
+        if actual and hit_fn(actual):
+            hit_ranks.append(i + 1)  # 1-indexed rank
+    if not hit_ranks:
+        return None
+    hit_ranks.sort()
+    n = len(hit_ranks)
+    return {
+        "totalHitters": n,
+        "totalRanked": len(ranked),
+        "medianRank": hit_ranks[n // 2],
+        "top10Pct": round(100 * sum(1 for r in hit_ranks if r <= 10) / n, 1),
+        "top20Pct": round(100 * sum(1 for r in hit_ranks if r <= 20) / n, 1),
+        "top30Pct": round(100 * sum(1 for r in hit_ranks if r <= 30) / n, 1),
+    }
+
+
 def check_date(date_str):
     snapshot_path = f"history/{date_str}.json"
     if not os.path.exists(snapshot_path):
@@ -215,13 +260,15 @@ def check_date(date_str):
             player_outcomes["batter"][str(p["playerId"])] = {
                 "hr": actual["hr"], "hrr": actual["hrr"], "tb": actual["tb"],
             }
-            for board, score_key, threshold in [
-                ("hr", "score", 1), ("hrr", "hrrScore", 2), ("tb", "tbScore", 2)
+            for board, score_key, tiers_to_use, threshold in [
+                ("hr", "hrProb", HR_PROB_TIERS, 1),
+                ("hrr", "hrrScore", BATTER_TIERS, 2),
+                ("tb", "tbScore", BATTER_TIERS, 2),
             ]:
                 score = p.get(score_key)
                 if score is None:
                     continue
-                tier = tier_for(score, BATTER_TIERS)
+                tier = tier_for(score, tiers_to_use)
                 bump(results, board, tier, actual[board] >= threshold)
             checked += 1
 
@@ -266,9 +313,22 @@ def check_date(date_str):
         coverage[board] = {"real_total": len(real_set), "matched": len(matched)}
         print(f"  {board.upper()} coverage: {len(matched)} of {len(real_set)} real qualifiers were on our board")
 
+    # v3.33: rank-based check for the HR board - where did real hitters
+    # actually land when ranked by hrProb, independent of tier labels.
+    rank_stats = {}
+    hr_rank = compute_rank_stats(
+        snapshot, "hrProb", lambda a: a["hr"] >= 1, player_outcomes["batter"])
+    if hr_rank:
+        rank_stats["hr"] = hr_rank
+        print(f"  HR rank check: {hr_rank['totalHitters']} real hitters out of "
+              f"{hr_rank['totalRanked']} ranked players - median rank "
+              f"{hr_rank['medianRank']}, {hr_rank['top10Pct']}% in top 10, "
+              f"{hr_rank['top20Pct']}% in top 20, {hr_rank['top30Pct']}% in top 30")
+
     os.makedirs("history/results", exist_ok=True)
     results_with_coverage = dict(results)
     results_with_coverage["_coverage"] = coverage
+    results_with_coverage["_rankStats"] = rank_stats
     with open(f"history/results/{date_str}.json", "w") as f:
         json.dump(results_with_coverage, f, indent=2)
 
