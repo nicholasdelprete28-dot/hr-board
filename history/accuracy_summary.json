@@ -1,88 +1,88 @@
 {
   "hr": {
     "prime": {
-      "hit": 22,
-      "total": 93
+      "hit": 26,
+      "total": 105
     },
     "strong": {
-      "hit": 50,
-      "total": 395
+      "hit": 61,
+      "total": 461
     },
     "inplay": {
-      "hit": 23,
-      "total": 204
+      "hit": 25,
+      "total": 238
     },
     "longshot": {
-      "hit": 34,
-      "total": 460
+      "hit": 46,
+      "total": 599
     }
   },
   "hrr": {
     "strong": {
-      "hit": 222,
-      "total": 465
+      "hit": 269,
+      "total": 563
     },
     "prime": {
-      "hit": 124,
-      "total": 228
+      "hit": 140,
+      "total": 271
     },
     "inplay": {
-      "hit": 54,
-      "total": 156
+      "hit": 74,
+      "total": 200
     },
     "longshot": {
-      "hit": 104,
-      "total": 303
+      "hit": 126,
+      "total": 369
     }
   },
   "tb": {
     "strong": {
-      "hit": 134,
-      "total": 330
+      "hit": 160,
+      "total": 402
     },
     "prime": {
-      "hit": 37,
-      "total": 72
+      "hit": 40,
+      "total": 86
     },
     "inplay": {
-      "hit": 75,
-      "total": 227
+      "hit": 90,
+      "total": 271
     },
     "longshot": {
-      "hit": 142,
-      "total": 523
+      "hit": 180,
+      "total": 644
     }
   },
   "k": {
     "inplay": {
-      "hit": 17,
-      "total": 41
+      "hit": 22,
+      "total": 50
     },
     "strong": {
-      "hit": 17,
-      "total": 43
+      "hit": 21,
+      "total": 53
     },
     "prime": {
-      "hit": 16,
-      "total": 36
+      "hit": 21,
+      "total": 43
     },
     "longshot": {
       "hit": 2,
-      "total": 8
+      "total": 9
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 135,
-      "matched": 129
+      "real_total": 165,
+      "matched": 158
     },
     "hrr": {
-      "real_total": 529,
-      "matched": 504
+      "real_total": 639,
+      "matched": 609
     },
     "tb": {
-      "real_total": 400,
-      "matched": 388
+      "real_total": 487,
+      "matched": 470
     }
   }
 }
