@@ -1731,7 +1731,15 @@ def compute_score(p):
     # bullpen, day-of-week) coincidentally lining up favorably at once -
     # that kind of alignment is much more plausibly noise than a hitter
     # simply being great, hot, and well-matched all at the same time.
-    SITUATIONAL_BOOST_TRIGGER = 0.10
+    #
+    # v3.36: loosened further, 0.10 -> 0.20. A player with a genuinely
+    # great matchup, favorable wind, a platoon edge, and a hot lineup
+    # spot all lining up on the SAME day is exactly the kind of real,
+    # day-specific signal that should lift him - not get treated as
+    # suspicious just because several real factors agree. The old 0.10
+    # trigger was catching this real-alignment case too often, on top of
+    # the genuine coincidental-noise case it was built for.
+    SITUATIONAL_BOOST_TRIGGER = 0.20
     STACK_PENALTY_MAX = 6.0
     sit_boost = situational_multiplier_boost(p)
     if sit_boost >= SITUATIONAL_BOOST_TRIGGER:
@@ -1877,7 +1885,28 @@ def compute_hr_probability(p):
 
     sf = compute_hr_subfactors(p)
     power_quality = sf["power"]
-    POWER_QUALITY_MULTIPLIER = 1.7  # was 1.3
+    # v3.35: trimmed 1.7 -> 1.5. Power's total swing (floor-to-ceiling
+    # ratio on season_implied_rate) was far larger than matchup's ever
+    # was, even before matchup got dialed back tonight - meaning an elite,
+    # established slugger's raw power alone could dominate the ranking
+    # almost regardless of today's actual matchup, while a merely-good
+    # hitter with a genuinely great matchup couldn't climb high enough to
+    # compete. This doesn't remove power's importance, just brings its
+    # total range closer in line with matchup's (see the sensitivity
+    # bump on PITCHER_MATCHUP_SENSITIVITY below) so a real day-specific
+    # edge can actually matter again.
+    #
+    # v3.36: cut further, 1.5 -> 1.1. 1.5 still wasn't enough to stop the
+    # same elite hitters dominating the top of the board day after day -
+    # power_quality is anchored heavily to SEASON-length stats and barely
+    # moves day to day for an established player, so as long as it
+    # dominates the final number, the same names will always be near the
+    # top regardless of today's actual matchup. This is a real, decisive
+    # cut (ceiling/floor ratio now ~4.3x, down from 6.7x at the start of
+    # tonight), paired with the matchup sensitivity increase below, so
+    # day-specific factors can genuinely reorder the board now instead of
+    # only nudging it.
+    POWER_QUALITY_MULTIPLIER = 1.1  # was 1.7 at the start of tonight
     season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
     # v3.16: recent HR rate now REGRESSED toward this player's own
@@ -2006,7 +2035,26 @@ def compute_hr_probability(p):
     # inflating a low-power hitter) independently of this constant, so
     # there's room to trust matchup quality more without reopening that
     # issue.
-    PITCHER_MATCHUP_SENSITIVITY = 0.5
+    #
+    # v3.35: pushed further, 0.5 -> 0.65 - ABOVE the original 0.6. Power's
+    # total swing was still large enough to let raw power dominate the
+    # board almost regardless of matchup, even with gating in place. The
+    # gate is what actually prevents the original failure mode (a weak
+    # hitter inflated by a bad pitcher) - it's independent of this
+    # constant, so this can go higher than the original value now without
+    # reopening that problem. This is what lets a genuinely great
+    # day-specific matchup meaningfully separate two otherwise-similar
+    # hitters again, instead of the ranking basically just being "who's
+    # the best hitter in MLB regardless of today."
+    #
+    # v3.36: pushed again, 0.65 -> 0.85, alongside the bigger power cut
+    # above. Matchup's ceiling/floor range is now roughly on par with
+    # power's (~4.5x vs ~4.3x) instead of being the clearly smaller
+    # factor - a genuinely great or terrible matchup can now compete with
+    # raw power for who ends up on top, which is the actual goal: real
+    # day-specific chances, not just a leaderboard of the best hitters in
+    # baseball reshuffled slightly.
+    PITCHER_MATCHUP_SENSITIVITY = 0.85
     raw_matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
     matchup_mult = 1 + (raw_matchup_mult - 1) * matchup_strength
     mean = max(0.01, base_rate * matchup_mult)
@@ -2048,7 +2096,11 @@ def compute_hr_probability(p):
     # simultaneously strong (those are real signal, not stacking noise);
     # only fires on genuinely situational alignment (home/road, day/night,
     # bullpen, day-of-week).
-    SITUATIONAL_BOOST_TRIGGER = 0.10
+    #
+    # v3.36: same loosening as compute_score() - 0.10 -> 0.20. Real,
+    # day-specific alignment across several genuine factors should lift a
+    # player, not get treated as suspicious.
+    SITUATIONAL_BOOST_TRIGGER = 0.20
     STACK_REDUCTION_MAX = 0.20
     sit_boost = situational_multiplier_boost(p)
     if sit_boost >= SITUATIONAL_BOOST_TRIGGER:
