@@ -1297,6 +1297,33 @@ def clamp01(x):
     return max(0.0, min(1.0, x))
 
 
+def launch_angle_quality(la):
+    """v3.37: launch angle finally wired into the actual power calc -
+    it's been display-only this whole session, purely cosmetic, while
+    the real formula stayed completely blind to it. The ideal home-run
+    launch angle is roughly 25-35 degrees; a hitter can post an elevated
+    exit velo AND an elevated barrel% while his AVERAGE launch angle is
+    still low (hard line drives and grounders, not lift) - the exact
+    case that exposed this gap: a real card showing EV up, barrel% up,
+    "power surge" flagged, and a 6.8 degree average launch angle telling
+    a completely different story that the formula was ignoring entirely.
+    Returns 0-1: 0 below 5 degrees (essentially no lift at all), ramps up
+    through the "getting there" zone, holds at 1.0 in the real ideal
+    window, then decays back down past ~35 degrees (too high starts
+    meaning popups, not homers)."""
+    if la is None:
+        return 0.5  # neutral - don't punish or reward when we don't have it
+    if la < 5:
+        return 0.0
+    if la <= 25:
+        return (la - 5) / 20
+    if la <= 35:
+        return 1.0
+    if la <= 50:
+        return max(0.0, 1 - (la - 35) / 15)
+    return 0.0
+
+
 def barrel_confidence(barrel, ev):
     if barrel is None or ev is None:
         return 1.0
@@ -1615,7 +1642,18 @@ def compute_hr_subfactors(p):
     # diluted 1-for-1 by a much weaker, angle-blind signal. A hitter with
     # a mediocre barrel% but inflated hard-hit% (hits the ball hard, just
     # not in the air) no longer gets nearly as much power credit for it.
-    quality_of_contact = barrel_n * 0.50 + ev_n * 0.25 + hardhit_n * 0.25
+    #
+    # v3.37: launch angle added as a genuine 4th component - previously
+    # display-only. barrel/EV/hardhit can all read as "elevated" purely
+    # from hard contact, with zero regard for whether that contact is
+    # actually going up. A real, live example: EV and barrel% both up
+    # from season, but AVERAGE launch angle at 6.8 degrees - hard contact
+    # on a trajectory that mostly doesn't leave the yard. Reweighted to
+    # make room (barrel still dominant at 40%, since it alone already
+    # requires both velo and angle) rather than just adding a 4th slice
+    # on top and inflating everyone's score.
+    la_q = launch_angle_quality(p.get("l15LaunchAngle"))
+    quality_of_contact = barrel_n * 0.40 + ev_n * 0.20 + hardhit_n * 0.20 + la_q * 0.20
 
     iso_n = clamp01((iso_final - 0.08) / 0.27)            # floor .080, peak-season ceiling .350
 
