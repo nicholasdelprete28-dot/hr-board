@@ -1298,29 +1298,37 @@ def clamp01(x):
 
 
 def launch_angle_quality(la):
-    """v3.37: launch angle finally wired into the actual power calc -
-    it's been display-only this whole session, purely cosmetic, while
-    the real formula stayed completely blind to it. The ideal home-run
-    launch angle is roughly 25-35 degrees; a hitter can post an elevated
-    exit velo AND an elevated barrel% while his AVERAGE launch angle is
-    still low (hard line drives and grounders, not lift) - the exact
-    case that exposed this gap: a real card showing EV up, barrel% up,
-    "power surge" flagged, and a 6.8 degree average launch angle telling
-    a completely different story that the formula was ignoring entirely.
-    Returns 0-1: 0 below 5 degrees (essentially no lift at all), ramps up
-    through the "getting there" zone, holds at 1.0 in the real ideal
-    window, then decays back down past ~35 degrees (too high starts
-    meaning popups, not homers)."""
+    """v3.37: launch angle wired into the actual power calc - previously
+    display-only. v3.38 FIX: the thresholds below were wrong on first
+    pass - they used ~25-35 degrees as the "good" zone, which is the
+    ideal angle for a single, perfectly-struck HOME RUN swing, not for a
+    player's AVERAGE launch angle across every batted ball he hits
+    (including routine grounders and weak contact). Real MLB hitters
+    average roughly 10-15 degrees across ALL their contact - almost
+    nobody's average approaches 25 degrees, since most swings aren't
+    home run swings. Using the single-swing-ideal range as the bar for
+    an average meant nearly every player got dragged down by this
+    component regardless of how good or bad their real profile was,
+    which is exactly what happened: broad PRIME collapse across the
+    board, not a meaningful reshuffling of who's actually hitting the
+    ball on a good trajectory. Rescaled to realistic AVERAGE ranges
+    instead: 0 at a grounder-heavy profile, ramping through a real
+    below-to-above-average band, holding at max for a genuinely good
+    fly-ball-oriented average, decaying past the point where an average
+    that high would mean too many popups. HONESTY NOTE: this is still a
+    reasoned approximation, not built from verified real league
+    launch-angle-average distribution data - treat it as directionally
+    right, not precisely calibrated, until checked against real numbers."""
     if la is None:
         return 0.5  # neutral - don't punish or reward when we don't have it
-    if la < 5:
+    if la <= -5:
         return 0.0
-    if la <= 25:
-        return (la - 5) / 20
-    if la <= 35:
+    if la <= 20:
+        return (la + 5) / 25
+    if la <= 28:
         return 1.0
-    if la <= 50:
-        return max(0.0, 1 - (la - 35) / 15)
+    if la <= 45:
+        return max(0.0, 1 - (la - 28) / 17)
     return 0.0
 
 
@@ -1988,14 +1996,28 @@ def compute_hr_probability(p):
     # just less severe.
     HOT_OUTCOME_MULT = 1.5
     if l15_rate_raw > season_implied_rate * HOT_OUTCOME_MULT:
+        # v3.41: barrel% now gets DOUBLE say in this vote, and a lower
+        # (more sensitive) move threshold - matching the same 2x weight
+        # it already gets in quality_of_contact (40% vs 20% each for
+        # EV/hard-hit%), for the same reason: barrel% is the only one of
+        # the three that requires both real exit velo AND real launch
+        # angle together, making it the single most HR-specific signal
+        # here. A real case that exposed this: barrel% genuinely UP
+        # (+1.2pp) and launch angle in the ideal HR zone, but hard-hit%
+        # down hard (-15.5pp) - the old equal-vote logic let hard-hit%
+        # alone (the weakest, most angle-blind of the three) drag this
+        # to a "confirmed fake streak" verdict despite the most trusted
+        # metric saying the opposite. Now that genuinely ties the vote
+        # instead of losing it, landing in the much gentler "unconfirmed"
+        # bucket rather than the harsh one.
         proc_moves = []
-        for diff, min_move in (
-            (sf.get("barrel_diff"), 0.02),
-            (sf.get("ev_diff"), 1.0),
-            (sf.get("hardhit_diff"), 0.03),
+        for diff, min_move, vote_weight in (
+            (sf.get("barrel_diff"), 0.01, 2),
+            (sf.get("ev_diff"), 1.0, 1),
+            (sf.get("hardhit_diff"), 0.03, 1),
         ):
             if diff is not None and abs(diff) >= min_move:
-                proc_moves.append(1 if diff > 0 else -1)
+                proc_moves.extend([1 if diff > 0 else -1] * vote_weight)
         if len(proc_moves) >= 2 and len(set(proc_moves)) == 1:
             if proc_moves[0] < 0:
                 # Real HR count is up, but contact quality is genuinely
@@ -2006,9 +2028,10 @@ def compute_hr_probability(p):
             # else: process genuinely agrees with the hot streak - full
             # trust, this looks like a real surge, not luck.
         else:
-            # No clear 2-of-3 process confirmation either way - a hot
-            # outcome with an unconfirmed process read still deserves a
-            # little caution, just much less than the confirmed-fake case.
+            # No clear process confirmation either way (including a
+            # genuine tie, like barrel% up against EV/hard-hit% down) - a
+            # hot outcome with an unconfirmed process read still deserves
+            # a little caution, just much less than the confirmed-fake case.
             l15_trust *= 0.9
             l5_trust *= 0.9
 
@@ -2043,8 +2066,21 @@ def compute_hr_probability(p):
     # affects outcomes beyond just raw homer power), so it shouldn't be
     # suppressed as aggressively as a lineup-slot or platoon nudge would
     # be for the same low-power hitter.
+    #
+    # v3.40: POWER_GATE_CEIL cut 0.65 -> 0.50. The gate's actual job is
+    # stopping WEAK hitters (power_quality near/below the floor) from
+    # getting inflated by a good matchup alone - the Rafaela case. But at
+    # a 0.65 ceiling, it was also capping how much a genuinely SOLID,
+    # not-quite-elite hitter could benefit from a truly great matchup -
+    # only near-elite power ever reached full matchup/situational
+    # strength. A moderate-power player with a real day-specific edge
+    # couldn't fully cash in on it. Lowering the ceiling means a merely-
+    # good power profile now reaches full gate strength, while the floor
+    # (0.25, unchanged) still protects genuinely weak hitters exactly the
+    # same as before - this doesn't reopen that problem, it just stops
+    # over-applying the same protection to hitters who don't need it.
     POWER_GATE_FLOOR = 0.25
-    POWER_GATE_CEIL = 0.65
+    POWER_GATE_CEIL = 0.50
     POWER_GATE_MIN_STRENGTH = 0.35
     MATCHUP_GATE_MIN_STRENGTH = 0.55
     power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
@@ -2228,7 +2264,17 @@ LEAGUE_AVG_TEAM_K_RATE = 0.220
 
 
 def diminishing_hr_credit(games):
-    return sum(min(g["hr"], 1) + max(g["hr"] - 1, 0) * 0.4 for g in games)
+    """v3.39: extra-HR-in-the-same-game credit cut 0.4 -> 0.15. A real
+    example that exposed this being too generous: 2 HR in one game and 2
+    HR in another game (4 total across 5 games) was only getting
+    discounted to 2.8 credit - still enough to read as strong, broad-
+    based recent form, when it's really two explosive but CONCENTRATED
+    games, not consistent production across many different games. A
+    second or third homer in the same game is real, but far less
+    informative about "is he going to keep doing this" than a homer in a
+    genuinely different game would be - the whole point of this function
+    existing at all."""
+    return sum(min(g["hr"], 1) + max(g["hr"] - 1, 0) * 0.15 for g in games)
 
 
 def poisson_over_prob(mean, line):
@@ -2536,12 +2582,22 @@ def main():
         # use the ACTUAL window length (not a fixed 15/30) so early-
         # season players with fewer games played don't get an
         # artificially deflated baseline.
+        #
+        # v3.39 FIX: both windows now use diminishing_hr_credit() instead
+        # of raw HR sums - previously the trend signal was the one place
+        # in the file still using raw counts, so a multi-homer game could
+        # inflate the "heating up" trend read even though every other
+        # recent-form calculation already discounts that same burst. Kept
+        # consistent with recent_rate's l15hrCredit/l5hrCredit everywhere
+        # else.
         l30_games = games_this_year[-30:] if games_this_year else []
         l30hr = sum(g["hr"] for g in l30_games)
+        l30hr_credit = diminishing_hr_credit(l30_games)
         l30_pa = sum(g["pa"] for g in l30_games)
         l15_games_for_trend = games_this_year[-15:] if games_this_year else []
-        l15hr_rate = (l15hr / len(l15_games_for_trend)) if l15_games_for_trend else None
-        l30hr_rate = (l30hr / len(l30_games)) if l30_games else None
+        l15hr_credit_for_trend = diminishing_hr_credit(l15_games_for_trend)
+        l15hr_rate = (l15hr_credit_for_trend / len(l15_games_for_trend)) if l15_games_for_trend else None
+        l30hr_rate = (l30hr_credit / len(l30_games)) if l30_games else None
         l15_games_for_iso = games_this_year[-15:] if games_this_year else []
         l15_iso_pa = sum(g["pa"] for g in l15_games_for_iso)
         l15_iso_val = (round((sum(g["tb"] for g in l15_games_for_iso) - sum(g["hits"] for g in l15_games_for_iso)) / l15_iso_pa, 3)
