@@ -113,6 +113,11 @@
     .controls{flex-wrap:wrap;}
     #tierselect{flex:1 1 auto;}
     #statusselect{flex:1 1 100%; margin-top:8px;}
+    /* 5 sort buttons (added a Matchup tab) don't fit one row on a phone
+       without getting unreadably narrow - wrap them into a 3-then-2
+       flow instead of squeezing everything onto one line. */
+    .sortrow{flex-wrap:wrap;}
+    .sortrow .sortbtn{flex:1 1 30%; min-width:70px;}
   }
 
   .boardtoggle{
@@ -558,8 +563,9 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
   <div class="controls">
     <input class="search" id="search" type="text" placeholder="Search player or team...">
   </div>
-  <div class="controls" style="margin-top:8px;">
+  <div class="controls sortrow" style="margin-top:8px;">
     <div class="sortbtn active" data-key="hrProb">FAVORABILITY ↓</div>
+    <div class="sortbtn" data-key="phr9">MATCHUP</div>
     <div class="sortbtn" data-key="l15hr">RECENT FORM</div>
     <div class="sortbtn" data-key="ev">EV</div>
     <div class="sortbtn" data-key="value">VALUE</div>
@@ -633,7 +639,7 @@ const BOARD_CONFIG = {
   hr: {
     scoreField: 'hrProb',
     subtitle: 'Real calibrated HR probability &middot; power, pitcher, platoon, opportunity, park/wind, bullpen all blended into one number',
-    sorts: { hrProb: 'FAVORABILITY', l15hr: 'RECENT FORM', ev: 'EV', value: 'VALUE' },
+    sorts: { hrProb: 'FAVORABILITY', phr9: 'MATCHUP', l15hr: 'RECENT FORM', ev: 'EV', value: 'VALUE' },
   },
   hrr: {
     scoreField: 'hrrScore',
@@ -696,6 +702,14 @@ function setSortButtonsForMode(){
   sortKey = keys[0];
   sortDesc = true;
   document.querySelectorAll('.sortbtn').forEach((btn, i) => {
+    if (i >= keys.length) {
+      // Only the HR board has a 5th (Matchup) sort option right now -
+      // hide the extra button slot on boards with fewer sort keys
+      // instead of showing it with an undefined label.
+      btn.style.display = 'none';
+      return;
+    }
+    btn.style.display = '';
     const key = keys[i];
     btn.dataset.key = key;
     btn.classList.toggle('active', key === sortKey);
@@ -1276,12 +1290,11 @@ function favTierName(score){
     return '&#9633; LONG SHOT';
   }
   if(boardMode === 'hr'){
-    // Real hrProb cutoffs (0-30% realistic range, capped by the backend's
-    // own real-world-grounded ceiling) - NOT the old 55/40/35 composite
-    // cutoffs, which meant nothing on this scale.
-    if(score >= 20) return '&#9670; PRIME';
-    if(score >= 14) return '&#9733; STRONG';
-    if(score >= 9) return '&#9651; IN PLAY';
+    // Cutoffs set to 16/11/6, matching check_results.py's HR_PROB_TIERS -
+    // keep both in sync if this changes again.
+    if(score >= 16) return '&#9670; PRIME';
+    if(score >= 11) return '&#9733; STRONG';
+    if(score >= 6) return '&#9651; IN PLAY';
     return '&#9633; LONG SHOT';
   }
   if(score >= 55) return '&#9670; PRIME';
@@ -1298,9 +1311,9 @@ function favTierClass(score){
     return 'longshot';
   }
   if(boardMode === 'hr'){
-    if(score >= 20) return 'prime';
-    if(score >= 14) return 'strong';
-    if(score >= 9) return 'inplay';
+    if(score >= 16) return 'prime';
+    if(score >= 11) return 'strong';
+    if(score >= 6) return 'inplay';
     return 'longshot';
   }
   if(score >= 55) return 'prime';
