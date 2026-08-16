@@ -1987,6 +1987,19 @@ def compute_hr_probability(p):
                 if proc_moves[0] < 0:
                     l15_trust *= 0.75 if matchup_is_great else 0.6
                     l5_trust *= 0.75 if matchup_is_great else 0.6
+                else:
+                    # v3.51 FIX: previously this branch did nothing - a
+                    # confirmed-real surge (outcome AND process agreeing)
+                    # only ever avoided the penalty, it never actually
+                    # got MORE credit than a normal blend would give. A
+                    # hitter who's hot AND whose barrel/EV/hard-hit%
+                    # genuinely confirm it is about as strong a real
+                    # trend signal as this file has - that should count
+                    # for more than just "not penalized," especially now
+                    # that recent form has real weight to matter with.
+                    boost = 1.35 if len(proc_moves) >= 3 else 1.20
+                    l15_trust = min(1.0, l15_trust * boost)
+                    l5_trust = min(1.0, l5_trust * boost)
             else:
                 discount = 0.97 if matchup_is_great else 0.9
                 l15_trust *= discount
@@ -2033,9 +2046,19 @@ def compute_hr_probability(p):
     # matchup differences (not just extreme ones) move the needle more,
     # and power's baseline weight cut further here so it's no longer
     # winning by default even in the new blend structure.
-    W_POWER = 0.20
+    #
+    # v3.51: W_RECENT raised further (0.25 -> 0.32), W_POWER cut again
+    # (0.20 -> 0.13) - real case that prompted this: multiple top players
+    # on the same day ALL had genuinely good matchups, so matchup alone
+    # couldn't differentiate them from each other. Recent tendencies are
+    # the remaining lever that CAN differentiate two players who are
+    # otherwise similarly matched today - a real hot streak should carry
+    # more weight than it was getting, now that the v3.50 power-leak fix
+    # means this component is genuinely independent instead of secretly
+    # power-derived.
+    W_POWER = 0.13
     W_MATCHUP = 0.45
-    W_RECENT = 0.25
+    W_RECENT = 0.32
     W_SITUATIONAL = 0.10
 
     POWER_GATE_FLOOR = 0.20
