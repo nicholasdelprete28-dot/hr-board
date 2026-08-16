@@ -1892,298 +1892,158 @@ LEAGUE_AVG_TB_CLEAR_RATE = 0.43
 
 
 def compute_hr_probability(p):
-    """Built from the SAME compute_hr_subfactors() the composite score
-    uses, so power automatically includes pure-L15 barrel/EV/hard-hit%
-    and real L15 ISO, and platoon/opportunity/park/wind factor in here
-    too.
+    """v3.48: COMPLETE REWRITE - additive blend of independent rate
+    estimates, replacing the old single multiplicative chain.
 
-    v3.13 CHANGES (see module docstring for full why):
-      - POWER_QUALITY_MULTIPLIER 1.3 -> 1.7 (power_quality can now
-        legitimately approach 1.0 for real elite profiles, so the rate
-        ceiling it implies needed to widen to match).
-      - RECENT_TRUST 0.4 -> 0.5 (actual demonstrated recent production
-        trusted evenly with the power-quality-implied rate, not
-        discounted below it).
-      - Old exponential soft-cap (0.22 -> 0.30) REMOVED, replaced with a
-        single hard sanity ceiling (0.45) - the stacking dampener a few
-        lines below already exists to keep unrealistic pileups in check;
-        this avoids doing that job twice."""
-    # v3.44: cheap, EARLY read of today's matchup quality - computed
-    # before power_quality/sf, since it only needs phr9/pip which are
-    # already on `p`. Used below to make the outcome-vs-process
-    # divergence check context-aware. Real diagnosis behind this: power,
-    # lineup slot, and platoon skill are all effectively STATIC traits of
-    # being a good hitter - they recur for the same elite players every
-    # night. The only genuinely new variable each day is the matchup. But
-    # every skepticism mechanism built tonight (divergence, diminishing
-    # credit, agreement requirements) specifically discounts RECENT HOT
-    # STREAKS - which is exactly the pathway a good-not-elite player
-    # needs to compete with season-long elite power. A genuinely extreme
-    # matchup today is real, independent, real-world corroboration that
-    # today is a legitimately good day for him, regardless of whether
-    # last week's barrel data alone would "confirm" a permanent skill
-    # change - so it should soften that skepticism instead of being
-    # ignored by it.
-    _early_phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
-    matchup_is_great = (_early_phr9 / LEAGUE_AVG_PITCHER_HR9) >= 2.0
+    WHY THIS CHANGED: every fix made to this function tonight - power
+    multiplier cuts, matchup sensitivity increases, gate ceiling changes -
+    was still built on the same underlying shape: mean = power_baseline
+    * matchup_mult * situational_mults. In that shape, power_baseline is
+    the SEED value everything else only nudges by a percentage. No
+    matter how wide the nudges' ratio gets, a percentage swing on a big
+    seed is still mostly the seed - that's structural, not a constant
+    that can be tuned away. It's why the same players kept showing up at
+    the top night after night even after repeatedly widening matchup's
+    range: the math itself was never going to let matchup fully compete
+    with power inside that shape.
 
-    l15hr = p.get("l15hr")
-    if l15hr is None:
-        return None
-    l5hr = p.get("l5hr")
-    l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
-    l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
+    NEW SHAPE: four INDEPENDENT real rate estimates, blended with real,
+    comparable weights - no single one is the seed the others perturb:
 
+      1. POWER BASELINE - his true talent level (season-anchored power
+         quality). Still the largest single weight, but no longer
+         structurally dominant over everything else combined.
+      2. MATCHUP QUALITY - what an AVERAGE MLB hitter's rate would be
+         against TODAY's specific pitcher (plus a smaller park/wind
+         factor) - computed with ZERO reference to this batter's own
+         power. This is the purely day-specific, batter-independent
+         signal - previously a small multiplicative nudge on a
+         power-dominated seed, now a first-class component with real
+         weight of its own.
+      3. RECENT FORM - the existing, well-built mechanism (diminishing
+         multi-HR-game credit, outcome-vs-process divergence, real
+         PA-based trust) - is he hot or cold right now, and is that
+         backed by real process or luck.
+      4. PERSONAL SITUATIONAL - does today specifically favor HIS OWN
+         real tendencies (platoon split, day/night split, day-of-week
+         split), anchored to his own baseline since these are personal
+         splits relative to his own normal, not league average.
+
+    A power gate still applies specifically to the MATCHUP QUALITY
+    weight (see power_gate below) - a genuinely powerless hitter facing
+    a terrible pitcher still shouldn't ride that alone into a high
+    number, so weight lost from a low-power player's matchup component
+    gets redistributed back into his power weight instead of vanishing."""
     sf = compute_hr_subfactors(p)
     power_quality = sf["power"]
-    # v3.35: trimmed 1.7 -> 1.5. Power's total swing (floor-to-ceiling
-    # ratio on season_implied_rate) was far larger than matchup's ever
-    # was, even before matchup got dialed back tonight - meaning an elite,
-    # established slugger's raw power alone could dominate the ranking
-    # almost regardless of today's actual matchup, while a merely-good
-    # hitter with a genuinely great matchup couldn't climb high enough to
-    # compete. This doesn't remove power's importance, just brings its
-    # total range closer in line with matchup's (see the sensitivity
-    # bump on PITCHER_MATCHUP_SENSITIVITY below) so a real day-specific
-    # edge can actually matter again.
-    #
-    # v3.36: cut further, 1.5 -> 1.1. 1.5 still wasn't enough to stop the
-    # same elite hitters dominating the top of the board day after day -
-    # power_quality is anchored heavily to SEASON-length stats and barely
-    # moves day to day for an established player, so as long as it
-    # dominates the final number, the same names will always be near the
-    # top regardless of today's actual matchup. This is a real, decisive
-    # cut (ceiling/floor ratio now ~4.3x, down from 6.7x at the start of
-    # tonight), paired with the matchup sensitivity increase below, so
-    # day-specific factors can genuinely reorder the board now instead of
-    # only nudging it.
-    POWER_QUALITY_MULTIPLIER = 1.1  # was 1.7 at the start of tonight
-    season_implied_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
-    # v3.16: recent HR rate now REGRESSED toward this player's own
-    # established (power-quality-implied) rate, weighted by real recent
-    # PA sample size - separately for L15 and L5, since e.g. 2 HR in a
-    # player's last 2 games inflates the L5 rate hugely even though it's
-    # PA-thin. Previously recent_rate was blended at a flat 50% trust
-    # regardless of whether "recent" meant a real 15-day sample or a tiny
-    # 2-game hot streak - this is exactly what let a short burst from a
-    # modest-power hitter climb the board on raw recency alone instead of
-    # being pulled back toward what he actually is.
-    RECENT_SHRINK_K = 20
-    l15_pa = p.get("l15IsoPa") or 0
-    l5_pa = p.get("l5Pa") or 0
-    l15_rate_raw = l15hr_for_rate / 15
-    l5_rate_raw = (l5hr_for_rate / 5) if l5hr_for_rate is not None else l15_rate_raw
-    l15_trust = l15_pa / (l15_pa + RECENT_SHRINK_K) if l15_pa > 0 else 0.0
-    l5_trust = l5_pa / (l5_pa + RECENT_SHRINK_K) if l5_pa > 0 else 0.0
+    # --- Component 1: POWER BASELINE (his true talent level) ---
+    POWER_QUALITY_MULTIPLIER = 1.1
+    power_baseline_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
-    # v3.26: OUTCOME-VS-PROCESS DIVERGENCE. A hot recent HR streak means
-    # something very different depending on whether it's backed by real
-    # quality-of-contact gains (barrel%/EV/hard-hit% actually improving)
-    # or not - a guy running hot on outcomes with flat-or-declining
-    # process stats is much more likely riding short fly balls or
-    # favorable bounces than a real skill uptick. Reuses the exact same
-    # L15-vs-season direction data the v3.23 power-blend agreement check
-    # already computes (sf["barrel_diff"] etc.), so this never drifts out
-    # of sync with it - just applies the same "does the process actually
-    # back this up" question to the HR-RATE regression too, not only the
-    # power blend.
-    #
-    # v3.29: loosened. HOT_OUTCOME_MULT 1.3 -> 1.5 - a 30% hot streak was
-    # too low a bar and triggered this check for most legitimately good
-    # picks, not just the genuinely suspicious ones. The default
-    # "unconfirmed" discount (no clear process signal either way) was
-    # softened from 0.8 to 0.9 - that catch-all case was firing more
-    # often than the two decisive cases (confirmed real surge, confirmed
-    # fake streak) and didn't deserve as much skepticism as it was
-    # getting. The confirmed-fake-streak discount also eased slightly,
-    # 0.5 -> 0.6 - still real skepticism for the strongest evidence case,
-    # just less severe.
-    HOT_OUTCOME_MULT = 1.5
-    if l15_rate_raw > season_implied_rate * HOT_OUTCOME_MULT:
-        # v3.41: barrel% now gets DOUBLE say in this vote, and a lower
-        # (more sensitive) move threshold - matching the same 2x weight
-        # it already gets in quality_of_contact (40% vs 20% each for
-        # EV/hard-hit%), for the same reason: barrel% is the only one of
-        # the three that requires both real exit velo AND real launch
-        # angle together, making it the single most HR-specific signal
-        # here. A real case that exposed this: barrel% genuinely UP
-        # (+1.2pp) and launch angle in the ideal HR zone, but hard-hit%
-        # down hard (-15.5pp) - the old equal-vote logic let hard-hit%
-        # alone (the weakest, most angle-blind of the three) drag this
-        # to a "confirmed fake streak" verdict despite the most trusted
-        # metric saying the opposite. Now that genuinely ties the vote
-        # instead of losing it, landing in the much gentler "unconfirmed"
-        # bucket rather than the harsh one.
-        proc_moves = []
-        for diff, min_move, vote_weight in (
-            (sf.get("barrel_diff"), 0.01, 2),
-            (sf.get("ev_diff"), 1.0, 1),
-            (sf.get("hardhit_diff"), 0.03, 1),
-        ):
-            if diff is not None and abs(diff) >= min_move:
-                proc_moves.extend([1 if diff > 0 else -1] * vote_weight)
-        if len(proc_moves) >= 2 and len(set(proc_moves)) == 1:
-            if proc_moves[0] < 0:
-                # Real HR count is up, but contact quality is genuinely
-                # declining at the same time - this streak looks lucky,
-                # not repeatable. Trust it less - UNLESS today's matchup
-                # is genuinely extreme, in which case that's real
-                # independent corroboration this is a good day for him
-                # regardless of the process read, so the discount is
-                # softened rather than skipped entirely.
-                l15_trust *= 0.75 if matchup_is_great else 0.6
-                l5_trust *= 0.75 if matchup_is_great else 0.6
-            # else: process genuinely agrees with the hot streak - full
-            # trust, this looks like a real surge, not luck.
-        else:
-            # No clear process confirmation either way (including a
-            # genuine tie, like barrel% up against EV/hard-hit% down) - a
-            # hot outcome with an unconfirmed process read still deserves
-            # a little caution, just much less than the confirmed-fake
-            # case - and even less than that when a genuinely great
-            # matchup is independently corroborating today specifically.
-            discount = 0.97 if matchup_is_great else 0.9
-            l15_trust *= discount
-            l5_trust *= discount
-
-    l15_rate_regressed = l15_rate_raw * l15_trust + season_implied_rate * (1 - l15_trust)
-    l5_rate_regressed = l5_rate_raw * l5_trust + season_implied_rate * (1 - l5_trust)
-    recent_rate = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
-
-    RECENT_TRUST = 0.5
-    blended_rate = recent_rate * RECENT_TRUST + season_implied_rate * (1 - RECENT_TRUST)
-
-    pw = power_sample_weight(p.get("pa"))
-    base_rate = blended_rate * pw + season_implied_rate * (1 - pw)
-
-    # v3.20: power_gate computed HERE (moved up from the nudge section
-    # below) so it can also gate the pitcher matchup multiplier, not just
-    # the situational nudges. Previously a bad pitcher matchup applied at
-    # FULL strength no matter how little power the batter had - the
-    # reasoning was "a bad pitcher gives up more homers to everyone," but
-    # a near-zero-power contact hitter facing a homer-prone pitcher isn't
-    # actually much more likely to go deep just because OTHER, real power
-    # hitters would punish that pitcher. A real example that exposed
-    # this: a hitter with barrel% and EV both below the power floor (both
-    # clamp to 0) still got a ~78% multiplicative boost from a bad
-    # starter's HR/9, which was the single biggest driver of his number -
-    # bigger than every situational nudge combined, which WERE already
-    # correctly gated down for him.
-    #
-    # Matchup quality still gets a HIGHER minimum strength than the pure
-    # situational nudges (0.55 vs 0.35) - unlike park/wind/lineup spot,
-    # pitcher quality is a more genuine signal that isn't purely about
-    # the batter's own power (a bad pitcher's control/contact quality
-    # affects outcomes beyond just raw homer power), so it shouldn't be
-    # suppressed as aggressively as a lineup-slot or platoon nudge would
-    # be for the same low-power hitter.
-    #
-    # v3.40: POWER_GATE_CEIL cut 0.65 -> 0.50. The gate's actual job is
-    # stopping WEAK hitters (power_quality near/below the floor) from
-    # getting inflated by a good matchup alone - the Rafaela case. But at
-    # a 0.65 ceiling, it was also capping how much a genuinely SOLID,
-    # not-quite-elite hitter could benefit from a truly great matchup -
-    # only near-elite power ever reached full matchup/situational
-    # strength. A moderate-power player with a real day-specific edge
-    # couldn't fully cash in on it. Lowering the ceiling means a merely-
-    # good power profile now reaches full gate strength, while the floor
-    # (0.25, unchanged) still protects genuinely weak hitters exactly the
-    # same as before - this doesn't reopen that problem, it just stops
-    # over-applying the same protection to hitters who don't need it.
-    POWER_GATE_FLOOR = 0.25
-    POWER_GATE_CEIL = 0.50
-    POWER_GATE_MIN_STRENGTH = 0.35
-    MATCHUP_GATE_MIN_STRENGTH = 0.55
-    power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
-    situational_strength = POWER_GATE_MIN_STRENGTH + (1 - POWER_GATE_MIN_STRENGTH) * power_gate
-    matchup_strength = MATCHUP_GATE_MIN_STRENGTH + (1 - MATCHUP_GATE_MIN_STRENGTH) * power_gate
-
+    # --- Component 2: MATCHUP QUALITY (batter-independent, day-specific) ---
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     pw_pitcher = pitcher_sample_weight(p.get("pip"))
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
-    # v3.21: sensitivity dialed back 0.6 -> 0.45. Even after the v3.20
-    # power-gating fix, the RAW size of this swing was still large - up
-    # to ~90% boost for a truly bad matchup, ~35% suppression for a truly
-    # great one, roughly a 2.9x total range on its own. That's real
-    # signal, not noise, but it was large enough to let one bad starter
-    # visually dominate the board, since (unlike a single great power
-    # hitter) the SAME multiplier applies to every batter facing him at
-    # once - a whole lineup inherits it simultaneously. This tuning
-    # keeps the signal directionally strong while narrowing how much any
-    # one pitcher can single-handedly stack a chunk of the board.
-    #
-    # v3.25: nudged back up 0.45 -> 0.5, splitting the difference with
-    # the original 0.6. 0.45 pulled back too far in the other direction -
-    # a real, strong pitcher matchup (elite or terrible) should still
-    # meaningfully separate two hitters, and the v3.20 power-gating fix
-    # already protects against the original problem (a bad-matchup boost
-    # inflating a low-power hitter) independently of this constant, so
-    # there's room to trust matchup quality more without reopening that
-    # issue.
-    #
-    # v3.35: pushed further, 0.5 -> 0.65 - ABOVE the original 0.6. Power's
-    # total swing was still large enough to let raw power dominate the
-    # board almost regardless of matchup, even with gating in place. The
-    # gate is what actually prevents the original failure mode (a weak
-    # hitter inflated by a bad pitcher) - it's independent of this
-    # constant, so this can go higher than the original value now without
-    # reopening that problem. This is what lets a genuinely great
-    # day-specific matchup meaningfully separate two otherwise-similar
-    # hitters again, instead of the ranking basically just being "who's
-    # the best hitter in MLB regardless of today."
-    #
-    # v3.36: pushed again, 0.65 -> 0.85, alongside the bigger power cut
-    # above. Matchup's ceiling/floor range is now roughly on par with
-    # power's (~4.5x vs ~4.3x) instead of being the clearly smaller
-    # factor - a genuinely great or terrible matchup can now compete with
-    # raw power for who ends up on top, which is the actual goal: real
-    # day-specific chances, not just a leaderboard of the best hitters in
-    # baseball reshuffled slightly.
-    PITCHER_MATCHUP_SENSITIVITY = 0.85
-    raw_matchup_mult = 1 + ((effective_phr9 / LEAGUE_AVG_PITCHER_HR9) - 1) * PITCHER_MATCHUP_SENSITIVITY
-    matchup_mult = 1 + (raw_matchup_mult - 1) * matchup_strength
-    mean = max(0.01, base_rate * matchup_mult)
+    MATCHUP_QUALITY_SENSITIVITY = 1.0
+    matchup_ratio = effective_phr9 / LEAGUE_AVG_PITCHER_HR9
+    park_wind_mult = 1 + (sf["park_s"] - 0.5) * 0.20 + (sf["wind_s"] - 0.5) * 0.20
+    matchup_quality_rate = max(0.01, LEAGUE_AVG_HR_RATE
+                                * (1 + (matchup_ratio - 1) * MATCHUP_QUALITY_SENSITIVITY)
+                                * park_wind_mult)
 
-    # v3.46: platoon, park, and wind REINSTATED as real scoring factors -
-    # each has its own real stat box on the card (AVG VS MIX; WIND/TEMP),
-    # unlike lineup bonus, home/road, day/night, day-of-week, and bullpen,
-    # which only ever show as a colored badge with no independent data
-    # box behind them. Rule: real displayed data stays a real factor,
-    # badge-only stays cosmetic. Opportunity (lineup bonus) and the four
-    # situational adjustments (home/road, day/night, day-of-week, bullpen)
-    # remain removed from scoring - display-only, per that same rule.
-    NUDGE_STRENGTH = 0.14
-    for factor_val in (sf["platoon"], sf["park_s"], sf["wind_s"]):
-        mean *= 1 + (factor_val - 0.5) * NUDGE_STRENGTH * situational_strength
+    # --- Component 3: RECENT FORM (existing mechanism, reused as-is) ---
+    l15hr = p.get("l15hr")
+    l5hr = p.get("l5hr")
+    if l15hr is not None:
+        l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
+        l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
 
-    # v3.47: day/night and day-of-week REINSTATED as real scoring
-    # factors, per explicit direction - badge-only on the card (no
-    # separate stat box), but applying anyway, overriding the "needs its
-    # own data box" rule used for the other cuts. Home/road and bullpen
-    # stay display-only unless told otherwise. Gated the same way as
-    # platoon/park/wind above (situational_strength), consistent with how
-    # every other situational factor in this file is protected against
-    # inflating a genuinely weak hitter.
-    for adj in (day_night_adjustment(p), day_of_week_adjustment(p)):
-        mean *= 1 + (adj - 1) * situational_strength
+        RECENT_SHRINK_K = 20
+        l15_pa = p.get("l15IsoPa") or 0
+        l5_pa = p.get("l5Pa") or 0
+        l15_rate_raw = l15hr_for_rate / 15
+        l5_rate_raw = (l5hr_for_rate / 5) if l5hr_for_rate is not None else l15_rate_raw
+        l15_trust = l15_pa / (l15_pa + RECENT_SHRINK_K) if l15_pa > 0 else 0.0
+        l5_trust = l5_pa / (l5_pa + RECENT_SHRINK_K) if l5_pa > 0 else 0.0
 
-    # v3.17: trend applied directly, NOT power-gated - this is about the
-    # player's OWN recent trajectory, same category as `recent` and
-    # `power`, not an external tailwind unrelated to his own performance.
-    # No visible chip counterpart, so it's not one of the display-only
-    # tags - stays as a real backend signal.
+        # Cheap early matchup-quality flag for the divergence check below -
+        # a genuinely extreme matchup today is real corroboration a hot
+        # streak is legitimate, independent of whether last week's process
+        # data alone would "confirm" it.
+        matchup_is_great = matchup_ratio >= 2.0
+
+        HOT_OUTCOME_MULT = 1.5
+        if l15_rate_raw > power_baseline_rate * HOT_OUTCOME_MULT:
+            proc_moves = []
+            for diff, min_move, vote_weight in (
+                (sf.get("barrel_diff"), 0.01, 2),
+                (sf.get("ev_diff"), 1.0, 1),
+                (sf.get("hardhit_diff"), 0.03, 1),
+            ):
+                if diff is not None and abs(diff) >= min_move:
+                    proc_moves.extend([1 if diff > 0 else -1] * vote_weight)
+            if len(proc_moves) >= 2 and len(set(proc_moves)) == 1:
+                if proc_moves[0] < 0:
+                    l15_trust *= 0.75 if matchup_is_great else 0.6
+                    l5_trust *= 0.75 if matchup_is_great else 0.6
+            else:
+                discount = 0.97 if matchup_is_great else 0.9
+                l15_trust *= discount
+                l5_trust *= discount
+
+        l15_rate_regressed = l15_rate_raw * l15_trust + power_baseline_rate * (1 - l15_trust)
+        l5_rate_regressed = l5_rate_raw * l5_trust + power_baseline_rate * (1 - l5_trust)
+        recent_rate_raw = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
+
+        pw = power_sample_weight(p.get("pa"))
+        recent_form_rate = recent_rate_raw * pw + power_baseline_rate * (1 - pw)
+    else:
+        recent_form_rate = power_baseline_rate
+
+    # --- Component 4: PERSONAL SITUATIONAL (his own real tendencies) ---
+    PERSONAL_STRENGTH = 0.30
+    personal_mult = 1 + (sf["platoon"] - 0.5) * PERSONAL_STRENGTH
+    personal_mult *= day_night_adjustment(p)
+    personal_mult *= day_of_week_adjustment(p)
+    personal_situational_rate = power_baseline_rate * personal_mult
+
+    # --- Blend, with the matchup-quality weight power-gated ---
+    W_POWER = 0.30
+    W_MATCHUP = 0.35
+    W_RECENT = 0.20
+    W_SITUATIONAL = 0.15
+
+    POWER_GATE_FLOOR = 0.20
+    POWER_GATE_CEIL = 0.50
+    MATCHUP_WEIGHT_MIN = 0.15
+    power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
+    effective_w_matchup = MATCHUP_WEIGHT_MIN + (W_MATCHUP - MATCHUP_WEIGHT_MIN) * power_gate
+    effective_w_power = W_POWER + (W_MATCHUP - effective_w_matchup)
+
+    mean = (effective_w_power * power_baseline_rate
+            + effective_w_matchup * matchup_quality_rate
+            + W_RECENT * recent_form_rate
+            + W_SITUATIONAL * personal_situational_rate)
+
+    # Overall scale - the additive blend naturally produces smaller raw
+    # values than the old multiplicative chain (averaging several <1
+    # rates rather than compounding them upward). Calibrated so a
+    # genuinely elite power + elite matchup case lands in a believable
+    # real-world range (~20-25%) rather than re-deriving the scale from
+    # scratch. HONESTY NOTE: this is a reasoned starting calibration, not
+    # backtested against real outcomes yet - the first real thing to
+    # check once this has run against actual results.
+    GLOBAL_SCALE = 1.5
+    mean *= GLOBAL_SCALE
+
     mean *= trend_adjustment(p)
-
     mean = max(0.01, mean)
 
     raw_prob = poisson_over_prob(mean, 0.5)
     if raw_prob is None:
         return None
 
-    # v3.13: single hard sanity ceiling instead of the old exponential
-    # soft-cap. Only clips truly extreme outputs, doesn't compress the
-    # normal PRIME/STRONG range the way the old 0.22->0.30 squeeze did.
     HR_PROB_HARD_CAP = 0.45
     return min(raw_prob, HR_PROB_HARD_CAP)
 
