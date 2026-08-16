@@ -1637,8 +1637,14 @@ def compute_hr_subfactors(p):
     # Denominators anchored to realistic MLB floor->rare-peak-season
     # ranges instead of round numbers no real hitter ever reaches.
     barrel_n = clamp01((barrel_adj - 0.05) / 0.15)       # floor 5%, peak-season ceiling 20%
-    ev_n = clamp01((ev_final - 87.0) / 7.0)               # floor 87mph, peak-season ceiling 94mph
-    hardhit_n = clamp01((hardhit_final - 0.30) / 0.22)    # floor 30%, peak-season ceiling 52%
+    # v3.42: EV and hard-hit% ceilings widened. Both were maxing out
+    # (clamping to 1.0) for genuinely elite - but not literally
+    # all-time-record - players, which meant no room left to
+    # differentiate the best from the truly best. Real MLB record-holder
+    # SEASON hard-hit rates run around 55-58%; 52% as a ceiling was too
+    # low and let strong-but-not-historic seasons peg the max.
+    ev_n = clamp01((ev_final - 87.0) / 9.0)               # floor 87mph, peak-season ceiling 96mph (was 94)
+    hardhit_n = clamp01((hardhit_final - 0.30) / 0.28)    # floor 30%, peak-season ceiling 58% (was 52)
     # v3.18: barrel% now weighted HEAVIER than EV/hard-hit% within
     # quality_of_contact, instead of a flat 3-way average. Hard-hit% only
     # requires exit velo >=95mph - a line-drive or ground-ball hitter can
@@ -1651,17 +1657,20 @@ def compute_hr_subfactors(p):
     # a mediocre barrel% but inflated hard-hit% (hits the ball hard, just
     # not in the air) no longer gets nearly as much power credit for it.
     #
-    # v3.37: launch angle added as a genuine 4th component - previously
-    # display-only. barrel/EV/hardhit can all read as "elevated" purely
-    # from hard contact, with zero regard for whether that contact is
-    # actually going up. A real, live example: EV and barrel% both up
-    # from season, but AVERAGE launch angle at 6.8 degrees - hard contact
-    # on a trajectory that mostly doesn't leave the yard. Reweighted to
-    # make room (barrel still dominant at 40%, since it alone already
-    # requires both velo and angle) rather than just adding a 4th slice
-    # on top and inflating everyone's score.
-    la_q = launch_angle_quality(p.get("l15LaunchAngle"))
-    quality_of_contact = barrel_n * 0.40 + ev_n * 0.20 + hardhit_n * 0.20 + la_q * 0.20
+    # v3.37 ADDED launch angle as a genuine 4th component here, v3.43
+    # REVERTED it. Real evidence from live runs: launch_angle came back
+    # missing (N/A) for nearly every player, including the exact same
+    # player who'd had a real value on an earlier run - not a coverage
+    # gap, a fundamentally unreliable data source (this was flagged as
+    # unverified against Baseball Savant's real CSV schema when it was
+    # first built, and that risk turned out real). With the neutral 0.5
+    # fallback firing for almost everyone, the effect wasn't "launch
+    # angle matters a little for everyone" - it was "a random few players
+    # get a real adjustment and everyone else doesn't," which is worse
+    # than not having the signal at all. Reverted to the v3.18 weighting
+    # until this can be fixed at the source (the raw CSV column
+    # detection in fetch_batter_statcast_l15()) and verified reliable.
+    quality_of_contact = barrel_n * 0.50 + ev_n * 0.25 + hardhit_n * 0.25
 
     iso_n = clamp01((iso_final - 0.08) / 0.27)            # floor .080, peak-season ceiling .350
 
@@ -1742,59 +1751,36 @@ def compute_hr_subfactors(p):
 
 
 def compute_score(p):
-    """HR Board composite score - Power 35% / Pitcher 15% / Platoon 10% /
-    Recent 15% / Opportunity 10% / Park 8% / Wind 7%, plus the stacking
-    dampener and the bounded home/road, day/night, bullpen multipliers.
-    Built from the shared compute_hr_subfactors() so it can never drift
-    from hrProb again.
+    """HR Board composite score - Power / Pitcher / Platoon / Recent /
+    Park / Wind. Opportunity (lineup bonus), home/road, day/night,
+    day-of-week, and bullpen are REMOVED from scoring.
 
-    FIX #3 (v3.12): the stacking dampener previously only watched
-    [power, pitcher_s, recent]. It now also counts a large combined
-    situational boost (home/road + day/night + bullpen + day-of-week all
-    lining up favorably) as equivalent to one more "maxed" bucket, so a
-    pileup of small favorable factors can't sail through unchecked just
-    because none of them individually cleared STACK_THRESHOLD."""
+    v3.45/v3.46: the rule applied here - if a factor has its own real
+    stat box with an actual number on the card (AVG VS MIX for platoon;
+    WIND/TEMP for park+wind), it stays a real scoring factor. If it only
+    ever shows up as a colored badge with no independent data box behind
+    it (lineup +X, home/road edge, day/night edge, day-of-week edge, weak
+    bullpen), it's display-only now - real context on the card, zero
+    effect on the number. This also retired the stacking-dampener
+    apparatus built earlier tonight to manage the badge-only nudges - it
+    no longer has anything to gate for those specific ones.
+    trend_adjustment() stays - no visible chip counterpart, it's a real
+    backend signal (L15 vs L30 HR rate), not a display-only tag."""
     sf = compute_hr_subfactors(p)
-    power, pitcher_s, platoon, recent, opportunity, park_s, wind_s = (
-        sf["power"], sf["pitcher_s"], sf["platoon"], sf["recent"],
-        sf["opportunity"], sf["park_s"], sf["wind_s"])
+    power, pitcher_s, platoon, recent, park_s, wind_s = (
+        sf["power"], sf["pitcher_s"], sf["platoon"], sf["recent"], sf["park_s"], sf["wind_s"])
 
-    score = (power * 35 + pitcher_s * 15 + platoon * 10 + recent * 15
-             + opportunity * 10 + park_s * 8 + wind_s * 7)
+    # Rescaled from the original 35/15/10/15/10/8/7 (which also included
+    # opportunity at 10%) down to these six summing to 100 on their own,
+    # keeping the same relative proportions among them.
+    score = power * 39 + pitcher_s * 17 + platoon * 11 + recent * 17 + park_s * 9 + wind_s * 7
 
-    # v3.15: dampener REWORKED. Previously any 2+ of [power, pitcher_s,
-    # recent] individually clearing STACK_THRESHOLD triggered a penalty -
-    # but these are genuine PRIMARY performance signals, not small
-    # independent nudges. A hitter who is legitimately elite in power AND
-    # legitimately hot right now AND legitimately facing a bad pitcher is
-    # exactly the profile that SHOULD score highest, not get penalized
-    # for it - especially now that the power subfactor (v3.13) can
-    # actually reach real elite territory, this was punishing genuinely
-    # great matchups as if they were suspicious stacking.
-    #
-    # The dampener now targets what it was actually meant to catch: many
-    # small, semi-independent SITUATIONAL factors (home/road, day/night,
-    # bullpen, day-of-week) coincidentally lining up favorably at once -
-    # that kind of alignment is much more plausibly noise than a hitter
-    # simply being great, hot, and well-matched all at the same time.
-    #
-    # v3.36: loosened further, 0.10 -> 0.20. A player with a genuinely
-    # great matchup, favorable wind, a platoon edge, and a hot lineup
-    # spot all lining up on the SAME day is exactly the kind of real,
-    # day-specific signal that should lift him - not get treated as
-    # suspicious just because several real factors agree. The old 0.10
-    # trigger was catching this real-alignment case too often, on top of
-    # the genuine coincidental-noise case it was built for.
-    SITUATIONAL_BOOST_TRIGGER = 0.20
-    STACK_PENALTY_MAX = 6.0
-    sit_boost = situational_multiplier_boost(p)
-    if sit_boost >= SITUATIONAL_BOOST_TRIGGER:
-        stack_penalty = min(STACK_PENALTY_MAX, sit_boost * 20)
-        score -= stack_penalty
-
-    score *= home_road_adjustment(p)
+    # v3.47: day/night and day-of-week REINSTATED as real scoring
+    # factors, per explicit direction - these apply even though they're
+    # badge-only on the card (no separate stat box), overriding the
+    # "needs its own data box" rule used for the other cuts. Home/road,
+    # bullpen, and lineup bonus stay display-only unless told otherwise.
     score *= day_night_adjustment(p)
-    score *= bullpen_adjustment(p)
     score *= day_of_week_adjustment(p)
     score *= trend_adjustment(p)
     score = max(0.0, min(100.0, score))
@@ -1806,7 +1792,7 @@ def compute_score(p):
         "pitcherPct": round(pitcher_s * 100, 1),
         "platoonPct": round(platoon * 100, 1),
         "recentPct": round(recent * 100, 1),
-        "opportunityPct": round(opportunity * 100, 1),
+        "opportunityPct": round(sf["opportunity"] * 100, 1),
         "parkPct": round(park_s * 100, 1),
         "windPct": round(wind_s * 100, 1),
         "avgVsMixPct": round(sf["avg_vs_mix_s"] * 100, 1) if sf["avg_vs_mix_s"] is not None else None,
@@ -1922,6 +1908,25 @@ def compute_hr_probability(p):
         single hard sanity ceiling (0.45) - the stacking dampener a few
         lines below already exists to keep unrealistic pileups in check;
         this avoids doing that job twice."""
+    # v3.44: cheap, EARLY read of today's matchup quality - computed
+    # before power_quality/sf, since it only needs phr9/pip which are
+    # already on `p`. Used below to make the outcome-vs-process
+    # divergence check context-aware. Real diagnosis behind this: power,
+    # lineup slot, and platoon skill are all effectively STATIC traits of
+    # being a good hitter - they recur for the same elite players every
+    # night. The only genuinely new variable each day is the matchup. But
+    # every skepticism mechanism built tonight (divergence, diminishing
+    # credit, agreement requirements) specifically discounts RECENT HOT
+    # STREAKS - which is exactly the pathway a good-not-elite player
+    # needs to compete with season-long elite power. A genuinely extreme
+    # matchup today is real, independent, real-world corroboration that
+    # today is a legitimately good day for him, regardless of whether
+    # last week's barrel data alone would "confirm" a permanent skill
+    # change - so it should soften that skepticism instead of being
+    # ignored by it.
+    _early_phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
+    matchup_is_great = (_early_phr9 / LEAGUE_AVG_PITCHER_HR9) >= 2.0
+
     l15hr = p.get("l15hr")
     if l15hr is None:
         return None
@@ -2022,18 +2027,25 @@ def compute_hr_probability(p):
             if proc_moves[0] < 0:
                 # Real HR count is up, but contact quality is genuinely
                 # declining at the same time - this streak looks lucky,
-                # not repeatable. Trust it less.
-                l15_trust *= 0.6
-                l5_trust *= 0.6
+                # not repeatable. Trust it less - UNLESS today's matchup
+                # is genuinely extreme, in which case that's real
+                # independent corroboration this is a good day for him
+                # regardless of the process read, so the discount is
+                # softened rather than skipped entirely.
+                l15_trust *= 0.75 if matchup_is_great else 0.6
+                l5_trust *= 0.75 if matchup_is_great else 0.6
             # else: process genuinely agrees with the hot streak - full
             # trust, this looks like a real surge, not luck.
         else:
             # No clear process confirmation either way (including a
             # genuine tie, like barrel% up against EV/hard-hit% down) - a
             # hot outcome with an unconfirmed process read still deserves
-            # a little caution, just much less than the confirmed-fake case.
-            l15_trust *= 0.9
-            l5_trust *= 0.9
+            # a little caution, just much less than the confirmed-fake
+            # case - and even less than that when a genuinely great
+            # matchup is independently corroborating today specifically.
+            discount = 0.97 if matchup_is_great else 0.9
+            l15_trust *= discount
+            l5_trust *= discount
 
     l15_rate_regressed = l15_rate_raw * l15_trust + season_implied_rate * (1 - l15_trust)
     l5_rate_regressed = l5_rate_raw * l5_trust + season_implied_rate * (1 - l5_trust)
@@ -2133,53 +2145,35 @@ def compute_hr_probability(p):
     matchup_mult = 1 + (raw_matchup_mult - 1) * matchup_strength
     mean = max(0.01, base_rate * matchup_mult)
 
-    # v3.14: situational nudges (platoon/opportunity/park/wind) and the
-    # home-road/day-night/bullpen/day-of-week multipliers are now GATED
-    # by how much real power is actually behind the pick. Previously
-    # these applied in full to every player regardless of power_quality -
-    # so an average-power hitter with a great platoon matchup, a hot
-    # lineup spot, and helpful wind could stack several multiplicative
-    # tailwinds and land in PRIME territory on situational alignment
-    # alone, without the raw ability to actually drive a ball out. A
-    # tailwind only helps a ball that was hit hard enough to be helped.
-    # A real elite bat still gets these nudges at full strength; a
-    # well-below-average bat gets them at a fraction of that
-    # (POWER_GATE_MIN_STRENGTH), scaling linearly in between. This is
-    # the direct fix for "too many PRIME picks that were really just
-    # decent-power guys with a good matchup on paper."
-
+    # v3.46: platoon, park, and wind REINSTATED as real scoring factors -
+    # each has its own real stat box on the card (AVG VS MIX; WIND/TEMP),
+    # unlike lineup bonus, home/road, day/night, day-of-week, and bullpen,
+    # which only ever show as a colored badge with no independent data
+    # box behind them. Rule: real displayed data stays a real factor,
+    # badge-only stays cosmetic. Opportunity (lineup bonus) and the four
+    # situational adjustments (home/road, day/night, day-of-week, bullpen)
+    # remain removed from scoring - display-only, per that same rule.
     NUDGE_STRENGTH = 0.14
-    for factor_val in (sf["platoon"], sf["opportunity"], sf["park_s"], sf["wind_s"]):
+    for factor_val in (sf["platoon"], sf["park_s"], sf["wind_s"]):
         mean *= 1 + (factor_val - 0.5) * NUDGE_STRENGTH * situational_strength
 
-    for adj in (home_road_adjustment(p), day_night_adjustment(p),
-                bullpen_adjustment(p), day_of_week_adjustment(p)):
+    # v3.47: day/night and day-of-week REINSTATED as real scoring
+    # factors, per explicit direction - badge-only on the card (no
+    # separate stat box), but applying anyway, overriding the "needs its
+    # own data box" rule used for the other cuts. Home/road and bullpen
+    # stay display-only unless told otherwise. Gated the same way as
+    # platoon/park/wind above (situational_strength), consistent with how
+    # every other situational factor in this file is protected against
+    # inflating a genuinely weak hitter.
+    for adj in (day_night_adjustment(p), day_of_week_adjustment(p)):
         mean *= 1 + (adj - 1) * situational_strength
 
-    # v3.17: trend applied directly, NOT power-gated like the four
-    # situational adjustments above - this is about the player's OWN
-    # recent trajectory, same category as `recent` and `power`, not an
-    # external tailwind unrelated to his own performance.
+    # v3.17: trend applied directly, NOT power-gated - this is about the
+    # player's OWN recent trajectory, same category as `recent` and
+    # `power`, not an external tailwind unrelated to his own performance.
+    # No visible chip counterpart, so it's not one of the display-only
+    # tags - stays as a real backend signal.
     mean *= trend_adjustment(p)
-
-    # FIX #3 (v3.12): same situational-pileup guard added to compute_score()
-    # is now applied here too - previously this stacking dampener only
-    # checked [power, pitcher_s, recent], same gap as compute_score() had.
-    # v3.15: same dampener rework as compute_score() - see the detailed
-    # comment there. No longer penalizes power/pitcher_s/recent for being
-    # simultaneously strong (those are real signal, not stacking noise);
-    # only fires on genuinely situational alignment (home/road, day/night,
-    # bullpen, day-of-week).
-    #
-    # v3.36: same loosening as compute_score() - 0.10 -> 0.20. Real,
-    # day-specific alignment across several genuine factors should lift a
-    # player, not get treated as suspicious.
-    SITUATIONAL_BOOST_TRIGGER = 0.20
-    STACK_REDUCTION_MAX = 0.20
-    sit_boost = situational_multiplier_boost(p)
-    if sit_boost >= SITUATIONAL_BOOST_TRIGGER:
-        reduction = min(STACK_REDUCTION_MAX, sit_boost * 0.7)
-        mean *= (1 - reduction)
 
     mean = max(0.01, mean)
 
