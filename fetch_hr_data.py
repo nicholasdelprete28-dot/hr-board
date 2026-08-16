@@ -1992,21 +1992,36 @@ def compute_hr_probability(p):
                 l15_trust *= discount
                 l5_trust *= discount
 
-        l15_rate_regressed = l15_rate_raw * l15_trust + power_baseline_rate * (1 - l15_trust)
-        l5_rate_regressed = l5_rate_raw * l5_trust + power_baseline_rate * (1 - l5_trust)
+        # v3.50 FIX: regression anchor changed from power_baseline_rate to
+        # LEAGUE_AVG_HR_RATE. Regressing toward power_baseline made this
+        # component secretly power-dependent again for any player without
+        # a very large recent sample - exactly the leak that let power's
+        # TRUE influence run well above its stated 20% weight. Regressing
+        # toward league average keeps this a genuinely independent read on
+        # "is he hot right now," not a disguised second serving of power.
+        l15_rate_regressed = l15_rate_raw * l15_trust + LEAGUE_AVG_HR_RATE * (1 - l15_trust)
+        l5_rate_regressed = l5_rate_raw * l5_trust + LEAGUE_AVG_HR_RATE * (1 - l5_trust)
         recent_rate_raw = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
 
         pw = power_sample_weight(p.get("pa"))
-        recent_form_rate = recent_rate_raw * pw + power_baseline_rate * (1 - pw)
+        recent_form_rate = recent_rate_raw * pw + LEAGUE_AVG_HR_RATE * (1 - pw)
     else:
-        recent_form_rate = power_baseline_rate
+        recent_form_rate = LEAGUE_AVG_HR_RATE
 
     # --- Component 4: PERSONAL SITUATIONAL (his own real tendencies) ---
+    # v3.50 FIX: anchored to LEAGUE_AVG_HR_RATE instead of
+    # power_baseline_rate - this was the bigger leak. As written before,
+    # this component was LITERALLY power_baseline_rate times a
+    # multiplier, meaning it wasn't independent at all, it was 100% power
+    # wearing a different label. personal_mult already reflects HIS OWN
+    # real platoon/day-night/day-of-week splits - anchoring it to league
+    # average instead measures "how much does today's situation help him
+    # relative to a neutral hitter," genuinely decoupled from his power.
     PERSONAL_STRENGTH = 0.30
     personal_mult = 1 + (sf["platoon"] - 0.5) * PERSONAL_STRENGTH
     personal_mult *= day_night_adjustment(p)
     personal_mult *= day_of_week_adjustment(p)
-    personal_situational_rate = power_baseline_rate * personal_mult
+    personal_situational_rate = LEAGUE_AVG_HR_RATE * personal_mult
 
     # --- Blend, with the matchup-quality weight power-gated ---
     # v3.49: real diagnosis for "still similar top 5" - true EXTREME
