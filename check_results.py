@@ -61,7 +61,7 @@ K_TIERS = [("prime", 51), ("strong", 45), ("inplay", 39), ("longshot", 0)]
 # cutoffs, which meant nothing on this scale. Reverted back to 20/14/9 -
 # the 16/11/6 experiment was undone. Kept in sync with index.html's
 # favTierName()/favTierClass() - update both together if this changes.
-HR_PROB_TIERS = [("prime", 20), ("strong", 14), ("inplay", 9), ("longshot", 0)]
+HR_PROB_TIERS = [("prime", 24), ("strong", 17), ("inplay", 11), ("longshot", 0)]
 
 
 def tier_for(score, tiers):
