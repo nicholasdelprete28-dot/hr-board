@@ -183,6 +183,7 @@ import json
 import math
 import os
 import time
+import bisect
 import datetime
 import concurrent.futures
 from zoneinfo import ZoneInfo
@@ -1948,9 +1949,24 @@ def compute_hr_probability(p):
     MATCHUP_QUALITY_SENSITIVITY = 1.4
     matchup_ratio = effective_phr9 / LEAGUE_AVG_PITCHER_HR9
     park_wind_mult = 1 + (sf["park_s"] - 0.5) * 0.20 + (sf["wind_s"] - 0.5) * 0.20
-    matchup_quality_rate = max(0.01, LEAGUE_AVG_HR_RATE
-                                * (1 + (matchup_ratio - 1) * MATCHUP_QUALITY_SENSITIVITY)
-                                * park_wind_mult)
+    absolute_matchup_rate = max(0.01, LEAGUE_AVG_HR_RATE
+                                 * (1 + (matchup_ratio - 1) * MATCHUP_QUALITY_SENSITIVITY)
+                                 * park_wind_mult)
+
+    # v3.52: blended with a RELATIVE-TO-TODAY read - where this pitcher
+    # ranks among ONLY today's actual probable starters, not the fixed
+    # all-time league average. Guarantees a real best/worst-matchup-of-
+    # the-day spread exists every day, even when today's slate happens to
+    # cluster near average by full-season standards. Blended 50/50 with
+    # the absolute-scale version rather than replacing it - keeps the
+    # number grounded in real-world meaning while still guaranteeing real
+    # day-to-day differentiation.
+    pitcher_percentile_today = p.get("pitcherHr9Percentile")
+    if pitcher_percentile_today is not None:
+        relative_matchup_rate = LEAGUE_AVG_HR_RATE * (0.5 + pitcher_percentile_today * 1.3) * park_wind_mult
+        matchup_quality_rate = max(0.01, absolute_matchup_rate * 0.5 + relative_matchup_rate * 0.5)
+    else:
+        matchup_quality_rate = absolute_matchup_rate
 
     # --- Component 3: RECENT FORM (existing mechanism, reused as-is) ---
     l15hr = p.get("l15hr")
@@ -2258,6 +2274,37 @@ def main():
           f"{len(todays_pitcher_ids)} probable starters "
           f"({len(todays_pitcher_ids) - len(reliable_pitcher_stats)} still falling back to the bulk list/default)")
 
+    # v3.52: RELATIVE-TO-TODAY matchup ranking. Everything built so far
+    # measures pitcher quality against a FIXED, all-time league-average
+    # scale (LEAGUE_AVG_PITCHER_HR9 = 1.20, always). On a day where every
+    # probable starter happens to cluster near that average - no
+    # historically extreme pitcher anywhere on the slate - that fixed
+    # yardstick correctly produces small differentiation, because there
+    # genuinely isn't much to differentiate with BY THAT YARDSTICK. This
+    # computes each pitcher's percentile rank among ONLY today's actual
+    # probable starters instead, so a real best-matchup-of-the-day and
+    # worst-matchup-of-the-day exist every single day by construction,
+    # regardless of whether today's slate happens to be unusually bunched
+    # near average by full-season standards.
+    todays_pitcher_hr9_values = sorted(
+        stat["hr9"] for stat in
+        (reliable_pitcher_stats.get(pid, pitching_stats.get(pid, {})) for pid in todays_pitcher_ids)
+        if stat.get("hr9") is not None
+    )
+    print(f"  today's real pitcher HR/9 pool: {len(todays_pitcher_hr9_values)} starters, "
+          f"range {todays_pitcher_hr9_values[0]:.2f}-{todays_pitcher_hr9_values[-1]:.2f}"
+          if todays_pitcher_hr9_values else "  today's real pitcher HR/9 pool: empty")
+
+    def pitcher_hr9_percentile_today(hr9):
+        """Where this pitcher's HR/9 ranks among TODAY's probable starters
+        specifically - 0.0 = best (lowest) HR/9 pitching today, 1.0 =
+        worst (highest) HR/9 pitching today. Falls back to a neutral 0.5
+        if we don't have a real value or a real pool to rank against."""
+        if hr9 is None or len(todays_pitcher_hr9_values) < 2:
+            return 0.5
+        idx = bisect.bisect_left(todays_pitcher_hr9_values, hr9)
+        return idx / (len(todays_pitcher_hr9_values) - 1)
+
     print("Fetching season batting stats (ISO)...")
     batting_stats = get_season_batting_stats()
 
@@ -2388,6 +2435,7 @@ def main():
                     "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),
                     "oppIpPerStart": pitcher_stat.get("ipPerStart"),
                     "oppPitcherId": pitcher_id,
+                    "pitcherHr9Percentile": pitcher_hr9_percentile_today(effective_hr9),
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
