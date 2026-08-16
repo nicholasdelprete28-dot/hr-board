@@ -2033,7 +2033,21 @@ def compute_hr_probability(p):
         recent_rate_raw = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
 
         pw = power_sample_weight(p.get("pa"))
-        recent_form_rate = recent_rate_raw * pw + LEAGUE_AVG_HR_RATE * (1 - pw)
+        absolute_recent_rate = recent_rate_raw * pw + LEAGUE_AVG_HR_RATE * (1 - pw)
+
+        # v3.53: blended with a RELATIVE-TO-TODAY read - where this
+        # batter's recent HR rate ranks among ONLY today's real batter
+        # pool, not a fixed league average. Same reasoning as the v3.52
+        # matchup percentile: guarantees a real hottest/coldest spread
+        # exists among today's actual players every day, blended 50/50
+        # with the absolute-scale version to stay grounded in real-world
+        # meaning rather than becoming pure relative noise.
+        recent_percentile_today = p.get("recentFormPercentile")
+        if recent_percentile_today is not None:
+            relative_recent_rate = LEAGUE_AVG_HR_RATE * (0.5 + recent_percentile_today * 1.3)
+            recent_form_rate = max(0.01, absolute_recent_rate * 0.5 + relative_recent_rate * 0.5)
+        else:
+            recent_form_rate = absolute_recent_rate
     else:
         recent_form_rate = LEAGUE_AVG_HR_RATE
 
@@ -2625,6 +2639,38 @@ def main():
             if (i + 1) % 50 == 0:
                 print(f"  ...{i + 1}/{len(rows)} done")
 
+    # v3.53: RELATIVE-TO-TODAY recent-form ranking - same mechanism as
+    # v3.52's pitcher matchup percentile, applied to recent hot/cold
+    # status. Ranks each batter's recent HR rate against every OTHER
+    # batter actually playing today, not just his own history regressed
+    # toward a fixed league average. Guarantees a real hottest/coldest
+    # spread exists among today's real player pool every day, the same
+    # way the matchup percentile guarantees a real best/worst-pitcher
+    # spread. Uses the diminishing-credit-adjusted counts (same
+    # multi-homer-game discount as everywhere else) so a single explosive
+    # game still can't fake a real hot streak here either.
+    todays_recent_rates = sorted(
+        (p.get("l15hrCredit") if p.get("l15hrCredit") is not None else (p.get("l15hr") or 0)) / 15 * 0.6
+        + (p.get("l5hrCredit") if p.get("l5hrCredit") is not None else (p.get("l5hr") or 0)) / 5 * 0.4
+        for p in players
+    )
+    print(f"  today's real recent-form pool: {len(todays_recent_rates)} batters")
+
+    def recent_form_percentile_today(l15hr_credit, l5hr_credit):
+        """Where this batter's recent HR rate ranks among TODAY's actual
+        batter pool - 0.0 = coldest batter playing today, 1.0 = hottest
+        batter playing today. Falls back to neutral 0.5 without a real
+        pool to rank against."""
+        if len(todays_recent_rates) < 2:
+            return 0.5
+        raw_rate = (l15hr_credit or 0) / 15 * 0.6 + (l5hr_credit or 0) / 5 * 0.4
+        idx = bisect.bisect_left(todays_recent_rates, raw_rate)
+        return idx / (len(todays_recent_rates) - 1)
+
+    for player_row in players:
+        player_row["recentFormPercentile"] = recent_form_percentile_today(
+            player_row.get("l15hrCredit"), player_row.get("l5hrCredit"))
+
     for player_row in players:
         player_row.update(compute_score(player_row))
         player_row.update(compute_hrr_score(player_row))
@@ -2802,6 +2848,8 @@ def write_daily_snapshot(players):
                 "oppIpPerStart": p.get("oppIpPerStart"),
                 "batSide": p.get("batSide"),
                 "phr9VsHand": p.get("phr9VsHand"), "phr9VsHandIp": p.get("phr9VsHandIp"),
+                "pitcherHr9Percentile": p.get("pitcherHr9Percentile"),
+                "recentFormPercentile": p.get("recentFormPercentile"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
