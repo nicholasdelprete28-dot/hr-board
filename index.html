@@ -1290,11 +1290,11 @@ function favTierName(score){
     return '&#9633; LONG SHOT';
   }
   if(boardMode === 'hr'){
-    // Cutoffs set to 16/11/6, matching check_results.py's HR_PROB_TIERS -
+    // Raised back to 20/14/9, matching check_results.py's HR_PROB_TIERS -
     // keep both in sync if this changes again.
-    if(score >= 16) return '&#9670; PRIME';
-    if(score >= 11) return '&#9733; STRONG';
-    if(score >= 6) return '&#9651; IN PLAY';
+    if(score >= 20) return '&#9670; PRIME';
+    if(score >= 14) return '&#9733; STRONG';
+    if(score >= 9) return '&#9651; IN PLAY';
     return '&#9633; LONG SHOT';
   }
   if(score >= 55) return '&#9670; PRIME';
@@ -1311,9 +1311,9 @@ function favTierClass(score){
     return 'longshot';
   }
   if(boardMode === 'hr'){
-    if(score >= 16) return 'prime';
-    if(score >= 11) return 'strong';
-    if(score >= 6) return 'inplay';
+    if(score >= 20) return 'prime';
+    if(score >= 14) return 'strong';
+    if(score >= 9) return 'inplay';
     return 'longshot';
   }
   if(score >= 55) return 'prime';
