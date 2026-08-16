@@ -1945,7 +1945,7 @@ def compute_hr_probability(p):
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
     pw_pitcher = pitcher_sample_weight(p.get("pip"))
     effective_phr9 = phr9 * pw_pitcher + LEAGUE_AVG_PITCHER_HR9 * (1 - pw_pitcher)
-    MATCHUP_QUALITY_SENSITIVITY = 1.0
+    MATCHUP_QUALITY_SENSITIVITY = 1.4
     matchup_ratio = effective_phr9 / LEAGUE_AVG_PITCHER_HR9
     park_wind_mult = 1 + (sf["park_s"] - 0.5) * 0.20 + (sf["wind_s"] - 0.5) * 0.20
     matchup_quality_rate = max(0.01, LEAGUE_AVG_HR_RATE
@@ -2009,10 +2009,19 @@ def compute_hr_probability(p):
     personal_situational_rate = power_baseline_rate * personal_mult
 
     # --- Blend, with the matchup-quality weight power-gated ---
-    W_POWER = 0.30
-    W_MATCHUP = 0.35
-    W_RECENT = 0.20
-    W_SITUATIONAL = 0.15
+    # v3.49: real diagnosis for "still similar top 5" - true EXTREME
+    # matchups are rare on any given slate; most probable starters
+    # cluster near average. So even with real weight, matchup mostly
+    # wasn't producing swings big enough to overcome power's ALWAYS-ON
+    # advantage among comparably elite hitters on a typical day. Two
+    # changes: MATCHUP_QUALITY_SENSITIVITY raised above so even ORDINARY
+    # matchup differences (not just extreme ones) move the needle more,
+    # and power's baseline weight cut further here so it's no longer
+    # winning by default even in the new blend structure.
+    W_POWER = 0.20
+    W_MATCHUP = 0.45
+    W_RECENT = 0.25
+    W_SITUATIONAL = 0.10
 
     POWER_GATE_FLOOR = 0.20
     POWER_GATE_CEIL = 0.50
@@ -2034,7 +2043,7 @@ def compute_hr_probability(p):
     # scratch. HONESTY NOTE: this is a reasoned starting calibration, not
     # backtested against real outcomes yet - the first real thing to
     # check once this has run against actual results.
-    GLOBAL_SCALE = 1.5
+    GLOBAL_SCALE = 1.6
     mean *= GLOBAL_SCALE
 
     mean *= trend_adjustment(p)
