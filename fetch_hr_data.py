@@ -2038,8 +2038,34 @@ def compute_hr_probability(p):
         BULLPEN_SENSITIVITY = 0.25
         bullpen_mult = 1 + (bullpen_ratio - 1) * BULLPEN_SENSITIVITY * exposure
 
+    # v3.69 NEW: per-batter handedness split, rebuilt properly this time.
+    # phr9VsHand/phr9VsHandIp were already being fetched (built earlier
+    # tonight, then reverted from overwriting the displayed phr9 stat
+    # after a real case showed the swing was too large - two teammates
+    # of different handedness showing wildly different "Pitcher HR/9" on
+    # their cards for the same pitcher). This is a much more conservative
+    # version: a small, HARD-CAPPED adjustment (+-12% max) applied only
+    # to the internal matchup_ratio used for scoring, NOT to effective_
+    # phr9 itself - the displayed stat box stays the pitcher's one real,
+    # natural number, exactly as it should. This directly targets the
+    # "teammates cluster because they share an identical matchup value"
+    # problem: a lefty and a righty facing the same pitcher genuinely can
+    # have different real matchup quality if he has a real platoon split,
+    # so this makes that split real without touching what's displayed.
+    hand_hr9 = p.get("phr9VsHand")
+    hand_ip = p.get("phr9VsHandIp") or 0
+    if hand_hr9 is not None and hand_ip > 0 and effective_phr9 > 0:
+        HAND_SPLIT_SHRINK_K = 60
+        HAND_SPLIT_MAX_ADJ = 0.12
+        hand_trust = hand_ip / (hand_ip + HAND_SPLIT_SHRINK_K)
+        hand_ratio = hand_hr9 / effective_phr9
+        hand_adj = max(-HAND_SPLIT_MAX_ADJ, min(HAND_SPLIT_MAX_ADJ, (hand_ratio - 1) * hand_trust))
+        matchup_ratio_for_batter = matchup_ratio * (1 + hand_adj)
+    else:
+        matchup_ratio_for_batter = matchup_ratio
+
     absolute_matchup_rate = max(0.01, LEAGUE_AVG_HR_RATE
-                                 * (1 + (matchup_ratio - 1) * MATCHUP_QUALITY_SENSITIVITY)
+                                 * (1 + (matchup_ratio_for_batter - 1) * MATCHUP_QUALITY_SENSITIVITY)
                                  * park_wind_mult * bullpen_mult)
 
     # v3.52: blended with a RELATIVE-TO-TODAY read - where this pitcher
@@ -2222,12 +2248,18 @@ def compute_hr_probability(p):
     # player to player, even on the same team) - trimming matchup and
     # boosting those two verified a real ~16% increase in separation
     # between two genuinely different teammates sharing the same
-    # matchup. Matchup still keeps by far the largest single weight
-    # (0.38 vs 0.27/0.18/0.17) - this moderates the earlier fix, it
-    # doesn't reverse it.
-    W_POWER = 0.17
-    W_MATCHUP = 0.38
-    W_RECENT = 0.27
+    # matchup.
+    #
+    # v3.69: trimmed once more, 0.38 -> 0.34, since checking across
+    # multiple real matchup strengths showed the shared component was
+    # still ~58% of total on a genuinely good matchup day - exactly the
+    # scenario that produces clustering, barely improved by the first
+    # trim. Paired with the new per-batter handedness split below, which
+    # tackles the same problem from the other direction (making matchup
+    # itself less identical between teammates, not just smaller).
+    W_POWER = 0.19
+    W_MATCHUP = 0.34
+    W_RECENT = 0.29
     W_SITUATIONAL = 0.18
 
     POWER_GATE_FLOOR = 0.20
