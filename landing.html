@@ -444,16 +444,22 @@ fetch('/players.json')
     // book — skip anyone missing odds so the odds pills always have
     // something real to show, same standard the real board holds itself to.
     const candidates = (players || [])
-      .filter(p => p.playerType === 'batter' && typeof p.score === 'number')
+      .filter(p => p.playerType === 'batter' && typeof p.hrProb === 'number')
       .filter(p => p.bookOdds && Array.isArray(p.bookOdds.hr) &&
                    p.bookOdds.hr.some(e => e.line === 0.5 && e.price != null))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => b.hrProb - a.hrProb);
     const p = candidates[0];
     if (!p) return; // leave the static example in place
 
-    const DISPLAY_FLOOR = 3, DISPLAY_CEIL = 32;
-    const displayPct = DISPLAY_FLOOR + (p.score / 100) * (DISPLAY_CEIL - DISPLAY_FLOOR);
-    const tier = p.score >= 55 ? 'PRIME' : p.score >= 40 ? 'STRONG' : p.score >= 35 ? 'IN PLAY' : 'LONG SHOT';
+    // v3.58 FIX: was selecting/sorting by p.score, and tiering off the
+    // OLD 55/40/35 composite scale - score and hrProb diverged completely
+    // once hrProb got rebuilt into an independent-component blend, so
+    // this could show a different "top pick" than what's actually #1 on
+    // the real board, with a tier badge that doesn't match the site's
+    // real cutoffs at all. Now sources both from hrProb, matching the
+    // live board exactly.
+    const displayPct = p.hrProb;
+    const tier = p.hrProb >= 24 ? 'PRIME' : p.hrProb >= 17 ? 'STRONG' : p.hrProb >= 11 ? 'IN PLAY' : 'LONG SHOT';
     const initials = p.player.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
     const timeStr = p.gameTime
       ? new Date(p.gameTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
