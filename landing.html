@@ -7,6 +7,18 @@
 <meta name="description" content="MLB home run and player prop predictions built on Statcast data, live sportsbook odds, and a public accuracy record.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* ==========================================================
+     DESIGN TOKENS
+     Core palette below is UNCHANGED from the previous version -
+     the live mockup card section reads these variables directly,
+     so their values stay fixed to guarantee that card renders
+     identically. Everything else on the page is rebuilt around a
+     literal ballpark-scoreboard identity: segment/mono numerals,
+     line-score-style rules instead of card grids, foul-pole gold
+     and infield green doing double duty as both brand accents and
+     baseball's own color language - grounded in the actual sport,
+     not decorative.
+     ========================================================== */
   :root{
     --bg:#0a0d0b; --surface2:#141a17; --line:#232b26; --text:#f2f0e6;
     --muted:#8b948d; --muted2:#5f675f; --gold:#e3a548; --green:#4fdb9a;
@@ -16,20 +28,54 @@
   *{box-sizing:border-box; margin:0; padding:0;}
   body{background:var(--bg); color:var(--text); font-family:var(--body); line-height:1.5;}
   .wrap{max-width:640px; margin:0 auto; padding:0 20px;}
+  ::selection{background:var(--gold); color:#0a0d0b;}
 
-  header{padding:24px 0; display:flex; align-items:center; justify-content:center; gap:10px;}
+  header{padding:22px 0 0; display:flex; align-items:center; justify-content:center; gap:10px;}
   .logo-badge{width:36px; height:36px; border-radius:10px; background:var(--surface2); border:1px solid var(--green); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; color:var(--text); font-size:15px;}
-  .logo-word{font-family:var(--display); font-weight:700; font-size:18px;}
+  .logo-word{font-family:var(--display); font-weight:700; font-size:18px; letter-spacing:-0.01em;}
 
-  .hero{padding:36px 0 8px; text-align:center;}
-  .hero h1{font-family:var(--display); font-weight:700; font-size:34px; line-height:1.25; margin-bottom:14px;}
-  .hero h1 .accent{background:linear-gradient(100deg,#fff 30%,var(--gold) 100%); -webkit-background-clip:text; background-clip:text; color:transparent;}
-  .hero p{color:var(--muted); font-size:16px; max-width:480px; margin:0 auto 26px;}
+  /* -------------------- SIGNATURE: scoreboard strip -------------------- */
+  /* A literal stadium-scoreboard readout, not a decorative stat bar - the
+     three segments are read left to right like a line score: what the
+     product is, how it's proven, what's live right now. The middle
+     segment pulls a real number from the same accuracy feed the proof
+     section below uses, so it's never a fabricated stat - it just
+     gracefully hides that one segment if the feed isn't ready yet. */
+  .scoreboard{
+    margin:20px auto 0; max-width:640px; background:#050705;
+    border:1px solid var(--line); border-radius:10px;
+    display:flex; align-items:stretch; overflow:hidden;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  .sb-seg{
+    flex:1; padding:10px 14px; text-align:center; border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  }
+  .sb-seg:last-child{border-right:none;}
+  .sb-seg .sb-val{
+    font-family:var(--mono); font-weight:700; font-size:15px; color:var(--stat-good);
+    letter-spacing:0.02em; text-shadow:0 0 10px rgba(66,232,150,0.35);
+  }
+  .sb-seg.gold .sb-val{color:var(--gold); text-shadow:0 0 10px rgba(227,165,72,0.35);}
+  .sb-seg .sb-lbl{font-family:var(--mono); font-size:8.5px; color:var(--muted2); letter-spacing:0.6px; text-transform:uppercase;}
+  .sb-seg.hidden{display:none;}
+
+  .hero{padding:32px 0 6px; text-align:center;}
+  .hero-eyebrow{
+    display:inline-block; font-family:var(--mono); font-size:11px; font-weight:700;
+    letter-spacing:1.2px; color:var(--gold); background:rgba(227,165,72,0.08);
+    border:1px solid rgba(227,165,72,0.3); border-radius:20px; padding:5px 12px; margin-bottom:16px;
+  }
+  .hero h1{font-family:var(--display); font-weight:700; font-size:35px; line-height:1.18; letter-spacing:-0.015em; margin-bottom:14px;}
+  .hero h1 .accent{background:linear-gradient(100deg,#fff 25%,var(--gold) 100%); -webkit-background-clip:text; background-clip:text; color:transparent;}
+  .hero p{color:var(--muted); font-size:16px; max-width:460px; margin:0 auto 26px;}
   .cta-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
-  .btn{display:inline-block; padding:13px 24px; border-radius:10px; font-family:var(--display); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:none;}
+  .btn{display:inline-block; padding:13px 24px; border-radius:10px; font-family:var(--display); font-weight:700; font-size:15px; text-decoration:none; cursor:pointer; border:none; transition:transform .15s ease;}
+  .btn:active{transform:scale(0.97);}
   .btn-primary{background:var(--stat-good); color:#0a0d0b;}
   .btn-secondary{background:transparent; border:1px solid var(--line); color:var(--text);}
 
+  /* -------------------- MOCKUP CARD (UNCHANGED) -------------------- */
   .mockup-wrap{margin:34px 0 6px; position:relative;}
   .mockup-label{font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted2); margin-bottom:16px;}
   .mockup-stack{position:relative; padding:14px 0 4px;}
@@ -72,52 +118,63 @@
   .mockup-odds-pill{font-family:var(--mono); font-size:11px; font-weight:700; color:var(--text); background:var(--surface2); border:1px solid var(--line); border-radius:7px; padding:5px 9px;}
   .mockup-caption{text-align:center; font-size:12px; color:var(--muted2); margin-top:14px;}
 
-  .proof{background:var(--surface2); border:1px solid var(--line); border-radius:16px; padding:28px 24px; margin:30px 0;}
-  .proof-top{margin-bottom:16px;}
-  .proof-label{font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted2); margin-bottom:6px; display:flex; align-items:center; gap:7px;}
-  .live-dot{width:7px; height:7px; border-radius:50%; background:var(--stat-good); display:inline-block;}
-  .proof-title{font-family:var(--display); font-weight:700; font-size:19px; margin-bottom:16px;}
-  .proof-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
-  .proof-stat{background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:14px;}
-  .proof-stat .val{font-family:var(--mono); font-weight:700; font-size:24px; color:var(--stat-good);}
-  .proof-stat .lbl{font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px;}
-  .proof-explainer{font-size:12.5px; color:var(--muted); line-height:1.5; margin-top:14px;}
-  .proof-coverage{font-size:11.5px; color:var(--stat-good); margin-top:8px; padding-top:8px; border-top:1px solid var(--line); font-weight:600;}
-  .proof-note{font-size:13px; color:var(--muted); margin-top:16px;}
+  /* -------------------- PROOF / TRACK RECORD -------------------- */
+  /* Rebuilt around one dominant, count-up hero stat instead of a
+     multi-board list of numbers - the HR board's real PRIME hit rate,
+     since this is explicitly a home-run-focused product now. Two
+     smaller counters flank it (coverage, picks graded) for support
+     without competing for attention. All three count up from 0 when the
+     section scrolls into view, real data only - respects
+     prefers-reduced-motion by skipping straight to the final value. */
+  .proof{background:var(--surface2); border:1px solid var(--line); border-radius:16px; padding:30px 22px; margin:32px 0; text-align:center;}
+  .proof-top{margin-bottom:6px;}
+  .proof-label{font-family:var(--mono); font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted2); margin-bottom:8px; display:flex; align-items:center; justify-content:center; gap:7px;}
+  .proof-tagline{font-family:var(--display); font-weight:700; font-size:17px;}
+  .live-dot{width:7px; height:7px; border-radius:50%; background:var(--stat-good); display:inline-block; box-shadow:0 0 8px rgba(66,232,150,0.7); animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.4;}}
 
-  /* Compact per-board summary cards - replaces the old full 4-tier grid.
-     Leads with just the number that's actually a clean, unambiguous
-     story on every board (PRIME hit rate vs. random baseline) plus the
-     coverage stat, instead of exposing the full STRONG/IN PLAY/LONG SHOT
-     breakdown, which is easy to misread out of context (lower tiers are
-     SUPPOSED to hit less often - that's confidence tiering working, not
-     a problem - but a cold visitor doesn't have that context yet). */
-  .proof-boards{grid-column:1/-1; display:flex; flex-direction:column; gap:10px;}
-  .proof-board-mini{
-    background:var(--bg); border:1px solid var(--line); border-radius:12px;
-    padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  .proof-hero{margin:22px 0 6px;}
+  .proof-hero-val{
+    font-family:var(--mono); font-weight:700; font-size:64px; line-height:1; color:var(--stat-good);
+    text-shadow:0 0 30px rgba(66,232,150,0.4); letter-spacing:-0.01em;
   }
-  .proof-board-mini-name{font-family:var(--display); font-weight:700; font-size:14px; flex:1 1 110px; min-width:110px;}
-  .proof-board-mini-main{text-align:right;}
-  .proof-board-mini-val{font-family:var(--mono); font-weight:700; font-size:25px; color:var(--stat-good);}
-  .proof-board-mini-sub{font-family:var(--mono); font-size:10px; color:var(--muted2); margin-top:1px;}
-  .proof-board-mini-coverage{
-    width:100%; font-size:11.5px; color:var(--muted);
-    border-top:1px solid var(--line); padding-top:8px; margin-top:2px;
+  .proof-hero-lbl{font-family:var(--display); font-weight:600; font-size:15px; color:var(--text); margin-top:8px;}
+  .proof-hero-sub{font-family:var(--mono); font-size:11.5px; color:var(--muted); margin-top:4px;}
+
+  .proof-flanks{display:flex; justify-content:center; gap:34px; margin-top:24px; padding-top:22px; border-top:1px solid var(--line);}
+  .proof-flank{text-align:center;}
+  .proof-flank-val{font-family:var(--mono); font-weight:700; font-size:22px; color:var(--gold);}
+  .proof-flank-lbl{font-family:var(--mono); font-size:9px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.5px; margin-top:3px;}
+
+  .proof-explainer{font-size:12.5px; color:var(--muted); line-height:1.55; margin-top:22px; padding-top:16px; border-top:1px solid var(--line);}
+  .proof-loading{text-align:center; padding:20px 0; color:var(--muted); font-size:13px;}
+
+  /* -------------------- WHAT YOU GET (organized by real board) -------------------- */
+  /* Structured by the four actual boards the product ships, in the same
+     order they appear in-app - this is real information order, not a
+     decorative 01/02/03 sequence, so the labels ARE the board names. */
+  .features{margin:36px 0;}
+  .section-title{font-family:var(--display); font-weight:700; font-size:22px; margin-bottom:6px; text-align:center;}
+  .section-sub{text-align:center; color:var(--muted); font-size:13.5px; margin-bottom:22px;}
+  .board-card{
+    display:flex; gap:14px; align-items:flex-start; padding:16px; margin-bottom:10px;
+    background:var(--surface2); border:1px solid var(--line); border-radius:12px;
   }
-  .proof-board-mini-coverage b{color:var(--stat-good);}
+  .board-tag{
+    font-family:var(--mono); font-weight:700; font-size:12px; color:#0a0d0b; background:var(--gold);
+    border-radius:6px; padding:5px 9px; flex-shrink:0; letter-spacing:0.3px; min-width:38px; text-align:center;
+  }
+  .board-card h3{font-family:var(--display); font-weight:600; font-size:15px; margin-bottom:3px;}
+  .board-card p{color:var(--muted); font-size:13.5px;}
+  .feature-plain{display:flex; gap:14px; padding:14px 0; border-top:1px solid var(--line);}
+  .feature-plain .feature-icon{width:36px; height:36px; border-radius:9px; background:var(--surface2); border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:16px;}
+  .feature-plain h3{font-family:var(--display); font-weight:600; font-size:14.5px; margin-bottom:3px;}
+  .feature-plain p{color:var(--muted); font-size:13px;}
 
-  .features{margin:34px 0;}
-  .section-title{font-family:var(--display); font-weight:700; font-size:22px; margin-bottom:18px; text-align:center;}
-  .feature{display:flex; gap:14px; padding:16px 0; border-bottom:1px solid var(--line);}
-  .feature:last-child{border-bottom:none;}
-  .feature-icon{width:38px; height:38px; border-radius:9px; background:var(--surface2); border:1px solid var(--line); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:17px;}
-  .feature h3{font-family:var(--display); font-weight:600; font-size:15px; margin-bottom:3px;}
-  .feature p{color:var(--muted); font-size:13.5px;}
-
+  /* -------------------- PRICING -------------------- */
   .pricing{margin:36px 0;}
   .plan{background:var(--surface2); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px;}
-  .plan.featured{border-color:var(--gold);}
+  .plan.featured{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold) inset;}
   .plan-name{font-family:var(--display); font-weight:700; font-size:16px;}
   .plan-price{font-family:var(--mono); color:var(--muted); font-size:13px; margin-top:2px;}
   .plan-badge{display:inline-block; background:var(--gold); color:#0a0d0b; font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:6px; margin-left:8px; vertical-align:middle;}
@@ -125,6 +182,10 @@
 
   footer{text-align:center; padding:30px 0 40px; color:var(--muted2); font-size:12px; font-family:var(--mono);}
   footer a{color:var(--muted); text-decoration:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    .live-dot{animation:none;}
+  }
 </style>
 <script>
 !function(w,d,s,u,n,a,b){if(w[n])return;a=w[n]={q:[],t:+new Date,s:[],o:u,track:function(){a.q.push([+new Date].concat([].slice.call(arguments)))},setScope:function(){a.s=[].slice.call(arguments).filter(function(x){return typeof x==="string"});a.q.push([+new Date,"setScope"].concat(a.s))},scope:function(){var c=[].slice.call(arguments);return{track:function(){a.q.push([+new Date].concat([].slice.call(arguments)).concat([{__scope:c}]))}}}};b=d.createElement(s);b.async=1;b.src=u+"/s.js";d.getElementsByTagName(s)[0].parentNode.insertBefore(b,d.getElementsByTagName(s)[0])}(window,document,"script","https://t.whop.tw","whop");
@@ -140,7 +201,14 @@ whop.track("page");
     <div class="logo-word">Going Yard</div>
   </header>
 
+  <div class="scoreboard" id="scoreboard">
+    <div class="sb-seg gold"><div class="sb-val">4</div><div class="sb-lbl">Live boards</div></div>
+    <div class="sb-seg hidden" id="sbPrimeSeg"><div class="sb-val" id="sbPrimeVal">—</div><div class="sb-lbl">HR Prime rate</div></div>
+    <div class="sb-seg"><div class="sb-val">4</div><div class="sb-lbl">Books tracked</div></div>
+  </div>
+
   <section class="hero">
+    <div class="hero-eyebrow">⚾ MLB HOME RUN PREDICTIONS</div>
     <h1>Know the home run<br><span class="accent">before it leaves the yard</span></h1>
     <p>MLB home run and player prop predictions built on Statcast data, live sportsbook odds, and wind/weather — with a public accuracy record you can check yourself.</p>
     <div class="cta-row">
@@ -184,33 +252,44 @@ whop.track("page");
 
   <section class="proof" id="proofSection">
     <div class="proof-top">
-      <div>
-        <div class="proof-label"><span class="live-dot"></span>Public track record</div>
-        <div class="proof-title">Every pick logged. Every result checked.</div>
-      </div>
+      <div class="proof-label"><span class="live-dot"></span>HR Prediction Track Record</div>
+      <div class="proof-tagline">Real home run picks. Built to stack.</div>
     </div>
-    <div class="proof-grid" id="proofGrid">
-      <div class="proof-stat"><div class="val">—</div><div class="lbl">Loading...</div></div>
+    <div id="proofBody">
+      <div class="proof-loading">Loading real results&hellip;</div>
     </div>
-    <div class="proof-note">We publish our top-tier hit rate daily, win or lose. This is the same data feeding <a href="/subscribe" style="color:var(--stat-good);">the boards</a>.</div>
   </section>
 
   <section class="features">
-    <div class="section-title">What you get</div>
-    <div class="feature">
-      <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#42e896" stroke-width="2"><path d="M3 17l6-6 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h6v6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div><h3>Four prediction boards</h3><p>Home runs, hits+runs+RBI, total bases, and pitcher strikeouts — each scored from real Statcast and matchup data.</p></div>
+    <div class="section-title">Four boards, one board room</div>
+    <div class="section-sub">Every board scored from real Statcast and matchup data — not a guess.</div>
+    <div class="board-card">
+      <div class="board-tag">HR</div>
+      <div><h3>Home runs</h3><p>Power, pitcher matchup, and recent form, ranked against real sportsbook lines.</p></div>
     </div>
-    <div class="feature">
-      <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e3a548" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5c0-1.5 1.5-2 3-2s3 .8 3 2-1.5 2-3 2-3 .5-3 2 1.5 2 3 2 3-.5 3-2" stroke-linecap="round"/></svg></div>
+    <div class="board-card">
+      <div class="board-tag">HRR</div>
+      <div><h3>Hits + runs + RBI</h3><p>On-base skill and matchup quality for the players most likely to produce.</p></div>
+    </div>
+    <div class="board-card">
+      <div class="board-tag">TB</div>
+      <div><h3>Total bases</h3><p>Power and contact quality combined for players trending toward extra bases.</p></div>
+    </div>
+    <div class="board-card">
+      <div class="board-tag">K</div>
+      <div><h3>Pitcher strikeouts</h3><p>Strikeout rate, recent form, and opposing lineup quality for every starter.</p></div>
+    </div>
+
+    <div class="feature-plain">
+      <div class="feature-icon">💰</div>
       <div><h3>Real sportsbook odds</h3><p>Live lines from DraftKings, FanDuel, BetMGM, and Hard Rock Bet, matched to every player.</p></div>
     </div>
-    <div class="feature">
-      <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#42e896" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="#42e896"/></svg></div>
-      <div><h3>Value alerts</h3><p>Flags where the market hasn't caught up to a real hot streak yet — not just "who's good."</p></div>
+    <div class="feature-plain">
+      <div class="feature-icon">🎯</div>
+      <div><h3>Value alerts</h3><p>Flags where the market hasn't caught up to a real edge yet — not just "who's good."</p></div>
     </div>
-    <div class="feature">
-      <div class="feature-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8b948d" stroke-width="2"><path d="M4 5h16v11H8l-4 4V5z" stroke-linejoin="round"/></svg></div>
+    <div class="feature-plain">
+      <div class="feature-icon">💬</div>
       <div><h3>Discord community</h3><p>Daily results, discussion, and a live accuracy feed you can watch update in real time.</p></div>
     </div>
   </section>
@@ -236,70 +315,85 @@ whop.track("page");
 
 <script>
 // ---------------------------------------------------------------------
-// 1) Public track record - compact per-board summary cards. Previously
-//    showed a full PRIME/STRONG/IN PLAY/LONG SHOT grid per board - real
-//    and honest, but easy for a cold visitor to misread: lower tiers are
-//    SUPPOSED to hit less often (that's confidence tiering working
-//    correctly), but out of context a STRONG number sitting well below
-//    PRIME just looks like a problem. This leads with the one number
-//    that's a clean, unambiguous story on every board - PRIME hit rate
-//    vs. a random-guess baseline - plus the real coverage stat. The full
-//    tier breakdown is still real and still worth showing somewhere
-//    (e.g. inside the app for subscribers who want the detail) - it's
-//    just not the first thing a visitor who's never seen the product
-//    needs to parse.
+// 1) Public track record - ONE dominant count-up hero stat (HR board's
+//    real PRIME hit rate) instead of a multi-board stat list, plus two
+//    small supporting counters (coverage, picks graded). All three
+//    animate from 0 to their real value when the section scrolls into
+//    view - real data only, never fabricated, and the same fetch feeds
+//    the scoreboard strip's live segment up top so there's only ever
+//    one source of truth for that number.
 // ---------------------------------------------------------------------
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Simple ease-out count-up: shared by the hero stat and both flanking
+// counters. Skips straight to the final value if the user has motion
+// reduction enabled, per accessibility guidance.
+function countUp(el, target, opts = {}) {
+  const { suffix = '', duration = 1200 } = opts;
+  if (prefersReducedMotion) { el.textContent = target + suffix; return; }
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(target * eased) + suffix;
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
 fetch('/history/accuracy_summary.json')
   .then(r => { if(!r.ok) throw new Error(); return r.json(); })
   .then(data => {
-    const grid = document.getElementById('proofGrid');
-    const boards = ['hr','hrr','tb','k'];
-    const labels = {hr:'Home runs', hrr:'Hits + runs + RBI', tb:'Total bases', k:'Pitcher strikeouts'};
-    // What a totally random pick, no model at all, hits on average -
-    // shown only next to PRIME, the one figure it's actually meant to
-    // be compared against.
-    const boardBaseline = {hr:12, hrr:52, tb:43};
-    const coverage = data._coverage || {};
-    let html = '';
-    let anyData = false;
+    const body = document.getElementById('proofBody');
+    const hrTiers = data.hr;
+    const primeRow = hrTiers && hrTiers.prime;
+    const coverage = (data._coverage && data._coverage.hr) || null;
 
-    boards.forEach(b => {
-      const tiers = data[b];
-      if (!tiers) return;
-      const primeRow = tiers.prime;
-      if (!primeRow || primeRow.total < 5) return; // hide until there's a real sample
-      anyData = true;
-
-      const pct = Math.round((primeRow.hit / primeRow.total) * 100);
-      const baseline = boardBaseline[b];
-      const subLine = baseline != null
-        ? `PRIME hit rate &middot; ~${baseline}% random baseline`
-        : `PRIME hit rate &middot; ${primeRow.total} picks`;
-
-      const cov = coverage[b];
-      const covLine = (cov && cov.real_total > 0)
-        ? `<div class="proof-board-mini-coverage">We had <b>${cov.matched} of ${cov.real_total}</b> real ${labels[b].toLowerCase()} qualifiers on our board that day.</div>`
-        : '';
-
-      html += `<div class="proof-board-mini">
-        <div class="proof-board-mini-name">${labels[b]}</div>
-        <div class="proof-board-mini-main">
-          <div class="proof-board-mini-val">${pct}%</div>
-          <div class="proof-board-mini-sub">${subLine}</div>
-        </div>
-        ${covLine}
-      </div>`;
-    });
-
-    if (anyData) {
-      grid.innerHTML = `<div class="proof-boards">${html}</div>`;
-      grid.insertAdjacentHTML('afterend', '<div class="proof-explainer">PRIME is our highest-confidence tier on each board - shown here because it\'s the cleanest single number to judge us by. Full tier-by-tier detail is available to subscribers inside the app.</div>');
-    } else {
-      grid.innerHTML = '<div class="proof-stat" style="grid-column:1/-1;"><div class="lbl" style="font-size:12px;">Track record is still building &mdash; check back soon, or watch it grow live in our Discord.</div></div>';
+    if (!primeRow || primeRow.total < 5) {
+      body.innerHTML = '<div class="proof-loading">Track record is still building &mdash; check back soon, or watch it grow live in our Discord.</div>';
+      return;
     }
+
+    const heroPct = Math.round((primeRow.hit / primeRow.total) * 100);
+    const coveragePct = (coverage && coverage.real_total > 0)
+      ? Math.round((coverage.matched / coverage.real_total) * 100) : null;
+
+    let flanksHtml = `<div class="proof-flank"><div class="proof-flank-val" id="flankPicks">0</div><div class="proof-flank-lbl">Prime picks graded</div></div>`;
+    if (coveragePct != null) {
+      flanksHtml += `<div class="proof-flank"><div class="proof-flank-val" id="flankCoverage">0%</div><div class="proof-flank-lbl">Real HR qualifiers covered</div></div>`;
+    }
+
+    body.innerHTML = `
+      <div class="proof-hero">
+        <div class="proof-hero-val" id="heroVal">0%</div>
+        <div class="proof-hero-lbl">PRIME hit rate on home run picks</div>
+        <div class="proof-hero-sub">vs. ~12% for a random guess with no model</div>
+      </div>
+      <div class="proof-flanks">${flanksHtml}</div>
+      <div class="proof-explainer">Full tier-by-tier detail on every board is available to subscribers inside the app.</div>
+    `;
+
+    document.getElementById('sbPrimeVal').textContent = heroPct + '%';
+    document.getElementById('sbPrimeSeg').classList.remove('hidden');
+
+    // Only animate once the section is actually visible on screen -
+    // triggering on page load would mean most visitors miss it entirely
+    // since this section starts below the fold.
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        countUp(document.getElementById('heroVal'), heroPct, { suffix: '%', duration: 1400 });
+        countUp(document.getElementById('flankPicks'), primeRow.total, { duration: 1000 });
+        if (coveragePct != null) {
+          countUp(document.getElementById('flankCoverage'), coveragePct, { suffix: '%', duration: 1000 });
+        }
+        observer.disconnect();
+      });
+    }, { threshold: 0.4 });
+    observer.observe(document.getElementById('proofSection'));
   })
   .catch(() => {
-    document.getElementById('proofGrid').innerHTML = '<div class="proof-stat" style="grid-column:1/-1;"><div class="lbl" style="font-size:12px;">Track record is still building — check back soon, or watch it grow live in our Discord.</div></div>';
+    document.getElementById('proofBody').innerHTML = '<div class="proof-loading">Track record is still building — check back soon, or watch it grow live in our Discord.</div>';
   });
 
 // ---------------------------------------------------------------------
