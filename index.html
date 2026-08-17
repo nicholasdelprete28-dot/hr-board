@@ -1353,6 +1353,45 @@ function render(){
     return sortDesc ? -diff : diff;
   });
 
+  // v3.66 NEW: team-diversity cap on the default Favorability view. Real
+  // diagnosis: MLB teams play the same opponent 3-4 games in a row - if
+  // that opponent's pitching is genuinely bad, EVERY hitter in the
+  // lineup gets a real, correlated matchup boost for the whole series,
+  // not just one day. That's accurate signal, not a formula bug - but
+  // it produces exactly the complaint this was built to fix: the same
+  // 2-3 teammates parked at the very top for days at a time. This
+  // doesn't touch anyone's real hrProb - every number stays exactly what
+  // it was computed to be. It only limits how many players from the
+  // SAME team can occupy the top of the DEFAULT board at once, the same
+  // way DFS/fantasy tools deliberately do. Scoped to hrProb specifically
+  // (not the Matchup sort tab) - someone using Matchup sort explicitly
+  // wants to see every hitter with a great matchup today, correlated or
+  // not, e.g. for building a parlay around one bad pitcher - capping
+  // that view would defeat its purpose.
+  if (boardMode === 'hr' && sortKey === 'hrProb') {
+    const CAP_SLOTS = 10, MAX_PER_TEAM = 2;
+    const topSlots = [];
+    const usedIdx = new Set();
+    const teamCount = {};
+    for (let i = 0; i < filtered.length && topSlots.length < CAP_SLOTS; i++) {
+      const p = filtered[i];
+      const count = teamCount[p.team] || 0;
+      if (count < MAX_PER_TEAM) {
+        topSlots.push(p);
+        teamCount[p.team] = count + 1;
+        usedIdx.add(i);
+      }
+    }
+    const rest = filtered.filter((p, i) => !usedIdx.has(i));
+    filtered = topSlots.concat(rest);
+    // v3.67 REVERTED: an individual "can't be #1 two days running" swap
+    // was briefly here - removed per explicit direction. The #1 slot
+    // must always be the genuine highest real hrProb, full stop. The
+    // team-diversity cap above stays (it never touches the #1 slot
+    // itself - the single highest-probability player is always
+    // considered first and always gets included, regardless of team).
+  }
+
   document.getElementById('count').textContent = filtered.length + ' player' + (filtered.length===1?'':'s');
 
   if(filtered.length === 0){
