@@ -302,7 +302,13 @@ def check_date(date_str):
         pid = p.get("playerId")
         if pid is None:
             continue
-        for board, score_key in [("hr", "score"), ("hrr", "hrrScore"), ("tb", "tbScore")]:
+        # v3.58 FIX: HR board presence now checked via hrProb, not score -
+        # score has architecturally diverged from hrProb (see
+        # fetch_hr_data.py's compute_score docstring), and hrProb is what
+        # actually determines whether a player is ranked/visible on the
+        # real live board. Checking presence via the wrong field could
+        # overcount coverage relative to what subscribers actually see.
+        for board, score_key in [("hr", "hrProb"), ("hrr", "hrrScore"), ("tb", "tbScore")]:
             if p.get(score_key) is not None:
                 tracked_ids[board].add(pid)
 
