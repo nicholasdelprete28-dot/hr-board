@@ -1994,7 +1994,18 @@ def compute_hr_probability(p):
         recent_trust = recent_pip / (recent_pip + PITCHER_RECENT_SHRINK_K)
         effective_phr9 += (recent_phr9 - effective_phr9) * recent_trust * PITCHER_RECENT_DAMPEN
 
-    MATCHUP_QUALITY_SENSITIVITY = 1.4
+    # v3.64 FIX: cut 1.4 -> 1.1. This had been raised repeatedly across
+    # the night specifically to fight power dominance (0.6 -> 1.4 over
+    # several rounds), but a real case exposed it swinging too far on its
+    # own: a merely-bad-not-legendary starter (HR9=2.61, 2.17x league
+    # average) alone produced a 31.7% matchup rate - nearly 3x league
+    # average - before bullpen, power, or recent form even entered the
+    # picture. That's disproportionate for "bad," not "historically
+    # awful." 1.1 still gives matchup real, meaningful teeth (still well
+    # above the original 0.6-0.85 range from earlier tonight), just no
+    # longer capable of single-handedly carrying a cold, declining-power
+    # hitter to STRONG on a moderately bad pitcher alone.
+    MATCHUP_QUALITY_SENSITIVITY = 1.1
     matchup_ratio = effective_phr9 / LEAGUE_AVG_PITCHER_HR9
     park_wind_mult = (1 + (sf["park_s"] - 0.5) * 0.20 + (sf["wind_s"] - 0.5) * 0.20
                       + (sf["temp_s"] - 0.5) * 0.14)
@@ -2013,7 +2024,18 @@ def compute_hr_probability(p):
     if bullpen_era is not None and bullpen_whip is not None and bullpen_ip >= BULLPEN_MIN_IP:
         bullpen_ratio = (bullpen_era / LEAGUE_AVG_BULLPEN_ERA + bullpen_whip / LEAGUE_AVG_BULLPEN_WHIP) / 2
         exposure = bullpen_exposure_weight(p.get("oppIpPerStart"))
-        BULLPEN_SENSITIVITY = 0.5
+        # v3.64 FIX: cut 0.5 -> 0.25. This was calibrated in isolation
+        # without re-checking what happens once it stacks with the
+        # already-aggressive MATCHUP_QUALITY_SENSITIVITY (1.4) - real
+        # case that exposed it: a merely-bad-not-legendary starter
+        # (HR9=2.61) plus a bad bullpen compounded to a rate nearly 3x
+        # league average from matchup alone, before power or recent form
+        # even entered the picture, carrying a genuinely cold, declining-
+        # power hitter (0% barrel, EV/hard-hit both down from season) to
+        # STRONG almost entirely on matchup. Halving this keeps bullpen
+        # as real, additional signal without letting it compound the
+        # starter's already-strong effect into something disproportionate.
+        BULLPEN_SENSITIVITY = 0.25
         bullpen_mult = 1 + (bullpen_ratio - 1) * BULLPEN_SENSITIVITY * exposure
 
     absolute_matchup_rate = max(0.01, LEAGUE_AVG_HR_RATE
