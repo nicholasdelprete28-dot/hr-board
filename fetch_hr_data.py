@@ -1710,7 +1710,18 @@ def compute_hr_subfactors(p):
     # (the weakest, most-diluted of the three - a broad historical
     # average, not even matchup-specific) gives up the room for it.
     if avg_vs_mix is not None:
-        avg_vs_mix_s = clamp01(avg_vs_mix / 0.320)
+        # v3.63 FIX: floor was 0.000 (a literal zero batting average),
+        # which nothing in real baseball ever actually hits - meaning a
+        # genuinely terrible .157 average still normalized to ~0.49,
+        # basically half credit. This is the real root cause every
+        # earlier platoon fix tonight was quietly built on top of: no
+        # matter how much weight or strength platoon got, a "bad" score
+        # was never actually reading as bad, so nothing downstream
+        # (including the divergence check needing it below 0.30) could
+        # ever properly fire. Floor moved to .150 - a real, genuinely
+        # poor performance level - so the normalized score finally means
+        # what it's supposed to mean.
+        avg_vs_mix_s = clamp01((avg_vs_mix - 0.150) / (0.320 - 0.150))
         platoon = pitch_mix_platoon * 0.40 + avgmix_s * 0.10 + avg_vs_mix_s * 0.50
     else:
         avg_vs_mix_s = None
