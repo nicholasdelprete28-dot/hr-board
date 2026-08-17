@@ -1369,7 +1369,14 @@ function render(){
   // not, e.g. for building a parlay around one bad pitcher - capping
   // that view would defeat its purpose.
   if (boardMode === 'hr' && sortKey === 'hrProb') {
-    const CAP_SLOTS = 10, MAX_PER_TEAM = 2;
+    // v3.70: MAX_PER_TEAM raised 2 -> 3 - real tradeoff surfaced from a
+    // live case (Ohtani, genuinely higher %, deferred below a lower-%
+    // player from an unrelated team because 2 other Dodgers already
+    // filled LA's cap). Less aggressive capping means this triggers
+    // less often, at the cost of allowing slightly more same-team
+    // clustering than before - the tradeoff itself is inherent to
+    // capping team representation at all, this just moves the dial.
+    const CAP_SLOTS = 10, MAX_PER_TEAM = 3;
     const topSlots = [];
     const usedIdx = new Set();
     const teamCount = {};
