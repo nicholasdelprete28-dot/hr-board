@@ -19,11 +19,13 @@ export async function onRequestGet({ request, env }) {
   authorizeUrl.searchParams.set("code_challenge", codeChallenge);
   authorizeUrl.searchParams.set("code_challenge_method", "S256");
   // Whop requires a scope param - "openid profile email" covers basic
-  // login/identity. If the memberships check later fails to authorize,
-  // check the "View available scopes" button on Whop's OAuth settings
-  // page for a Whop-specific scope (e.g. something membership-related)
-  // that may need adding here too.
-  authorizeUrl.searchParams.set("scope", "openid profile email");
+  // login/identity. member:basic:read + member:email:read were added
+  // (Aug 2026) because the memberships lookup in callback.js needs them -
+  // without these, GET /api/v1/memberships returns a 400
+  // "You are not authorized" error even for genuinely subscribed users.
+  // Matches the permissions enabled for this app in the Whop dashboard
+  // (Developer > Going Yard Auth > Permissions).
+  authorizeUrl.searchParams.set("scope", "openid profile email member:basic:read member:email:read");
   authorizeUrl.searchParams.set("nonce", nonce);
 
   const headers = new Headers();
