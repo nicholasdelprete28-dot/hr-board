@@ -2215,7 +2215,23 @@ def compute_hr_probability(p):
     W_SITUATIONAL = 0.18
 
     POWER_GATE_FLOOR = 0.20
-    POWER_GATE_CEIL = 0.50
+    # v3.65 FIX: ceiling cut 0.50 -> 0.35. Real diagnosis for "the same
+    # elite guy is #1 four days straight even after every other fix
+    # tonight": his power_quality (~0.63) clears 0.50 by a wide margin,
+    # meaning he ALWAYS gets full matchup weight, every day, regardless
+    # of who he's facing. A merely-good challenger at 0.35-0.45 power
+    # gets REDUCED matchup weight - even on their single best matchup
+    # day of the season. That's a compounding, self-reinforcing gap: 
+    # elite power gets a strong baseline AND full matchup access, while
+    # a good-not-elite hitter is capped on BOTH axes simultaneously. No
+    # amount of day-to-day matchup variance can close a gap that's built
+    # into the gate itself. This doesn't change an elite player's own
+    # number (still fully above the new ceiling either way) - it gives
+    # real challengers the same full matchup access on their best days,
+    # which they never actually had before. The floor (0.20) is
+    # unchanged - genuinely weak hitters (Rafaela-style, ~0.16) stay
+    # exactly as protected as before.
+    POWER_GATE_CEIL = 0.35
     MATCHUP_WEIGHT_MIN = 0.15
     power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
     effective_w_matchup = MATCHUP_WEIGHT_MIN + (W_MATCHUP - MATCHUP_WEIGHT_MIN) * power_gate
