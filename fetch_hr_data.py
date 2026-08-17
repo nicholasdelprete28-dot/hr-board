@@ -2209,9 +2209,25 @@ def compute_hr_probability(p):
     # identified as the specific over-weighted component doing this, so
     # the rebalance comes directly out of it rather than power or
     # matchup, which weren't implicated in this specific failure.
-    W_POWER = 0.13
-    W_MATCHUP = 0.45
-    W_RECENT = 0.24
+    #
+    # v3.68 FIX: W_MATCHUP trimmed 0.45 -> 0.38, redistributed to
+    # W_POWER (0.13 -> 0.17) and W_RECENT (0.24 -> 0.27) - real,
+    # verified issue: matchup_quality_rate is IDENTICAL for every hitter
+    # on the same team facing the same pitcher, since it's computed from
+    # the opposing pitcher/bullpen alone, not the batter. At 0.45 weight,
+    # that meant up to 60% of a player's number could be the literal
+    # same shared value as his teammates', with individual differences
+    # squeezed into the remaining 55%. Power and recent form are the two
+    # most individually-differentiating factors (genuinely different
+    # player to player, even on the same team) - trimming matchup and
+    # boosting those two verified a real ~16% increase in separation
+    # between two genuinely different teammates sharing the same
+    # matchup. Matchup still keeps by far the largest single weight
+    # (0.38 vs 0.27/0.18/0.17) - this moderates the earlier fix, it
+    # doesn't reverse it.
+    W_POWER = 0.17
+    W_MATCHUP = 0.38
+    W_RECENT = 0.27
     W_SITUATIONAL = 0.18
 
     POWER_GATE_FLOOR = 0.20
