@@ -1,6 +1,3 @@
-
-
-
 """
 fetch_hr_data.py  (v3.13 - power subfactor recalibration + probability formula fix)
 
@@ -1375,6 +1372,8 @@ DOW_MAX_ADJ = 0.03
 DOW_MIN_PA = 25
 TREND_MAX_ADJ = 0.06
 TREND_MIN_PA = 40  # need a genuinely real L30 sample before trusting a trend read at all
+TREND_L5_MIN_PA = 15
+TREND_L5_SHRINK_K = 38
 
 
 def power_sample_weight(pa):
@@ -1429,31 +1428,51 @@ def day_night_adjustment(p):
 
 
 def trend_adjustment(p):
-    """v3.17: bounded multiplier comparing this player's L15 HR rate
-    against his OWN longer L30 window - a stable, PA-larger baseline
-    rather than a flat season aggregate. This is real within-season trend
-    detection (heating up / cooling down) that a season-long rate can't
-    see, without the noise risk of splitting an already-thin L15 sample
-    in half to fit a slope (see the KNOWN LIMITATION note at the top of
-    this file - this directly addresses that gap, the cheap and low-
-    noise way rather than the aggressive one).
+    """v3.80: bounded, sample-aware trend signal.
 
-    This is treated as genuine player-specific signal (like `recent`),
-    NOT situational noise - it does not participate in the stacking
-    dampener the way home/road, day/night, bullpen, and day-of-week do
-    (see situational_multiplier_boost() and the v3.15 notes on why those
-    four are kept separate from real performance signal)."""
+    L15-vs-L30 remains the main trend read, but L5 is now used only as a
+    SHORT-TERM direction check. This keeps the board moving day-to-day without
+    letting the same 1-2 game burst get counted as a second full recent-form
+    component.
+
+    L5 only nudges the final trend multiplier when it has a real PA sample and
+    agrees with the broader L15-vs-L30 direction. If L5 disagrees, it dampens
+    the trend rather than reversing it. This is intentionally modest.
+    """
     l15_rate = p.get("l15hrRate")
     l30_rate = p.get("l30hrRate")
     l30_pa = p.get("l30Pa") or 0
-    if l15_rate is None or l30_rate is None or l30_rate <= 0:
+    l5_credit = p.get("l5hrCredit")
+    l5_pa = p.get("l5Pa") or 0
+
+    if l15_rate is None or l30_rate is None or l30_rate <= 0 or l30_pa < TREND_MIN_PA:
         return 1.0
-    if l30_pa < TREND_MIN_PA:
-        return 1.0
+
+    # Broader trend: L15 versus L30.
     raw_ratio = l15_rate / l30_rate
-    adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
-    adj = max(-TREND_MAX_ADJ, min(TREND_MAX_ADJ, adj))
-    return 1 + adj
+    broad_adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
+    broad_adj = max(-TREND_MAX_ADJ, min(TREND_MAX_ADJ, broad_adj))
+
+    # Short-term trend: L5 versus L15. Only use it as a direction check;
+    # do not let a thin L5 sample create a large independent multiplier.
+    if l5_credit is None or l5_pa < TREND_L5_MIN_PA or l15_rate <= 0:
+        return 1 + broad_adj
+
+    l5_rate = l5_credit / 5
+    short_ratio = l5_rate / l15_rate
+    short_direction = max(-1.0, min(1.0, (short_ratio - 1.0) * 2.0))
+    short_trust = l5_pa / (l5_pa + TREND_L5_SHRINK_K)
+
+    if broad_adj != 0 and short_direction * broad_adj > 0:
+        # Agreement earns a small additional fraction of the existing trend.
+        broad_adj *= 1 + 0.30 * short_trust * abs(short_direction)
+    elif broad_adj != 0 and short_direction * broad_adj < 0:
+        # Disagreement is evidence that the broader trend may be cooling/heating
+        # unevenly, so shrink rather than reverse it.
+        broad_adj *= max(0.55, 1 - 0.35 * short_trust * abs(short_direction))
+
+    broad_adj = max(-TREND_MAX_ADJ, min(TREND_MAX_ADJ, broad_adj))
+    return 1 + broad_adj
 
 
 def compute_hr_subfactors(p):
@@ -1687,7 +1706,7 @@ def compute_hr_subfactors(p):
     # yet. A modest-power hitter's 2-game hot streak now gets pulled back
     # toward what he actually is instead of standing on its own.
     RECENT_SHRINK_K = 38
-    # v3.73: L15 now uses the same stricter shrink as L5 - a 15-game window can still be noisy, and recent form should not become near-fully trusted too quickly.
+    # v3.80: L15 now uses the same stricter shrink as L5 - a 15-game window can still be noisy, and recent form should not become near-fully trusted too quickly.
     # v3.56: L5 gets its own, stricter shrink constant - a 5-game window
     # is a much thinner, noisier sample than 15 games, and was using the
     # SAME shrink constant as L15 despite that. A real case that exposed
@@ -2137,8 +2156,18 @@ def compute_hr_probability(p):
     # hitter to STRONG on a moderately bad pitcher alone.
     MATCHUP_QUALITY_SENSITIVITY = 1.1
     matchup_ratio = effective_phr9 / LEAGUE_AVG_PITCHER_HR9
-    park_wind_mult = (1 + (sf["park_s"] - 0.5) * 0.20 + (sf["wind_s"] - 0.5) * 0.20
-                      + (sf["temp_s"] - 0.5) * 0.14)
+    # v3.80: park/weather calibration uses the real park factor when available
+    # instead of letting the normalized display score become the multiplier.
+    # Park gets the largest situational effect; wind and temperature remain
+    # modest physical nudges.
+    park_raw = p.get("park")
+    if park_raw is None:
+        park_mult = 1.0
+    else:
+        park_mult = max(0.92, min(1.12, 1 + (park_raw - 1.0) * 0.45))
+    wind_mult = 1 + (sf["wind_s"] - 0.5) * 0.16
+    temp_mult = 1 + (sf["temp_s"] - 0.5) * 0.08
+    park_wind_mult = park_mult * wind_mult * temp_mult
 
     # v3.62: bullpen quality folded into matchup quality - a bad bullpen
     # is real, additional matchup upside beyond just the starter, scaled
@@ -2194,8 +2223,19 @@ def compute_hr_probability(p):
     else:
         matchup_ratio_for_batter = matchup_ratio
 
+    # v3.80: nonlinear matchup response. Ordinary pitcher differences are
+    # intentionally compressed so a merely-bad pitcher cannot dominate the
+    # whole board. Once the matchup gets genuinely extreme, the response
+    # accelerates, preserving meaningful day-to-day movement for elite/bad
+    # HR environments.
+    matchup_deviation = matchup_ratio_for_batter - 1.0
+    deviation_abs = abs(matchup_deviation)
+    ordinary_dev = 0.65 * min(deviation_abs, 0.20)
+    extreme_dev = (max(deviation_abs - 0.20, 0.0) ** 1.25) * 1.15
+    nonlinear_deviation = (ordinary_dev + extreme_dev) * (1 if matchup_deviation >= 0 else -1)
+
     absolute_matchup_rate = max(0.01, LEAGUE_AVG_HR_RATE
-                                 * (1 + (matchup_ratio_for_batter - 1) * MATCHUP_QUALITY_SENSITIVITY)
+                                 * (1 + nonlinear_deviation * MATCHUP_QUALITY_SENSITIVITY)
                                  * park_wind_mult * bullpen_mult)
 
     # v3.52: blended with a RELATIVE-TO-TODAY read - where this pitcher
@@ -2208,8 +2248,11 @@ def compute_hr_probability(p):
     # day-to-day differentiation.
     pitcher_percentile_today = p.get("pitcherHr9Percentile")
     if pitcher_percentile_today is not None:
-        relative_matchup_rate = LEAGUE_AVG_HR_RATE * (0.5 + pitcher_percentile_today * 1.3) * park_wind_mult
-        matchup_quality_rate = max(0.01, absolute_matchup_rate * 0.5 + relative_matchup_rate * 0.5)
+        # v3.80: 30% slate-relative / 70% absolute. The relative component
+        # still creates daily movement, but cannot manufacture a huge matchup
+        # merely because someone ranks first in a mediocre slate.
+        relative_matchup_rate = LEAGUE_AVG_HR_RATE * (0.70 + pitcher_percentile_today * 0.60) * park_wind_mult
+        matchup_quality_rate = max(0.01, absolute_matchup_rate * 0.70 + relative_matchup_rate * 0.30)
     else:
         matchup_quality_rate = absolute_matchup_rate
 
@@ -2220,7 +2263,7 @@ def compute_hr_probability(p):
         l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
         l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
 
-        RECENT_SHRINK_K = 38  # v3.73: stricter L15 recent-form trust to reduce small-sample spikes
+        RECENT_SHRINK_K = 38  # v3.80: stricter L15 recent-form trust to reduce small-sample spikes
         L5_SHRINK_K = 38  # v3.56: L5 gets a stricter shrink than L15 - see compute_hr_subfactors() for the full reasoning
         l15_pa = p.get("l15IsoPa") or 0
         l5_pa = p.get("l5Pa") or 0
@@ -2293,7 +2336,9 @@ def compute_hr_probability(p):
         # "is he hot right now," not a disguised second serving of power.
         l15_rate_regressed = l15_rate_raw * l15_trust + LEAGUE_AVG_HR_RATE * (1 - l15_trust)
         l5_rate_regressed = l5_rate_raw * l5_trust + LEAGUE_AVG_HR_RATE * (1 - l5_trust)
-        recent_rate_raw = l15_rate_regressed * 0.6 + l5_rate_regressed * 0.4
+        # v3.80: L15 is the main recent-form window; L5 is primarily a short-term
+        # direction signal and therefore gets less direct weight here.
+        recent_rate_raw = l15_rate_regressed * 0.75 + l5_rate_regressed * 0.25
 
         pw = power_sample_weight(p.get("pa"))
         absolute_recent_rate = recent_rate_raw * pw + LEAGUE_AVG_HR_RATE * (1 - pw)
@@ -2307,10 +2352,34 @@ def compute_hr_probability(p):
         # meaning rather than becoming pure relative noise.
         recent_percentile_today = p.get("recentFormPercentile")
         if recent_percentile_today is not None:
-            relative_recent_rate = LEAGUE_AVG_HR_RATE * (0.5 + recent_percentile_today * 1.3)
-            recent_form_rate = max(0.01, absolute_recent_rate * 0.5 + relative_recent_rate * 0.5)
+            # v3.80: relative ranking is useful for daily movement, but it
+            # should not turn "best of today's mediocre recent group" into
+            # "actually elite." Keep most of the absolute signal and use the
+            # slate percentile as a smaller daily tie-breaker.
+            relative_recent_rate = LEAGUE_AVG_HR_RATE * (0.75 + recent_percentile_today * 0.50)
+            recent_form_rate = max(0.01, absolute_recent_rate * 0.70 + relative_recent_rate * 0.30)
         else:
             recent_form_rate = absolute_recent_rate
+
+        # v3.80: recent HR outcomes must be supported by recent contact quality.
+        # Positive barrel/EV/hard-hit movement earns a modest additional share;
+        # negative process suppresses outcome-driven heat. This is deliberately
+        # capped so recent form can still move day-to-day, just not on HR count
+        # alone.
+        process_signal = []
+        if sf.get("barrel_diff") is not None:
+            process_signal.append(max(-1.0, min(1.0, sf["barrel_diff"] / 0.06)))
+        if sf.get("ev_diff") is not None:
+            process_signal.append(max(-1.0, min(1.0, sf["ev_diff"] / 5.0)))
+        if sf.get("hardhit_diff") is not None:
+            process_signal.append(max(-1.0, min(1.0, sf["hardhit_diff"] / 0.10)))
+
+        recent_process_pa = p.get("l15PowerPa") or p.get("l15IsoPa") or 0
+        if process_signal and recent_process_pa > 0:
+            process_direction = sum(process_signal) / len(process_signal)
+            process_trust = recent_process_pa / (recent_process_pa + 60)
+            process_mult = 1 + 0.16 * process_direction * process_trust
+            recent_form_rate = max(0.01, recent_form_rate * process_mult)
     else:
         recent_form_rate = LEAGUE_AVG_HR_RATE
 
@@ -2323,7 +2392,7 @@ def compute_hr_probability(p):
     personal_situational_rate = LEAGUE_AVG_HR_RATE * personal_mult
 
     # --- Blend, with the matchup-quality weight power-gated ---
-    # v3.73: recent form reduced 0.29 -> 0.24; power increased 0.19 -> 0.24.
+    # v3.80: recent form reduced 0.29 -> 0.24; power increased 0.19 -> 0.24.
     # This keeps the total weight unchanged while making a short hot streak less able to overpower a mediocre underlying power profile.
     W_POWER = 0.24
     W_MATCHUP = 0.34
@@ -2352,6 +2421,13 @@ def compute_hr_probability(p):
     # check once this has run against actual results.
     GLOBAL_SCALE = 1.6
     mean *= GLOBAL_SCALE
+
+    # v3.80: confidence layer. A low-PA hitter can still move on a strong
+    # matchup, but we shrink unusually high/low estimates modestly toward the
+    # league baseline until his underlying season sample is established.
+    batter_pa = p.get("pa") or 0
+    confidence = 0.88 + 0.12 * (batter_pa / (batter_pa + 250)) if batter_pa > 0 else 0.88
+    mean = LEAGUE_AVG_HR_RATE + (mean - LEAGUE_AVG_HR_RATE) * confidence
 
     mean *= trend_adjustment(p)
 
