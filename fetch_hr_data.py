@@ -1,6 +1,3 @@
-
-
-
 """
 fetch_hr_data.py  (v3.13 - power subfactor recalibration + probability formula fix)
 
