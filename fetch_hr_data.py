@@ -1643,7 +1643,7 @@ def avg_vs_mix_override_mult(avg_vs_mix_s, avg_vs_mix_pa):
     return 1 - severity * AVG_VS_MIX_MAX_PENALTY
 
 
-def compute_hr_probability(p):
+def compute_hr_probability(p, debug=False):
     """v3.48: additive blend of independent rate estimates (see module
     docstring for the full v3.48 rationale).
 
@@ -1689,11 +1689,39 @@ def compute_hr_probability(p):
     PRIOR_YEAR_SHRINK_K = 45
     PRIOR_YEAR_MAX_PA = 200
     prior_year = p.get("seasonPrev")
-    current_pa = p.get("pa") or 0
-    if prior_year and prior_year.get("n", 0) >= 20 and current_pa < PRIOR_YEAR_MAX_PA:
+    # v3.84 FIX (this session - see chat discussion, caught by
+    # explain_player.py on the Raleigh case): `p.get("pa") or 0` treats a
+    # MISSING pa (data gap - get_season_batting_stats() failing to find
+    # this player, see the v3.83 diagnostic logging fix) identically to a
+    # real pa of 0 (a genuine rookie who hasn't played yet). Those are
+    # not the same thing - a data gap means "unknown," not "thin sample."
+    # An established player whose PA field happened to come back None
+    # was being incorrectly waved through the "thin sample" gate and
+    # getting his prior-year rate blended in after all, exactly the stale-
+    # data leak this gate was built to prevent. Now a genuinely missing
+    # pa disables the prior-year blend entirely (safer than guessing)
+    # rather than defaulting to 0 and satisfying the thin-sample gate.
+    current_pa_raw = p.get("pa")
+    current_pa = current_pa_raw if current_pa_raw is not None else 0
+    pa_is_known = current_pa_raw is not None
+    if pa_is_known and prior_year and prior_year.get("n", 0) >= 20 and current_pa < PRIOR_YEAR_MAX_PA:
         prior_hr_rate = prior_year["hrPct"] / 100
         current_trust = current_pa / (current_pa + PRIOR_YEAR_SHRINK_K) if current_pa > 0 else 0.0
         power_baseline_rate = power_baseline_rate * current_trust + prior_hr_rate * (1 - current_trust)
+
+    if debug:
+        gate_applied = pa_is_known and prior_year and prior_year.get("n", 0) >= 20 and current_pa < PRIOR_YEAR_MAX_PA
+        if not pa_is_known:
+            gate_reason = "not applied - pa is UNKNOWN (data gap), not treated as thin-sample"
+        elif current_pa >= PRIOR_YEAR_MAX_PA:
+            gate_reason = f"not applied - current PA ({current_pa}) >= {PRIOR_YEAR_MAX_PA}"
+        elif not prior_year or prior_year.get("n", 0) < 20:
+            gate_reason = "not applied - no qualifying prior-year data"
+        else:
+            gate_reason = "APPLIED"
+        print(f"[EXPLAIN] player={p.get('player')!r}  pa={p.get('pa')!r} (raw, before or-0 fallback)")
+        print(f"[EXPLAIN] power_quality={power_quality:.4f}  power_baseline_rate={power_baseline_rate:.4f}"
+              f"  (prior-year gate: {gate_reason})")
 
     # --- Component 2: MATCHUP QUALITY (batter-independent, day-specific) ---
     phr9 = p.get("phr9") if p.get("phr9") is not None else LEAGUE_AVG_PITCHER_HR9
@@ -1757,6 +1785,13 @@ def compute_hr_probability(p):
         matchup_quality_rate = max(0.01, absolute_matchup_rate * 0.70 + relative_matchup_rate * 0.30)
     else:
         matchup_quality_rate = absolute_matchup_rate
+
+    if debug:
+        print(f"[EXPLAIN] effective_phr9={effective_phr9:.3f}  matchup_ratio={matchup_ratio:.3f}"
+              f"  park_wind_mult={park_wind_mult:.3f}  bullpen_mult={bullpen_mult:.3f}")
+        print(f"[EXPLAIN] absolute_matchup_rate={absolute_matchup_rate:.4f}"
+              f"  pitcherHr9Percentile={pitcher_percentile_today}"
+              f"  matchup_quality_rate={matchup_quality_rate:.4f}")
 
     # --- Component 3: RECENT FORM (existing mechanism, reused as-is) ---
     l15hr = p.get("l15hr")
@@ -1851,11 +1886,17 @@ def compute_hr_probability(p):
     # same as before.
     recent_form_rate *= trend_adjustment(p)
 
+    if debug:
+        print(f"[EXPLAIN] recent_form_rate={recent_form_rate:.4f}  trend_mult={trend_adjustment(p):.4f}")
+
     # --- Component 4: PERSONAL SITUATIONAL (his own real tendencies) ---
     PERSONAL_STRENGTH = 0.65
     personal_mult = 1 + (sf["platoon"] - 0.5) * PERSONAL_STRENGTH
     personal_mult *= day_night_adjustment(p)
     personal_situational_rate = LEAGUE_AVG_HR_RATE * personal_mult
+
+    if debug:
+        print(f"[EXPLAIN] platoon={sf['platoon']:.4f}  personal_situational_rate={personal_situational_rate:.4f}")
 
     # --- Blend, with the matchup-quality weight power-gated ---
     W_POWER = 0.24
@@ -1875,12 +1916,26 @@ def compute_hr_probability(p):
             + W_RECENT * recent_form_rate
             + W_SITUATIONAL * personal_situational_rate)
 
+    if debug:
+        print(f"[EXPLAIN] effective_w_power={effective_w_power:.3f}  effective_w_matchup={effective_w_matchup:.3f}"
+              f"  W_RECENT={W_RECENT}  W_SITUATIONAL={W_SITUATIONAL}")
+        print(f"[EXPLAIN] blended mean (pre-scale)={mean:.4f}"
+              f"    contributions: power={effective_w_power*power_baseline_rate:.4f}"
+              f"  matchup={effective_w_matchup*matchup_quality_rate:.4f}"
+              f"  recent={W_RECENT*recent_form_rate:.4f}"
+              f"  situational={W_SITUATIONAL*personal_situational_rate:.4f}")
+
     GLOBAL_SCALE = 1.6
     mean *= GLOBAL_SCALE
+    mean_after_scale = mean
 
     batter_pa = p.get("pa") or 0
     confidence = 0.88 + 0.12 * (batter_pa / (batter_pa + 250)) if batter_pa > 0 else 0.88
     mean = LEAGUE_AVG_HR_RATE + (mean - LEAGUE_AVG_HR_RATE) * confidence
+
+    if debug:
+        print(f"[EXPLAIN] mean after GLOBAL_SCALE (x{GLOBAL_SCALE})={mean_after_scale:.4f}"
+              f"  confidence={confidence:.3f}  mean after confidence shrink={mean:.4f}")
 
     # v3.83 FIX (this session - see chat discussion): trend_adjustment()
     # (L15-vs-L30 "heating up/cooling down") used to multiply the ENTIRE
@@ -1893,7 +1948,8 @@ def compute_hr_probability(p):
     # like the rest of the architecture intends, instead of leaking into
     # power_baseline_rate and matchup_quality_rate too.
 
-    mean *= avg_vs_mix_override_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
+    avg_vs_mix_mult = avg_vs_mix_override_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
+    mean *= avg_vs_mix_mult
 
     mean = max(0.01, mean)
 
@@ -1902,7 +1958,15 @@ def compute_hr_probability(p):
         return None
 
     HR_PROB_HARD_CAP = 0.45
-    return min(raw_prob, HR_PROB_HARD_CAP)
+    final_prob = min(raw_prob, HR_PROB_HARD_CAP)
+
+    if debug:
+        print(f"[EXPLAIN] avg_vs_mix_override_mult={avg_vs_mix_mult:.3f}  final mean={mean:.4f}")
+        print(f"[EXPLAIN] FINAL hrProb = {final_prob*100:.1f}%"
+              f"{'  (HARD CAPPED at 45%)' if raw_prob > HR_PROB_HARD_CAP else ''}")
+        print("[EXPLAIN] " + "-" * 60)
+
+    return final_prob
 
 
 def compute_hrr_probability(p):
@@ -2416,16 +2480,47 @@ def main():
         if tb_prob is not None:
             player_row["tbProb"] = round(tb_prob * 100, 1)
 
+    # v3.84 FIX (this session - see chat discussion, confirmed via real
+    # board screenshots): 4 of 9 real top-tier cards (Raleigh, Suarez,
+    # Acuna, Buxton) all shared the same 'PA N/A'/'Season ISO N/A' data
+    # gap - get_season_batting_stats() failing to find them (diagnostic
+    # logging for the root cause was added earlier this session, but
+    # needs a live run's log to actually diagnose). Confirmed concretely
+    # that this bug doesn't just suppress these players - it's plain
+    # regression-toward-league-average applied to players who are NOT
+    # actually thin-sample cases, so it can just as easily prop up a
+    # genuinely cold player (Buxton: 0 HR in his last 15 AND last 5
+    # games, 0.0% recent barrel - by his own real numbers he should not
+    # be anywhere near PRIME) as it can suppress a genuinely hot one.
+    # Until the real root cause is found and fixed (via the diagnostic
+    # log), a player with an unknown current-season pa is excluded from
+    # the percentile pool used to set today's PRIME/STRONG cutoffs (so
+    # their distorted number can't shift the bar for everyone else), and
+    # is hard-capped below PRIME/STRONG on their own card - the board's
+    # whole purpose is trustworthy differentiation, and a player we
+    # structurally don't have real season data for shouldn't be able to
+    # occupy a top-tier slot on the strength of a data gap.
     todays_hr_probs = sorted(
         p["hrProb"] for p in players
         if p.get("playerType") == "batter" and p.get("hrProb") is not None
+        and p.get("pa") is not None
     )
     print(f"  today's real hrProb pool for tiering: {len(todays_hr_probs)} batters, "
           f"range {todays_hr_probs[0]:.1f}-{todays_hr_probs[-1]:.1f}"
           if todays_hr_probs else "  today's real hrProb pool for tiering: empty")
+    unknown_pa_capped = 0
     for player_row in players:
         if player_row.get("playerType") == "batter":
             player_row["tier"] = hr_tier_for_percentile(player_row.get("hrProb"), todays_hr_probs)
+            if player_row.get("pa") is None and player_row.get("tier") in ("prime", "strong"):
+                player_row["tier"] = "inplay"
+                player_row["tierCappedReason"] = "unknown_season_pa"
+                unknown_pa_capped += 1
+    if unknown_pa_capped:
+        print(f"  WARNING: {unknown_pa_capped} batters were capped below PRIME/STRONG "
+              f"because their season PA is unknown (same data gap as Season ISO 'N/A' "
+              f"on the card) - fix get_season_batting_stats() per the diagnostic log, "
+              f"then this cap stops being necessary.")
     if todays_hr_probs:
         from collections import Counter
         tier_counts = Counter(p.get("tier") for p in players if p.get("playerType") == "batter")
@@ -2561,7 +2656,7 @@ def write_daily_snapshot(players):
                 "lineupConfirmed": p.get("lineupConfirmed"), "pitcherConfirmed": p.get("pitcherConfirmed"),
                 "score": p.get("score"), "hrrScore": p.get("hrrScore"), "tbScore": p.get("tbScore"),
                 "hrProb": p.get("hrProb"), "hrrProb": p.get("hrrProb"), "tbProb": p.get("tbProb"),
-                "tier": p.get("tier"),
+                "tier": p.get("tier"), "tierCappedReason": p.get("tierCappedReason"),
                 "barrel": p.get("barrel"), "ev": p.get("ev"), "hardhit": p.get("hardhit"),
                 "l15Barrel": p.get("l15Barrel"), "l15Ev": p.get("l15Ev"),
                 "l15Hardhit": p.get("l15Hardhit"), "l15PowerPa": p.get("l15PowerPa"),
