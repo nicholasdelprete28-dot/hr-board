@@ -1737,7 +1737,24 @@ def compute_hr_probability(p):
         recent_percentile_today = p.get("recentFormPercentile")
         if recent_percentile_today is not None:
             relative_recent_rate = LEAGUE_AVG_HR_RATE * (0.75 + recent_percentile_today * 0.50)
-            recent_form_rate = max(0.01, absolute_recent_rate * 0.70 + relative_recent_rate * 0.30)
+            # v3.83 FIX (this session): previously this 30% relative-rank
+            # weight applied in full regardless of how much real recent PA
+            # sample backed the player's rank - unlike every other recent-
+            # form number in this file (l15_trust/l5_trust above, power's
+            # own shrinkage), which all scale down for a thin sample. A
+            # call-up, injury return, or part-time fill-in with only a
+            # handful of recent PA could land in a high slate percentile
+            # purely on a small lucky sample and get the full 30% weight
+            # for it - no sample-size floor at all. Now the relative share
+            # itself scales with real L15 PA trust (same pa/(pa+K) pattern
+            # used everywhere else), capping out at the original 30% only
+            # once there's a real sample behind the rank, and fading
+            # toward 0% (pure absolute_recent_rate) for a thin one.
+            PERCENTILE_TRUST_K = 25
+            percentile_trust = l15_pa / (l15_pa + PERCENTILE_TRUST_K) if l15_pa > 0 else 0.0
+            relative_weight = 0.30 * percentile_trust
+            recent_form_rate = max(0.01, absolute_recent_rate * (1 - relative_weight)
+                                    + relative_recent_rate * relative_weight)
         else:
             recent_form_rate = absolute_recent_rate
 
@@ -1749,6 +1766,13 @@ def compute_hr_probability(p):
         # for the full reasoning.
     else:
         recent_form_rate = LEAGUE_AVG_HR_RATE
+
+    # v3.83: trend_adjustment() moved here (from the end of the function,
+    # where it used to multiply the entire final mean) - see the note
+    # further down where it used to be applied for the full reasoning.
+    # Harmless no-op (returns 1.0) when there's no real L15/L30 sample,
+    # same as before.
+    recent_form_rate *= trend_adjustment(p)
 
     # --- Component 4: PERSONAL SITUATIONAL (his own real tendencies) ---
     PERSONAL_STRENGTH = 0.65
@@ -1781,7 +1805,16 @@ def compute_hr_probability(p):
     confidence = 0.88 + 0.12 * (batter_pa / (batter_pa + 250)) if batter_pa > 0 else 0.88
     mean = LEAGUE_AVG_HR_RATE + (mean - LEAGUE_AVG_HR_RATE) * confidence
 
-    mean *= trend_adjustment(p)
+    # v3.83 FIX (this session - see chat discussion): trend_adjustment()
+    # (L15-vs-L30 "heating up/cooling down") used to multiply the ENTIRE
+    # final blended mean here - power, matchup, and situational included,
+    # not just recent form. That let a hot trend inflate components that
+    # have nothing conceptually to do with recent trend, well past Recent
+    # Form's real, intended 24% share of the blend. It's now applied
+    # earlier, directly to recent_form_rate, BEFORE that rate enters the
+    # weighted blend - so its real influence is capped at W_RECENT (0.24)
+    # like the rest of the architecture intends, instead of leaking into
+    # power_baseline_rate and matchup_quality_rate too.
 
     mean *= avg_vs_mix_override_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
 
@@ -1956,16 +1989,26 @@ def main():
                 pitcher_recent_hr9[pid] = (recent_hr9, recent_ip)
     print(f"  got recent-form data for {len(pitcher_recent_hr9)} of {len(todays_pitcher_ids)} probable starters")
 
+    # v3.83 FIX (this session - see chat discussion): _pool_hr9() used to
+    # blend in the same recent-3-starts HR/9 signal that effective_phr9
+    # (used for absolute_matchup_rate below, via compute_hr_probability)
+    # ALSO blends in independently. matchup_quality_rate blends an
+    # "absolute" read and a "relative to today's slate" read specifically
+    # so they'd act as two different checks on the same underlying
+    # question - but if both are built from the same recent-form-adjusted
+    # number, a pitcher's hot/cold last-3-starts stretch gets counted
+    # through BOTH halves of the blend, not just once. This is the pitcher-
+    # side version of the batter-side double-count already fixed this
+    # session. FIX: the ranking pool (and therefore pitcherHr9Percentile)
+    # now uses SEASON-ONLY hr9 - no recent-form blend - so it's a genuinely
+    # independent "how does his season-long profile rank among today's
+    # starters" check, while effective_phr9 (and therefore
+    # absolute_matchup_rate) keeps its own separate, real recent-form
+    # blend exactly as before. Recent pitcher form now only ever affects
+    # matchup_quality_rate through the absolute half, once.
     def _pool_hr9(pid):
         stat = reliable_pitcher_stats.get(pid, pitching_stats.get(pid, {}))
-        season_hr9 = stat.get("hr9")
-        if season_hr9 is None:
-            return None
-        recent_hr9_val, recent_ip_val = pitcher_recent_hr9.get(pid, (None, 0))
-        if recent_hr9_val is not None and recent_ip_val > 0:
-            _trust = recent_ip_val / (recent_ip_val + 15)
-            return season_hr9 + (recent_hr9_val - season_hr9) * _trust * 0.5
-        return season_hr9
+        return stat.get("hr9")
 
     todays_pitcher_hr9_values = sorted(
         v for v in (_pool_hr9(pid) for pid in todays_pitcher_ids) if v is not None
@@ -2049,13 +2092,13 @@ def main():
             effective_hr9 = pitcher_stat.get("hr9", 1.20)
             effective_whip = pitcher_stat.get("whip", 1.30)
 
-            recent_hr9_val, recent_ip_val = pitcher_recent_hr9.get(pitcher_id, (None, 0))
-            if recent_hr9_val is not None and recent_ip_val > 0:
-                _k, _dampen = 15, 0.5
-                _trust = recent_ip_val / (recent_ip_val + _k)
-                percentile_hr9 = effective_hr9 + (recent_hr9_val - effective_hr9) * _trust * _dampen
-            else:
-                percentile_hr9 = effective_hr9
+            # v3.83: season-only, kept in sync with the _pool_hr9() fix
+            # above - the recent-form blend used to be applied here too,
+            # which is what made pitcherHr9Percentile double-count the
+            # same recent-form signal already present in effective_phr9
+            # inside compute_hr_probability. See that fix's comment for
+            # the full reasoning.
+            percentile_hr9 = effective_hr9
 
             park = PARKS.get(g["home_team"], {"factor": 1.0, "lat": None, "lon": None, "orient": None})
             wind_speed, wind_dir, temp_f = (None, None, None)
