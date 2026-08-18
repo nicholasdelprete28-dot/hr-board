@@ -1,3 +1,6 @@
+
+
+
 """
 fetch_hr_data.py  (v3.13 - power subfactor recalibration + probability formula fix)
 
@@ -172,6 +175,18 @@ and fixed for power_baseline_rate (see the v3.50 note further down).
   double-counted process read. Recommend a few days of live output
   before making any further weight changes (e.g. raising matchup's real
   pull) - see one clean run first.
+
+WHAT CHANGED IN v3.85 (this session):
+  1. STATCAST CONFIRMATION IS NOW SAMPLE-SIZE GATED. The old confirmation
+     boost could reach the full 1.35x / 1.20x multiplier even when L5/L15
+     were backed by a very small PA sample. The boost now ramps from zero
+     toward its maximum using a PA-based shrink curve, with L5 and L15
+     getting separate confidence values.
+  2. RECENT HR PRODUCTION NOW FADES SMOOTHLY BY GAME AGE. L5/L15/L30 still
+     use the same windows, but an HR from yesterday carries more weight than
+     an HR from 10-15 games ago. The recency weights are normalized so the
+     overall scale of the old rates is preserved, eliminating the hard
+     full-credit-then-zero cliff when a game rolls out of a window.
 """
 
 import csv
@@ -1256,6 +1271,19 @@ TREND_MIN_PA = 40
 TREND_L5_MIN_PA = 15
 TREND_L5_SHRINK_K = 38
 
+# Recent-HR recency decay.  A fixed L15/L5 window should not treat a HR
+# from 14 games ago exactly like one from yesterday.  We use a smooth
+# exponential decay by game age, then normalize the weighted credit back
+# to the size of the window so a neutral/steady hitter is not artificially
+# penalized just because the window is being recency-weighted.
+RECENT_HR_DECAY_HALF_LIFE = 10.0
+
+# Statcast confirmation of a hot/cold HR streak should become stronger as
+# the underlying recent PA sample gets larger.  This prevents a tiny read
+# (for example 3 HR in 17 PA) from receiving essentially the same maximum
+# confirmation boost as a well-established recent sample.
+CONFIRMATION_SHRINK_K = 40
+
 
 def power_sample_weight(pa):
     if pa is None or pa <= 0:
@@ -1826,9 +1854,21 @@ def compute_hr_probability(p, debug=False):
                     l15_trust *= 0.75 if matchup_is_great else 0.6
                     l5_trust *= 0.75 if matchup_is_great else 0.6
                 else:
-                    boost = 1.35 if len(proc_moves) >= 3 else 1.20
-                    l15_trust = min(1.0, l15_trust * boost)
-                    l5_trust = min(1.0, l5_trust * boost)
+                    # v3.85: confirmation strength is now sample-size gated.
+                    # The old code applied the full 1.35x / 1.20x boost even
+                    # when the L5/L15 read was backed by only a handful of PA.
+                    # That allowed a tiny hot streak to jump too quickly.
+                    #
+                    # Each window gets its own confidence based on its actual
+                    # PA sample, so L5 can remain responsive while still being
+                    # much harder to max out on a tiny sample.
+                    confirmation_base = 1.35 if len(proc_moves) >= 3 else 1.20
+                    l15_confirmation_conf = l15_pa / (l15_pa + CONFIRMATION_SHRINK_K) if l15_pa > 0 else 0.0
+                    l5_confirmation_conf = l5_pa / (l5_pa + CONFIRMATION_SHRINK_K) if l5_pa > 0 else 0.0
+                    l15_boost = 1 + (confirmation_base - 1) * l15_confirmation_conf
+                    l5_boost = 1 + (confirmation_base - 1) * l5_confirmation_conf
+                    l15_trust = min(1.0, l15_trust * l15_boost)
+                    l5_trust = min(1.0, l5_trust * l5_boost)
             else:
                 discount = 0.97 if matchup_is_great else 0.9
                 l15_trust *= discount
@@ -2035,7 +2075,39 @@ LEAGUE_AVG_TEAM_K_RATE = 0.220
 
 
 def diminishing_hr_credit(games):
-    return sum(min(g["hr"], 1) + max(g["hr"] - 1, 0) * 0.15 for g in games)
+    """Return recent HR credit with smooth game-by-game recency decay.
+
+    The existing function already reduced the value of a player's second+ HR
+    in the same game, but every game inside L15/L30 still had identical
+    weight.  That created a hard cliff when a game rolled out of the window.
+
+    We now exponentially down-weight older games.  The weights are normalized
+    to the number of games in the supplied window, preserving the scale of the
+    old credit while making older production fade gradually instead of staying
+    at 100% until it disappears.
+    """
+    if not games:
+        return 0.0
+
+    n = len(games)
+    half_life = RECENT_HR_DECAY_HALF_LIFE
+    weighted_credit = 0.0
+    weight_total = 0.0
+
+    # games are chronological (oldest -> newest), so the final game has age 0.
+    for age, g in enumerate(reversed(games)):
+        weight = 0.5 ** (age / half_life)
+        hr = g.get("hr", 0) or 0
+        game_credit = min(hr, 1) + max(hr - 1, 0) * 0.15
+        weighted_credit += game_credit * weight
+        weight_total += weight
+
+    if weight_total <= 0:
+        return 0.0
+
+    # Normalize back to the window's game count so the resulting rate remains
+    # comparable with the pre-decay L15/L5/L30 rates.
+    return weighted_credit * n / weight_total
 
 
 def poisson_over_prob(mean, line):
