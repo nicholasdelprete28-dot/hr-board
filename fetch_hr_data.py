@@ -584,6 +584,15 @@ def get_player_name(player_id):
 
 
 def get_platoon_split(batter_id, vs_hand):
+    """v3.83 FIX (this session): now returns (avg, pa) instead of just
+    avg. The real plate-appearance count was already present in this
+    same API response (stat.get('plateAppearances')) and simply never
+    read - avgmix_confidence_blend() downstream was instead guessing at
+    sample-size risk by checking whether the AVG ITSELF looked extreme
+    (<=0.10 or >=0.40), which discounts a genuinely well-sampled .420
+    platoon average exactly as hard as a fluky 5-AB .420. Returning the
+    real PA lets that function shrink for real, the same pa/(pa+K)
+    pattern used everywhere else in this file."""
     sit_code = "vl" if vs_hand == "L" else "vr"
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
@@ -592,10 +601,13 @@ def get_platoon_split(batter_id, vs_hand):
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         if splits:
-            return float(splits[0]["stat"].get("avg", 0) or 0)
+            stat = splits[0]["stat"]
+            avg = float(stat.get("avg", 0) or 0)
+            pa = int(stat.get("plateAppearances", 0) or 0)
+            return avg, pa
     except Exception:
         pass
-    return None
+    return None, 0
 
 
 _batside_cache = {}
@@ -641,6 +653,8 @@ def get_pitcher_platoon_split(pitcher_id, vs_hand):
 
 
 def get_risp_avg(batter_id):
+    """v3.83: now returns (avg, pa) - same fix and reasoning as
+    get_platoon_split() above."""
     try:
         data = statsapi_get(f"people/{batter_id}/stats", {
             "stats": "statSplits", "sitCodes": "risp",
@@ -648,10 +662,13 @@ def get_risp_avg(batter_id):
         })
         splits = data.get("stats", [{}])[0].get("splits", [])
         if splits:
-            return float(splits[0]["stat"].get("avg", 0) or 0)
+            stat = splits[0]["stat"]
+            avg = float(stat.get("avg", 0) or 0)
+            pa = int(stat.get("plateAppearances", 0) or 0)
+            return avg, pa
     except Exception:
         pass
-    return None
+    return None, 0
 
 
 def get_day_night_split(batter_id):
@@ -1175,17 +1192,34 @@ def barrel_confidence(barrel, ev):
     return 1 - discount
 
 
-def avgmix_confidence_blend(avgmix):
+def avgmix_confidence_blend(avgmix, avgmix_pa=None):
+    """v3.83 FIX (this session): previously discounted based on whether
+    the AVG ITSELF looked extreme (<=0.10 or >=0.40) rather than on real
+    sample size - a genuinely well-sampled .420 got the same haircut as a
+    fluky 5-AB .420. Now shrinks by real PA (same pa/(pa+K) pattern used
+    everywhere else in this file) when avgmix_pa is provided. Falls back
+    to the old value-based heuristic when avgmix_pa isn't available (e.g.
+    a caller that hasn't been updated), so this stays backward compatible
+    rather than silently changing behavior for any untouched call site."""
     if avgmix is None:
         return 0.24
+    if avgmix_pa is not None:
+        AVGMIX_SHRINK_K = 40
+        trust = avgmix_pa / (avgmix_pa + AVGMIX_SHRINK_K) if avgmix_pa > 0 else 0.0
+        return avgmix * trust + 0.24 * (1 - trust)
     if avgmix <= 0.10 or avgmix >= 0.40:
         return avgmix * 0.5 + 0.24 * 0.5
     return avgmix
 
 
-def risp_confidence_blend(risp):
+def risp_confidence_blend(risp, risp_pa=None):
+    """v3.83: same fix and reasoning as avgmix_confidence_blend() above."""
     if risp is None:
         return 0.255
+    if risp_pa is not None:
+        RISP_SHRINK_K = 40
+        trust = risp_pa / (risp_pa + RISP_SHRINK_K) if risp_pa > 0 else 0.0
+        return risp * trust + 0.255 * (1 - trust)
     if risp <= 0.15 or risp >= 0.35:
         return risp * 0.5 + 0.255 * 0.5
     return risp
@@ -1367,14 +1401,12 @@ def compute_hr_subfactors(p):
 
     phr9 = p["phr9"] if p["phr9"] is not None else 1.2
     whip = p["whip"] if p["whip"] is not None else 1.30
-    avgmix = avgmix_confidence_blend(p["avgmix"])
+    avgmix = avgmix_confidence_blend(p["avgmix"], p.get("avgmixPa"))
     wind = p["wind"] or 0
     park = p["park"] if p["park"] is not None else 1.0
     l15hr = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else (p["l15hr"] if p["l15hr"] is not None else 0)
     l5hr = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else (p["l5hr"] if p.get("l5hr") is not None else 0)
     lbonus = p["lbonus"] if p["lbonus"] is not None else 3
-    crush = p["crush"] or 0
-    split = p["split"] or 0
 
     conf = barrel_confidence(barrel_final, ev_final)
     barrel_adj = barrel_final * conf
@@ -1419,14 +1451,31 @@ def compute_hr_subfactors(p):
     recent_l5 = clamp01(l5hr / 3) * l5_trust + power * (1 - l5_trust)
     recent = recent_l15 * 0.6 + recent_l5 * 0.4
 
-    handedness_platoon = (crush + split) / 2
+    # v3.83 FIX (this session): crush/split are pure binary thresholds
+    # (>=0.280 / >=0.260) computed directly off `avgmix` in main() - the
+    # exact same raw number already scored continuously a few lines below
+    # as avgmix_s (10% weight). Folding (crush+split)/2 back in here as
+    # "handedness_platoon" meant that one real stat - his avg vs this
+    # pitcher's throwing hand - was being counted through two separate
+    # paths in the same component: once as a clean continuous read, and
+    # again re-derived and disguised as a supposedly different signal via
+    # two coarse thresholds on itself. That gave it real effective weight
+    # well beyond the 10% avgmix_s share a reader of the weights would
+    # assume - up to another 40% of platoon when no pitch-mix data
+    # exists, or 12% when it does. FIX: pitch_mix_platoon now falls back
+    # directly to avgmix_s (not a redundant re-statement of it) when real
+    # pitch-mix-match data isn't available, instead of the crush/split
+    # detour. crush/split themselves are UNCHANGED and still saved/
+    # returned on player_row - they're real, live display badges on the
+    # card (e.g. "no crusher match") and other than this fix, nothing
+    # about how they're computed or shown has changed.
     pitch_mix_raw = p.get("pitchMixMatch")
+    avgmix_s = clamp01(avgmix / 0.5)
     if pitch_mix_raw is not None:
         pitch_mix_norm = clamp01(pitch_mix_raw / 0.45)
-        pitch_mix_platoon = pitch_mix_norm * 0.7 + handedness_platoon * 0.3
+        pitch_mix_platoon = pitch_mix_norm
     else:
-        pitch_mix_platoon = handedness_platoon
-    avgmix_s = clamp01(avgmix / 0.5)
+        pitch_mix_platoon = avgmix_s
     avg_vs_mix = p.get("avgVsMix")
     if avg_vs_mix is not None:
         avg_vs_mix_s = clamp01((avg_vs_mix - 0.150) / (0.320 - 0.150))
@@ -1477,8 +1526,8 @@ def compute_hrr_score(p):
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     iso = p["iso"] or 0
     whip = p["whip"] if p["whip"] is not None else 1.30
-    avgmix = avgmix_confidence_blend(p["avgmix"])
-    risp = risp_confidence_blend(p.get("risp"))
+    avgmix = avgmix_confidence_blend(p["avgmix"], p.get("avgmixPa"))
+    risp = risp_confidence_blend(p.get("risp"), p.get("rispPa"))
     l15hrr = p.get("l15hrr") if p.get("l15hrr") is not None else 0
     hrr_lbonus = p["hrrLbonus"] if p.get("hrrLbonus") is not None else 4
 
@@ -1514,7 +1563,7 @@ def compute_tb_score(p):
     iso = p["iso"] or 0
     hardhit = p["hardhit"] or 0.30
     whip = p["whip"] if p["whip"] is not None else 1.30
-    avgmix = avgmix_confidence_blend(p["avgmix"])
+    avgmix = avgmix_confidence_blend(p["avgmix"], p.get("avgmixPa"))
     l15tb = p.get("l15tb") if p.get("l15tb") is not None else 0
     lbonus = p["lbonus"] if p["lbonus"] is not None else 3
 
@@ -2234,7 +2283,7 @@ def main():
         player_row, batter_id, pitcher_hand = item
         if not player_row["player"]:
             player_row["player"] = get_player_name(batter_id)
-        platoon_avg = get_platoon_split(batter_id, pitcher_hand)
+        platoon_avg, platoon_avg_pa = get_platoon_split(batter_id, pitcher_hand)
 
         bat_side = get_player_bat_side(batter_id)
         effective_vs_hand = ("R" if pitcher_hand == "L" else "L") if bat_side == "S" else bat_side
@@ -2275,7 +2324,7 @@ def main():
                  if games_this_year else None)
         l15hits = (sum(g["hits"] for g in games_this_year[-15:])
                    if games_this_year else None)
-        risp = get_risp_avg(batter_id)
+        risp, risp_pa = get_risp_avg(batter_id)
 
         hr_road = home_road_split(games_this_year) if games_this_year else {}
         dow_hr_rate, dow_pa = day_of_week_split(games_this_year, TODAY_WEEKDAY) if games_this_year else (None, 0)
@@ -2285,6 +2334,7 @@ def main():
         season_hr_rate = (season_hr / season_pa) if season_pa > 0 else None
 
         player_row["avgmix"] = platoon_avg
+        player_row["avgmixPa"] = platoon_avg_pa
         player_row["l15hr"] = l15hr
         player_row["l15Iso"] = l15_iso_val
         player_row["l15IsoPa"] = l15_iso_pa
@@ -2300,6 +2350,7 @@ def main():
         player_row["l15tb"] = l15tb
         player_row["l15hits"] = l15hits
         player_row["risp"] = risp
+        player_row["rispPa"] = risp_pa
         player_row["crush"] = 1 if (platoon_avg or 0) >= 0.280 else 0
         player_row["split"] = 1 if (platoon_avg or 0) >= 0.260 else 0
         player_row["homeHrRate"] = hr_road.get("homeHrRate")
