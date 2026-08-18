@@ -1229,7 +1229,7 @@ function tipNightEdge(p){
   return `Night-game HR rate is ${fmtPct(p.nightHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.nightPa} night-game PA) - real, demonstrated night-game advantage, and this is a night game.`;
 }
 function tipDowEdge(p){
-  return `HR rate on this day of the week is ${fmtPct(p.dowHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.dowPa} PA on this weekday) - a real but genuinely thin sample, the least-trusted situational signal on this card.`;
+  return `HR rate on this day of the week is ${fmtPct(p.dowHrRate)} vs a ${fmtPct(p.seasonHrRate)} overall rate (${p.dowPa} PA on this weekday) - display-only context now (no longer part of the score itself - too thin a sample to trust as a real scoring factor).`;
 }
 function tipWeakBullpen(p){
   return `Opposing bullpen ERA ${fmtNum(p.oppBullpenEra,2)} / WHIP ${fmtNum(p.oppBullpenWhip,2)} over ${fmtNum(p.oppBullpenIp,1)} real relief innings - a genuinely shaky relief corps if this game gets deep.`;
@@ -1258,10 +1258,12 @@ function situationalChips(p){
     } else if(!p.isDayGame && p.nightHrRate != null && p.nightPa >= 60 && p.nightHrRate >= p.seasonHrRate * 1.15){
       chips.push(`<div class="chip chip-edge" title="${escAttr(tipNightEdge(p))}" data-tip="${escAttr(tipNightEdge(p))}">night edge</div>`);
     }
-    // NEW: day-of-week edge - same 60+ PA gate other edges use would be too
-    // strict for this specific split (25 PA is already a stretch for a
-    // single weekday across a season), so it uses the backend's own,
-    // deliberately looser DOW_MIN_PA=25 threshold instead.
+    // v3.72 NOTE: day-of-week edge is now DISPLAY-ONLY, same treatment as
+    // home/road already had - the backend no longer factors it into the
+    // real score (see fetch_hr_data.py's v3.72 note: self-documented as
+    // the thinnest, least-trusted signal in the file). Still shown here
+    // as real context since it doesn't cost anything to display, it just
+    // no longer moves the number.
     if(p.dowHrRate != null && p.dowPa >= 25 && p.dowHrRate >= p.seasonHrRate * 1.15){
       chips.push(`<div class="chip chip-edge" title="${escAttr(tipDowEdge(p))}" data-tip="${escAttr(tipDowEdge(p))}">day-of-week edge</div>`);
     }
@@ -1281,7 +1283,38 @@ function renderStatboxes(items){
   }).join('');
 }
 
-function favTierName(score){
+// v3.72 REWRITE: favTierName()/favTierClass() now take the PLAYER object
+// (not just the raw score) so the HR board can read the backend's real,
+// percentile-of-today tier directly off p.tier instead of recomputing it
+// from a fixed hrProb cutoff here in the frontend. This is the actual
+// fix for the scale-drift bug discussed this session: the raw hrProb
+// SCALE isn't stable day to day (it roughly doubled between two real
+// days reviewed this session), so any fixed number baked in here will
+// eventually drift out of sync again exactly the same way the old
+// >=20/>=14 cutoffs did. The backend computes tier fresh each day from
+// that day's REAL distribution (see fetch_hr_data.py's
+// hr_tier_for_percentile()) - this just displays whatever it decided.
+//
+// FALLBACK: a small number of older `history/*.json` snapshots predate
+// this backend change and won't have a `tier` field. For those (and
+// only those) this falls back to the old fixed-cutoff behavior, so
+// past days you look back on don't just show blank/unknown tiers.
+function favTierName(p){
+  if(boardMode === 'hr'){
+    const t = p.tier;
+    if(t === 'prime') return '&#9670; PRIME';
+    if(t === 'strong') return '&#9733; STRONG';
+    if(t === 'inplay') return '&#9651; IN PLAY';
+    if(t === 'longshot') return '&#9633; LONG SHOT';
+    // fallback for pre-v3.71 history snapshots with no server-side tier
+    const score = p.hrProb;
+    if(score == null) return 'N/A';
+    if(score >= 24) return '&#9670; PRIME';
+    if(score >= 17) return '&#9733; STRONG';
+    if(score >= 11) return '&#9651; IN PLAY';
+    return '&#9633; LONG SHOT';
+  }
+  const score = p[scoreField()];
   if(score == null) return 'N/A';
   if(boardMode === 'k'){
     if(score >= 51) return '&#9670; PRIME';
@@ -1289,31 +1322,28 @@ function favTierName(score){
     if(score >= 39) return '&#9651; IN PLAY';
     return '&#9633; LONG SHOT';
   }
-  if(boardMode === 'hr'){
-    // Cutoffs raised to 24/17/11, matching check_results.py's
-    // HR_PROB_TIERS - keep both in sync if this changes again.
-    if(score >= 24) return '&#9670; PRIME';
-    if(score >= 17) return '&#9733; STRONG';
-    if(score >= 11) return '&#9651; IN PLAY';
-    return '&#9633; LONG SHOT';
-  }
   if(score >= 55) return '&#9670; PRIME';
   if(score >= 40) return '&#9733; STRONG';
   if(score >= 35) return '&#9651; IN PLAY';
   return '&#9633; LONG SHOT';
 }
-function favTierClass(score){
+function favTierClass(p){
+  if(boardMode === 'hr'){
+    if(p.tier === 'prime' || p.tier === 'strong' || p.tier === 'inplay' || p.tier === 'longshot') return p.tier;
+    // fallback for pre-v3.71 history snapshots with no server-side tier
+    const score = p.hrProb;
+    if(score == null) return 'unknown';
+    if(score >= 24) return 'prime';
+    if(score >= 17) return 'strong';
+    if(score >= 11) return 'inplay';
+    return 'longshot';
+  }
+  const score = p[scoreField()];
   if(score == null) return 'unknown';
   if(boardMode === 'k'){
     if(score >= 51) return 'prime';
     if(score >= 45) return 'strong';
     if(score >= 39) return 'inplay';
-    return 'longshot';
-  }
-  if(boardMode === 'hr'){
-    if(score >= 24) return 'prime';
-    if(score >= 17) return 'strong';
-    if(score >= 11) return 'inplay';
     return 'longshot';
   }
   if(score >= 55) return 'prime';
@@ -1329,7 +1359,7 @@ function render(){
     const q = query.toLowerCase();
     const matchesSearch = p.player.toLowerCase().includes(q) || p.team.toLowerCase().includes(q) || (p.game || '').toLowerCase().includes(q) || (p.pitcher || p.opponent || '').toLowerCase().includes(q);
     const matchesGame = !selectedGame || p.game === selectedGame;
-    const matchesTier = !selectedTier || favTierClass(p[scoreField()]) === selectedTier;
+    const matchesTier = !selectedTier || favTierClass(p) === selectedTier;
     const matchesType = p.playerType === (boardMode === 'k' ? 'pitcher' : 'batter');
     let matchesStatus = true;
     if (selectedGame) {
@@ -1544,7 +1574,7 @@ function render(){
         </div>
         <div class="scorebox">
           ${homerBadge ? `<div>${homerBadge}</div>` : ''}
-          <div class="favtier favtier-${favTierClass(cardScore)}">${favTierName(cardScore)}</div>
+          <div class="favtier favtier-${favTierClass(p)}">${favTierName(p)}</div>
           <div class="scoreval">${fmtNum(displayPct(cardScore, boardMode), 1)}%</div>
           <div class="scorelabel ${p.playerType === 'pitcher' ? 'scorelabel-pitcher' : ''}">${p.playerType === 'pitcher' ? `O/U ${fmtNum(p.kLine, 1)} K's` : boardMode === 'hr' ? 'HR probability' : `${boardMode.toUpperCase()} favorability`}</div>
         </div>
