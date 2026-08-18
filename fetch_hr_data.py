@@ -1,3 +1,6 @@
+
+
+
 """
 fetch_hr_data.py  (v3.13 - power subfactor recalibration + probability formula fix)
 
@@ -1683,7 +1686,8 @@ def compute_hr_subfactors(p):
     # this file (barrel%/EV/hard-hit%/ISO/season HR rate), just not here
     # yet. A modest-power hitter's 2-game hot streak now gets pulled back
     # toward what he actually is instead of standing on its own.
-    RECENT_SHRINK_K = 20
+    RECENT_SHRINK_K = 38
+    # v3.73: L15 now uses the same stricter shrink as L5 - a 15-game window can still be noisy, and recent form should not become near-fully trusted too quickly.
     # v3.56: L5 gets its own, stricter shrink constant - a 5-game window
     # is a much thinner, noisier sample than 15 games, and was using the
     # SAME shrink constant as L15 despite that. A real case that exposed
@@ -2216,7 +2220,7 @@ def compute_hr_probability(p):
         l15hr_for_rate = p.get("l15hrCredit") if p.get("l15hrCredit") is not None else l15hr
         l5hr_for_rate = p.get("l5hrCredit") if p.get("l5hrCredit") is not None else l5hr
 
-        RECENT_SHRINK_K = 20
+        RECENT_SHRINK_K = 38  # v3.73: stricter L15 recent-form trust to reduce small-sample spikes
         L5_SHRINK_K = 38  # v3.56: L5 gets a stricter shrink than L15 - see compute_hr_subfactors() for the full reasoning
         l15_pa = p.get("l15IsoPa") or 0
         l5_pa = p.get("l5Pa") or 0
@@ -2319,9 +2323,11 @@ def compute_hr_probability(p):
     personal_situational_rate = LEAGUE_AVG_HR_RATE * personal_mult
 
     # --- Blend, with the matchup-quality weight power-gated ---
-    W_POWER = 0.19
+    # v3.73: recent form reduced 0.29 -> 0.24; power increased 0.19 -> 0.24.
+    # This keeps the total weight unchanged while making a short hot streak less able to overpower a mediocre underlying power profile.
+    W_POWER = 0.24
     W_MATCHUP = 0.34
-    W_RECENT = 0.29
+    W_RECENT = 0.24
     W_SITUATIONAL = 0.18
 
     POWER_GATE_FLOOR = 0.20
