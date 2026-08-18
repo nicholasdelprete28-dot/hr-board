@@ -89,6 +89,25 @@ WHAT CHANGED IN v3.13 (per formula review - PRIME/STRONG discrimination):
       live site regardless of this change (separate bug, flagged
       earlier) - this rewrite doesn't fix that on its own.
 
+WHAT CHANGED IN v3.70 (AVG VS MIX real override - see the ongoing
+session discussion): a genuinely bad AVG VS MIX read (near/at the 0.150
+floor introduced in v3.63) was only ever able to act through its 18%-
+weighted share of W_SITUATIONAL - meaning even a player pinned at the
+worst possible matchup-type read could still rank #1 overall on the
+strength of a hot power/recent-form read alone, because nothing in the
+blend could ever let one bad signal actually cap the outcome. Real case
+that exposed this: two PRIME players on the same day both showing
+AVG VS MIX at .161 and .159 (right on the floor) still ranked #1 and #4
+overall. Added avg_vs_mix_override_mult() - a real, sample-size-gated
+multiplicative penalty applied to the FINAL blended mean (not buried
+inside one component), so a genuinely bad, well-sampled matchup-type
+read can now meaningfully drag a player down regardless of how hot
+everything else is reading. This is intentionally narrow in scope: it
+does not change compute_score(), does not touch the existing platoon/
+situational weighting, and only engages when there's real matched-PA
+sample behind the read (see AVG_VS_MIX_PENALTY_MIN_PA) so a thin-sample
+noisy read can't trigger it.
+
 WHAT CHANGED IN v3.12 (per formula review):
   - FIX #1: PARKS was only covering 15 of 30 teams. Any game hosted by the
     other 15 (LAA, AZ, DET, KC, LAD, WSH, NYM, ATH, SEA, STL, TB, TOR, MIN,
@@ -1787,8 +1806,18 @@ def compute_score(p):
     # badge-only on the card (no separate stat box), overriding the
     # "needs its own data box" rule used for the other cuts. Home/road,
     # bullpen, and lineup bonus stay display-only unless told otherwise.
+    # v3.72 REMOVED: day-of-week adjustment used to multiply in here too.
+    # Cut per explicit review - this file's OWN docstring on
+    # day_of_week_split() already called it "the least-trusted signal
+    # here, by design" (MLB doesn't track day-of-week as a real split;
+    # it's inferred from a ~15-25 PA/season sample), and its effect was
+    # bounded to a max +-3% anyway. Real complexity/thin-sample cost for
+    # a signal the file itself never fully trusted. day_of_week_split()
+    # and dowHrRate/dowPa are still fetched and still shown as a
+    # display-only "day-of-week edge" chip on the card (same
+    # zero-effect-on-the-number treatment as home/road) - just no longer
+    # multiplied into the real score.
     score *= day_night_adjustment(p)
-    score *= day_of_week_adjustment(p)
     score *= trend_adjustment(p)
     score = max(0.0, min(100.0, score))
 
@@ -1898,6 +1927,92 @@ LEAGUE_AVG_HR_RATE = 0.12
 LEAGUE_AVG_HRR_CLEAR_RATE = 0.52
 LEAGUE_AVG_TB_CLEAR_RATE = 0.43
 
+# v3.71 NEW: PRIME/STRONG/IN PLAY/LONG SHOT tiers, now computed as a
+# PERCENTILE OF TODAY'S REAL hrProb DISTRIBUTION instead of the old fixed
+# hrProb>=20/>=14 cutoff that lived in index.html's favTierClass()/
+# favTierName(). Real case that exposed why this was broken: the raw
+# hrProb SCALE isn't stable day to day (median player ran ~6.7-7.8% on
+# 08-13/14/15, then jumped to ~14.7-15.6% on 08-16/17 after a batch of
+# formula changes landed) - with a fixed cutoff, that meant PRIME
+# silently went from 0-7 players some days to 20-31 players on others,
+# with the exact same "PRIME" label meaning wildly different things
+# depending on which side of the scale shift a given day fell on.
+#
+# The percentages below (6% / 28% / 28% / remaining ~38%) are not
+# arbitrary - they match the REAL historical PRIME/STRONG/IN PLAY/LONG
+# SHOT proportions from the 8 days of check_results.py output reviewed
+# in this session (123/549/550/721 real picks respectively, out of 1943
+# total), so today's PRIME still means roughly "the same share of the
+# slate PRIME has always meant" - just measured against TODAY's real
+# distribution instead of a fixed number that can drift out of sync with
+# whatever scale the formula happens to be producing that week.
+#
+# HONESTY NOTE: this only fixes the HR board. HRR/TB tiers were NOT
+# showing the same scale-drift symptom in the 8-day review (both stayed
+# cleanly monotonic PRIME>STRONG>IN PLAY>LONG SHOT throughout), so they
+# were left on their existing cutoffs rather than changed pre-emptively -
+# revisit if the same symptom shows up there later.
+HR_TIER_PRIME_PCT = 0.06
+HR_TIER_STRONG_PCT = 0.28
+HR_TIER_INPLAY_PCT = 0.28
+# LONG SHOT = whatever's left (~0.38)
+
+
+def hr_tier_for_percentile(hr_prob_val, todays_hr_probs):
+    """Where this player's hrProb ranks among TODAY's real batter pool,
+    bucketed into PRIME/STRONG/INPLAY/LONGSHOT using the percentile bands
+    above. Same bisect-based percentile pattern already used elsewhere in
+    this file (pitcher_hr9_percentile_today, recent_form_percentile_today)
+    - deliberately reused rather than reinvented. Returns None if there's
+    no real hrProb or not enough of a real pool to rank against (falls
+    back to whatever the frontend was already doing in that edge case)."""
+    if hr_prob_val is None or len(todays_hr_probs) < 10:
+        return None
+    idx = bisect.bisect_left(todays_hr_probs, hr_prob_val)
+    percentile = idx / (len(todays_hr_probs) - 1)
+    if percentile >= 1 - HR_TIER_PRIME_PCT:
+        return "prime"
+    if percentile >= 1 - HR_TIER_PRIME_PCT - HR_TIER_STRONG_PCT:
+        return "strong"
+    if percentile >= 1 - HR_TIER_PRIME_PCT - HR_TIER_STRONG_PCT - HR_TIER_INPLAY_PCT:
+        return "inplay"
+    return "longshot"
+
+# v3.70 NEW: real, final-stage override for a genuinely bad AVG VS MIX
+# read - see the module docstring for the full case that exposed why
+# this was needed (two PRIME players on the same day both pinned at the
+# .150 floor still ranking #1 and #4 overall). Deliberately kept as a
+# small, separate function rather than folded into compute_hr_subfactors()
+# so it's obvious this acts on the FINAL blended probability, not as one
+# more ingredient competing for a slice of a weighted average.
+AVG_VS_MIX_PENALTY_MIN_PA = 40          # need real matched-PA sample before trusting the read enough to penalize on it
+AVG_VS_MIX_PENALTY_THRESHOLD = 0.30     # avg_vs_mix_s below this = a genuinely bad matchup-type read, not just mediocre
+AVG_VS_MIX_MAX_PENALTY = 0.35           # at the worst possible reading (avg_vs_mix_s = 0), cut the final mean by up to 35%
+
+
+def avg_vs_mix_override_mult(avg_vs_mix_s, avg_vs_mix_pa):
+    """Returns a multiplier (<=1.0) applied to the FINAL blended mean in
+    compute_hr_probability(). Unlike the existing platoon-vs-recent
+    divergence check (which only discounts the RECENT component when a
+    hot streak looks unconfirmed), this can drag the final number down
+    even when every other component - power, matchup, recent - is
+    reading hot, because a genuinely bad, well-sampled matchup-type read
+    is real information the rest of the blend has no way to fully
+    override at its current 18%-of-18% effective weight.
+
+    Scales linearly from 1.0 (at the threshold) down to
+    1 - AVG_VS_MIX_MAX_PENALTY (at the worst possible reading), and does
+    nothing at all below the real-sample gate - a thin, noisy matched-PA
+    read should never be allowed to cap a player's number."""
+    if avg_vs_mix_s is None or avg_vs_mix_pa is None:
+        return 1.0
+    if avg_vs_mix_pa < AVG_VS_MIX_PENALTY_MIN_PA:
+        return 1.0
+    if avg_vs_mix_s >= AVG_VS_MIX_PENALTY_THRESHOLD:
+        return 1.0
+    severity = (AVG_VS_MIX_PENALTY_THRESHOLD - avg_vs_mix_s) / AVG_VS_MIX_PENALTY_THRESHOLD
+    return 1 - severity * AVG_VS_MIX_MAX_PENALTY
+
 
 def compute_hr_probability(p):
     """v3.48: COMPLETE REWRITE - additive blend of independent rate
@@ -1941,7 +2056,16 @@ def compute_hr_probability(p):
     weight (see power_gate below) - a genuinely powerless hitter facing
     a terrible pitcher still shouldn't ride that alone into a high
     number, so weight lost from a low-power player's matchup component
-    gets redistributed back into his power weight instead of vanishing."""
+    gets redistributed back into his power weight instead of vanishing.
+
+    v3.70: after the full blend/scale/trend pipeline runs, a real
+    AVG-VS-MIX override (avg_vs_mix_override_mult(), see above) is
+    applied to the final mean - see that function's docstring and the
+    v3.70 module-docstring note for the full case that made this
+    necessary. This is intentionally the LAST thing applied before the
+    Poisson conversion, so it acts as a genuine cap on the final number
+    rather than one more input competing for a slice of a weighted
+    average."""
     sf = compute_hr_subfactors(p)
     power_quality = sf["power"]
 
@@ -2185,100 +2309,20 @@ def compute_hr_probability(p):
         recent_form_rate = LEAGUE_AVG_HR_RATE
 
     # --- Component 4: PERSONAL SITUATIONAL (his own real tendencies) ---
-    # v3.50 FIX: anchored to LEAGUE_AVG_HR_RATE instead of
-    # power_baseline_rate - this was the bigger leak. As written before,
-    # this component was LITERALLY power_baseline_rate times a
-    # multiplier, meaning it wasn't independent at all, it was 100% power
-    # wearing a different label. personal_mult already reflects HIS OWN
-    # real platoon/day-night/day-of-week splits - anchoring it to league
-    # average instead measures "how much does today's situation help him
-    # relative to a neutral hitter," genuinely decoupled from his power.
-    #
-    # v3.57: PERSONAL_STRENGTH more than doubled, 0.30 -> 0.65. Even a
-    # genuinely bad platoon score only produced a ~15% swing before -
-    # nowhere near enough to matter against power and matchup. Combined
-    # with the platoon reweighting above (real AVG VS MIX now dominates
-    # the platoon score itself), a genuinely bad matchup-type read now
-    # produces a real, meaningful drag instead of a token one.
+    # v3.72: day-of-week adjustment removed here too - see the matching
+    # v3.72 note in compute_score() for the full reasoning.
     PERSONAL_STRENGTH = 0.65
     personal_mult = 1 + (sf["platoon"] - 0.5) * PERSONAL_STRENGTH
     personal_mult *= day_night_adjustment(p)
-    personal_mult *= day_of_week_adjustment(p)
     personal_situational_rate = LEAGUE_AVG_HR_RATE * personal_mult
 
     # --- Blend, with the matchup-quality weight power-gated ---
-    # v3.49: real diagnosis for "still similar top 5" - true EXTREME
-    # matchups are rare on any given slate; most probable starters
-    # cluster near average. So even with real weight, matchup mostly
-    # wasn't producing swings big enough to overcome power's ALWAYS-ON
-    # advantage among comparably elite hitters on a typical day. Two
-    # changes: MATCHUP_QUALITY_SENSITIVITY raised above so even ORDINARY
-    # matchup differences (not just extreme ones) move the needle more,
-    # and power's baseline weight cut further here so it's no longer
-    # winning by default even in the new blend structure.
-    #
-    # v3.51: W_RECENT raised further (0.25 -> 0.32), W_POWER cut again
-    # (0.20 -> 0.13) - real case that prompted this: multiple top players
-    # on the same day ALL had genuinely good matchups, so matchup alone
-    # couldn't differentiate them from each other. Recent tendencies are
-    # the remaining lever that CAN differentiate two players who are
-    # otherwise similarly matched today - a real hot streak should carry
-    # more weight than it was getting, now that the v3.50 power-leak fix
-    # means this component is genuinely independent instead of secretly
-    # power-derived.
-    #
-    # v3.57: W_SITUATIONAL raised 0.10 -> 0.18, taken directly from
-    # W_RECENT (0.32 -> 0.24). Real case: two players both showing a
-    # clearly bad AVG VS MIX still ranked #1 and #2, propped up almost
-    # entirely by recent form (both had hit recently) while platoon had
-    # nowhere near enough weight to push back. Recent form was correctly
-    # identified as the specific over-weighted component doing this, so
-    # the rebalance comes directly out of it rather than power or
-    # matchup, which weren't implicated in this specific failure.
-    #
-    # v3.68 FIX: W_MATCHUP trimmed 0.45 -> 0.38, redistributed to
-    # W_POWER (0.13 -> 0.17) and W_RECENT (0.24 -> 0.27) - real,
-    # verified issue: matchup_quality_rate is IDENTICAL for every hitter
-    # on the same team facing the same pitcher, since it's computed from
-    # the opposing pitcher/bullpen alone, not the batter. At 0.45 weight,
-    # that meant up to 60% of a player's number could be the literal
-    # same shared value as his teammates', with individual differences
-    # squeezed into the remaining 55%. Power and recent form are the two
-    # most individually-differentiating factors (genuinely different
-    # player to player, even on the same team) - trimming matchup and
-    # boosting those two verified a real ~16% increase in separation
-    # between two genuinely different teammates sharing the same
-    # matchup.
-    #
-    # v3.69: trimmed once more, 0.38 -> 0.34, since checking across
-    # multiple real matchup strengths showed the shared component was
-    # still ~58% of total on a genuinely good matchup day - exactly the
-    # scenario that produces clustering, barely improved by the first
-    # trim. Paired with the new per-batter handedness split below, which
-    # tackles the same problem from the other direction (making matchup
-    # itself less identical between teammates, not just smaller).
     W_POWER = 0.19
     W_MATCHUP = 0.34
     W_RECENT = 0.29
     W_SITUATIONAL = 0.18
 
     POWER_GATE_FLOOR = 0.20
-    # v3.65 FIX: ceiling cut 0.50 -> 0.35. Real diagnosis for "the same
-    # elite guy is #1 four days straight even after every other fix
-    # tonight": his power_quality (~0.63) clears 0.50 by a wide margin,
-    # meaning he ALWAYS gets full matchup weight, every day, regardless
-    # of who he's facing. A merely-good challenger at 0.35-0.45 power
-    # gets REDUCED matchup weight - even on their single best matchup
-    # day of the season. That's a compounding, self-reinforcing gap: 
-    # elite power gets a strong baseline AND full matchup access, while
-    # a good-not-elite hitter is capped on BOTH axes simultaneously. No
-    # amount of day-to-day matchup variance can close a gap that's built
-    # into the gate itself. This doesn't change an elite player's own
-    # number (still fully above the new ceiling either way) - it gives
-    # real challengers the same full matchup access on their best days,
-    # which they never actually had before. The floor (0.20) is
-    # unchanged - genuinely weak hitters (Rafaela-style, ~0.16) stay
-    # exactly as protected as before.
     POWER_GATE_CEIL = 0.35
     MATCHUP_WEIGHT_MIN = 0.15
     power_gate = clamp01((power_quality - POWER_GATE_FLOOR) / (POWER_GATE_CEIL - POWER_GATE_FLOOR))
@@ -2302,6 +2346,17 @@ def compute_hr_probability(p):
     mean *= GLOBAL_SCALE
 
     mean *= trend_adjustment(p)
+
+    # v3.70 NEW: real AVG-VS-MIX override, applied LAST, after every
+    # other component/scale/trend adjustment - see
+    # avg_vs_mix_override_mult()'s docstring and the module-docstring
+    # v3.70 note. This is deliberately placed here (not inside
+    # compute_hr_subfactors' platoon blend) so a genuinely bad,
+    # well-sampled matchup-type read can act as a real cap on the whole
+    # number, not just one ingredient in an averaged component that a hot
+    # power/recent read can always outvote.
+    mean *= avg_vs_mix_override_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
+
     mean = max(0.01, mean)
 
     raw_prob = poisson_over_prob(mean, 0.5)
@@ -2310,10 +2365,6 @@ def compute_hr_probability(p):
 
     HR_PROB_HARD_CAP = 0.45
     return min(raw_prob, HR_PROB_HARD_CAP)
-
-
-LEAGUE_AVG_AVG = 0.245
-LEAGUE_AVG_OBP = 0.315
 
 
 def compute_hrr_probability(p):
@@ -2918,6 +2969,28 @@ def main():
         if tb_prob is not None:
             player_row["tbProb"] = round(tb_prob * 100, 1)
 
+    # v3.71: assign HR tier from TODAY's real hrProb distribution - see
+    # the hr_tier_for_percentile()/HR_TIER_*_PCT docstring above for the
+    # full reasoning. Two-pass, same pattern as recentFormPercentile:
+    # every player's hrProb needs to exist first before anyone's
+    # percentile rank (and therefore tier) can be computed.
+    todays_hr_probs = sorted(
+        p["hrProb"] for p in players
+        if p.get("playerType") == "batter" and p.get("hrProb") is not None
+    )
+    print(f"  today's real hrProb pool for tiering: {len(todays_hr_probs)} batters, "
+          f"range {todays_hr_probs[0]:.1f}-{todays_hr_probs[-1]:.1f}"
+          if todays_hr_probs else "  today's real hrProb pool for tiering: empty")
+    for player_row in players:
+        if player_row.get("playerType") == "batter":
+            player_row["tier"] = hr_tier_for_percentile(player_row.get("hrProb"), todays_hr_probs)
+    if todays_hr_probs:
+        from collections import Counter
+        tier_counts = Counter(p.get("tier") for p in players if p.get("playerType") == "batter")
+        print(f"  HR tier counts (percentile-based): prime={tier_counts.get('prime',0)} "
+              f"strong={tier_counts.get('strong',0)} inplay={tier_counts.get('inplay',0)} "
+              f"longshot={tier_counts.get('longshot',0)}")
+
     print("Fetching team strikeout rates (opposing-lineup matchup signal)...")
     team_k_rate = get_team_k_rate()
 
@@ -3049,6 +3122,7 @@ def write_daily_snapshot(players):
                 "lineupConfirmed": p.get("lineupConfirmed"), "pitcherConfirmed": p.get("pitcherConfirmed"),
                 "score": p.get("score"), "hrrScore": p.get("hrrScore"), "tbScore": p.get("tbScore"),
                 "hrProb": p.get("hrProb"), "hrrProb": p.get("hrrProb"), "tbProb": p.get("tbProb"),
+                "tier": p.get("tier"),
                 "barrel": p.get("barrel"), "ev": p.get("ev"), "hardhit": p.get("hardhit"),
                 "l15Barrel": p.get("l15Barrel"), "l15Ev": p.get("l15Ev"),
                 "l15Hardhit": p.get("l15Hardhit"), "l15PowerPa": p.get("l15PowerPa"),
