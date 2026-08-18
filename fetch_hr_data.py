@@ -1588,11 +1588,33 @@ def compute_hr_probability(p):
     POWER_QUALITY_MULTIPLIER = 1.1
     power_baseline_rate = LEAGUE_AVG_HR_RATE * (0.3 + power_quality * POWER_QUALITY_MULTIPLIER)
 
+    # v3.82 FIX (this session - see chat discussion): PRIOR_YEAR_SHRINK_K=150
+    # let a player's prior-year rate keep ~20-27% weight even at a normal
+    # August PA count (~450-550), regardless of whether THIS season has
+    # actually looked anything like that. That's backwards - once a player
+    # has a real current-season sample, this year's own data already tells
+    # us who he is right now, and a static prior-year number that never
+    # changes day to day is pure anti-differentiation drag, not a genuine
+    # prior. Real case that exposed this: a player who led MLB in HR last
+    # season but has been meaningfully different this year kept getting
+    # propped up toward last year's rate regardless of that divergence.
+    #
+    # FIX: hard-gated to only ever apply when the CURRENT season sample is
+    # still genuinely thin (PRIOR_YEAR_MAX_PA) - true early-season, a slow
+    # start, an injury return, or a mid-season call-up/demotion, which was
+    # the actual stated intent all along. Once a player clears a real
+    # current-season sample, prior year is dropped entirely rather than
+    # lingering at a small-but-nonzero weight - this year's own data is
+    # trusted on its own merits from that point on. The shrink constant
+    # itself was also tightened (150 -> 45) so that even inside the gated
+    # window, the anchor fades out faster as real current-season PA
+    # accumulates, instead of staying artificially strong.
+    PRIOR_YEAR_SHRINK_K = 45
+    PRIOR_YEAR_MAX_PA = 200
     prior_year = p.get("seasonPrev")
-    if prior_year and prior_year.get("n", 0) >= 20:
+    current_pa = p.get("pa") or 0
+    if prior_year and prior_year.get("n", 0) >= 20 and current_pa < PRIOR_YEAR_MAX_PA:
         prior_hr_rate = prior_year["hrPct"] / 100
-        current_pa = p.get("pa") or 0
-        PRIOR_YEAR_SHRINK_K = 150
         current_trust = current_pa / (current_pa + PRIOR_YEAR_SHRINK_K) if current_pa > 0 else 0.0
         power_baseline_rate = power_baseline_rate * current_trust + prior_hr_rate * (1 - current_trust)
 
