@@ -1,6 +1,14 @@
 name: Update HR Board Data
-
 # Runs at 10:00 AM EST, 1:00 PM EST, and 5:00 PM EST each day.
+# NOTE: these crons are fixed UTC times. EST is UTC-5, but during Daylight
+# Saving Time (roughly mid-March to early November - which includes right
+# now) the US runs on EDT (UTC-4), so these same three cron times actually
+# fire at 11:00 AM / 2:00 PM / 6:00 PM EDT, one hour later than the label
+# says. Not a bug, just worth knowing so a "5:00 PM" run landing at 6:00 PM
+# local doesn't look like a malfunction. If you want the literal same local
+# clock time year-round, that requires two sets of cron entries (one for
+# EST months, one for EDT months) - flag if you want that added.
+#
 # Also runnable manually anytime from the Actions tab (workflow_dispatch).
 on:
   schedule:
@@ -9,38 +17,48 @@ on:
     - cron: "0 22 * * *"
   workflow_dispatch:
 
-# Explicitly grant this workflow permission to push commits. Without this,
-# many repos default the automated token to read-only, which lets the bot
-# commit locally but blocks the actual push with a 403 error.
+# Prevents two runs of this workflow from ever executing concurrently -
+# this is what actually caused the merge conflict you hit. Without it, a
+# scheduled run and a manual re-run (or two schedule triggers close
+# together) can both check out the repo, both regenerate a full
+# players.json, and both try to push at nearly the same time. Since
+# players.json/history/*.json are fully regenerated every run (not
+# incrementally edited), there's nothing meaningful to line-diff between
+# two versions - git just doesn't know that. This queues the second run
+# behind the first instead of letting them race.
+concurrency:
+  group: hr-board-data-pipeline
+  cancel-in-progress: false
+
 permissions:
   contents: write
-
 jobs:
   update-data:
     runs-on: ubuntu-latest
     steps:
       - name: Check out this repository
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install dependencies
         run: pip install requests
-
       - name: Run the data-fetching script
         run: python fetch_hr_data.py
-
       - name: Commit and push players.json and today's snapshot if changed
         run: |
           git config user.name "hr-board-bot"
           git config user.email "actions@github.com"
           git add players.json history/
           git diff --quiet --cached || git commit -m "Update player data ($(date -u +%Y-%m-%dT%H:%M))"
-          # Pull in anything pushed to the repo (e.g. a manual edit on GitHub's
-          # website) since this job's checkout, then push. Avoids "rejected -
-          # fetch first" errors when you and the bot edit around the same time.
-          git pull --rebase origin main
-          git push
+          # Fetch and merge instead of rebase. On a genuine conflict (which
+          # the concurrency lock above should now prevent outright), -X ours
+          # keeps THIS run's freshly-generated players.json/history files
+          # rather than trying to line-diff two unrelated full-file
+          # regenerations - there's no real content to "merge" between two
+          # complete rewrites of the same data file, so the freshest one
+          # should just win.
+          git fetch origin main
+          git merge -X ours origin/main -m "merge: keep freshest generated data"
+          git push origin main
