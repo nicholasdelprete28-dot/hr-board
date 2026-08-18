@@ -503,11 +503,28 @@ def get_pitcher_season_stats(pitcher_id, season):
 
 
 def get_season_batting_stats():
+    # v3.83: limit raised 1500 -> 2500 and real diagnostics added (see
+    # chat discussion - Cal Raleigh's card showed 'Season ISO: N/A' while
+    # his season Statcast barrel%/EV/hard-hit% were present and correct,
+    # meaning this specific fetch - not the Savant one - is failing to
+    # find/use him). HONESTY NOTE: I don't yet know the exact root cause
+    # (could be the 1500-row limit silently truncating the response
+    # before reaching him depending on the API's internal sort order,
+    # could be a specific player whose avg/slg came back null/missing
+    # from the API itself, or something else). Rather than guess further,
+    # this prints exactly what's happening on the next real run: total
+    # rows returned, how many players got a usable iso/avg/slg, and the
+    # raw stat line for anyone who was present in the response but got
+    # excluded for missing avg/slg - so the actual cause is visible in
+    # the Action log instead of inferred.
     data = statsapi_get("stats", {
-        "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1, "limit": 1500
+        "stats": "season", "group": "hitting", "season": YEAR, "sportId": 1, "limit": 2500
     })
+    splits = data.get("stats", [{}])[0].get("splits", [])
+    print(f"  season hitting stats: {len(splits)} rows returned from the API")
     out = {}
-    for split in data.get("stats", [{}])[0].get("splits", []):
+    excluded = []
+    for split in splits:
         pid = split.get("player", {}).get("id")
         name = split.get("player", {}).get("fullName")
         stat = split.get("stat", {})
@@ -537,6 +554,17 @@ def get_season_batting_stats():
             except (TypeError, ValueError):
                 slg_f = None
             out[pid] = {"name": name, "iso": iso, "avg": avg_f, "obp": obp_f, "pa": pa_i, "slg": slg_f}
+        elif pid:
+            # present in the response, but avg/slg came back missing -
+            # real evidence of the actual failure mode, not a guess.
+            excluded.append((name, pid, avg, slg, pa))
+    print(f"  parsed usable season batting stats (avg/iso/pa) for {len(out)} players")
+    if excluded:
+        print(f"  WARNING: {len(excluded)} players were present in the API response "
+              f"but excluded for missing avg/slg - these will show 'N/A' on the live "
+              f"card for Season ISO/AVG/PA exactly like Cal Raleigh's did:")
+        for name, pid, avg, slg, pa in excluded[:25]:
+            print(f"    id={pid} name={name!r} avg={avg!r} slg={slg!r} pa={pa!r}")
     return out
 
 
@@ -2517,6 +2545,15 @@ def write_daily_snapshot(players):
                 "phr9VsHand": p.get("phr9VsHand"), "phr9VsHandIp": p.get("phr9VsHandIp"),
                 "pitcherHr9Percentile": p.get("pitcherHr9Percentile"),
                 "recentFormPercentile": p.get("recentFormPercentile"),
+                # v3.83: added so a real hrProb trace/backtest is possible
+                # after the fact - these all feed compute_hr_probability()
+                # but were never being saved, which is why diagnosing the
+                # Raleigh question required guessing instead of just
+                # reading the real inputs.
+                "seasonPrev": p.get("seasonPrev"),
+                "l15hrCredit": p.get("l15hrCredit"), "l5hrCredit": p.get("l5hrCredit"),
+                "pip": p.get("pip"),
+                "pitcherRecentHr9": p.get("pitcherRecentHr9"), "pitcherRecentIp": p.get("pitcherRecentIp"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
