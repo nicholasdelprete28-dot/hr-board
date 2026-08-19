@@ -1695,6 +1695,17 @@ def compute_hr_subfactors(p):
     # returned on player_row - they're real, live display badges on the
     # card (e.g. "no crusher match") and other than this fix, nothing
     # about how they're computed or shown has changed.
+    # v3.89 FIX (this session - see chat discussion, "guys who look REALLY
+    # good against the mix, from a given pitcher, on a given day"): avg_vs_mix
+    # (this batter's real AVG against THIS specific pitcher's actual pitch
+    # arsenal) used to get folded in here at 50% of `platoon`, which itself
+    # is only ~16%-weighted (W_SITUATIONAL) in the final blend - so a
+    # genuinely exceptional matchup-of-the-day read had at most ~8% real
+    # pull on the final number, diluted alongside generic handedness
+    # platoon splits. It's pulled out here entirely and given its own
+    # standalone, genuinely two-sided treatment below (see
+    # avg_vs_mix_two_sided_mult) - this is specifically the "different
+    # pitcher today" signal the model was under-using.
     pitch_mix_raw = p.get("pitchMixMatch")
     avgmix_s = clamp01(avgmix / 0.5)
     if pitch_mix_raw is not None:
@@ -1703,12 +1714,9 @@ def compute_hr_subfactors(p):
     else:
         pitch_mix_platoon = avgmix_s
     avg_vs_mix = p.get("avgVsMix")
-    if avg_vs_mix is not None:
-        avg_vs_mix_s = clamp01((avg_vs_mix - 0.150) / (0.320 - 0.150))
-        platoon = pitch_mix_platoon * 0.40 + avgmix_s * 0.10 + avg_vs_mix_s * 0.50
-    else:
-        avg_vs_mix_s = None
-        platoon = pitch_mix_platoon * 0.65 + avgmix_s * 0.35
+    avg_vs_mix_s = (clamp01((avg_vs_mix - 0.150) / (0.320 - 0.150))
+                    if avg_vs_mix is not None else None)
+    platoon = pitch_mix_platoon * 0.65 + avgmix_s * 0.35
 
     opportunity = clamp01((lbonus - 1) / 5)
 
@@ -1916,17 +1924,35 @@ def hr_tier_for_percentile(hr_prob_val, todays_hr_probs):
 AVG_VS_MIX_PENALTY_MIN_PA = 40
 AVG_VS_MIX_PENALTY_THRESHOLD = 0.30
 AVG_VS_MIX_MAX_PENALTY = 0.35
+# v3.89 NEW (this session): matches the penalty side's existing max swing,
+# now mirrored for genuine upside - a batter who's hitting this specific
+# pitcher's specific arsenal exceptionally well deserves the same-sized
+# real boost that a batter hitting it badly gets penalized.
+AVG_VS_MIX_MAX_BOOST = 0.35
+AVG_VS_MIX_FULL_TRUST_PA = 100
 
 
-def avg_vs_mix_override_mult(avg_vs_mix_s, avg_vs_mix_pa):
+def avg_vs_mix_two_sided_mult(avg_vs_mix_s, avg_vs_mix_pa):
+    """v3.89 REWRITE (this session - see chat discussion): the old
+    avg_vs_mix_override_mult() could only ever return 1.0 or a penalty
+    below 1.0 - a batter who looks exceptional against today's specific
+    pitcher's specific arsenal got ZERO credit for it, only ever a
+    possible penalty for looking bad against it. That's backwards for a
+    stat whose entire point is "how does HE match up against THIS
+    PITCHER today" - exactly the kind of day-specific story that should
+    be able to push a real number up, not just drag one down. Now
+    genuinely two-sided and PA-trust-gated on a continuous ramp (rather
+    than the old hard on/off AVG_VS_MIX_PENALTY_MIN_PA cutoff) so a
+    borderline sample doesn't swing the full amount."""
     if avg_vs_mix_s is None or avg_vs_mix_pa is None:
         return 1.0
     if avg_vs_mix_pa < AVG_VS_MIX_PENALTY_MIN_PA:
         return 1.0
-    if avg_vs_mix_s >= AVG_VS_MIX_PENALTY_THRESHOLD:
-        return 1.0
-    severity = (AVG_VS_MIX_PENALTY_THRESHOLD - avg_vs_mix_s) / AVG_VS_MIX_PENALTY_THRESHOLD
-    return 1 - severity * AVG_VS_MIX_MAX_PENALTY
+    trust = clamp01((avg_vs_mix_pa - AVG_VS_MIX_PENALTY_MIN_PA)
+                     / (AVG_VS_MIX_FULL_TRUST_PA - AVG_VS_MIX_PENALTY_MIN_PA))
+    deviation = avg_vs_mix_s - 0.5  # -0.5 (worst) .. +0.5 (best), 0 = neutral
+    max_swing = AVG_VS_MIX_MAX_BOOST if deviation >= 0 else AVG_VS_MIX_MAX_PENALTY
+    return 1 + deviation * 2 * max_swing * trust
 
 
 def compute_hr_probability(p, debug=False):
@@ -2217,8 +2243,18 @@ def compute_hr_probability(p, debug=False):
         # inputs the l15_trust/l5_trust confirmation block above already
         # used. See the module docstring and this function's docstring
         # for the full reasoning.
+        # v3.89 NEW (this session - see chat discussion, "hot right now,
+        # not a season stud"): capture how confidently the recent-form
+        # read above has already been established as real (well-sampled
+        # AND, when applicable, confirmed by the outcome-vs-process check
+        # a few dozen lines up) - used below to let a genuinely trustworthy
+        # hot streak earn more say in the final blend than a flat, fixed
+        # W_RECENT share allows, without loosening anything for a thin or
+        # unconfirmed sample.
+        recent_confirmed_trust = max(l15_trust, l5_trust)
     else:
         recent_form_rate = LEAGUE_AVG_HR_RATE
+        recent_confirmed_trust = 0.0
 
     # v3.83: trend_adjustment() moved here (from the end of the function,
     # where it used to multiply the entire final mean) - see the note
@@ -2280,10 +2316,36 @@ def compute_hr_probability(p, debug=False):
     effective_w_matchup = MATCHUP_WEIGHT_MIN + (W_MATCHUP - MATCHUP_WEIGHT_MIN) * power_gate
     effective_w_power = W_POWER + (W_MATCHUP - effective_w_matchup)
 
+    # v3.89 NEW (this session - see chat discussion, "hot right now, not a
+    # season stud"): W_RECENT above is a fixed 14% regardless of how
+    # confidently we know the recent read is real - that's appropriate for
+    # a THIN or unconfirmed sample (which should stay heavily regressed
+    # toward league average, already handled by l15_trust/l5_trust), but
+    # it means even a large, well-sampled, PROCESS-CONFIRMED hot streak
+    # (recent_confirmed_trust, captured above) can never earn more real
+    # say than a shaky one - a mediocre-season player genuinely locked in
+    # right now stays capped by the same 14% as noise. Let recent's
+    # effective weight scale up toward RECENT_WEIGHT_MAX specifically when
+    # recent_confirmed_trust is high, borrowing from power (not matchup or
+    # situational) - this is deliberately a story about "his current form
+    # matters more than his season-long power reading says," not about
+    # matchup, so power is the right place to borrow from.
+    RECENT_WEIGHT_MAX = 0.30
+    RECENT_GATE_FLOOR = 0.45
+    RECENT_GATE_CEIL = 0.80
+    recent_gate = clamp01((recent_confirmed_trust - RECENT_GATE_FLOOR) / (RECENT_GATE_CEIL - RECENT_GATE_FLOOR))
+    effective_w_recent = W_RECENT + (RECENT_WEIGHT_MAX - W_RECENT) * recent_gate
+    POWER_FLOOR_VS_RECENT = 0.08
+    effective_w_power = max(POWER_FLOOR_VS_RECENT, effective_w_power - (effective_w_recent - W_RECENT))
+
     mean = (effective_w_power * power_baseline_rate
             + effective_w_matchup * matchup_quality_rate
-            + W_RECENT * recent_form_rate
+            + effective_w_recent * recent_form_rate
             + W_SITUATIONAL * personal_situational_rate)
+
+    if debug:
+        print(f"[EXPLAIN] recent_confirmed_trust={recent_confirmed_trust:.3f}  recent_gate={recent_gate:.3f}"
+              f"  effective_w_recent={effective_w_recent:.3f}")
 
     if debug:
         print(f"[EXPLAIN] effective_w_power={effective_w_power:.3f}  effective_w_matchup={effective_w_matchup:.3f}"
@@ -2291,7 +2353,7 @@ def compute_hr_probability(p, debug=False):
         print(f"[EXPLAIN] blended mean (pre-scale)={mean:.4f}"
               f"    contributions: power={effective_w_power*power_baseline_rate:.4f}"
               f"  matchup={effective_w_matchup*matchup_quality_rate:.4f}"
-              f"  recent={W_RECENT*recent_form_rate:.4f}"
+              f"  recent={effective_w_recent*recent_form_rate:.4f}"
               f"  situational={W_SITUATIONAL*personal_situational_rate:.4f}")
 
     GLOBAL_SCALE = 1.6
@@ -2326,7 +2388,7 @@ def compute_hr_probability(p, debug=False):
     # like the rest of the architecture intends, instead of leaking into
     # power_baseline_rate and matchup_quality_rate too.
 
-    avg_vs_mix_mult = avg_vs_mix_override_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
+    avg_vs_mix_mult = avg_vs_mix_two_sided_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
     mean *= avg_vs_mix_mult
 
     # v3.87 NEW (this session - see chat discussion): lineup spot was
