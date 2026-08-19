@@ -1403,7 +1403,21 @@ LEAGUE_AVG_OBP = 0.315
 # 3-of-3 agreement bonus below to do all the work. Season power is
 # supposed to be the slow-moving anchor, but 0.35 was low enough that even
 # a real L15 divergence barely nudged the season-dominated blend.
-POWER_L15_WEIGHT = 0.48
+# v3.88 FIX (this session - see chat discussion, real board evidence: L15/L5
+# HR counts correlating at 0.53-0.59 with both `power` and final hrProb,
+# well beyond what a reader would expect from recent form's nominal 20%
+# blend weight). Root cause: raising this to 0.48 in v3.86 let L15 recent
+# form move `power` directly, ON TOP OF the SEPARATE dedicated
+# recent_form_rate component a few hundred lines below - the same
+# underlying L15 barrel/EV/hard-hit data was influencing the final number
+# through two channels at once. Dialed back to 0.40 - keeps real
+# improvement over the original 0.35 (a genuine hot/cold Statcast trend
+# still moves power on its own merit) without letting it dominate as
+# heavily as 0.48 did. See the W_RECENT cut in compute_hr_probability's
+# blend weights for the other half of this fix - that dedicated component
+# also had its weight trimmed now that power already accounts for some of
+# the same signal.
+POWER_L15_WEIGHT = 0.40
 POWER_L15_MIN_PA = 15
 L15_ISO_MIN_PA = 30
 
@@ -2248,9 +2262,15 @@ def compute_hr_probability(p, debug=False):
     # could lower it. Track PRIME/STRONG/INPLAY/LONGSHOT hit rates with
     # check_results.py over the next stretch of real days to see the
     # actual effect before pushing this further in either direction.
+    # v3.88 FIX (this session): W_RECENT trimmed 0.20 -> 0.14, shifted to
+    # W_MATCHUP (0.44 -> 0.50) - now that `power` (via POWER_L15_WEIGHT)
+    # already carries some real recent-form signal on its own, the
+    # dedicated recent_form_rate component doesn't need as large a share
+    # to still matter; the two together were compounding L15/L5 HR counts'
+    # real influence well past what either weight alone suggested.
     W_POWER = 0.20
-    W_MATCHUP = 0.44
-    W_RECENT = 0.20
+    W_MATCHUP = 0.50
+    W_RECENT = 0.14
     W_SITUATIONAL = 0.16
 
     POWER_GATE_FLOOR = 0.20
