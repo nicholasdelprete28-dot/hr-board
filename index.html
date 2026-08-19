@@ -1838,6 +1838,36 @@ function calculateValue(p, mode){
   }
   if(ourProb == null || expectedLine == null) return null;
 
+  // v3.86-fe FIX (this session - see chat discussion, "-.5/-1.5 instead of
+  // the right lines"): for hrr/tb, expectedLine used to be a single
+  // hardcoded 1.5 applied to EVERY player, regardless of what that
+  // player's real sportsbook line actually is. Real HRR/TB lines vary by
+  // player (a light hitter might be posted at 0.5, a slugger at 2.5) -
+  // unlike hr (0.5 is genuinely close to universal) or k (which already
+  // uses a real per-player p.kLine from the backend), hrr/tb never had a
+  // per-player line at all. p.hrrProb/p.tbProb are ONLY meaningful as
+  // "probability of clearing 1.5" - that's literally how they're defined
+  // in fetch_hr_data.py (LEAGUE_AVG_HRR_CLEAR_RATE / LEAGUE_AVG_TB_
+  // CLEAR_RATE, l15hrr/l15tb both count games clearing a >=2 threshold).
+  // So when a book's real consensus line for a given player ISN'T 1.5,
+  // our probability and the book's price are answering two different
+  // questions - showing a "value edge" there would be comparing apples
+  // to oranges, not a real edge. FIX: check the real consensus line
+  // first, and only compute a value edge when it actually matches what
+  // our model is calibrated to (1.5) - otherwise return null with a
+  // reason, so the UI can honestly show "no comparable line" instead of
+  // silently forcing a wrong or mismatched number.
+  if(mode === 'hrr' || mode === 'tb'){
+    const allFieldEntries = (p.bookOdds && p.bookOdds[BOARD_TO_ODDS_FIELD[mode]]) || [];
+    const realConsensusLine = computeConsensus(allFieldEntries);
+    if(realConsensusLine != null && realConsensusLine !== expectedLine){
+      return { ourProb: null, bookImplied: null, edge: -Infinity, book: null, price: null,
+        line: realConsensusLine, isMedian: false,
+        lineMismatch: true,
+        mismatchNote: `Book's real line is ${fmtNum(realConsensusLine, 1)}, not the ${fmtNum(expectedLine, 1)} our model is calibrated to - not a fair comparison.` };
+    }
+  }
+
   const candidateEntries = entries.filter(e => e.line === expectedLine && e.price != null);
   if(!candidateEntries.length) return null;
   const sortedByPrice = [...candidateEntries].sort((a, b) => a.price - b.price);
