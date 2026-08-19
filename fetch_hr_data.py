@@ -1485,6 +1485,36 @@ def day_night_adjustment(p):
     return 1 + adj
 
 
+# v3.87 NEW (this session - see chat discussion, "may not just be matchup"):
+# home_road_split() was already computed and stored on every player row
+# (homeHrRate/homePa/roadHrRate/roadPa) but no adjustment function ever
+# consumed it - unlike day/night and day-of-week, which both have a real
+# adjustment function AND get applied inside compute_hr_probability().
+# Whether a team is home or road is a genuinely new, real, day-specific
+# fact (not a re-derivation of power or matchup) that was being computed
+# and then thrown away. Mirrors day_night_adjustment()'s exact pattern -
+# same sample-size gate, same conservative max swing.
+HOME_ROAD_MAX_ADJ = 0.03
+HOME_ROAD_MIN_PA = 60
+
+
+def home_road_adjustment(p):
+    is_home = p.get("isHomeGame")
+    if is_home is None:
+        return 1.0
+    relevant_rate = p.get("homeHrRate") if is_home else p.get("roadHrRate")
+    relevant_pa = p.get("homePa" if is_home else "roadPa") or 0
+    overall_rate = p.get("seasonHrRate")
+    if relevant_rate is None or overall_rate is None or overall_rate <= 0:
+        return 1.0
+    if relevant_pa < HOME_ROAD_MIN_PA:
+        return 1.0
+    raw_ratio = relevant_rate / overall_rate
+    adj = clamp01((raw_ratio - 1) * 0.3 + 0.5) - 0.5
+    adj = max(-HOME_ROAD_MAX_ADJ, min(HOME_ROAD_MAX_ADJ, adj))
+    return 1 + adj
+
+
 def trend_adjustment(p):
     l15_rate = p.get("l15hrRate")
     l30_rate = p.get("l30hrRate")
@@ -2190,16 +2220,38 @@ def compute_hr_probability(p, debug=False):
     PERSONAL_STRENGTH = 0.65
     personal_mult = 1 + (sf["platoon"] - 0.5) * PERSONAL_STRENGTH
     personal_mult *= day_night_adjustment(p)
+    # v3.87 NEW (this session - see chat discussion): day-of-week and
+    # home/road were both already computed per player but never actually
+    # applied inside compute_hr_probability() - day_night_adjustment was
+    # the only one of the three that made it in. All three follow the
+    # identical sample-size-gated pattern, so folding these two in now is
+    # consistent with the existing design, not a new mechanism.
+    personal_mult *= day_of_week_adjustment(p)
+    personal_mult *= home_road_adjustment(p)
     personal_situational_rate = LEAGUE_AVG_HR_RATE * personal_mult
 
     if debug:
         print(f"[EXPLAIN] platoon={sf['platoon']:.4f}  personal_situational_rate={personal_situational_rate:.4f}")
 
     # --- Blend, with the matchup-quality weight power-gated ---
-    W_POWER = 0.24
-    W_MATCHUP = 0.34
-    W_RECENT = 0.24
-    W_SITUATIONAL = 0.18
+    # v3.87 FIX (this session - see chat discussion): raised W_MATCHUP
+    # 0.34 -> 0.44 (and trimmed power/recent/situational to compensate),
+    # per explicit direction after reviewing real board examples (e.g. a
+    # tough-matchup elite bat still outranking several genuinely poor-
+    # matchup bats by a smaller margin than felt right). HONESTY NOTE,
+    # carried over from the earlier v3.86 discussion: this is a real,
+    # acknowledged trade - the 9-day check_results.py data available at
+    # the time showed PRIME hitting real HRs at 25.4% vs LONGSHOT's 7.0%,
+    # a validated, working signal built mostly on power. Pushing matchup's
+    # share up further trades some of that validated accuracy for more
+    # day-to-day variety - it is not proven to raise real hit rate, and
+    # could lower it. Track PRIME/STRONG/INPLAY/LONGSHOT hit rates with
+    # check_results.py over the next stretch of real days to see the
+    # actual effect before pushing this further in either direction.
+    W_POWER = 0.20
+    W_MATCHUP = 0.44
+    W_RECENT = 0.20
+    W_SITUATIONAL = 0.16
 
     POWER_GATE_FLOOR = 0.20
     POWER_GATE_CEIL = 0.35
@@ -2256,6 +2308,31 @@ def compute_hr_probability(p, debug=False):
 
     avg_vs_mix_mult = avg_vs_mix_override_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
     mean *= avg_vs_mix_mult
+
+    # v3.87 NEW (this session - see chat discussion): lineup spot was
+    # already computed (lbonus, used in compute_score()'s "opportunity"
+    # display component) but had ZERO effect on hrProb - the actual
+    # number driving the board. This is a real, distinct mechanism from
+    # power/matchup/recent/platoon: a leadoff hitter gets meaningfully
+    # more plate appearances per game than a #9 hitter (roughly 4.5 vs
+    # 3.5 PA/game in real MLB averages), which scales HR opportunity
+    # independent of skill - even a mediocre hitter batting leadoff gets
+    # more cracks at it than a great hitter batting 9th. Applied as a
+    # bounded multiplier on the final mean (a PA-volume effect, not a
+    # per-PA skill or matchup read) rather than folded into one of the
+    # four weighted components. Deliberately modest (+-12%) to match the
+    # real-world PA-per-slot spread, not inflated - lineup spot also
+    # correlates with power (better hitters bat higher), so this is kept
+    # small on purpose to add real signal without double-counting talent.
+    LINEUP_OPPORTUNITY_MIN_MULT = 0.88
+    LINEUP_OPPORTUNITY_MAX_MULT = 1.12
+    lbonus = p.get("lbonus")
+    if lbonus is not None:
+        opportunity_mult = LINEUP_OPPORTUNITY_MIN_MULT + (clamp01(lbonus / 8)
+            * (LINEUP_OPPORTUNITY_MAX_MULT - LINEUP_OPPORTUNITY_MIN_MULT))
+    else:
+        opportunity_mult = 1.0
+    mean *= opportunity_mult
 
     mean = max(0.01, mean)
 
