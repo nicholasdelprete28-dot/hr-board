@@ -1406,7 +1406,16 @@ function render(){
     // less often, at the cost of allowing slightly more same-team
     // clustering than before - the tradeoff itself is inherent to
     // capping team representation at all, this just moves the dial.
-    const CAP_SLOTS = 10, MAX_PER_TEAM = 3;
+    // v3.86-fe FIX (this session - see chat discussion, real board example:
+    // LAD @ COL vs Freeland put 3 Dodgers - Ohtani, Muncy, Pages - in the
+    // same top-12 window, which read as repetitive even though each one
+    // is a real, individually-justified signal). Lowered back 3 -> 2 -
+    // the v3.70 note reverting 2->3 flagged the real cost (a genuinely
+    // higher-% player from an unrelated team can get bumped below a
+    // lower-% player because 2 teammates already filled the slot) - that
+    // tradeoff is unavoidable with ANY cap, and 2 was explicitly chosen
+    // again knowing that cost, to cut same-team clustering more than 3 did.
+    const CAP_SLOTS = 10, MAX_PER_TEAM = 2;
     const topSlots = [];
     const usedIdx = new Set();
     const teamCount = {};
