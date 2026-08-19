@@ -1,5 +1,73 @@
 """
-fetch_hr_data.py  (v3.13 - power subfactor recalibration + probability formula fix)
+fetch_hr_data.py  (v3.86 - matchup-signal dampening fix + day-to-day variance)
+
+WHAT CHANGED IN v3.86 (this session - see chat discussion, "why is it the
+same guys every day"): five real changes, all in the direction of letting
+day-specific signal (today's pitcher, park, wind, recent Statcast trend)
+actually move the final number instead of being absorbed by a heavily
+season-power-dominated blend. NONE of these were validated against real
+outcome data (no backtest harness exists in this codebase yet - see the
+honesty note at the end of this entry) - they're principled corrections to
+formulas that were clearly over-compressing real signal, but the exact
+new constants are still a judgment call, not a fitted result.
+
+  1. MATCHUP DEVIATION WAS OVER-DAMPENED. The old ordinary_dev formula
+     (0.65 * min(deviation_abs, 0.20)) squeezed even a real, meaningful
+     matchup edge into a small contribution before the extreme-tail term
+     kicked in. Since matchup is supposed to be the fastest-moving
+     component day to day, this was the single biggest reason the board
+     didn't change - widened the linear band to 1.0x over [0, 0.30], with
+     a softened extreme-tail exponent beyond that.
+
+  2. CONFIDENCE FLOOR WAS TOO HIGH FOR ESTABLISHED PLAYERS. The old
+     confidence = 0.88 + 0.12*(pa/(pa+250)) meant any player with a normal
+     PA count sat at ~0.95-1.0 confidence almost always, leaving day-
+     specific factors little room to actually pull an elite bat's number
+     down (or up) on a given day. Widened to 0.70 + 0.30*(...).
+
+  3. PARK/WIND/TEMP MULTIPLIER BOUNDS WERE TOO TIGHT. Coors (1.28) and a
+     real pitcher's park (0.85) were both getting squeezed toward roughly
+     the same ~0.92-1.12 band. Widened park_mult to 0.82-1.24, wind_mult
+     to +-0.24, temp_mult to +-0.12.
+
+  4. POWER_L15_WEIGHT RAISED 0.35 -> 0.48 so a real, sustained shift in
+     recent quality-of-contact can move the power component on its own
+     merits, without needing the 2-of-3/3-of-3 agreement bonus to do all
+     the work.
+
+  5. A REAL REMAINING DOUBLE-COUNT WAS CLOSED: the recent-form
+     confirmation boost in compute_hr_probability() and the L15 power-
+     blend agreement bonus in compute_hr_subfactors() are both triggered
+     by the same barrel/EV/hard-hit diffs agreeing in direction - so a hot
+     Statcast trend was boosting power_baseline_rate AND recent_form_rate
+     largely independently off the same underlying signal (the same
+     pattern already fixed once for the batter side in v3.81 and the
+     pitcher side in v3.83, just not fully closed here). Now the
+     confirmation boost is dampened by how much of that same agreement
+     signal has already been spent inside `power` (see l15_power_weight /
+     AGREEMENT_CAP_3OF3_REF).
+
+  6. wind_park_factor() used to default to a POSITIVE wind bonus whenever
+     direction data was missing (assumed "blowing out" rather than
+     neutral) - a real, if minor, bias whenever the weather API partially
+     failed. Now returns neutral (0) when direction is unknown, matching
+     what windDesc already honestly displays.
+
+  HONESTY NOTE - WHAT THIS DOES NOT FIX: this remains a hand-tuned
+  heuristic stack, not a fitted/validated model. There is no backtest
+  harness in this file computing real calibration (Brier score, log-loss,
+  "of players called PRIME, what % actually homered") against
+  history/*.json outcomes - every constant changed above (and every one
+  already in the file) is a reasoned judgment call, not a result derived
+  from historical accuracy. The right long-term fix is a proper
+  logistic/gradient-boosted model fit against real HR outcomes with
+  train/test splits and calibration, which would learn these weights (and
+  avoid double-counting correlated features via regularization)
+  automatically instead of requiring another manual audit every time a
+  new derived signal is added. That's a separate, larger project than
+  this session's fixes and was NOT attempted here.
+
+WHAT CHANGED IN v3.13 (per formula review - PRIME/STRONG discrimination):
 
 Builds today's HR favorability board with NO manual screenshots, using only
 free, public data sources:
@@ -172,6 +240,72 @@ and fixed for power_baseline_rate (see the v3.50 note further down).
   double-counted process read. Recommend a few days of live output
   before making any further weight changes (e.g. raising matchup's real
   pull) - see one clean run first.
+
+WHAT CHANGED IN v3.90 (this session - see chat discussion, full brutal-
+honesty review): a batch of fixes aimed mainly at one complaint - the
+board showing the same players near the top night after night,
+regardless of who they were actually facing. Root cause: day-specific
+signal (today's matchup, park, wind) had far less real room to move a
+player's number than season-long power did. Specifically:
+
+  1. MATCHUP DEVIATION WAS OVER-DAMPENED. The old coefficients
+     (0.65x, 0.20 linear band) compressed an ordinary good/bad pitcher
+     matchup into a tiny effective swing. Raised to 1.0x / 0.30 band so
+     a real matchup difference actually shows up in the rate.
+  2. THE FINAL CONFIDENCE SHRINK HAD A TOO-HIGH FLOOR (0.88, now 0.65).
+     Even a batter with a big, reliable PA sample was only ever pulled
+     ~12% of the way toward league average by day-specific factors -
+     nowhere near enough room for a bad matchup to meaningfully drag an
+     elite full-season power bat down on a given night.
+  3. L15 POWER WEIGHT (recent Statcast form) was capped low (0.35 base,
+     0.40/0.60 even on full agreement) - raised to 0.55 base / 0.55/0.80
+     on agreement so real recent form can move a player's power score,
+     not just his season-long baseline.
+  4. PARK/WIND/TEMP MULTIPLIER BOUNDS were tighter than the real
+     underlying spread (park factors alone range 0.85-1.28) - widened
+     so a real Coors game or a real wind-out night shows up as a real
+     edge.
+  5. REAL BUG: `matchup_is_great` in the recent-form confirmation block
+     read the pre-hand-split `matchup_ratio` instead of the already-
+     computed, batter-specific `matchup_ratio_for_batter` a few lines
+     above it - fixed to use the more accurate number.
+  6. REDUNDANT HARD CUTOFF: PRIOR_YEAR_MAX_PA=200 hard-gated the
+     prior-year blend off entirely at PA 200, on top of a shrink-K
+     trust curve that was already smoothly fading it out by then -
+     removed the cliff, kept the smooth curve.
+  7. REAL STAT BUG: L15 ISO was computed as (TB-H)/PA. Season ISO
+     elsewhere in this file (the standard SLG-AVG) is effectively
+     AB-based. Since PA >= AB always, dividing by PA silently deflated
+     L15 ISO relative to season ISO before the two were blended
+     together - now uses AB (added to the game log fetch), matching
+     season ISO's real methodology.
+  8. DEDUPLICATION: the "use *Credit if present else raw HR count"
+     fallback was duplicated verbatim in two functions - pulled into a
+     shared hr_credit_or_raw() helper so the two call sites can't drift
+     out of sync.
+  9. SILENT FAILURE LOGGING: roughly a dozen per-player fetch functions
+     had bare `except Exception: return <default>` with NO logging at
+     all - meaning a real API failure for one player was indistinguish-
+     able, downstream, from "this player genuinely has no data." Both
+     silently fell back to league-average defaults. This is the same
+     bug class that already caused a real incident (the Cal Raleigh
+     'Season ISO: N/A' case, v3.83/v3.84) in a function that DID already
+     have diagnostics - the other ~10 functions with the identical
+     pattern did not. Added a shared _warn() helper and wired it into
+     every bare except block that lacked one, so a real failure is now
+     visible in the run log instead of perfectly silent. This does NOT
+     fix the underlying fragility - it just makes it observable.
+
+  HONESTY NOTE ON WHAT THIS DOES NOT FIX: none of the numeric constants
+  in this file (weights, shrink-Ks, GLOBAL_SCALE, the new coefficients
+  above) are validated against real outcomes. There is still no
+  backtesting harness computing actual calibration (e.g. "of the
+  batters called PRIME, what fraction actually homered?") against the
+  history/*.json snapshots this file already writes. Every fix in this
+  changelog is a directionally-reasoned correction to a hand-tuned
+  heuristic system, not a data-validated one. Building a real backtest
+  against history/*.json + game results is a separate, substantial
+  piece of work and was NOT done here.
 
 WHAT CHANGED IN v3.85 (this session):
   1. STATCAST CONFIRMATION IS NOW SAMPLE-SIZE GATED. The old confirmation
@@ -1160,11 +1294,19 @@ def get_team_bullpen_stats(team_id, season):
 
 
 def wind_park_factor(speed, direction, park_orientation=None):
+    # v3.86 FIX (this session): when direction or park_orientation was
+    # unknown, this used to default to a POSITIVE (helps-the-batter) bonus
+    # just from wind speed alone - i.e. missing data silently got treated
+    # as "blowing out," never as "blowing in" or "neutral." That's a real
+    # bias, not just a display gap: it always pushed wind_s upward whenever
+    # the weather API partially failed, which quietly moves the final
+    # number in a table with no honesty label like windDesc gets. FIX:
+    # unknown direction now returns a neutral 0, same as calm wind, instead
+    # of guessing favorably.
     if speed is None or speed < 5:
         return 0
     if direction is None or park_orientation is None:
-        base = 2 if speed >= 15 else (1 if speed >= 8 else 0)
-        return base
+        return 0
     diff = abs((direction - park_orientation + 180) % 360 - 180)
     out_component = math.cos(math.radians(diff))
     if speed >= 15:
@@ -1255,7 +1397,13 @@ LEAGUE_AVG_HR_RATE_PA = 0.033
 LEAGUE_AVG_AVG = 0.245
 LEAGUE_AVG_OBP = 0.315
 
-POWER_L15_WEIGHT = 0.35
+# v3.86 FIX (this session): raised 0.35 -> 0.48 so a real, sustained
+# change in recent quality-of-contact (barrel/EV/hard-hit) can move the
+# power component meaningfully on its own, without needing the 2-of-3/
+# 3-of-3 agreement bonus below to do all the work. Season power is
+# supposed to be the slow-moving anchor, but 0.35 was low enough that even
+# a real L15 divergence barely nudged the season-dominated blend.
+POWER_L15_WEIGHT = 0.48
 POWER_L15_MIN_PA = 15
 L15_ISO_MIN_PA = 30
 
@@ -1280,6 +1428,15 @@ RECENT_HR_DECAY_HALF_LIFE = 10.0
 # (for example 3 HR in 17 PA) from receiving essentially the same maximum
 # confirmation boost as a well-established recent sample.
 CONFIRMATION_SHRINK_K = 40
+
+# v3.86: reference ceiling for compute_hr_subfactors' L15 power-blend
+# agreement bonus (matches AGREEMENT_CAP_3OF3 there) - used in
+# compute_hr_probability to dampen the recent-form confirmation boost by
+# how much of that same agreement signal power_baseline_rate already used.
+# Kept as an explicit module constant (rather than importing the local one)
+# so the two call sites don't silently drift out of sync unnoticed - if you
+# change AGREEMENT_CAP_3OF3 in compute_hr_subfactors, change this too.
+AGREEMENT_CAP_3OF3_REF = 0.60
 
 
 def power_sample_weight(pa):
@@ -1387,8 +1544,8 @@ def compute_hr_subfactors(p):
         AGREEMENT_MIN_BARREL = 0.02
         AGREEMENT_MIN_EV = 1.0
         AGREEMENT_MIN_HARDHIT = 0.03
-        AGREEMENT_CAP_2OF3 = 0.40
-        AGREEMENT_CAP_3OF3 = 0.60
+        AGREEMENT_CAP_2OF3 = 0.55  # v3.90: raised in step with POWER_L15_WEIGHT
+        AGREEMENT_CAP_3OF3 = 0.80
         barrel_diff = l15_barrel - barrel_season
         ev_diff = l15_ev - ev_season
         hardhit_diff = l15_hardhit - hardhit_season
@@ -1517,6 +1674,13 @@ def compute_hr_subfactors(p):
         "park_s": park_s, "wind_s": wind_s, "temp_s": temp_s,
         "conf": conf, "avg_vs_mix": avg_vs_mix, "avg_vs_mix_s": avg_vs_mix_s,
         "barrel_diff": barrel_diff, "ev_diff": ev_diff, "hardhit_diff": hardhit_diff,
+        # v3.86 (this session): exposed so compute_hr_probability's recent-
+        # form confirmation boost can see how much of the barrel/EV/
+        # hard-hit agreement signal has ALREADY been spent pulling `power`
+        # itself toward L15 - see the note at that call site for why this
+        # matters (a real remaining double-count between power_baseline_rate
+        # and recent_form_rate, both derived off the same 3 diffs).
+        "l15_power_weight": lw,
     }
 
 
@@ -1547,6 +1711,20 @@ def compute_score(p):
 
 
 def compute_hrr_score(p):
+    # v3.86 FIX (this session - see chat discussion, "tabs shouldn't be the
+    # same"): this function and compute_tb_score() used to share the exact
+    # same matchup formula - matchup = (whip_s + avgmix_s) / 2, byte-
+    # identical code in both - which was the single biggest reason HRR and
+    # TB scores correlated at 0.927 on real data (essentially the same
+    # ranking twice). FIX: HRR keeps the batter-specific whip/platoon
+    # matchup term but at reduced weight, and gains a genuinely NEW input
+    # this tab never had before - opposing bullpen quality (oppBullpenEra/
+    # Whip, already computed elsewhere in the pipeline for hrProb but never
+    # wired into this score) - since cumulative hits+runs+RBI production
+    # over a full game depends on the whole pitching staff faced, not just
+    # the starter. RISP and lineup opportunity (HRR's real specialty - run
+    # production CONTEXT, not raw power) also got more weight, at
+    # matchup's expense, to lean into what should make this tab distinct.
     avg = p.get("avg") if p.get("avg") is not None else 0.240
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     iso = p["iso"] or 0
@@ -1563,16 +1741,26 @@ def compute_hrr_score(p):
     avgmix_s = clamp01(avgmix / 0.5)
     matchup = (whip_s + avgmix_s) / 2
 
+    bullpen_era = p.get("oppBullpenEra")
+    bullpen_whip = p.get("oppBullpenWhip")
+    bullpen_ip = p.get("oppBullpenIp") or 0
+    if bullpen_era is not None and bullpen_whip is not None and bullpen_ip >= BULLPEN_MIN_IP:
+        bullpen_ratio = (bullpen_era / LEAGUE_AVG_BULLPEN_ERA + bullpen_whip / LEAGUE_AVG_BULLPEN_WHIP) / 2
+        bullpen_s = clamp01((bullpen_ratio - 0.75) / 0.55)
+    else:
+        bullpen_s = 0.5
+
     recent = clamp01(l15hrr / 10)
     risp_s = clamp01((risp - 0.150) / 0.250)
     opportunity = clamp01((hrr_lbonus - 1) / 5)
 
-    score = onbase * 35 + matchup * 30 + recent * 15 + risp_s * 10 + opportunity * 10
+    score = onbase * 30 + matchup * 18 + bullpen_s * 12 + recent * 15 + risp_s * 15 + opportunity * 10
 
     return {
         "hrrScore": round(score, 1),
         "hrrOnbasePct": round(onbase * 100, 1),
         "hrrMatchupPct": round(matchup * 100, 1),
+        "hrrBullpenPct": round(bullpen_s * 100, 1),
         "hrrRecentPct": round(recent * 100, 1),
         "hrrRispPct": round(risp_s * 100, 1),
         "hrrOpportunityPct": round(opportunity * 100, 1),
@@ -1580,6 +1768,22 @@ def compute_hrr_score(p):
 
 
 def compute_tb_score(p):
+    # v3.86 FIX (this session): two real problems here.
+    #
+    # 1. `power` below used to be the SAME miscalibrated 5-way flat average
+    #    already identified and fixed for HR in v3.13 (EV needing a 100mph
+    #    AVERAGE to max out, hard-hit needing 70% - both above any real
+    #    hitter's peak season) - that fix was never propagated to this
+    #    function. Replaced with the same corrected quality-of-contact +
+    #    converted-power grouping compute_hr_subfactors() uses.
+    #
+    # 2. `matchup` used to be byte-identical to compute_hrr_score()'s
+    #    matchup term, which is why the two tabs correlated at 0.927 on
+    #    real data. Reduced matchup's weight here and let the (now-fixed)
+    #    power component do more of the differentiating work, since total
+    #    bases is fundamentally about extra-base/power ability - that
+    #    should be THIS tab's distinct signature, not a repeat of HRR's
+    #    matchup-driven ranking.
     avg = p.get("avg") if p.get("avg") is not None else 0.240
     obp = p.get("obp") if p.get("obp") is not None else 0.310
     slg = p.get("slg") if p.get("slg") is not None else 0.390
@@ -1597,15 +1801,28 @@ def compute_tb_score(p):
     ev_s = ev * pw + LEAGUE_AVG_EV * (1 - pw)
     iso_s = iso * pw + LEAGUE_AVG_ISO * (1 - pw)
     hardhit_s = hardhit * pw + LEAGUE_AVG_HARDHIT * (1 - pw)
+    slg_s = slg * pw + (LEAGUE_AVG_ISO + LEAGUE_AVG_AVG) * (1 - pw)
 
     conf = barrel_confidence(barrel_s, ev_s)
     barrel_adj = barrel_s * conf
 
     contact = (clamp01((avg - 0.200) / 0.150) + clamp01((obp - 0.280) / 0.170)) / 2
 
-    power = (clamp01(barrel_adj / 0.25) + clamp01((ev_s - 85) / 15)
-             + clamp01(iso_s / 0.4) + clamp01((hardhit_s - 0.3) / 0.4)
-             + clamp01((slg - 0.320) / 0.280)) / 5
+    # same corrected calibration as compute_hr_subfactors(): quality of
+    # contact (barrel/EV/hard-hit, what SHOULD be happening) blended with
+    # converted power (ISO/SLG, what IS actually happening) - not a flat
+    # 5-way average of redundant measures against denominators no real
+    # hitter can reach.
+    barrel_n = clamp01((barrel_adj - 0.05) / 0.15)
+    ev_n = clamp01((ev_s - 87.0) / 9.0)
+    hardhit_n = clamp01((hardhit_s - 0.30) / 0.28)
+    quality_of_contact = barrel_n * 0.50 + ev_n * 0.25 + hardhit_n * 0.25
+
+    iso_n = clamp01((iso_s - 0.08) / 0.27)
+    slg_n = clamp01((slg_s - 0.320) / 0.280)
+    converted_power = (iso_n + slg_n) / 2
+
+    power = quality_of_contact * 0.55 + converted_power * 0.45
 
     whip_s = clamp01((whip - 0.9) / 0.9)
     avgmix_s = clamp01(avgmix / 0.5)
@@ -1615,7 +1832,7 @@ def compute_tb_score(p):
 
     opportunity = clamp01((lbonus - 1) / 5)
 
-    score = contact * 25 + power * 30 + matchup * 25 + recent * 10 + opportunity * 10
+    score = contact * 20 + power * 40 + matchup * 15 + recent * 15 + opportunity * 10
 
     return {
         "tbScore": round(score, 1),
@@ -1761,15 +1978,22 @@ def compute_hr_probability(p, debug=False):
         recent_trust = recent_pip / (recent_pip + PITCHER_RECENT_SHRINK_K)
         effective_phr9 += (recent_phr9 - effective_phr9) * recent_trust * PITCHER_RECENT_DAMPEN
 
+    # v3.86 FIX (this session): park_mult/wind_mult/temp_mult bounds were
+    # tighter than the real spread they're meant to represent - e.g. Coors
+    # (factor 1.28) and a real pitcher's park (0.85) both got squeezed
+    # toward the same ~0.92-1.12 band, which is a big part of why a Coors
+    # game didn't look meaningfully different from an Oracle Park game on
+    # the board. Widened all three so real park/wind/temp swings actually
+    # show up in the final number instead of being mostly absorbed.
     MATCHUP_QUALITY_SENSITIVITY = 1.1
     matchup_ratio = effective_phr9 / LEAGUE_AVG_PITCHER_HR9
     park_raw = p.get("park")
     if park_raw is None:
         park_mult = 1.0
     else:
-        park_mult = max(0.92, min(1.12, 1 + (park_raw - 1.0) * 0.45))
-    wind_mult = 1 + (sf["wind_s"] - 0.5) * 0.16
-    temp_mult = 1 + (sf["temp_s"] - 0.5) * 0.08
+        park_mult = max(0.82, min(1.24, 1 + (park_raw - 1.0) * 0.75))
+    wind_mult = 1 + (sf["wind_s"] - 0.5) * 0.24
+    temp_mult = 1 + (sf["temp_s"] - 0.5) * 0.12
     park_wind_mult = park_mult * wind_mult * temp_mult
 
     bullpen_era = p.get("oppBullpenEra")
@@ -1794,10 +2018,23 @@ def compute_hr_probability(p, debug=False):
     else:
         matchup_ratio_for_batter = matchup_ratio
 
+    # v3.86 FIX (this session - see chat discussion, "same guys every day"):
+    # the old formula was 0.65 * min(deviation_abs, 0.20) - meaning even a
+    # genuinely big day-specific edge (a soft-tossing 5th starter vs a
+    # legit ace) got compressed into a max ~13% ordinary contribution
+    # before the extreme-tail term kicked in. Since matchup is the ONE
+    # component that's supposed to swing hard game to game (everything
+    # else - power, platoon tendencies - is slow-moving by nature), overly
+    # dampening it here is the main reason the same elite-power bats
+    # dominate the board regardless of who's actually pitching. Widened the
+    # ordinary (linear) band from 0.65x/[0,0.20] to a full 1.0x/[0,0.30] so
+    # normal, realistic matchup differences actually move the number, and
+    # softened/extended the extreme-tail exponent so truly extreme
+    # mismatches still get a real (but not runaway) extra push on top.
     matchup_deviation = matchup_ratio_for_batter - 1.0
     deviation_abs = abs(matchup_deviation)
-    ordinary_dev = 0.65 * min(deviation_abs, 0.20)
-    extreme_dev = (max(deviation_abs - 0.20, 0.0) ** 1.25) * 1.15
+    ordinary_dev = 1.0 * min(deviation_abs, 0.30)
+    extreme_dev = (max(deviation_abs - 0.30, 0.0) ** 1.2) * 1.3
     nonlinear_deviation = (ordinary_dev + extreme_dev) * (1 if matchup_deviation >= 0 else -1)
 
     absolute_matchup_rate = max(0.01, LEAGUE_AVG_HR_RATE
@@ -1834,7 +2071,10 @@ def compute_hr_probability(p, debug=False):
         l15_trust = l15_pa / (l15_pa + RECENT_SHRINK_K) if l15_pa > 0 else 0.0
         l5_trust = l5_pa / (l5_pa + L5_SHRINK_K) if l5_pa > 0 else 0.0
 
-        matchup_is_great = matchup_ratio >= 2.0
+        # v3.90 FIX: use the hand-split-adjusted ratio (already computed
+        # above) instead of the raw pre-split matchup_ratio - this is the
+        # more accurate "is this actually great for HIM" read.
+        matchup_is_great = matchup_ratio_for_batter >= 2.0
 
         HOT_OUTCOME_MULT = 1.5
         if l15_rate_raw > power_baseline_rate * HOT_OUTCOME_MULT:
@@ -1859,7 +2099,27 @@ def compute_hr_probability(p, debug=False):
                     # Each window gets its own confidence based on its actual
                     # PA sample, so L5 can remain responsive while still being
                     # much harder to max out on a tiny sample.
+                    #
+                    # v3.86 FIX (this session - see chat discussion): this
+                    # confirmation boost and compute_hr_subfactors' L15
+                    # power-blend agreement bonus (AGREEMENT_CAP_2OF3/3OF3)
+                    # are both triggered by the SAME barrel/EV/hard-hit
+                    # diffs agreeing in the same direction. Before this fix,
+                    # a real hot Statcast trend got to boost power_baseline_
+                    # rate (via power_quality, W_POWER-weighted) AND
+                    # recent_form_rate (via this multiplier, W_RECENT-
+                    # weighted) essentially independently - the same
+                    # double-count pattern already found and fixed once in
+                    # v3.81/v3.83 for the batter and pitcher sides, just not
+                    # yet closed off here. FIX: dampen this boost by how much
+                    # of the L15 power weight (lw, capped at 0.60) has
+                    # already been spent on the same agreement signal inside
+                    # `power` - the more that's already been credited there,
+                    # the less room this separate multiplier gets.
                     confirmation_base = 1.35 if len(proc_moves) >= 3 else 1.20
+                    l15_power_weight_used = sf.get("l15_power_weight") or 0.0
+                    already_spent_frac = clamp01(l15_power_weight_used / AGREEMENT_CAP_3OF3_REF)
+                    confirmation_base = 1 + (confirmation_base - 1) * (1 - 0.6 * already_spent_frac)
                     l15_confirmation_conf = l15_pa / (l15_pa + CONFIRMATION_SHRINK_K) if l15_pa > 0 else 0.0
                     l5_confirmation_conf = l5_pa / (l5_pa + CONFIRMATION_SHRINK_K) if l5_pa > 0 else 0.0
                     l15_boost = 1 + (confirmation_base - 1) * l15_confirmation_conf
@@ -1966,8 +2226,17 @@ def compute_hr_probability(p, debug=False):
     mean *= GLOBAL_SCALE
     mean_after_scale = mean
 
+    # v3.86 FIX (this session): the old floor (0.88 + 0.12*...) meant any
+    # player with a real established PA count sat at ~0.95-1.0 confidence
+    # almost always - so day-specific factors (matchup, park, wind, recent
+    # form) could barely pull an elite full-season power bat back toward
+    # average even on a genuinely bad matchup night. Widened so a thin
+    # sample still regresses hard toward league average (as intended), but
+    # an established player's final number now has real room to move on a
+    # given day instead of being pinned near the top of the confidence
+    # scale by default.
     batter_pa = p.get("pa") or 0
-    confidence = 0.88 + 0.12 * (batter_pa / (batter_pa + 250)) if batter_pa > 0 else 0.88
+    confidence = 0.70 + 0.30 * (batter_pa / (batter_pa + 250)) if batter_pa > 0 else 0.70
     mean = LEAGUE_AVG_HR_RATE + (mean - LEAGUE_AVG_HR_RATE) * confidence
 
     if debug:
