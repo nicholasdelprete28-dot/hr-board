@@ -1,88 +1,88 @@
 {
   "hr": {
     "prime": {
-      "hit": 33,
-      "total": 131
+      "hit": 35,
+      "total": 142
     },
     "strong": {
-      "hit": 100,
-      "total": 640
+      "hit": 106,
+      "total": 693
     },
     "inplay": {
-      "hit": 92,
-      "total": 880
+      "hit": 104,
+      "total": 1055
     },
     "longshot": {
-      "hit": 51,
-      "total": 739
+      "hit": 54,
+      "total": 770
     }
   },
   "hrr": {
     "strong": {
-      "hit": 425,
-      "total": 916
+      "hit": 479,
+      "total": 1029
     },
     "prime": {
-      "hit": 256,
-      "total": 464
+      "hit": 279,
+      "total": 502
     },
     "inplay": {
-      "hit": 155,
-      "total": 378
+      "hit": 175,
+      "total": 423
     },
     "longshot": {
-      "hit": 224,
-      "total": 632
+      "hit": 251,
+      "total": 706
     }
   },
   "tb": {
     "strong": {
-      "hit": 260,
-      "total": 665
+      "hit": 275,
+      "total": 709
     },
     "prime": {
-      "hit": 83,
-      "total": 155
+      "hit": 91,
+      "total": 174
     },
     "inplay": {
-      "hit": 149,
-      "total": 450
+      "hit": 164,
+      "total": 494
     },
     "longshot": {
-      "hit": 319,
-      "total": 1120
+      "hit": 365,
+      "total": 1283
     }
   },
   "k": {
     "inplay": {
-      "hit": 38,
-      "total": 83
+      "hit": 44,
+      "total": 95
     },
     "strong": {
-      "hit": 38,
-      "total": 90
+      "hit": 41,
+      "total": 96
     },
     "prime": {
-      "hit": 34,
-      "total": 74
+      "hit": 37,
+      "total": 83
     },
     "longshot": {
-      "hit": 6,
-      "total": 18
+      "hit": 7,
+      "total": 21
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 288,
-      "matched": 277
+      "real_total": 313,
+      "matched": 300
     },
     "hrr": {
-      "real_total": 1125,
-      "matched": 1066
+      "real_total": 1255,
+      "matched": 1190
     },
     "tb": {
-      "real_total": 846,
-      "matched": 815
+      "real_total": 935,
+      "matched": 899
     }
   }
 }
