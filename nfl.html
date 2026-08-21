@@ -30,6 +30,7 @@
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
   body{
+    display:flex;
     background-image:
       radial-gradient(ellipse 900px 600px at 15% -5%, rgba(227,165,72,0.22), transparent 62%),
       radial-gradient(ellipse 700px 500px at 90% 15%, rgba(199,125,214,0.17), transparent 62%),
@@ -37,6 +38,35 @@
       radial-gradient(ellipse 600px 400px at 5% 60%, rgba(106,159,216,0.13), transparent 62%),
       repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
     background-attachment:fixed;
+  }
+  /* v1.0 NEW (this session): same sidebar component/behavior as index.html
+     - see that file for the fuller comment. Kept CSS identical (only the
+     accent colors differ, via this page's own :root tokens) so the
+     sidebar looks and behaves consistently across all three pages. */
+  .sidebar{
+    width:64px; flex-shrink:0; height:100vh; position:sticky; top:0; z-index:50;
+    background:var(--surface2); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 0;
+  }
+  .sidebar-logo{
+    width:34px; height:34px; border-radius:9px; background:var(--bg); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--gold); margin-bottom:10px;
+  }
+  .sidebar-link{
+    width:52px; padding:9px 4px; border-radius:10px; text-decoration:none;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color:var(--muted); transition:background .15s, color .15s;
+  }
+  .sidebar-link:hover{background:rgba(242,181,68,0.08); color:var(--text);}
+  .sidebar-link.active{background:rgba(242,181,68,0.14); color:var(--gold);}
+  .sidebar-link svg{width:20px; height:20px;}
+  .sidebar-label{font-family:var(--mono); font-size:8.5px; letter-spacing:0.3px; text-transform:uppercase; text-align:center;}
+  .page-content{flex:1; min-width:0;}
+  @media (max-width: 480px){
+    .sidebar{width:52px;}
+    .sidebar-link{width:44px; padding:7px 2px;}
+    .sidebar-link svg{width:18px; height:18px;}
+    .sidebar-label{font-size:7.5px;}
   }
 
   .wrap{max-width:var(--content-width); margin:0 auto; padding:0 14px 80px;}
@@ -506,19 +536,31 @@ whop.track("page");
 </head>
 <body>
 
+<nav class="sidebar">
+  <div class="sidebar-logo"><svg viewBox="0 0 100 100" width="18" height="18"><ellipse cx="50" cy="50" rx="34" ry="21" fill="none" stroke="currentColor" stroke-width="8"/></svg></div>
+  <a href="index.html" class="sidebar-link" title="Board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+    <div class="sidebar-label">Board</div>
+  </a>
+  <a href="splits.html" class="sidebar-link" title="Splits">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    <div class="sidebar-label">Splits</div>
+  </a>
+  <a href="nfl.html" class="sidebar-link active" title="Football">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="5.5"/><path d="M7 12h10"/></svg>
+    <div class="sidebar-label">NFL</div>
+  </a>
+</nav>
+
+<div class="page-content">
+
 <header>
   <div class="titlebar">
     <div>
       <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><ellipse cx="50" cy="50" rx="32" ry="19" fill="none" stroke="currentColor" stroke-width="6"/><line x1="36" y1="50" x2="64" y2="50" stroke="currentColor" stroke-width="4"/></svg>GOING<span class="dot">·</span>YARD</div>
       <div class="subtitle" id="subtitle">Football preview &middot; anytime-TD favorability, layout matches the baseball board exactly - colors only differ</div>
     </div>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <div style="display:flex; gap:2px; background:var(--surface2); border:1px solid var(--line); border-radius:10px; padding:3px; font-family:var(--mono); font-size:11px;">
-        <a href="index.html" style="text-decoration:none; padding:7px 13px; border-radius:7px; color:var(--muted); display:flex; align-items:center; gap:6px;">&#9918; Baseball</a>
-        <a href="nfl.html" style="text-decoration:none; padding:7px 13px; border-radius:7px; background:var(--gold); color:#0d0e13; font-weight:700; display:flex; align-items:center; gap:6px;">&#127944; Football</a>
-      </div>
-      <div class="count" id="count">4 players</div>
-    </div>
+    <div class="count" id="count">4 players</div>
   </div>
   <div class="boardtoggle" id="boardToggle">
     <div class="boardtab active" data-board="td">Anytime TD</div>
@@ -619,6 +661,8 @@ function renderCard(p){
 
 document.getElementById("cardList").innerHTML = SAMPLE.map(renderCard).join("");
 </script>
+
+</div>
 
 </body>
 </html>
