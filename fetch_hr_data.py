@@ -2334,6 +2334,19 @@ def compute_hr_probability(p, debug=False):
     RECENT_GATE_FLOOR = 0.45
     RECENT_GATE_CEIL = 0.80
     recent_gate = clamp01((recent_confirmed_trust - RECENT_GATE_FLOOR) / (RECENT_GATE_CEIL - RECENT_GATE_FLOOR))
+    # v3.90 NEW (this session - see chat discussion, "don't want Ohtani
+    # shooting even higher"): the story this mechanism is meant to tell -
+    # "trust his current form over what his season power says" - only
+    # makes sense when season power ISN'T already saying something great.
+    # For an already-elite power_quality, a confirmed hot streak is a
+    # confirming bonus, not a reason to override season power further -
+    # so the gate itself is dampened as power_quality climbs past a real
+    # threshold, on top of (not instead of) the existing trust gate.
+    ELITE_POWER_DAMPEN_FLOOR = 0.55
+    ELITE_POWER_DAMPEN_CEIL = 0.80
+    elite_power_dampen = clamp01((power_quality - ELITE_POWER_DAMPEN_FLOOR)
+                                  / (ELITE_POWER_DAMPEN_CEIL - ELITE_POWER_DAMPEN_FLOOR))
+    recent_gate *= (1 - 0.7 * elite_power_dampen)
     effective_w_recent = W_RECENT + (RECENT_WEIGHT_MAX - W_RECENT) * recent_gate
     POWER_FLOOR_VS_RECENT = 0.08
     effective_w_power = max(POWER_FLOOR_VS_RECENT, effective_w_power - (effective_w_recent - W_RECENT))
@@ -2389,6 +2402,17 @@ def compute_hr_probability(p, debug=False):
     # power_baseline_rate and matchup_quality_rate too.
 
     avg_vs_mix_mult = avg_vs_mix_two_sided_mult(sf.get("avg_vs_mix_s"), p.get("avgVsMixPa"))
+    # v3.90 NEW (this session - see chat discussion): same reasoning as the
+    # recent-form dampening above, applied to avg_vs_mix's UPSIDE only -
+    # the downside penalty is left untouched, since a genuinely bad
+    # matchup-specific read should still hurt an elite hitter same as
+    # anyone else. A great matchup-of-the-day reading matters most as a
+    # way to surface a player who ISN'T already a story on power alone;
+    # for someone already elite on power_quality, the extra boost is
+    # dampened so it confirms rather than compounds.
+    if avg_vs_mix_mult > 1.0:
+        excess = avg_vs_mix_mult - 1.0
+        avg_vs_mix_mult = 1.0 + excess * (1 - 0.7 * elite_power_dampen)
     mean *= avg_vs_mix_mult
 
     # v3.87 NEW (this session - see chat discussion): lineup spot was
