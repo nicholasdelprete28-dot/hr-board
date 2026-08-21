@@ -1,70 +1,70 @@
 {
   "hr": {
     "prime": {
-      "hit": 35,
-      "total": 142
+      "hit": 36,
+      "total": 147
     },
     "strong": {
-      "hit": 106,
-      "total": 693
+      "hit": 110,
+      "total": 719
     },
     "inplay": {
-      "hit": 104,
-      "total": 1055
+      "hit": 112,
+      "total": 1162
     },
     "longshot": {
       "hit": 54,
-      "total": 770
+      "total": 794
     }
   },
   "hrr": {
     "strong": {
-      "hit": 479,
-      "total": 1029
+      "hit": 514,
+      "total": 1108
     },
     "prime": {
-      "hit": 279,
-      "total": 502
+      "hit": 290,
+      "total": 517
     },
     "inplay": {
-      "hit": 175,
-      "total": 423
+      "hit": 188,
+      "total": 449
     },
     "longshot": {
-      "hit": 251,
-      "total": 706
+      "hit": 265,
+      "total": 748
     }
   },
   "tb": {
     "strong": {
-      "hit": 275,
-      "total": 709
+      "hit": 280,
+      "total": 733
     },
     "prime": {
-      "hit": 91,
-      "total": 174
+      "hit": 96,
+      "total": 186
     },
     "inplay": {
-      "hit": 164,
-      "total": 494
+      "hit": 170,
+      "total": 517
     },
     "longshot": {
-      "hit": 365,
-      "total": 1283
+      "hit": 391,
+      "total": 1386
     }
   },
   "k": {
     "inplay": {
-      "hit": 44,
-      "total": 95
+      "hit": 47,
+      "total": 102
     },
     "strong": {
-      "hit": 41,
-      "total": 96
+      "hit": 45,
+      "total": 103
     },
     "prime": {
-      "hit": 37,
-      "total": 83
+      "hit": 38,
+      "total": 87
     },
     "longshot": {
       "hit": 7,
@@ -73,16 +73,16 @@
   },
   "_coverage": {
     "hr": {
-      "real_total": 313,
-      "matched": 300
+      "real_total": 327,
+      "matched": 313
     },
     "hrr": {
-      "real_total": 1255,
-      "matched": 1190
+      "real_total": 1332,
+      "matched": 1263
     },
     "tb": {
-      "real_total": 935,
-      "matched": 899
+      "real_total": 981,
+      "matched": 941
     }
   }
 }
