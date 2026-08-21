@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Going Yard - Splits Explorer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230a0d0b' rx='18'/%3E%3Cpath d='M50 20 L80 50 L50 80 L20 50 Z' fill='none' stroke='%23e3a548' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='8' fill='%234fdb9a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0d0b;
+    --surface2: #141a17;
+    --line: #232b26;
+    --text: #f2f0e6;
+    --muted: #8b948d;
+    --muted2: #5f675f;
+    --gold: #e3a548;
+    --green: #4fdb9a;
+    --red: #d96b5b;
+    --teal: #5bc8e8;
+    --stat-good: #42e896;
+    --stat-bad: #ff9638;
+    --stat-verybad: #ff4242;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Manrope', sans-serif;
+    --content-width: 1240px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
+  body{
+    display:flex;
+    background-image:
+      radial-gradient(ellipse 900px 600px at 15% -5%, rgba(227,165,72,0.22), transparent 62%),
+      radial-gradient(ellipse 700px 500px at 90% 15%, rgba(199,125,214,0.17), transparent 62%),
+      radial-gradient(ellipse 800px 500px at 50% 100%, rgba(79,219,154,0.16), transparent 62%),
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+    background-attachment:fixed;
+  }
+  /* v1.0 NEW (this session): same sidebar as index.html/nfl.html - see
+     index.html for the fuller comment. */
+  .sidebar{
+    width:64px; flex-shrink:0; height:100vh; position:sticky; top:0; z-index:50;
+    background:var(--surface2); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 0;
+  }
+  .sidebar-logo{
+    width:34px; height:34px; border-radius:9px; background:var(--bg); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--gold); margin-bottom:10px;
+  }
+  .sidebar-link{
+    width:52px; padding:9px 4px; border-radius:10px; text-decoration:none;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color:var(--muted); transition:background .15s, color .15s;
+  }
+  .sidebar-link:hover{background:rgba(227,165,72,0.08); color:var(--text);}
+  .sidebar-link.active{background:rgba(227,165,72,0.14); color:var(--gold);}
+  .sidebar-link svg{width:20px; height:20px;}
+  .sidebar-label{font-family:var(--mono); font-size:8.5px; letter-spacing:0.3px; text-transform:uppercase; text-align:center;}
+  .page-content{flex:1; min-width:0;}
+  @media (max-width: 480px){
+    .sidebar{width:52px;}
+    .sidebar-link{width:44px; padding:7px 2px;}
+    .sidebar-link svg{width:18px; height:18px;}
+    .sidebar-label{font-size:7.5px;}
+  }
+  .wrap{max-width:1440px; margin:0 auto; padding:0 14px 80px;}
+
+  header{
+    position:sticky; top:0; z-index:20;
+    background:
+      radial-gradient(ellipse 500px 200px at 15% 0%, rgba(227,165,72,0.22), transparent 75%),
+      radial-gradient(ellipse 400px 180px at 85% 20%, rgba(79,219,154,0.18), transparent 75%),
+      linear-gradient(180deg, rgba(10,13,11,0.98) 75%, rgba(10,13,11,0) 100%);
+    backdrop-filter: blur(6px);
+    padding:18px 14px 20px;
+  }
+  .titlebar{max-width:1440px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .title{
+    font-family:var(--display); font-weight:700; letter-spacing:-0.5px;
+    font-size:26px; text-transform:uppercase;
+    background:linear-gradient(100deg, #fff 30%, var(--gold) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    display:flex; align-items:center; gap:9px;
+  }
+  .title-icon{color:var(--gold); flex-shrink:0;}
+  .subtitle{font-size:12px; color:var(--muted2); margin-top:2px; font-family:var(--body);}
+
+  .controls-bar{
+    max-width:1440px; margin:16px auto 0; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+  }
+  .control-group{display:flex; flex-direction:column; gap:5px;}
+  .control-label{font-family:var(--mono); font-size:9.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.8px;}
+  select, .search-input{
+    background:var(--surface2); border:1px solid var(--line); border-radius:9px;
+    color:var(--text); font-family:var(--body); font-size:13px; padding:9px 11px;
+    outline:none; -webkit-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b948d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 9px center; background-size:14px;
+    padding-right:30px; cursor:pointer; min-width:150px;
+  }
+  select:focus, .search-input:focus{border-color:var(--gold);}
+  .search-input{background-image:none; padding-right:11px; min-width:180px;}
+  .dir-toggle{
+    background:var(--surface2); border:1px solid var(--line); border-radius:9px;
+    color:var(--muted); font-family:var(--mono); font-size:12px; padding:9px 12px; cursor:pointer;
+  }
+  .dir-toggle.desc{color:var(--gold); border-color:var(--gold);}
+
+  .result-count{
+    font-family:var(--mono); font-size:11px; color:var(--muted2); margin-left:auto; align-self:center;
+  }
+
+  .table-wrap{
+    max-width:1440px; margin:18px auto 0; overflow-x:auto;
+    border:1px solid var(--line); border-radius:14px; background:var(--surface2);
+  }
+  table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px; white-space:nowrap;}
+  thead th{
+    text-align:left; padding:12px 14px; color:var(--muted2); font-size:10px; text-transform:uppercase;
+    letter-spacing:0.6px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--surface2);
+  }
+  tbody tr{border-bottom:1px solid var(--line); cursor:pointer; transition:background .12s;}
+  tbody tr:hover{background:rgba(227,165,72,0.06);}
+  tbody tr:last-child{border-bottom:none;}
+  td{padding:11px 14px;}
+  .td-player{font-family:var(--body); font-weight:600; color:var(--text); font-size:13px;}
+  .td-meta{color:var(--muted); font-size:10.5px; font-family:var(--mono); margin-top:2px;}
+  .td-rank{color:var(--muted2); width:30px;}
+  .td-highlight{color:var(--gold); font-weight:700; font-size:13.5px;}
+  .td-tier{font-size:9.5px; font-weight:700; padding:3px 7px; border-radius:5px; letter-spacing:0.4px;}
+  .tier-prime{color:#4fdb9a; background:rgba(79,219,154,0.16);}
+  .tier-strong{color:#5bc8e8; background:rgba(91,200,232,0.16);}
+  .tier-inplay{color:#e3a548; background:rgba(227,165,72,0.16);}
+  .tier-longshot{color:var(--muted); background:rgba(139,148,141,0.1);}
+  .low-sample{color:var(--stat-bad);}
+  .no-data{color:var(--muted2); font-style:italic;}
+
+  .empty-state{
+    max-width:1440px; margin:60px auto; text-align:center; padding:40px 20px; color:var(--muted);
+  }
+
+  @media (max-width: 800px){
+    .controls-bar{flex-direction:column; align-items:stretch;}
+    select, .search-input{min-width:0; width:100%;}
+    .result-count{margin-left:0; align-self:flex-start;}
+    table{font-size:11.5px;}
+    td, thead th{padding:9px 10px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-logo"><svg viewBox="0 0 100 100" width="18" height="18"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="9"/></svg></div>
+  <a href="index.html" class="sidebar-link" title="Board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+    <div class="sidebar-label">Board</div>
+  </a>
+  <a href="splits.html" class="sidebar-link active" title="Splits">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    <div class="sidebar-label">Splits</div>
+  </a>
+  <a href="nfl.html" class="sidebar-link" title="Football">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="5.5"/><path d="M7 12h10"/></svg>
+    <div class="sidebar-label">NFL</div>
+  </a>
+</nav>
+
+<div class="page-content">
+
+<header>
+  <div class="titlebar">
+    <div>
+      <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="22" height="22"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>Splits Explorer</div>
+      <div class="subtitle" id="subtitle">Sort every batter by any real factor - day of week, home/road, day/night, or performance vs a specific pitch type</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="controls-bar">
+    <div class="control-group">
+      <div class="control-label">Sort By</div>
+      <select id="sortFactor"></select>
+    </div>
+    <div class="control-group" id="dayPickerGroup" style="display:none;">
+      <div class="control-label">Day</div>
+      <select id="dayPicker">
+        <option value="Mon">Monday</option>
+        <option value="Tue">Tuesday</option>
+        <option value="Wed">Wednesday</option>
+        <option value="Thu">Thursday</option>
+        <option value="Fri">Friday</option>
+        <option value="Sat">Saturday</option>
+        <option value="Sun">Sunday</option>
+      </select>
+    </div>
+    <div class="control-group" id="pitchMetricGroup" style="display:none;">
+      <div class="control-label">Metric</div>
+      <select id="pitchMetric">
+        <option value="ba">AVG</option>
+        <option value="hardhit">Hard-Hit %</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <div class="control-label">Direction</div>
+      <div class="dir-toggle desc" id="dirToggle">&#8595; Highest First</div>
+    </div>
+    <div class="control-group" style="flex:1;">
+      <div class="control-label">Search</div>
+      <input type="text" class="search-input" id="searchBox" placeholder="Player or team...">
+    </div>
+    <div class="result-count" id="resultCount"></div>
+  </div>
+
+  <div class="table-wrap" id="tableWrap"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">No batters match this factor with real data today.</div>
+</div>
+
+<script>
+const DATA_URL = "./players.json";
+let players = [];
+
+// v3.92 NEW (this session - see chat discussion, "sort by a BUNCH of
+// different factors to find exactly what you need"): a dedicated
+// discovery table, separate from the per-player modal - built to explore
+// ACROSS all batters by any single real factor, not to deep-dive one
+// player at a time. Reuses the same players.json the main board and the
+// modal's Splits & Mix tab already consume - no new backend data, just a
+// new way to sort and scan it. Static factor options below (day-of-week,
+// home/road, day/night, model factors); the pitch-type options are NOT
+// hardcoded - built dynamically from whatever pitch types actually
+// appear in today's real data, so this never claims a pitch type exists
+// that isn't actually in the loaded dataset.
+const STATIC_FACTORS = [
+  {value: 'hrProb', label: 'HR Probability (overall)', group: 'Model'},
+  {value: 'score', label: 'Power', group: 'Model'},
+  {value: 'phr9', label: 'Matchup (opp. pitcher HR/9)', group: 'Model', invert: true},
+  {value: 'l15hr', label: 'Recent Form (L15 HR)', group: 'Model'},
+  {value: 'avgmix', label: 'Platoon Edge (AVG vs hand)', group: 'Model'},
+  {value: 'dow', label: 'Day of Week HR Rate', group: 'Situational'},
+  {value: 'home', label: 'Home HR Rate', group: 'Situational'},
+  {value: 'road', label: 'Road HR Rate', group: 'Situational'},
+  {value: 'day', label: 'Day Game HR Rate', group: 'Situational'},
+  {value: 'night', label: 'Night Game HR Rate', group: 'Situational'},
+];
+const PITCH_NAMES = {FF:'4-Seam FB', SI:'Sinker', FC:'Cutter', SL:'Slider', ST:'Sweeper',
+  CU:'Curveball', KC:'Knuckle Curve', CH:'Changeup', FS:'Splitter', KN:'Knuckleball'};
+
+let sortDesc = true;
+let currentFactor = 'hrProb';
+
+function buildFactorOptions(){
+  const sel = document.getElementById('sortFactor');
+  const groups = {};
+  STATIC_FACTORS.forEach(f => { (groups[f.group] = groups[f.group] || []).push(f); });
+
+  // Dynamically discover which pitch types actually appear in today's
+  // real loaded data - never a hardcoded list a given day's slate might
+  // not actually contain.
+  const pitchTypesSeen = new Set();
+  players.forEach(p => {
+    if (p.pitchTypeBreakdown) Object.keys(p.pitchTypeBreakdown).forEach(pt => pitchTypesSeen.add(pt));
+  });
+  if (pitchTypesSeen.size) {
+    groups['Vs. Pitch Type'] = [...pitchTypesSeen].sort().map(pt => ({
+      value: 'pitch:' + pt, label: `Vs. ${PITCH_NAMES[pt] || pt}`, group: 'Vs. Pitch Type',
+    }));
+  }
+
+  sel.innerHTML = Object.entries(groups).map(([group, opts]) =>
+    `<optgroup label="${group}">${opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</optgroup>`
+  ).join('');
+}
+
+function getFactorValue(p, factorValue){
+  if (factorValue === 'hrProb') return {val: p.hrProb, pa: null, fmt: v => v.toFixed(1) + '%'};
+  if (factorValue === 'score') return {val: p.score, pa: null, fmt: v => v.toFixed(1)};
+  if (factorValue === 'phr9') return {val: p.phr9, pa: null, fmt: v => v.toFixed(2) + ' HR/9'};
+  if (factorValue === 'l15hr') return {val: p.l15hr, pa: p.l15IsoPa, fmt: v => v + ' HR'};
+  if (factorValue === 'avgmix') return {val: p.avgmix, pa: p.avgmixPa, fmt: v => v.toFixed(3)};
+  if (factorValue === 'dow'){
+    const day = document.getElementById('dayPicker').value;
+    const entry = p.dowBreakdown && p.dowBreakdown[day];
+    return {val: entry ? entry.hrRate : null, pa: entry ? entry.pa : 0, fmt: v => (v*100).toFixed(1) + '%'};
+  }
+  if (factorValue === 'home') return {val: p.homeHrRate, pa: p.homePa, fmt: v => (v*100).toFixed(1) + '%'};
+  if (factorValue === 'road') return {val: p.roadHrRate, pa: p.roadPa, fmt: v => (v*100).toFixed(1) + '%'};
+  if (factorValue === 'day') return {val: p.dayHrRate, pa: p.dayPa, fmt: v => (v*100).toFixed(1) + '%'};
+  if (factorValue === 'night') return {val: p.nightHrRate, pa: p.nightPa, fmt: v => (v*100).toFixed(1) + '%'};
+  if (factorValue.startsWith('pitch:')){
+    const pt = factorValue.slice(6);
+    const metric = document.getElementById('pitchMetric').value;
+    const entry = p.pitchTypeBreakdown && p.pitchTypeBreakdown[pt];
+    if (!entry) return {val: null, pa: 0, fmt: v => v};
+    const raw = metric === 'ba' ? entry.ba : entry.hardhit;
+    return {
+      val: raw, pa: entry.pa,
+      fmt: v => metric === 'ba' ? v.toFixed(3) : (v*100).toFixed(0) + '%',
+    };
+  }
+  return {val: null, pa: null, fmt: v => v};
+}
+
+function tierClass(tier){
+  return {prime: 'tier-prime', strong: 'tier-strong', inplay: 'tier-inplay', longshot: 'tier-longshot'}[tier] || 'tier-longshot';
+}
+
+function render(){
+  const factorMeta = [...STATIC_FACTORS, ...[...document.querySelectorAll('#sortFactor option')].map(o => ({value: o.value, label: o.textContent}))]
+    .find(f => f.value === currentFactor) || {label: currentFactor};
+  const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
+
+  const batters = players.filter(p => p.playerType === 'batter');
+  const withFactor = batters
+    .map(p => ({p, f: getFactorValue(p, currentFactor)}))
+    .filter(({p}) => !searchTerm || p.player.toLowerCase().includes(searchTerm) || (p.team||'').toLowerCase().includes(searchTerm))
+    .filter(({f}) => f.val != null);
+
+  const invert = STATIC_FACTORS.find(f => f.value === currentFactor)?.invert;
+  withFactor.sort((a, b) => {
+    const diff = (a.f.val - b.f.val) * (invert ? -1 : 1);
+    return sortDesc ? -diff : diff;
+  });
+
+  document.getElementById('resultCount').textContent = `${withFactor.length} of ${batters.length} batters have real data for this factor`;
+
+  const emptyEl = document.getElementById('emptyState');
+  const tableEl = document.getElementById('tableWrap');
+  if (!withFactor.length){
+    emptyEl.style.display = '';
+    tableEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  tableEl.style.display = '';
+
+  const rows = withFactor.map(({p, f}, i) => {
+    const lowSample = f.pa != null && f.pa > 0 && f.pa < 15;
+    return `
+    <tr data-player-id="${p.playerId}">
+      <td class="td-rank">${i+1}</td>
+      <td>
+        <div class="td-player">${p.player}</div>
+        <div class="td-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
+      </td>
+      <td><div class="td-tier ${tierClass(p.tier)}">${(p.tier||'-').toUpperCase()}</div></td>
+      <td class="td-highlight ${lowSample ? 'low-sample' : ''}">${f.fmt(f.val)}${lowSample ? ' &#9888;' : ''}</td>
+      <td>${f.pa != null ? f.pa + ' PA' : '&mdash;'}</td>
+      <td>${p.hrProb != null ? p.hrProb.toFixed(1) + '%' : '&mdash;'}</td>
+    </tr>`;
+  }).join('');
+
+  tableEl.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>#</th><th>Player</th><th>Tier</th><th>${factorMeta.label}</th><th>Sample</th><th>Overall HR%</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  tableEl.querySelectorAll('tbody tr').forEach(tr => {
+    tr.addEventListener('click', () => {
+      // Same DATA_URL/player shape as the main board - a real integration
+      // point exists here to open the SAME player modal used on index.html
+      // (openPlayerModal(p)) once this file is merged into that page's
+      // script rather than kept fully standalone. Left as a direct link
+      // to the main board with the player pre-searched for now, so
+      // clicking a row is still useful today rather than a dead click.
+      window.location.href = `index.html?search=${encodeURIComponent(tr.querySelector('.td-player').textContent)}`;
+    });
+  });
+}
+
+async function load(){
+  try {
+    const res = await fetch(DATA_URL + '?t=' + Date.now());
+    players = await res.json();
+  } catch(e) {
+    document.getElementById('tableWrap').innerHTML = '';
+    document.getElementById('emptyState').style.display = '';
+    document.getElementById('emptyState').textContent = 'Could not load players.json - check the file exists in this folder.';
+    return;
+  }
+  buildFactorOptions();
+  render();
+}
+
+document.getElementById('sortFactor').addEventListener('change', (e) => {
+  currentFactor = e.target.value;
+  document.getElementById('dayPickerGroup').style.display = currentFactor === 'dow' ? '' : 'none';
+  document.getElementById('pitchMetricGroup').style.display = currentFactor.startsWith('pitch:') ? '' : 'none';
+  render();
+});
+document.getElementById('dayPicker').addEventListener('change', render);
+document.getElementById('pitchMetric').addEventListener('change', render);
+document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('dirToggle').addEventListener('click', () => {
+  sortDesc = !sortDesc;
+  const btn = document.getElementById('dirToggle');
+  btn.classList.toggle('desc', sortDesc);
+  btn.innerHTML = sortDesc ? '&#8595; Highest First' : '&#8593; Lowest First';
+  render();
+});
+
+load();
+</script>
+
+</div>
+
+</body>
+</html>
