@@ -878,12 +878,95 @@ def get_gamelog(batter_id, season):
         return []
 
 
+# v3.93 NEW (this session - see chat discussion, "select certain
+# pitchers... for the graph"): the gamelog above never captured WHICH
+# PITCHER the batter actually faced each game - only the date and
+# opposing TEAM. Filtering a graph by "games vs this pitcher" needs that
+# data to exist first.
+#
+# DESIGN TRADEOFF, stated plainly: the accurate way to get this is each
+# game's real boxscore-confirmed starter (get_recent_starter() elsewhere
+# in this file already does exactly that, for a single game). Doing that
+# per-game for a FULL SEASON across every team would mean thousands of
+# extra boxscore calls (30 teams x ~100+ games each) - a real, heavy cost
+# to this pipeline's runtime. Instead, this fetches each team's full
+# season schedule ONCE (a single call per team, hydrated with
+# probablePitcher) and reuses that across every batter on the team - the
+# same efficient "fetch once per team, not once per player" pattern
+# get_team_bullpen_stats() already uses elsewhere in this file.
+#
+# HONEST LIMITATION: probablePitcher is the ANNOUNCED starter, not a
+# boxscore-confirmed one - in the rare case of a real last-minute
+# substitution, this will show the pitcher who was scheduled to start,
+# not necessarily the one who actually did. This is a deliberate,
+# disclosed accuracy-for-performance tradeoff, not an oversight.
+def get_team_season_probable_pitchers(team_id, season):
+    try:
+        data = statsapi_get("schedule", {
+            "sportId": 1, "teamId": team_id, "season": season,
+            "gameType": "R", "hydrate": "probablePitcher",
+        })
+    except Exception as e:
+        print(f"  WARNING: season schedule fetch failed for team {team_id} ({e}) - "
+              f"opposing-pitcher-per-game will be unavailable for this team's batters.")
+        return {}
+    by_date = {}
+    for date_block in data.get("dates", []):
+        for g in date_block.get("games", []):
+            if g.get("gameNumber") == 2:
+                continue
+            home_id = g["teams"]["home"]["team"].get("id")
+            away_id = g["teams"]["away"]["team"].get("id")
+            is_home = home_id == team_id
+            opp_side = "away" if is_home else "home"
+            opp_pitcher = g["teams"][opp_side].get("probablePitcher") or {}
+            if not opp_pitcher:
+                continue
+            game_date = g.get("gameDate", "")[:10]
+            by_date[game_date] = {
+                "id": opp_pitcher.get("id"),
+                "name": opp_pitcher.get("fullName", ""),
+                "hand": opp_pitcher.get("pitchHand", {}).get("code"),
+            }
+    return by_date
+
+
+def enrich_gamelog_with_pitchers(games, team_probable_pitchers):
+    """Joins get_gamelog()'s per-game entries (keyed by date) against
+    get_team_season_probable_pitchers()'s team-level lookup (also keyed
+    by date) - see that function's docstring for the real accuracy
+    tradeoff this relies on."""
+    for g in games:
+        entry = team_probable_pitchers.get(g.get("date"))
+        g["oppPitcherId"] = entry["id"] if entry else None
+        g["oppPitcherName"] = entry["name"] if entry else None
+        g["oppPitcherHand"] = entry["hand"] if entry else None
+    return games
+
+
 def day_of_week_split(games, target_weekday):
     matching_games = [g for g in games
                        if g.get("date") and datetime.date.fromisoformat(g["date"]).weekday() == target_weekday]
     pa = sum(g["pa"] for g in matching_games)
     hr = sum(g["hr"] for g in matching_games)
     return (hr / pa if pa > 0 else None), pa
+
+
+DOW_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+def full_day_of_week_breakdown(games):
+    """v3.92 NEW (this session - see chat discussion, "analyze each aspect
+    of - what day they hit HRs"): day_of_week_split() above already existed,
+    but was only ever called for TODAY's specific weekday (see
+    TODAY_WEEKDAY) - a single number, not the full picture. This reuses
+    that same real function for all 7 days, so the full Mon-Sun breakdown
+    can be saved and actually explored, instead of being computed and
+    discarded for every day except whichever one happens to be today."""
+    return {
+        DOW_NAMES[wd]: {"hrRate": rate, "pa": pa}
+        for wd, (rate, pa) in ((wd, day_of_week_split(games, wd)) for wd in range(7))
+    }
 
 
 def home_road_split(games):
@@ -1243,6 +1326,37 @@ def compute_avg_vs_mix(batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mi
     sw = matched_pa_total / (matched_pa_total + AVG_VS_MIX_SHRINK_K)
     shrunk = raw_avg_vs_mix * sw + anchor_avg * (1 - sw)
     return round(shrunk, 3), matched_pa_total
+
+
+# v3.92 NEW (this session - see chat discussion, "analyze EACH aspect of
+# the pitch mix"): compute_avg_vs_mix() and compute_pitch_mix_match()
+# above both already fetch real per-pitch-type data (batter_pitch_avg,
+# batter_pitch_data) - but only ever to collapse it into ONE blended
+# number (avgVsMix, pitchMixMatch). The real per-pitch-type breakdown was
+# computed and then thrown away every single run. This saves it instead -
+# same real data, just not discarded - scoped to only the pitch types
+# TODAY's specific opposing pitcher actually throws (pitcherUsage > 0),
+# so it reads as "how does he do against each pitch THIS pitcher will
+# actually throw him" rather than a generic career pitch-type dump.
+def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix):
+    ba_data = batter_pitch_avg.get(batter_id) or {}
+    hardhit_data = batter_pitch_data.get(batter_id) or {}
+    mix = pitcher_pitch_mix.get(pitcher_id) or {}
+    if not mix:
+        return {}
+    breakdown = {}
+    for pitch_type, usage in sorted(mix.items(), key=lambda kv: -kv[1]):
+        ba_entry = ba_data.get(pitch_type)
+        hardhit_val = hardhit_data.get(pitch_type)
+        if ba_entry is None and hardhit_val is None:
+            continue  # no real data for this pitch type against this batter - omit rather than show a false zero
+        breakdown[pitch_type] = {
+            "pitcherUsage": round(usage, 3),
+            "ba": ba_entry["ba"] if ba_entry else None,
+            "pa": ba_entry["pa"] if ba_entry else 0,
+            "hardhit": round(hardhit_val, 3) if hardhit_val is not None else None,
+        }
+    return breakdown
 
 
 def get_team_roster(team_id):
@@ -2730,6 +2844,17 @@ def main():
     print(f"  got trusted bullpen reads for {trusted_bullpens} of {len(all_team_ids)} teams "
           f"(rest fell below {BULLPEN_MIN_IP} IP relief sample and will show no adjustment)")
 
+    print("Fetching each team's full-season probable-pitcher-per-game (for graph filtering)...")
+
+    def fetch_one_team_pitchers(tid):
+        return tid, get_team_season_probable_pitchers(tid, YEAR)
+
+    team_pitchers_cache = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        for tid, pitchers_by_date in executor.map(fetch_one_team_pitchers, all_team_ids):
+            team_pitchers_cache[tid] = pitchers_by_date
+    print(f"  got season pitcher-per-game data for {len(team_pitchers_cache)} of {len(all_team_ids)} teams")
+
     rows = []
     sides_with_pitcher = 0
     sides_confirmed_lineup = 0
@@ -2806,11 +2931,14 @@ def main():
                 sc_l15 = statcast_l15.get(batter_id, {})
                 avg_vs_mix_val, avg_vs_mix_pa = compute_avg_vs_mix(
                     batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mix, bstats.get("avg"))
+                pitch_type_breakdown = build_pitch_type_breakdown(
+                    batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix)
 
                 player_row = {
                     "playerType": "batter",
                     "player": name,
                     "team": team,
+                    "teamId": team_id,
                     "pitcher": opp_pitcher.get("fullName", ""),
                     "hand": pitcher_hand,
                     "game": f"{g['away_team']} @ {g['home_team']}",
@@ -2825,6 +2953,7 @@ def main():
                         batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix),
                     "avgVsMix": avg_vs_mix_val,
                     "avgVsMixPa": avg_vs_mix_pa,
+                    "pitchTypeBreakdown": pitch_type_breakdown,
                     "oppBullpenEra": bullpen_cache.get(opp_team_id, {}).get("bullpenEra"),
                     "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"),
                     "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),
@@ -2895,8 +3024,22 @@ def main():
         player_row["batSide"] = bat_side
 
         games_this_year = get_gamelog(batter_id, YEAR)
+        games_this_year = enrich_gamelog_with_pitchers(
+            games_this_year, team_pitchers_cache.get(player_row.get("teamId"), {}))
         totals_prev_year = get_season_totals_hitting(batter_id, YEAR - 1)
-        last20 = games_this_year[-20:]
+        # v3.93 FIX (this session - see chat discussion, "select certain
+        # pitchers, certain days of the week, certain matchups" for the
+        # graph): this used to be games_this_year[-20:] - meaning any
+        # graph filter (by pitcher, day-of-week, opponent) could only ever
+        # search the last 20 games, not the player's real full season.
+        # Widened to the full season - safe because l5/l10/l20 below only
+        # ever slice the END of whatever list they're given, so they're
+        # unaffected by the base list being longer. Real tradeoff, stated
+        # plainly: this meaningfully increases each player's payload size
+        # in players.json (a full season of games vs. 20) - acceptable
+        # for what real filtering needs, but worth knowing if file size or
+        # load time becomes a real problem later.
+        last20 = games_this_year
         l15hr = sum(g["hr"] for g in games_this_year[-15:]) if games_this_year else None
         l5hr = sum(g["hr"] for g in games_this_year[-5:]) if games_this_year else None
         l30_games = games_this_year[-30:] if games_this_year else []
@@ -2927,6 +3070,7 @@ def main():
 
         hr_road = home_road_split(games_this_year) if games_this_year else {}
         dow_hr_rate, dow_pa = day_of_week_split(games_this_year, TODAY_WEEKDAY) if games_this_year else (None, 0)
+        dow_breakdown = full_day_of_week_breakdown(games_this_year) if games_this_year else {}
         day_night = get_day_night_split(batter_id)
         season_pa = sum(g["pa"] for g in games_this_year) if games_this_year else 0
         season_hr = sum(g["hr"] for g in games_this_year) if games_this_year else 0
@@ -2963,6 +3107,7 @@ def main():
         player_row["seasonHrRate"] = season_hr_rate
         player_row["dowHrRate"] = dow_hr_rate
         player_row["dowPa"] = dow_pa
+        player_row["dowBreakdown"] = dow_breakdown
         player_row["seasonPrev"] = season_totals_to_window(totals_prev_year)
         player_row["gamelog"] = {
             "games": last20,
@@ -3287,6 +3432,10 @@ def write_daily_snapshot(players):
                 # v3.91: saved for future validation against real game HR
                 # totals, same as everything else in this snapshot.
                 "gameProjectedHR": p.get("gameProjectedHR"), "teamProjectedHR": p.get("teamProjectedHR"),
+                # v3.92: real per-pitch-type and full-week breakdowns,
+                # saved instead of discarded - see the build functions.
+                "pitchTypeBreakdown": p.get("pitchTypeBreakdown"),
+                "dowBreakdown": p.get("dowBreakdown"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
