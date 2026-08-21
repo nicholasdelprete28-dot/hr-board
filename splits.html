@@ -141,12 +141,44 @@
     max-width:1440px; margin:60px auto; text-align:center; padding:40px 20px; color:var(--muted);
   }
 
+  /* v3.93 NEW (this session) - filterable graph modal */
+  .gmodal-overlay{
+    display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.7);
+    align-items:flex-start; justify-content:center; padding:40px 14px; overflow-y:auto;
+  }
+  .gmodal-overlay.show{display:flex;}
+  .gmodal-panel{
+    background:var(--surface2); border:1px solid var(--line); border-radius:16px;
+    max-width:760px; width:100%; padding:24px; margin-bottom:40px;
+  }
+  .gmodal-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;}
+  .gmodal-name{font-family:var(--display); font-weight:700; font-size:20px; color:var(--text);}
+  .gmodal-meta{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:2px;}
+  .gmodal-close{
+    background:var(--bg); border:1px solid var(--line); border-radius:8px; color:var(--muted);
+    width:30px; height:30px; cursor:pointer; font-size:16px; flex-shrink:0;
+  }
+  .gmodal-filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+  .gmodal-filters select{min-width:0; flex:1;}
+  .gmodal-summary{
+    display:grid; grid-template-columns:repeat(4, 1fr); gap:0; margin-bottom:18px;
+    border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  }
+  .gmodal-stat{padding:12px 8px; text-align:center; border-right:1px solid var(--line);}
+  .gmodal-stat:last-child{border-right:none;}
+  .gmodal-stat-label{font-family:var(--mono); font-size:8.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px;}
+  .gmodal-stat-val{font-family:var(--mono); font-size:16px; color:var(--gold); font-weight:700; margin-top:4px;}
+  .gmodal-chart-wrap{overflow-x:auto; padding-bottom:4px;}
+  .gmodal-empty{padding:30px 0; text-align:center; color:var(--muted2); font-family:var(--body); font-size:13px;}
+
   @media (max-width: 800px){
     .controls-bar{flex-direction:column; align-items:stretch;}
     select, .search-input{min-width:0; width:100%;}
     .result-count{margin-left:0; align-self:flex-start;}
     table{font-size:11.5px;}
     td, thead th{padding:9px 10px;}
+    .gmodal-summary{grid-template-columns:repeat(2, 1fr);}
+    .gmodal-stat:nth-child(2){border-right:none;}
   }
 </style>
 </head>
@@ -219,6 +251,25 @@
   <div class="empty-state" id="emptyState" style="display:none;">No batters match this factor with real data today.</div>
 </div>
 
+<div class="gmodal-overlay" id="gmodalOverlay">
+  <div class="gmodal-panel">
+    <div class="gmodal-head">
+      <div>
+        <div class="gmodal-name" id="gmodalName"></div>
+        <div class="gmodal-meta" id="gmodalMeta"></div>
+      </div>
+      <button class="gmodal-close" id="gmodalClose">&times;</button>
+    </div>
+    <div class="gmodal-filters">
+      <select id="filterPitcher"><option value="">All Pitchers</option></select>
+      <select id="filterDow"><option value="">All Days</option></select>
+      <select id="filterOpp"><option value="">All Opponents</option></select>
+      <select id="filterHome"><option value="">Home &amp; Road</option><option value="home">Home Only</option><option value="road">Road Only</option></select>
+    </div>
+    <div id="gmodalBody"></div>
+  </div>
+</div>
+
 <script>
 const DATA_URL = "./players.json";
 let players = [];
@@ -240,6 +291,34 @@ const STATIC_FACTORS = [
   {value: 'phr9', label: 'Matchup (opp. pitcher HR/9)', group: 'Model', invert: true},
   {value: 'l15hr', label: 'Recent Form (L15 HR)', group: 'Model'},
   {value: 'avgmix', label: 'Platoon Edge (AVG vs hand)', group: 'Model'},
+  {value: 'avgVsMix', label: "Vs. Today's Pitcher Mix (blended)", group: 'Model'},
+  // v3.93 NEW (this session - see chat discussion, "more in depth... we
+  // need more data") - all of these were already real, already-computed
+  // fields in players.json (barrel%, EV, hard-hit%, ISO, SLG, park,
+  // wind, bullpen, RISP, trend) that this page simply wasn't exposing as
+  // sortable factors yet. No backend change needed for any of these.
+  {value: 'barrel', label: 'Barrel % (season)', group: 'Power Metrics'},
+  {value: 'l15Barrel', label: 'Barrel % (L15)', group: 'Power Metrics'},
+  {value: 'ev', label: 'Exit Velocity (season)', group: 'Power Metrics'},
+  {value: 'l15Ev', label: 'Exit Velocity (L15)', group: 'Power Metrics'},
+  {value: 'hardhit', label: 'Hard-Hit % (season)', group: 'Power Metrics'},
+  {value: 'l15Hardhit', label: 'Hard-Hit % (L15)', group: 'Power Metrics'},
+  {value: 'iso', label: 'ISO (season)', group: 'Power Metrics'},
+  {value: 'slg', label: 'SLG (season)', group: 'Power Metrics'},
+  {value: 'avg', label: 'AVG (season)', group: 'Power Metrics'},
+  {value: 'obp', label: 'OBP (season)', group: 'Power Metrics'},
+  {value: 'l15hrRate', label: 'HR Rate Trend (L15)', group: 'Power Metrics'},
+  {value: 'l30hrRate', label: 'HR Rate Trend (L30)', group: 'Power Metrics'},
+  {value: 'pitcherHr9Percentile', label: "Today's Pitcher HR/9 Percentile", group: 'Matchup'},
+  {value: 'oppBullpenEra', label: 'Opposing Bullpen ERA', group: 'Matchup', invert: true},
+  {value: 'oppBullpenWhip', label: 'Opposing Bullpen WHIP', group: 'Matchup', invert: true},
+  {value: 'risp', label: 'RISP AVG', group: 'Matchup'},
+  {value: 'park', label: 'Park Factor', group: 'Park & Weather'},
+  {value: 'wind', label: 'Wind Score', group: 'Park & Weather'},
+  {value: 'temp', label: 'Temperature', group: 'Park & Weather'},
+  {value: 'gameProjectedHR', label: 'Projected Total HR (game)', group: 'Team Context'},
+  {value: 'teamProjectedHR', label: 'Projected Total HR (team)', group: 'Team Context'},
+  {value: 'lbonus', label: 'Lineup Spot Bonus', group: 'Team Context'},
   {value: 'dow', label: 'Day of Week HR Rate', group: 'Situational'},
   {value: 'home', label: 'Home HR Rate', group: 'Situational'},
   {value: 'road', label: 'Road HR Rate', group: 'Situational'},
@@ -275,12 +354,46 @@ function buildFactorOptions(){
   ).join('');
 }
 
+// v3.93 NEW (this session): data-driven map for all the new straightforward
+// field-based factors, instead of one giant if-chain - each real field
+// pulled directly from players.json, with the real sample-size field
+// (pa) shown alongside it where one exists.
+const SIMPLE_FIELD_FACTORS = {
+  score:       {field: 'score',       pa: null,        fmt: v => v.toFixed(1)},
+  phr9:        {field: 'phr9',        pa: null,        fmt: v => v.toFixed(2) + ' HR/9'},
+  avgVsMix:    {field: 'avgVsMix',    pa: 'avgVsMixPa', fmt: v => v.toFixed(3)},
+  barrel:      {field: 'barrel',      pa: 'pa',        fmt: v => (v*100).toFixed(1) + '%'},
+  l15Barrel:   {field: 'l15Barrel',   pa: 'l15PowerPa', fmt: v => (v*100).toFixed(1) + '%'},
+  ev:          {field: 'ev',          pa: 'pa',        fmt: v => v.toFixed(1) + ' mph'},
+  l15Ev:       {field: 'l15Ev',       pa: 'l15PowerPa', fmt: v => v.toFixed(1) + ' mph'},
+  hardhit:     {field: 'hardhit',     pa: 'pa',        fmt: v => (v*100).toFixed(1) + '%'},
+  l15Hardhit:  {field: 'l15Hardhit',  pa: 'l15PowerPa', fmt: v => (v*100).toFixed(1) + '%'},
+  iso:         {field: 'iso',         pa: 'pa',        fmt: v => v.toFixed(3)},
+  slg:         {field: 'slg',         pa: 'pa',        fmt: v => v.toFixed(3)},
+  avg:         {field: 'avg',         pa: 'pa',        fmt: v => v.toFixed(3)},
+  obp:         {field: 'obp',         pa: 'pa',        fmt: v => v.toFixed(3)},
+  l15hrRate:   {field: 'l15hrRate',   pa: 'l15IsoPa',  fmt: v => (v*100).toFixed(1) + '%'},
+  l30hrRate:   {field: 'l30hrRate',   pa: 'l30Pa',     fmt: v => (v*100).toFixed(1) + '%'},
+  pitcherHr9Percentile: {field: 'pitcherHr9Percentile', pa: null, fmt: v => (v*100).toFixed(0) + 'th pctl'},
+  oppBullpenEra:  {field: 'oppBullpenEra',  pa: 'oppBullpenIp', fmt: v => v.toFixed(2)},
+  oppBullpenWhip: {field: 'oppBullpenWhip', pa: 'oppBullpenIp', fmt: v => v.toFixed(2)},
+  risp:        {field: 'risp',        pa: 'rispPa',    fmt: v => v.toFixed(3)},
+  park:        {field: 'park',        pa: null,        fmt: v => v.toFixed(2)},
+  wind:        {field: 'wind',        pa: null,        fmt: v => v.toFixed(1)},
+  temp:        {field: 'temp',        pa: null,        fmt: v => v.toFixed(0) + '&deg;F'},
+  gameProjectedHR: {field: 'gameProjectedHR', pa: null, fmt: v => v.toFixed(2)},
+  teamProjectedHR: {field: 'teamProjectedHR', pa: null, fmt: v => v.toFixed(2)},
+  lbonus:      {field: 'lbonus',      pa: null,        fmt: v => v.toFixed(0)},
+};
+
 function getFactorValue(p, factorValue){
   if (factorValue === 'hrProb') return {val: p.hrProb, pa: null, fmt: v => v.toFixed(1) + '%'};
-  if (factorValue === 'score') return {val: p.score, pa: null, fmt: v => v.toFixed(1)};
-  if (factorValue === 'phr9') return {val: p.phr9, pa: null, fmt: v => v.toFixed(2) + ' HR/9'};
   if (factorValue === 'l15hr') return {val: p.l15hr, pa: p.l15IsoPa, fmt: v => v + ' HR'};
   if (factorValue === 'avgmix') return {val: p.avgmix, pa: p.avgmixPa, fmt: v => v.toFixed(3)};
+  if (SIMPLE_FIELD_FACTORS[factorValue]){
+    const def = SIMPLE_FIELD_FACTORS[factorValue];
+    return {val: p[def.field], pa: def.pa ? p[def.pa] : null, fmt: def.fmt};
+  }
   if (factorValue === 'dow'){
     const day = document.getElementById('dayPicker').value;
     const entry = p.dowBreakdown && p.dowBreakdown[day];
@@ -363,13 +476,9 @@ function render(){
 
   tableEl.querySelectorAll('tbody tr').forEach(tr => {
     tr.addEventListener('click', () => {
-      // Same DATA_URL/player shape as the main board - a real integration
-      // point exists here to open the SAME player modal used on index.html
-      // (openPlayerModal(p)) once this file is merged into that page's
-      // script rather than kept fully standalone. Left as a direct link
-      // to the main board with the player pre-searched for now, so
-      // clicking a row is still useful today rather than a dead click.
-      window.location.href = `index.html?search=${encodeURIComponent(tr.querySelector('.td-player').textContent)}`;
+      const playerId = tr.dataset.playerId;
+      const p = players.find(pl => String(pl.playerId) === String(playerId));
+      if (p) openGraphModal(p);
     });
   });
 }
@@ -403,6 +512,117 @@ document.getElementById('dirToggle').addEventListener('click', () => {
   btn.classList.toggle('desc', sortDesc);
   btn.innerHTML = sortDesc ? '&#8595; Highest First' : '&#8593; Lowest First';
   render();
+});
+
+// v3.93 NEW (this session - see chat discussion, "select certain
+// pitchers, certain days of the week, certain matchups" for the graph):
+// uses the newly-enriched full-season gamelog (see fetch_hr_data.py
+// v3.93 - get_team_season_probable_pitchers/enrich_gamelog_with_pitchers)
+// which now carries oppPitcherId/Name/Hand on every game, not just
+// date/opponent. Every dropdown option below is built from what's
+// actually present in THIS player's real games - never a static list
+// that might not match his actual schedule.
+let modalGames = [];
+let modalPlayerRef = null;
+const DOW_ORDER = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+function dowFromDateStr(dateStr){
+  // Games store an ISO date (YYYY-MM-DD); Date.getDay() is 0=Sun-based,
+  // convert to the same Mon-first order used by dowBreakdown elsewhere.
+  const d = new Date(dateStr + 'T12:00:00Z');
+  return DOW_ORDER[(d.getUTCDay() + 6) % 7];
+}
+
+function openGraphModal(p){
+  modalPlayerRef = p;
+  modalGames = (p.gamelog && p.gamelog.games) || [];
+  document.getElementById('gmodalName').textContent = p.player;
+  document.getElementById('gmodalMeta').textContent = `${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}`.replace('&middot;', '\u00b7');
+
+  // Populate filter dropdowns from this player's REAL games only.
+  const pitchers = [...new Map(modalGames.filter(g => g.oppPitcherId)
+    .map(g => [g.oppPitcherId, g.oppPitcherName])).entries()];
+  const opponents = [...new Set(modalGames.map(g => g.opp).filter(Boolean))].sort();
+  const daysPresent = [...new Set(modalGames.map(g => dowFromDateStr(g.date)))];
+  const orderedDays = DOW_ORDER.filter(d => daysPresent.includes(d));
+
+  const pitcherSel = document.getElementById('filterPitcher');
+  pitcherSel.innerHTML = '<option value="">All Pitchers</option>' +
+    pitchers.map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+
+  const oppSel = document.getElementById('filterOpp');
+  oppSel.innerHTML = '<option value="">All Opponents</option>' +
+    opponents.map(o => `<option value="${o}">${o}</option>`).join('');
+
+  const dowSel = document.getElementById('filterDow');
+  dowSel.innerHTML = '<option value="">All Days</option>' +
+    orderedDays.map(d => `<option value="${d}">${d}</option>`).join('');
+
+  document.getElementById('filterHome').value = '';
+  renderGraphModalBody();
+  document.getElementById('gmodalOverlay').classList.add('show');
+}
+
+function closeGraphModal(){
+  document.getElementById('gmodalOverlay').classList.remove('show');
+}
+
+function renderGraphModalBody(){
+  const pitcherFilter = document.getElementById('filterPitcher').value;
+  const dowFilter = document.getElementById('filterDow').value;
+  const oppFilter = document.getElementById('filterOpp').value;
+  const homeFilter = document.getElementById('filterHome').value;
+
+  const filtered = modalGames.filter(g => {
+    if (pitcherFilter && String(g.oppPitcherId) !== pitcherFilter) return false;
+    if (dowFilter && dowFromDateStr(g.date) !== dowFilter) return false;
+    if (oppFilter && g.opp !== oppFilter) return false;
+    if (homeFilter === 'home' && !g.home) return false;
+    if (homeFilter === 'road' && g.home) return false;
+    return true;
+  });
+
+  const body = document.getElementById('gmodalBody');
+  if (!filtered.length){
+    body.innerHTML = `<div class="gmodal-empty">No games match this combination of filters - try loosening one.</div>`;
+    return;
+  }
+
+  const totalHr = filtered.reduce((s, g) => s + g.hr, 0);
+  const totalPa = filtered.reduce((s, g) => s + g.pa, 0);
+  const hrRate = totalPa > 0 ? (totalHr / totalPa * 100).toFixed(1) + '%' : '&mdash;';
+  const gamesWithHr = filtered.filter(g => g.hr > 0).length;
+
+  const maxHr = Math.max(1, ...filtered.map(g => g.hr));
+  const barWidth = Math.max(14, Math.min(28, Math.floor(680 / filtered.length)));
+  const bars = filtered.map(g => {
+    const h = Math.max(3, (g.hr / maxHr) * 90);
+    const color = g.hr > 0 ? 'var(--gold)' : 'var(--line)';
+    const title = `${g.date} vs ${g.opp}${g.oppPitcherName ? ' (' + g.oppPitcherName + ')' : ''}: ${g.hr} HR, ${g.hits} H`;
+    return `<div title="${title}" style="width:${barWidth-3}px; height:${h}px; background:${color}; border-radius:3px 3px 0 0; flex-shrink:0;"></div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="gmodal-summary">
+      <div class="gmodal-stat"><div class="gmodal-stat-label">Games</div><div class="gmodal-stat-val">${filtered.length}</div></div>
+      <div class="gmodal-stat"><div class="gmodal-stat-label">Total HR</div><div class="gmodal-stat-val">${totalHr}</div></div>
+      <div class="gmodal-stat"><div class="gmodal-stat-label">HR Rate</div><div class="gmodal-stat-val">${hrRate}</div></div>
+      <div class="gmodal-stat"><div class="gmodal-stat-label">Games w/ HR</div><div class="gmodal-stat-val">${gamesWithHr}</div></div>
+    </div>
+    <div class="gmodal-chart-wrap">
+      <div style="display:flex; align-items:flex-end; gap:3px; height:100px; min-width:${filtered.length * barWidth}px;">${bars}</div>
+    </div>
+    <div style="font-family:var(--mono); font-size:9.5px; color:var(--muted2); margin-top:8px; text-align:center;">
+      Bar height = HR that game &middot; gold = hit a HR &middot; hover a bar for details
+    </div>`;
+}
+
+document.getElementById('gmodalClose').addEventListener('click', closeGraphModal);
+document.getElementById('gmodalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'gmodalOverlay') closeGraphModal();
+});
+['filterPitcher','filterDow','filterOpp','filterHome'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderGraphModalBody);
 });
 
 load();
