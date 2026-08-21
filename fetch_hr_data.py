@@ -1955,7 +1955,7 @@ def avg_vs_mix_two_sided_mult(avg_vs_mix_s, avg_vs_mix_pa):
     return 1 + deviation * 2 * max_swing * trust
 
 
-def compute_hr_probability(p, debug=False):
+def compute_hr_probability(p, debug=False, return_mean=False):
     """v3.48: additive blend of independent rate estimates (see module
     docstring for the full v3.48 rationale).
 
@@ -2444,7 +2444,7 @@ def compute_hr_probability(p, debug=False):
 
     raw_prob = poisson_over_prob(mean, 0.5)
     if raw_prob is None:
-        return None
+        return (None, None) if return_mean else None
 
     HR_PROB_HARD_CAP = 0.45
     final_prob = min(raw_prob, HR_PROB_HARD_CAP)
@@ -2455,6 +2455,20 @@ def compute_hr_probability(p, debug=False):
               f"{'  (HARD CAPPED at 45%)' if raw_prob > HR_PROB_HARD_CAP else ''}")
         print("[EXPLAIN] " + "-" * 60)
 
+    # v3.91 NEW (this session - see chat discussion, "projected HR per
+    # game"): `mean` here is this batter's own real Poisson-lambda HR
+    # expectation for the game - the same number poisson_over_prob() uses
+    # to derive hrProb, BEFORE the HR_PROB_HARD_CAP (a display/UI safety
+    # cap on the single-batter PROBABILITY, not a claim that his true
+    # expected HR count is capped - the cap would silently distort a
+    # game-level sum built from these). Poisson means are additive, so
+    # summing every batter's mean across a game's two starting lineups is
+    # a real, mathematically legitimate "projected total HRs this game"
+    # estimate - not a new model, just an honest aggregation of numbers
+    # already computed and validated per-batter. Only returned when asked
+    # for, so every existing call site is unaffected.
+    if return_mean:
+        return final_prob, mean
     return final_prob
 
 
@@ -2991,15 +3005,64 @@ def main():
         player_row.update(compute_score(player_row))
         player_row.update(compute_hrr_score(player_row))
         player_row.update(compute_tb_score(player_row))
-        hr_prob = compute_hr_probability(player_row)
+        hr_prob, hr_mean = compute_hr_probability(player_row, return_mean=True)
         if hr_prob is not None:
             player_row["hrProb"] = round(hr_prob * 100, 1)
+        player_row["_hrMean"] = hr_mean  # raw per-batter expected HR count, used below for game/team totals; not written to the final snapshot
         hrr_prob = compute_hrr_probability(player_row)
         if hrr_prob is not None:
             player_row["hrrProb"] = round(hrr_prob * 100, 1)
         tb_prob = compute_tb_probability(player_row)
         if tb_prob is not None:
             player_row["tbProb"] = round(tb_prob * 100, 1)
+
+    # v3.91 NEW (this session - see chat discussion, "projected HR per
+    # game"): Poisson means are additive, so summing every confirmed/
+    # projected starting batter's own real hrMean within a game gives a
+    # mathematically legitimate "projected total HRs this game" - not a
+    # new model, an honest aggregation of numbers already computed and
+    # validated per-batter. Also broken out per-team (home/away
+    # separately), since that's how real sportsbooks actually offer this
+    # (Team Total Home Runs is a real market; Game Total less commonly
+    # so, but the number is useful either way). HONESTY CAVEAT this
+    # covers only the STARTING lineup batters this pipeline models - it
+    # does not account for pinch hitters, extra innings, or lineup slots
+    # the pipeline couldn't find data for, so it will systematically run
+    # a bit low on games with those factors, same as any other per-game
+    # aggregate here.
+    game_team_hr_totals = {}
+    for player_row in players:
+        if player_row.get("playerType") != "batter":
+            continue
+        mean = player_row.get("_hrMean")
+        if mean is None:
+            continue
+        game_key = player_row.get("game")
+        team_key = (game_key, player_row.get("team"))
+        if game_key:
+            game_team_hr_totals.setdefault(("game", game_key), 0.0)
+            game_team_hr_totals[("game", game_key)] += mean
+        if team_key[0] and team_key[1]:
+            game_team_hr_totals.setdefault(("team", team_key), 0.0)
+            game_team_hr_totals[("team", team_key)] += mean
+
+    for player_row in players:
+        if player_row.get("playerType") != "batter":
+            continue
+        game_key = player_row.get("game")
+        team_key = ("team", (game_key, player_row.get("team")))
+        if game_key:
+            player_row["gameProjectedHR"] = round(game_team_hr_totals.get(("game", game_key), 0.0), 2)
+        if team_key[1][0] and team_key[1][1]:
+            player_row["teamProjectedHR"] = round(game_team_hr_totals.get(team_key, 0.0), 2)
+        player_row.pop("_hrMean", None)
+
+    real_game_totals = sorted(v for (kind, _), v in game_team_hr_totals.items() if kind == "game")
+    if real_game_totals:
+        avg_game_total = sum(real_game_totals) / len(real_game_totals)
+        print(f"  projected total HRs per game: {len(real_game_totals)} games, "
+              f"avg {avg_game_total:.2f} (real MLB average is roughly 2.2-2.6) - "
+              f"range {min(real_game_totals):.2f}-{max(real_game_totals):.2f}")
 
     # v3.84 FIX (this session - see chat discussion, confirmed via real
     # board screenshots): 4 of 9 real top-tier cards (Raleigh, Suarez,
@@ -3221,6 +3284,9 @@ def write_daily_snapshot(players):
                 "l15hrCredit": p.get("l15hrCredit"), "l5hrCredit": p.get("l5hrCredit"),
                 "pip": p.get("pip"),
                 "pitcherRecentHr9": p.get("pitcherRecentHr9"), "pitcherRecentIp": p.get("pitcherRecentIp"),
+                # v3.91: saved for future validation against real game HR
+                # totals, same as everything else in this snapshot.
+                "gameProjectedHR": p.get("gameProjectedHR"), "teamProjectedHR": p.get("teamProjectedHR"),
             })
     path = f"history/{date_str}.json"
     with open(path, "w") as f:
