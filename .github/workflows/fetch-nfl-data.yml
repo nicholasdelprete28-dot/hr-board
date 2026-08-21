@@ -1,0 +1,78 @@
+name: Update NFL TD Board Data
+#
+# HONESTY NOTE (this session - see chat discussion): unlike the HR board
+# workflow this is modeled on, this one is workflow_dispatch ONLY - no
+# schedule triggers yet. fetch_nfl_td_data.py currently stops on purpose
+# at a NotImplementedError (see that file's module docstring) once its
+# data-fetching diagnostics have printed, since the actual scoring model
+# is still blocked on verifying real nfl_data_py column names against a
+# live run. Right now the script never reaches a step that writes an
+# output file, so "Run the data-fetching script" below will always exit
+# non-zero (a real, expected failure - not a bug in this workflow). Adding
+# schedule: triggers before that's fixed would just fill the Actions tab
+# with red X's on autopilot for no benefit - manual dispatch is the right
+# mode until the script is verified end-to-end.
+#
+# WHEN THE SCRIPT IS FINISHED: add a schedule: block back (see the HR
+# board workflow for the exact syntax/UTC-vs-local-time caveat). NFL's
+# real cadence should probably look different from baseball's 3x/day,
+# though - games are weekly (mostly Sunday, plus Thu/Mon), and the signal
+# that actually changes hour to hour is injury/practice reports (Wed-Fri)
+# and final inactives/weather (~90 min before kickoff on gameday) - not a
+# flat 3x/day, every day pattern. Flag if you want a real proposal for
+# this once the model itself is done - not decided here since it's a
+# separate question from getting the workflow mechanics right.
+#
+# Also runnable manually anytime from the Actions tab (workflow_dispatch).
+on:
+  workflow_dispatch:
+# Same concurrency lock as the HR board workflow, same reasoning: this
+# script (once finished) will fully regenerate its output file(s) every
+# run rather than incrementally editing them, so two concurrent runs have
+# nothing meaningful to line-diff between - queue instead of race.
+concurrency:
+  group: nfl-td-board-data-pipeline
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        # nfl_data_py added on top of the HR board's requests - this
+        # package has had real historical install friction with one of
+        # its own dependencies (python-snappy, used for parquet reading)
+        # per its own changelog. If this step fails, that's the first
+        # thing to check in the log - not something I can verify without
+        # a live run.
+        run: pip install requests nfl_data_py
+      - name: Run the data-fetching script
+        # EXPECTED TO FAIL RIGHT NOW - see the note at the top of this
+        # file. That's why this workflow has no schedule trigger yet -
+        # you're seeing this run because you (or I, walking you through
+        # it) triggered it manually to capture the real diagnostic output.
+        run: python fetch_nfl_td_data.py
+      - name: Commit and push nfl_players.json and today's snapshot if changed
+        # HONESTY NOTE: fetch_nfl_td_data.py does not actually write
+        # nfl_players.json or an nfl_history/ directory yet - main() stops
+        # before that point on purpose (see the script). These filenames
+        # are a placeholder for once that's built, kept deliberately
+        # DIFFERENT from players.json/history/ so the eventual real NFL
+        # output can never collide with or overwrite the real MLB data
+        # living in the same repo. Update this step's paths if the real
+        # script ends up naming its output differently.
+        run: |
+          git config user.name "nfl-board-bot"
+          git config user.email "actions@github.com"
+          git add nfl_players.json nfl_history/ 2>/dev/null || true
+          git diff --quiet --cached || git commit -m "Update NFL player data ($(date -u +%Y-%m-%dT%H:%M))"
+          git fetch origin main
+          git merge -X ours origin/main -m "merge: keep freshest generated NFL data"
+          git push origin main
