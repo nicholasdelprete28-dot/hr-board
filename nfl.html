@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paydirt</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%230b0e14' rx='18'/%3E%3Cellipse cx='50' cy='50' rx='30' ry='19' fill='none' stroke='%23ffcc33' stroke-width='4'/%3E%3Cline x1='38' y1='50' x2='62' y2='50' stroke='%23ffcc33' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0e14;
+    --surface2: #161c26;
+    --line: #232c38;
+    --text: #eef1f0;
+    --muted: #8a95a3;
+    --muted2: #5c6675;
+    --marker: #ffcc33;
+    --turf: #3fa06a;
+    --flag: #e2453a;
+    --teal: #4fb8d6;
+    --stat-good: #4fd88f;
+    --stat-bad: #ff9a4d;
+    --stat-verybad: #ff4d4d;
+    --mono: 'Space Mono', monospace;
+    --display: 'Oswald', sans-serif;
+    --body: 'Barlow', sans-serif;
+    --content-width: 1240px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
+  body{
+    background-image:
+      radial-gradient(ellipse 900px 500px at 15% -5%, rgba(255,204,51,0.14), transparent 62%),
+      radial-gradient(ellipse 700px 450px at 90% 10%, rgba(79,184,214,0.10), transparent 62%),
+      radial-gradient(ellipse 800px 500px at 50% 100%, rgba(63,160,106,0.10), transparent 62%),
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.010) 0px, rgba(255,255,255,0.010) 1px, transparent 1px, transparent 3px);
+    background-attachment:fixed;
+  }
+
+  .wrap{max-width:var(--content-width); margin:0 auto; padding:0 14px 80px;}
+
+  /* ---- Signature element: yard-line ruler divider ---- */
+  .yardline{
+    max-width:var(--content-width); margin:0 auto; padding:10px 14px 2px;
+    display:flex; align-items:flex-end; gap:0; user-select:none; pointer-events:none;
+  }
+  .yardline .tick{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;}
+  .yardline .tick .mark{width:1px; height:7px; background:var(--line);}
+  .yardline .tick.major .mark{height:12px; width:1.5px; background:var(--muted2);}
+  .yardline .tick .num{
+    font-family:var(--mono); font-size:9px; color:var(--muted2); letter-spacing:0.5px;
+  }
+  .yardline .tick.major .num{color:var(--muted);}
+  .yardline-rule{border:none; border-top:1px solid var(--line); margin:0 0 0; }
+
+  header{
+    position:sticky; top:0; z-index:20;
+    background:
+      radial-gradient(ellipse 500px 200px at 15% 0%, rgba(255,204,51,0.16), transparent 75%),
+      radial-gradient(ellipse 400px 180px at 85% 20%, rgba(79,184,214,0.12), transparent 75%),
+      linear-gradient(180deg, rgba(11,14,20,0.98) 75%, rgba(11,14,20,0) 100%);
+    backdrop-filter: blur(6px);
+    padding:14px 14px 0;
+  }
+  .titlebar{max-width:var(--content-width); margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:10px; padding-bottom:10px;}
+  .title{
+    font-family:var(--display); font-weight:600; letter-spacing:0.5px;
+    font-size:30px; text-transform:uppercase;
+    background:linear-gradient(100deg, #fff 25%, var(--marker) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    display:flex; align-items:center; gap:9px;
+  }
+  .title-icon{color:var(--marker); flex-shrink:0;}
+  .subtitle{font-size:12px; color:var(--muted2); margin-top:1px; font-family:var(--body); font-weight:500;}
+
+  /* ---- Sport switcher ---- */
+  .sport-switch{
+    display:flex; gap:2px; background:var(--surface2); border:1px solid var(--line);
+    border-radius:10px; padding:3px; font-family:var(--mono); font-size:11px;
+  }
+  .sport-switch a{
+    text-decoration:none; padding:7px 13px; border-radius:7px; color:var(--muted);
+    display:flex; align-items:center; gap:6px; transition:background .15s, color .15s;
+    letter-spacing:0.5px;
+  }
+  .sport-switch a.active{background:var(--marker); color:#171307; font-weight:700;}
+  .sport-switch a:not(.active):hover{color:var(--text);}
+
+  .preview-banner{
+    max-width:var(--content-width); margin:14px auto 0; padding:11px 15px;
+    background:rgba(255,204,51,0.08); border:1px solid rgba(255,204,51,0.35); border-radius:10px;
+    font-family:var(--body); font-size:13px; color:var(--text); display:flex; gap:9px; align-items:flex-start;
+    line-height:1.45;
+  }
+  .preview-banner svg{flex-shrink:0; margin-top:2px; color:var(--marker);}
+  .preview-banner b{color:var(--marker);}
+
+  .tabs{
+    max-width:var(--content-width); margin:16px auto 0; display:flex; gap:8px; flex-wrap:wrap;
+  }
+  .tab{
+    font-family:var(--display); font-size:14px; letter-spacing:0.3px; text-transform:uppercase;
+    background:var(--surface2); border:1px solid var(--line); border-radius:9px;
+    color:var(--muted); padding:9px 16px; cursor:pointer; display:flex; align-items:center; gap:7px;
+  }
+  .tab.active{color:var(--marker); border-color:var(--marker); background:rgba(255,204,51,0.07);}
+  .tab.locked{color:var(--muted2); cursor:default;}
+  .tab .soon{
+    font-family:var(--mono); font-size:9px; background:var(--line); color:var(--muted);
+    padding:2px 6px; border-radius:10px; text-transform:none; letter-spacing:0.3px;
+  }
+
+  .grid{
+    max-width:var(--content-width); margin:18px auto 0;
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:14px;
+  }
+
+  .card{
+    background:var(--surface2); border:1px solid var(--line); border-radius:14px;
+    padding:16px; position:relative; overflow:hidden;
+    border-top:2.5px solid var(--marker);
+  }
+  .card-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .player-name{font-family:var(--display); font-size:19px; font-weight:600; letter-spacing:0.2px;}
+  .player-meta{
+    font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:5px; line-height:1.6;
+  }
+  .tier-badge{
+    font-family:var(--mono); font-size:10px; font-weight:700; letter-spacing:0.5px;
+    padding:5px 9px; border-radius:7px; white-space:nowrap; display:flex; align-items:center; gap:4px;
+    text-transform:uppercase;
+  }
+  .tier-prime{background:rgba(255,204,51,0.14); color:var(--marker); border:1px solid rgba(255,204,51,0.4);}
+  .tier-strong{background:rgba(79,184,214,0.13); color:var(--teal); border:1px solid rgba(79,184,214,0.35);}
+
+  .prob-row{display:flex; align-items:baseline; justify-content:space-between; margin-top:14px;}
+  .prob-num{font-family:var(--mono); font-size:30px; font-weight:700; color:var(--text);}
+  .prob-label{font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.6px;}
+
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:13px;}
+  .chip{
+    font-family:var(--mono); font-size:10.5px; padding:5px 9px; border-radius:7px;
+    border:1px solid var(--line); color:var(--muted); background:rgba(255,255,255,0.02);
+  }
+  .chip.good{color:var(--stat-good); border-color:rgba(79,216,143,0.35);}
+  .chip.bad{color:var(--stat-bad); border-color:rgba(255,154,77,0.35);}
+
+  .statgrid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:0; margin-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .stat{padding:10px 4px; text-align:center; border-right:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .stat:nth-child(3n){border-right:none;}
+  .stat-label{font-family:var(--mono); font-size:8.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px;}
+  .stat-val{font-family:var(--mono); font-size:14px; color:var(--text); margin-top:3px; font-weight:700;}
+
+  .empty-tab{
+    max-width:var(--content-width); margin:40px auto; text-align:center; padding:50px 20px;
+    color:var(--muted); font-family:var(--body);
+  }
+  .empty-tab .icon{color:var(--line); margin-bottom:14px;}
+  .empty-tab h3{font-family:var(--display); color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-size:18px; margin:0 0 6px;}
+  .empty-tab p{font-size:13px; max-width:420px; margin:0 auto; line-height:1.6;}
+
+  @media (max-width: 640px){
+    .grid{grid-template-columns:1fr;}
+    .title{font-size:24px;}
+    .yardline .tick .num{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="titlebar">
+    <div>
+      <div class="title">
+        <svg class="title-icon" width="26" height="26" viewBox="0 0 100 100" fill="none">
+          <ellipse cx="50" cy="50" rx="34" ry="21" fill="none" stroke="currentColor" stroke-width="5"/>
+          <line x1="34" y1="50" x2="66" y2="50" stroke="currentColor" stroke-width="3.5"/>
+          <line x1="42" y1="43" x2="42" y2="57" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="50" y1="41" x2="50" y2="59" stroke="currentColor" stroke-width="2.5"/>
+          <line x1="58" y1="43" x2="58" y2="57" stroke="currentColor" stroke-width="2.5"/>
+        </svg>
+        Paydirt<span style="color:var(--marker)">.</span>
+      </div>
+      <div class="subtitle">NFL touchdown &amp; prop favorability board</div>
+    </div>
+    <div class="sport-switch">
+      <a href="index.html">&#9918; Baseball</a>
+      <a href="nfl.html" class="active">&#127944; Football</a>
+    </div>
+  </div>
+</header>
+
+<div class="yardline">
+  <div class="tick major"><span class="num">10</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">20</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">30</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">40</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">50</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">40</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">30</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">20</span><div class="mark"></div></div>
+  <div class="tick"><div class="mark"></div></div>
+  <div class="tick major"><span class="num">10</span><div class="mark"></div></div>
+</div>
+<hr class="yardline-rule">
+
+<div class="preview-banner">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <div><b>Preview build - sample data, not real predictions.</b> This page shows the visual design and layout only. The real backend (real player stats, real matchups, real red-zone rates) isn't wired up yet - anytime-TD probabilities below are placeholder numbers for layout review, and the Passing/Rushing/Receiving Yards tabs aren't built at all yet.</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active">&#127944; Anytime TD</div>
+  <div class="tab locked">Passing Yds <span class="soon">soon</span></div>
+  <div class="tab locked">Rushing Yds <span class="soon">soon</span></div>
+  <div class="tab locked">Receiving Yds <span class="soon">soon</span></div>
+</div>
+
+<div class="grid" id="cardGrid"></div>
+
+<script>
+// v1.0 PREVIEW DATA - hand-written sample rows for layout/design review only.
+// Field names are a best guess at what the real backend (fetch_nfl_td_data.py,
+// once its NotImplementedError stubs are built out against verified real
+// nfl_data_py columns) will eventually produce - NOT a finalized schema.
+// Every number below is made up for visual purposes, not a real projection.
+const SAMPLE_PLAYERS = [
+  {
+    player: "Christian McCaffrey", team: "SF", opponent: "@ SEA", game: "SF @ SEA",
+    tdProb: 68.2, tier: "prime",
+    chips: [
+      {label: "goal-line back", good: true},
+      {label: "soft RZ D (58% allowed)", good: true},
+      {label: "implied total 26.4", good: true},
+    ],
+    stats: [
+      {label: "RZ Share", val: "41%"},
+      {label: "Opp RZ TD%", val: "58%"},
+      {label: "Team Impl.", val: "26.4"},
+      {label: "L4 TDs", val: "3"},
+      {label: "Snap %", val: "89%"},
+      {label: "Season TDs", val: "9"},
+    ],
+  },
+  {
+    player: "Ja'Marr Chase", team: "CIN", opponent: "vs PIT", game: "CIN vs PIT",
+    tdProb: 51.4, tier: "prime",
+    chips: [
+      {label: "target share 29%", good: true},
+      {label: "tough RZ D (39% allowed)", good: false},
+    ],
+    stats: [
+      {label: "RZ Share", val: "33%"},
+      {label: "Opp RZ TD%", val: "39%"},
+      {label: "Team Impl.", val: "23.1"},
+      {label: "L4 TDs", val: "2"},
+      {label: "Snap %", val: "94%"},
+      {label: "Season TDs", val: "7"},
+    ],
+  },
+  {
+    player: "Bucky Irving", team: "TB", opponent: "vs NO", game: "TB vs NO",
+    tdProb: 44.8, tier: "strong",
+    chips: [
+      {label: "committee back", good: false},
+      {label: "soft RZ D (61% allowed)", good: true},
+    ],
+    stats: [
+      {label: "RZ Share", val: "24%"},
+      {label: "Opp RZ TD%", val: "61%"},
+      {label: "Team Impl.", val: "24.8"},
+      {label: "L4 TDs", val: "1"},
+      {label: "Snap %", val: "62%"},
+      {label: "Season TDs", val: "5"},
+    ],
+  },
+  {
+    player: "Sam LaPorta", team: "DET", opponent: "@ GB", game: "DET @ GB",
+    tdProb: 39.6, tier: "strong",
+    chips: [
+      {label: "red-zone target leader", good: true},
+      {label: "road edge", good: false},
+    ],
+    stats: [
+      {label: "RZ Share", val: "22%"},
+      {label: "Opp RZ TD%", val: "47%"},
+      {label: "Team Impl.", val: "22.0"},
+      {label: "L4 TDs", val: "2"},
+      {label: "Snap %", val: "81%"},
+      {label: "Season TDs", val: "4"},
+    ],
+  },
+];
+
+function tierLabel(t){ return t === "prime" ? "PRIME" : "STRONG"; }
+
+function renderCard(p){
+  const chipHtml = p.chips.map(c => `<div class="chip ${c.good ? 'good' : 'bad'}">${c.label}</div>`).join("");
+  const statHtml = p.stats.map(s => `
+    <div class="stat">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-val">${s.val}</div>
+    </div>`).join("");
+  return `
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="player-name">${p.player}</div>
+        <div class="player-meta">${p.team} ${p.opponent}</div>
+      </div>
+      <div class="tier-badge tier-${p.tier}">&#9733; ${tierLabel(p.tier)}</div>
+    </div>
+    <div class="prob-row">
+      <div class="prob-num">${p.tdProb}%</div>
+      <div class="prob-label">Anytime TD</div>
+    </div>
+    <div class="chips">${chipHtml}</div>
+    <div class="statgrid">${statHtml}</div>
+  </div>`;
+}
+
+document.getElementById("cardGrid").innerHTML = SAMPLE_PLAYERS.map(renderCard).join("");
+</script>
+
+</body>
+</html>
