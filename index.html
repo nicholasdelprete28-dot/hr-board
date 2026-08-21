@@ -541,7 +541,16 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
       <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>GOING<span class="dot">·</span>YARD</div>
       <div class="subtitle" id="subtitle">Real calibrated HR probability &middot; power, pitcher, platoon, opportunity, park/wind, bullpen all blended into one number</div>
     </div>
-    <div class="count" id="count">60 players</div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <!-- v1.0 NEW (this session - see chat discussion): sport switcher,
+           reciprocal to the one added on nfl.html, so navigation between
+           the two sport pages works both directions. -->
+      <div style="display:flex; gap:2px; background:var(--surface2); border:1px solid var(--line); border-radius:10px; padding:3px; font-family:var(--mono); font-size:11px;">
+        <a href="index.html" style="text-decoration:none; padding:7px 13px; border-radius:7px; background:var(--gold); color:#171307; font-weight:700; display:flex; align-items:center; gap:6px;">&#9918; Baseball</a>
+        <a href="nfl.html" style="text-decoration:none; padding:7px 13px; border-radius:7px; color:var(--muted); display:flex; align-items:center; gap:6px;">&#127944; Football</a>
+      </div>
+      <div class="count" id="count">60 players</div>
+    </div>
   </div>
   <div class="boardtoggle" id="boardToggle">
     <div class="boardtab active" data-board="hr">HR</div>
