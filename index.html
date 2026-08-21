@@ -29,6 +29,38 @@
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--body);}
+  body{display:flex;}
+
+  /* v1.0 NEW (this session - see chat discussion): persistent left icon
+     sidebar, replacing the earlier inline title-bar switcher per
+     explicit direction. Fixed width, flex-shrink:0, so it never
+     collapses; .page-content (wraps everything else previously direct
+     inside <body>) takes the remaining flex space. */
+  .sidebar{
+    width:64px; flex-shrink:0; height:100vh; position:sticky; top:0; z-index:50;
+    background:var(--surface2); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:16px 0;
+  }
+  .sidebar-logo{
+    width:34px; height:34px; border-radius:9px; background:var(--bg); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; color:var(--gold); margin-bottom:10px;
+  }
+  .sidebar-link{
+    width:52px; padding:9px 4px; border-radius:10px; text-decoration:none;
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    color:var(--muted); transition:background .15s, color .15s;
+  }
+  .sidebar-link:hover{background:rgba(227,165,72,0.08); color:var(--text);}
+  .sidebar-link.active{background:rgba(227,165,72,0.14); color:var(--gold);}
+  .sidebar-link svg{width:20px; height:20px;}
+  .sidebar-label{font-family:var(--mono); font-size:8.5px; letter-spacing:0.3px; text-transform:uppercase; text-align:center;}
+  .page-content{flex:1; min-width:0;}
+  @media (max-width: 480px){
+    .sidebar{width:52px;}
+    .sidebar-link{width:44px; padding:7px 2px;}
+    .sidebar-link svg{width:18px; height:18px;}
+    .sidebar-label{font-size:7.5px;}
+  }
   body{
     background-image:
       radial-gradient(ellipse 900px 600px at 15% -5%, rgba(227,165,72,0.22), transparent 62%),
@@ -78,7 +110,7 @@
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
   #toast-container{
-    position:fixed; top:14px; left:0; right:0; z-index:100;
+    position:fixed; top:14px; left:64px; right:0; z-index:100;
     display:flex; flex-direction:column; align-items:center; gap:8px;
     pointer-events:none; padding:0 14px;
   }
@@ -506,6 +538,24 @@ whop.track("page");
 </head>
 <body>
 
+<nav class="sidebar">
+  <div class="sidebar-logo"><svg viewBox="0 0 100 100" width="18" height="18"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="9"/></svg></div>
+  <a href="index.html" class="sidebar-link active" title="Board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>
+    <div class="sidebar-label">Board</div>
+  </a>
+  <a href="splits.html" class="sidebar-link" title="Splits">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    <div class="sidebar-label">Splits</div>
+  </a>
+  <a href="nfl.html" class="sidebar-link" title="Football">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="12" rx="9" ry="5.5"/><path d="M7 12h10"/></svg>
+    <div class="sidebar-label">NFL</div>
+  </a>
+</nav>
+
+<div class="page-content">
+
 <div id="discordWelcomeBanner" style="display:none; position:fixed; inset:0; z-index:9998; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; padding:20px;">
   <div style="background:var(--surface2); border:1px solid var(--line); border-radius:16px; padding:40px 32px; max-width:420px; width:100%; text-align:center;">
     <div style="width:56px; height:56px; margin:0 auto 20px; border-radius:14px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-family:var(--display); font-weight:700; font-size:22px; color:var(--green); border:1px solid var(--line);">GY</div>
@@ -541,16 +591,7 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
       <div class="title"><svg class="title-icon" viewBox="0 0 100 100" width="24" height="24"><path d="M50 15 L85 50 L50 85 L15 50 Z" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="10" fill="currentColor"/></svg>GOING<span class="dot">·</span>YARD</div>
       <div class="subtitle" id="subtitle">Real calibrated HR probability &middot; power, pitcher, platoon, opportunity, park/wind, bullpen all blended into one number</div>
     </div>
-    <div style="display:flex; align-items:center; gap:10px;">
-      <!-- v1.0 NEW (this session - see chat discussion): sport switcher,
-           reciprocal to the one added on nfl.html, so navigation between
-           the two sport pages works both directions. -->
-      <div style="display:flex; gap:2px; background:var(--surface2); border:1px solid var(--line); border-radius:10px; padding:3px; font-family:var(--mono); font-size:11px;">
-        <a href="index.html" style="text-decoration:none; padding:7px 13px; border-radius:7px; background:var(--gold); color:#171307; font-weight:700; display:flex; align-items:center; gap:6px;">&#9918; Baseball</a>
-        <a href="nfl.html" style="text-decoration:none; padding:7px 13px; border-radius:7px; color:var(--muted); display:flex; align-items:center; gap:6px;">&#127944; Football</a>
-      </div>
-      <div class="count" id="count">60 players</div>
-    </div>
+    <div class="count" id="count">60 players</div>
   </div>
   <div class="boardtoggle" id="boardToggle">
     <div class="boardtab active" data-board="hr">HR</div>
@@ -625,6 +666,7 @@ if (new URLSearchParams(window.location.search).get("welcome") === "1") {
     <div class="modal-tabs" id="modalTabs">
       <div class="modal-tab active" data-view="graph">Graph</div>
       <div class="modal-tab" data-view="stats">Stats</div>
+      <div class="modal-tab" data-view="splits">Splits &amp; Mix</div>
     </div>
     <div id="modalBody"></div>
   </div>
@@ -2015,8 +2057,106 @@ function renderPitcherModalBody(p){
 
 function renderModalBody(){
   const body = document.getElementById('modalBody');
-  body.innerHTML = modalView === 'graph' ? renderGraphView() : renderStatsView();
+  if (modalView === 'graph') body.innerHTML = renderGraphView();
+  else if (modalView === 'splits') body.innerHTML = renderSplitsView();
+  else body.innerHTML = renderStatsView();
   wireModalBodyEvents();
+}
+
+// v3.92 NEW (this session - see chat discussion, "analyze EACH aspect of
+// the pitch mix, what day they hit HRs"): surfaces real data that was
+// already being computed backend-side (day-of-week split, home/road,
+// day/night) or was computed and discarded until this session
+// (pitchTypeBreakdown, dowBreakdown - see fetch_hr_data.py v3.92). This
+// view is prop-agnostic (modalProp doesn't affect it) since these are
+// facts about the BATTER, not about a specific prop type.
+function renderSplitsView(){
+  const p = modalPlayer;
+  if (!p || p.playerType !== 'batter') {
+    return `<div style="padding:30px 0; text-align:center; color:var(--muted); font-family:var(--body); font-size:13px;">
+      Splits &amp; pitch-mix breakdown is only available for batters.</div>`;
+  }
+
+  // --- Day-of-week HR rate ---
+  const dow = p.dowBreakdown || {};
+  const dowOrder = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const todayName = dowOrder[(new Date().getDay() + 6) % 7]; // JS getDay(): 0=Sun -> convert to Mon-first
+  const dowRates = dowOrder.map(d => (dow[d] && dow[d].hrRate != null) ? dow[d].hrRate : null);
+  const maxDowRate = Math.max(0.001, ...dowRates.filter(r => r != null));
+  const dowHtml = dowOrder.map((d, i) => {
+    const entry = dow[d];
+    const rate = entry ? entry.hrRate : null;
+    const pa = entry ? entry.pa : 0;
+    const pct = rate != null ? Math.round((rate / maxDowRate) * 100) : 0;
+    const isToday = d === todayName;
+    const barColor = pa < 15 ? 'var(--muted2)' : (isToday ? 'var(--gold)' : 'var(--green)');
+    return `
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+        <div style="width:32px; font-family:var(--mono); font-size:11px; color:${isToday ? 'var(--gold)' : 'var(--muted)'}; font-weight:${isToday ? 700 : 500};">${d}${isToday ? ' &bull;' : ''}</div>
+        <div style="flex:1; background:var(--bg); border-radius:4px; height:16px; position:relative; overflow:hidden;">
+          <div style="width:${pct}%; height:100%; background:${barColor}; border-radius:4px;"></div>
+        </div>
+        <div style="width:90px; font-family:var(--mono); font-size:10px; color:var(--muted2); text-align:right;">
+          ${rate != null ? (rate*100).toFixed(1)+'%' : '&mdash;'} <span style="opacity:0.6;">(${pa} PA)</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  // --- Home/road and day/night ---
+  function splitRow(label, aName, aRate, aPa, bName, bRate, bPa){
+    const fmt = (r) => r != null ? (r*100).toFixed(1)+'%' : '&mdash;';
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line);">
+        <div style="font-family:var(--body); font-size:12.5px; color:var(--muted);">${label}</div>
+        <div style="display:flex; gap:16px; font-family:var(--mono); font-size:12px;">
+          <div>${aName}: <b style="color:var(--text);">${fmt(aRate)}</b> <span style="color:var(--muted2);">(${aPa})</span></div>
+          <div>${bName}: <b style="color:var(--text);">${fmt(bRate)}</b> <span style="color:var(--muted2);">(${bPa})</span></div>
+        </div>
+      </div>`;
+  }
+  const contextHtml = splitRow('Home / Road', 'Home', p.homeHrRate, p.homePa || 0, 'Road', p.roadHrRate, p.roadPa || 0)
+    + splitRow('Day / Night', 'Day', p.dayHrRate, p.dayPa || 0, 'Night', p.nightHrRate, p.nightPa || 0);
+
+  // --- Per-pitch-type breakdown vs today's actual opposing pitcher ---
+  const pitchBreakdown = p.pitchTypeBreakdown || {};
+  const pitchTypes = Object.keys(pitchBreakdown);
+  const PITCH_NAMES = {FF:'4-Seam FB', SI:'Sinker', FC:'Cutter', SL:'Slider', ST:'Sweeper',
+    CU:'Curveball', KC:'Knuckle Curve', CH:'Changeup', FS:'Splitter', KN:'Knuckleball'};
+  const pitchHtml = pitchTypes.length ? pitchTypes.map(pt => {
+    const d = pitchBreakdown[pt];
+    const name = PITCH_NAMES[pt] || pt;
+    const baStr = d.ba != null ? d.ba.toFixed(3) : 'N/A';
+    const hhStr = d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A';
+    const lowSample = d.pa > 0 && d.pa < 15;
+    return `
+      <div style="display:grid; grid-template-columns:1.4fr 0.7fr 0.8fr 0.8fr 0.6fr; gap:6px; padding:8px 0; border-bottom:1px solid var(--line); align-items:center;">
+        <div style="font-family:var(--body); font-size:12.5px; color:var(--text);">${name} <span style="color:var(--muted2); font-family:var(--mono); font-size:10px;">(${pt})</span></div>
+        <div style="font-family:var(--mono); font-size:11px; color:var(--gold);">${(d.pitcherUsage*100).toFixed(0)}% usage</div>
+        <div style="font-family:var(--mono); font-size:12px; color:var(--text);">${baStr} AVG</div>
+        <div style="font-family:var(--mono); font-size:12px; color:var(--text);">${hhStr} hard-hit</div>
+        <div style="font-family:var(--mono); font-size:9px; color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</div>
+      </div>`;
+  }).join('') : `<div style="padding:16px 0; text-align:center; color:var(--muted2); font-family:var(--body); font-size:12.5px;">
+      No pitch-mix data available for today's matchup.</div>`;
+
+  return `
+    <div style="margin-bottom:22px;">
+      <div style="font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">HR Rate by Day of Week</div>
+      ${dowHtml}
+    </div>
+    <div style="margin-bottom:22px;">
+      <div style="font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">Situational Splits</div>
+      ${contextHtml}
+    </div>
+    <div>
+      <div style="font-family:var(--mono); font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">
+        Vs. Today's Pitcher's Actual Pitch Mix ${p.pitcher ? '&middot; ' + p.pitcher : ''}
+      </div>
+      ${pitchHtml}
+      <div style="margin-top:8px; font-family:var(--body); font-size:10.5px; color:var(--muted2); line-height:1.5;">
+        &#9888; = under 15 PA against this pitch type - real but a small sample, weight accordingly.
+      </div>
+    </div>`;
 }
 
 function renderGraphView(){
@@ -2217,6 +2357,8 @@ document.getElementById('playerModal').addEventListener('click', (e) => {
   if (e.target.id === 'playerModal') closePlayerModal();
 });
 </script>
+
+</div>
 
 </body>
 </html>
