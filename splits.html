@@ -276,6 +276,27 @@
     font-size:8.5px; font-weight:700; padding:2px 6px; border-radius:5px; letter-spacing:0.4px;
     display:inline-block; margin-top:4px;
   }
+  .row-badge{
+    font-family:var(--mono); font-size:8px; font-weight:700; padding:2px 6px; border-radius:5px;
+    letter-spacing:0.3px; display:inline-block; margin-top:4px; margin-right:4px;
+  }
+  .badge-hrprone{background:rgba(255,150,56,0.16); color:var(--stat-bad);}
+  .badge-stingy{background:rgba(91,200,232,0.16); color:var(--teal);}
+  .badge-opener{background:rgba(255,66,66,0.16); color:#ff6b6b;}
+  .badge-hot{background:rgba(227,165,72,0.18); color:var(--gold);}
+  .badge-cold{background:rgba(139,148,141,0.12); color:var(--muted);}
+  .player-row.top-pick{
+    background:linear-gradient(90deg, rgba(227,165,72,0.10), transparent 60%);
+    border-left:3px solid var(--gold);
+  }
+  .game-summary-strip{
+    max-width:1440px; margin:12px auto 0; padding:12px 16px;
+    background:var(--surface2); border:1px solid var(--line); border-radius:10px;
+    display:flex; gap:24px; align-items:center; font-family:var(--mono); font-size:12px;
+  }
+  .gss-stat{display:flex; flex-direction:column; gap:2px;}
+  .gss-label{font-size:9px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px;}
+  .gss-val{font-size:15px; color:var(--gold); font-weight:700;}
   .tier-prime{color:#4fdb9a; background:rgba(79,219,154,0.16);}
   .tier-strong{color:#5bc8e8; background:rgba(91,200,232,0.16);}
   .tier-inplay{color:#e3a548; background:rgba(227,165,72,0.16);}
@@ -295,7 +316,7 @@
   .stat-block.low-sample .stat-block-val{color:var(--stat-bad);}
   .stat-block-na .stat-block-val{color:var(--muted2); font-style:italic;}
 
-  .pitch-mix-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .pitch-mix-row{display:flex; gap:14px; flex-wrap:wrap; grid-column:1 / -1;}
   .pitch-mix-item{
     background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:6px 10px; min-width:120px;
   }
@@ -304,7 +325,7 @@
   .pitch-mix-stats{font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px; display:flex; gap:8px;}
 
   .low-sample-flag{color:var(--stat-bad); font-size:9px; margin-left:2px;}
-  .no-data{color:var(--muted2); font-style:italic;}
+  .no-data{color:var(--muted2); font-style:italic; grid-column:1 / -1;}
 
   @media (max-width: 900px){
     .player-row{flex-wrap:wrap;}
@@ -411,6 +432,10 @@
       </select>
     </div>
     <div class="control-group">
+      <div class="control-label">Game</div>
+      <select id="gameFilter"><option value="">All Games</option></select>
+    </div>
+    <div class="control-group">
       <div class="control-label">Direction</div>
       <div class="dir-toggle desc" id="dirToggle">&#8595; Highest First</div>
     </div>
@@ -422,6 +447,8 @@
     <button class="guide-btn" id="guideBtn">&#128214; How to Use This</button>
     <button class="watchlist-btn" id="watchlistBtn">&#9733; My Watchlist</button>
   </div>
+
+  <div class="game-summary-strip" id="gameSummaryStrip" style="display:none;"></div>
 
   <div class="table-wrap" id="tableWrap"></div>
   <div class="empty-state" id="emptyState" style="display:none;">No batters match this factor with real data today.</div>
@@ -856,6 +883,39 @@ function tierClass(tier){
   return {prime: 'tier-prime', strong: 'tier-strong', inplay: 'tier-inplay', longshot: 'tier-longshot'}[tier] || 'tier-longshot';
 }
 
+// v3.98 NEW (this session - see chat discussion, ideas drawn from
+// reviewing a competitor product but built on OUR OWN real, already-
+// understood data - see fetch_hr_data.py v3.98 for the opener flag and
+// arsenal split, everything else here was already in the data):
+function buildRowBadges(p){
+  const badges = [];
+  // Pitcher tag - real, from pitcherHr9Percentile (already computed).
+  // Thresholds are a real judgment call (top/bottom 15%), stated plainly
+  // as a threshold choice, not a precise scientific cutoff.
+  if (p.pitcherHr9Percentile != null){
+    if (p.pitcherHr9Percentile >= 0.85) badges.push(`<span class="row-badge badge-hrprone" title="Opposing pitcher is in the top 15% of today's starters for HR/9">HR-PRONE</span>`);
+    else if (p.pitcherHr9Percentile <= 0.15) badges.push(`<span class="row-badge badge-stingy" title="Opposing pitcher is in the bottom 15% of today's starters for HR/9">STINGY</span>`);
+  }
+  if (p.oppPitcherIsOpener){
+    badges.push(`<span class="row-badge badge-opener" title="Real opener - typically faces only a handful of batters before the bulk-innings pitcher takes over. Matchup numbers reflect a limited outing, not a full start.">&#9888; OPENER</span>`);
+  }
+  // Real streak badge from the actual full-season gamelog (v3.93 widened
+  // this to the full season) - not a guess, a real count of real games.
+  const games = (p.gamelog && p.gamelog.games) || [];
+  if (games.length >= 5){
+    const last5 = games.slice(-5);
+    const hrIn5 = last5.filter(g => g.hr > 0).length;
+    if (hrIn5 >= 3) badges.push(`<span class="row-badge badge-hot">&#128293; HR in ${hrIn5}/5</span>`);
+  }
+  // Real cold-streak flag: genuinely zero barrels over a real, sample-
+  // gated recent window (20+ PA) - not inferred, the actual L15 barrel
+  // rate is 0.
+  if (p.l15PowerPa != null && p.l15PowerPa >= 20 && p.l15Barrel === 0){
+    badges.push(`<span class="row-badge badge-cold">0% Barrel / L15</span>`);
+  }
+  return badges.join('');
+}
+
 // v3.95 NEW (this session): percentile-based composite scoring - the
 // honest way to combine factors on very different real scales (a
 // percentage, an HR/9 rate, a raw PA count) into one comparable ranking.
@@ -881,8 +941,10 @@ function render(){
   const factorsArr = [...selectedFactors];
   const allFactors = Object.values(groupedFactors).flat();
   const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
+  const gameFilterVal = document.getElementById('gameFilter').value;
   const batters = players.filter(p => p.playerType === 'batter')
-    .filter(p => !searchTerm || p.player.toLowerCase().includes(searchTerm) || (p.team||'').toLowerCase().includes(searchTerm));
+    .filter(p => !searchTerm || p.player.toLowerCase().includes(searchTerm) || (p.team||'').toLowerCase().includes(searchTerm))
+    .filter(p => !gameFilterVal || p.game === gameFilterVal);
 
   const emptyEl = document.getElementById('emptyState');
   const tableEl = document.getElementById('tableWrap');
@@ -928,9 +990,10 @@ function render(){
       ? `<div class="stat-block is-sort-key"><div class="stat-block-label">Composite Match</div><div class="stat-block-val">${compositeScore.toFixed(0)}/100</div></div>`
       : '';
     const isChecked = compareSet.has(String(p.playerId));
+    const isTopPick = i === 0;
     return `
-    <div class="player-row" data-player-id="${p.playerId}">
-      <div class="row-rank">${i+1}</div>
+    <div class="player-row ${isTopPick ? 'top-pick' : ''}" data-player-id="${p.playerId}">
+      <div class="row-rank">${isTopPick ? '&#9733;' : i+1}</div>
       <div class="compare-check ${isChecked ? 'checked' : ''}" data-compare-id="${p.playerId}" title="Add to comparison">&#10003;</div>
       <div class="star-check ${isStarredToday(p.playerId) ? 'starred' : ''}" data-star-id="${p.playerId}" title="Add to watchlist">&#9733;</div>
       ${playerHeadshot(p)}
@@ -938,6 +1001,7 @@ function render(){
         <div class="row-player">${p.player}</div>
         <div class="row-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
         <div class="row-tier ${tierClass(p.tier)}">${(p.tier||'-').toUpperCase()}</div>
+        ${buildRowBadges(p)}
       </div>
       <div class="stat-panel">${compositeBadge}${buildStatPanel(p, activeGroup, selectedFactors)}</div>
     </div>`;
@@ -1145,11 +1209,16 @@ function buildStatPanel(p, group, sortFactor){
     ].join('');
   }
   if (group === 'Matchup'){
+    const arsenal = p.oppPitcherArsenalSplit;
+    const arsenalStr = arsenal
+      ? `${(arsenal.fastball*100).toFixed(0)}/${(arsenal.breaking*100).toFixed(0)}/${(arsenal.offspeed*100).toFixed(0)}`
+      : null;
     return [
       sb("Pitcher HR/9 %ile", p.pitcherHr9Percentile, {sortKey: sortFactor.has('pitcherHr9Percentile'), fmt: v=>(v*100).toFixed(0)+'th'}),
       sb('Bullpen ERA', p.oppBullpenEra, {sortKey: sortFactor.has('oppBullpenEra'), pa: p.oppBullpenIp, fmt: dec2}),
       sb('Bullpen WHIP', p.oppBullpenWhip, {sortKey: sortFactor.has('oppBullpenWhip'), pa: p.oppBullpenIp, fmt: dec2}),
       sb('RISP AVG', p.risp, {sortKey: sortFactor.has('risp'), pa: p.rispPa, fmt: dec3}),
+      sb('FB/BR/OF Mix', arsenalStr, {fmt: v=>v}),
     ].join('');
   }
   if (group === 'Park & Weather'){
@@ -1191,6 +1260,7 @@ function buildStatPanel(p, group, sortFactor){
         <div class="pitch-mix-item" style="${isSortKey ? 'border-color:var(--gold); background:rgba(227,165,72,0.07);' : ''}">
           <div class="pitch-mix-name">${name} <span class="pitch-mix-usage">${(d.pitcherUsage*100).toFixed(0)}% usage</span></div>
           <div class="pitch-mix-stats">
+            <span style="color:${d.hr > 0 ? 'var(--gold)' : 'var(--muted2)'}; font-weight:${d.hr > 0 ? 700 : 400};">${d.hr} HR</span>
             <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
             <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
             <span style="color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</span>
@@ -1217,6 +1287,7 @@ function buildStatPanel(p, group, sortFactor){
         <div class="pitch-mix-item" style="${isSortKey ? 'border-color:var(--gold); background:rgba(227,165,72,0.07);' : ''}">
           <div class="pitch-mix-name">${name}</div>
           <div class="pitch-mix-stats">
+            <span style="color:${d.hr > 0 ? 'var(--gold)' : 'var(--muted2)'}; font-weight:${d.hr > 0 ? 700 : 400};">${d.hr} HR</span>
             <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
             <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
             <span style="color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</span>
@@ -1240,12 +1311,59 @@ async function load(){
     return;
   }
   buildFactorOptions();
+  buildGameFilterOptions();
   render();
 }
+
+// v3.98 NEW (this session - see chat discussion, real idea from a
+// competitor's horizontal game-switcher, adapted to this page's existing
+// filterable-list style rather than a tab strip): dynamically built from
+// whatever real games are actually in today's data - never hardcoded.
+function buildGameFilterOptions(){
+  const games = [...new Set(players.map(p => p.game).filter(Boolean))].sort();
+  const sel = document.getElementById('gameFilter');
+  sel.innerHTML = '<option value="">All Games</option>' +
+    games.map(g => `<option value="${g}">${g}</option>`).join('');
+}
+
+function updateGameSummaryStrip(){
+  const selectedGame = document.getElementById('gameFilter').value;
+  const stripEl = document.getElementById('gameSummaryStrip');
+  if (!selectedGame){
+    stripEl.style.display = 'none';
+    return;
+  }
+  // Real numbers, not recomputed here - every batter in this game already
+  // carries the same real gameProjectedHR (and their own real
+  // teamProjectedHR) from fetch_hr_data.py's real Poisson-sum aggregation
+  // (v3.91) - just reading it off any one of them.
+  const gamePlayers = players.filter(p => p.game === selectedGame && p.playerType === 'batter');
+  if (!gamePlayers.length){
+    stripEl.style.display = 'none';
+    return;
+  }
+  const gameProj = gamePlayers[0].gameProjectedHR;
+  const teams = [...new Set(gamePlayers.map(p => p.team))];
+  const teamStats = teams.map(t => {
+    const teamPlayers = gamePlayers.filter(p => p.team === t);
+    return {team: t, proj: teamPlayers[0] ? teamPlayers[0].teamProjectedHR : null};
+  });
+  stripEl.style.display = 'flex';
+  stripEl.innerHTML = `
+    <div class="gss-stat"><div class="gss-label">Game</div><div class="gss-val" style="color:var(--text); font-size:13px;">${selectedGame}</div></div>
+    <div class="gss-stat"><div class="gss-label">Projected Total HR</div><div class="gss-val">${gameProj != null ? gameProj.toFixed(2) : '&mdash;'}</div></div>
+    ${teamStats.map(t => `<div class="gss-stat"><div class="gss-label">${t.team} Proj.</div><div class="gss-val" style="color:var(--text); font-size:13px;">${t.proj != null ? t.proj.toFixed(2) : '&mdash;'}</div></div>`).join('')}
+  `;
+}
+
 
 document.getElementById('dayPicker').addEventListener('change', render);
 document.getElementById('pitchMetric').addEventListener('change', render);
 document.getElementById('searchBox').addEventListener('input', render);
+document.getElementById('gameFilter').addEventListener('change', () => {
+  updateGameSummaryStrip();
+  render();
+});
 document.getElementById('dirToggle').addEventListener('click', () => {
   sortDesc = !sortDesc;
   const btn = document.getElementById('dirToggle');
