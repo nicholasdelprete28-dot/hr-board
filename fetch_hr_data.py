@@ -1094,30 +1094,27 @@ def fetch_batter_statcast():
               f"printed CSV columns above and add the real name to the "
               f"matching *_columns list in fetch_batter_statcast().")
 
-    # v3.99 NEW (this session - see chat discussion, ideas drawn from
-    # reviewing a competitor product's real displayed stats - xwOBAcon and
-    # fly-ball rate are established, real Statcast metrics this file
-    # never looked for before, even though this SAME leaderboard call may
-    # already return them alongside EV/barrel/hard-hit in one row.
-    # HONESTY NOTE: unconfirmed without a live run whether this specific
-    # leaderboard endpoint includes these columns - defensive detection
-    # only, same as everything else in this function. If the printed
-    # columns above show these aren't here, a different Savant leaderboard
-    # (e.g. /leaderboard/expected_statistics for xwOBA, or a batted-ball-
-    # profile leaderboard for FB%) would need its own fetch - not
-    # guessed at here. This adds DATA ONLY - it does not change
-    # compute_hr_probability()'s formula. That should only happen after a
-    # real run confirms these values exist and what real ranges look
-    # like, the same calibration discipline used for every other constant
-    # in this file - not before.
-    xwoba_columns = ["xwoba", "est_woba", "xwoba_x"]
-    xwobacon_columns = ["xwobacon", "est_woba_minus_woba_diff", "xwoba_con"]
-    fb_columns = ["fbld", "fb_percent", "flyball_percent", "fb_pct"]
-    xwoba_col = next((c for c in xwoba_columns if rows and c in rows[0]), None)
-    xwobacon_col = next((c for c in xwobacon_columns if rows and c in rows[0]), None)
-    fb_col = next((c for c in fb_columns if rows and c in rows[0]), None)
-    print(f"  using xwOBA column: {xwoba_col} | xwOBAcon column: {xwobacon_col} | FB% column: {fb_col}"
-          f"{' (none found - these fields will be unavailable this run, see HONESTY NOTE above)' if not (xwoba_col or xwobacon_col or fb_col) else ''}")
+    # v3.99 NEW (this session), v4.0 CORRECTED (this session, after a
+    # real live run - see chat discussion): the real printed columns from
+    # your run confirm this leaderboard does NOT have xwOBA/xwOBAcon at
+    # all - and confirmed a real mistake in the original fb_columns guess.
+    # "fbld" was guessed as "fly ball %", but a real sample value (88.5
+    # for a contact-oriented hitter) makes far more sense as an EXIT
+    # VELOCITY split (FB/LD exit velo) than a percentage - no real hitter
+    # has an 88.5% fly ball rate. Rather than ship a mislabeled, likely
+    # fabricated-looking stat, "fbld" is REMOVED from consideration here.
+    # Replaced with a real, unambiguous column confirmed present in your
+    # actual run: anglesweetspotpercent (Sweet Spot %) - the name itself
+    # states exactly what it is, not a guessed abbreviation.
+    # xwOBA note: real wOBA/xwOBA (est_woba) data DOES exist elsewhere in
+    # this pipeline - per PITCH TYPE, in fetch_pitch_mix_data()'s existing
+    # batter pitch-arsenal CSV (confirmed real columns from your run:
+    # woba, est_woba) - see that function for the real fix, arguably more
+    # useful than a single season aggregate since it's pitch-type-specific.
+    sweetspot_columns = ["anglesweetspotpercent", "sweet_spot_percent"]
+    sweetspot_col = next((c for c in sweetspot_columns if rows and c in rows[0]), None)
+    print(f"  using Sweet Spot% column: {sweetspot_col}"
+          f"{' (not found - unavailable this run)' if not sweetspot_col else ''}")
 
     out = {}
     for row in rows:
@@ -1131,26 +1128,12 @@ def fetch_batter_statcast():
                 "barrel": float((row.get(barrel_col) if barrel_col else None) or 0) / 100,
                 "hardhit": float((row.get(hardhit_col) if hardhit_col else None) or 0) / 100,
             }
-            # Each of these three is independently optional - a batter
-            # missing just one doesn't lose the others, and none of them
-            # default to a fake 0 the way ev/barrel/hardhit above do
-            # (those three are treated as required elsewhere downstream;
-            # these new ones are not yet consumed anywhere, so None is
-            # the honest, safe default until they are).
-            if xwoba_col and row.get(xwoba_col):
+            # Optional, honest-if-missing - not consumed by the formula
+            # yet, same discipline as before.
+            if sweetspot_col and row.get(sweetspot_col):
                 try:
-                    entry["xwoba"] = float(row[xwoba_col])
-                except (TypeError, ValueError):
-                    pass
-            if xwobacon_col and row.get(xwobacon_col):
-                try:
-                    entry["xwobacon"] = float(row[xwobacon_col])
-                except (TypeError, ValueError):
-                    pass
-            if fb_col and row.get(fb_col):
-                try:
-                    raw_fb = float(row[fb_col])
-                    entry["flyballPct"] = raw_fb / 100 if raw_fb > 1 else raw_fb
+                    raw_ss = float(row[sweetspot_col])
+                    entry["sweetSpotPct"] = raw_ss / 100 if raw_ss > 1 else raw_ss
                 except (TypeError, ValueError):
                     pass
             out[pid] = entry
@@ -1159,87 +1142,121 @@ def fetch_batter_statcast():
     return out
 
 
+SAVANT_ROW_CAP = 25000  # confirmed real from a live run - both the old L15
+# fetch and the old single-request season fetch returned EXACTLY 25000
+# rows each, which is Baseball Savant's real API cap, not a coincidence
+# of real data volume. See fetch_batter_statcast_l15() and
+# fetch_batter_hr_by_pitch_type() below - both chunk their date range to
+# stay under this.
+
+
 def fetch_batter_statcast_l15():
+    """v4.0 FIX (this session, after a real run confirmed the row-cap bug
+    - see chat discussion): the L15 window ALSO hit exactly 25000 rows in
+    a real run - meaning this has likely been silently truncating to
+    roughly the most recent 5-6 days of league-wide pitches instead of
+    the intended full 15-day window, this whole session, quietly biasing
+    the "recent power trend" signal that feeds compute_hr_probability().
+    Fixed the same way as the season HR-by-pitch-type fetch: chunk the
+    date range into smaller windows, each safely under the real cap."""
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=15)
-    url = (
-        "https://baseballsavant.mlb.com/statcast_search/csv"
-        "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
-        "&hfGT=R%7C&hfC=&hfSea=" + str(YEAR) + "%7C&hfSit="
-        "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
-        "&hfSA=&game_date_gt=" + start_date.isoformat()
-        + "&game_date_lt=" + end_date.isoformat()
-        + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
-        "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
-        "&group_by=name&sort_col=pitches&player_event_sort=api_p_release_speed"
-        "&sort_order=desc&min_pas=0&type=details"
-    )
-    try:
-        resp = requests.get(url, timeout=90, headers={"User-Agent": "Mozilla/5.0"})
-        resp.raise_for_status()
-        text = resp.content.decode("utf-8-sig")
-        reader = csv.DictReader(io.StringIO(text))
-        rows = list(reader)
-        print(f"  Savant L15 event-level CSV columns: {reader.fieldnames}")
-        print(f"  Savant L15 event-level CSV row count (all pitches): {len(rows)}")
-        if rows:
-            print(f"  sample row keys with values: "
-                  f"{ {k: rows[0].get(k) for k in ['batter','type','launch_speed','launch_angle','launch_speed_angle','game_date']} }")
-    except Exception as e:
-        print(f"  WARNING: L15 Statcast event-level fetch failed ({e}) - power "
-              f"score will fall back to season-only for everyone.")
-        return {}
-
-    id_columns = ["batter", "player_id", "batter_id"]
-    id_col = next((c for c in id_columns if rows and c in rows[0]), None)
-    type_columns = ["type"]
-    type_col = next((c for c in type_columns if rows and c in rows[0]), None)
-    ls_columns = ["launch_speed"]
-    ls_col = next((c for c in ls_columns if rows and c in rows[0]), None)
-    lsa_columns = ["launch_speed_angle"]
-    lsa_col = next((c for c in lsa_columns if rows and c in rows[0]), None)
-    la_columns = ["launch_angle"]
-    la_col = next((c for c in la_columns if rows and c in rows[0]), None)
-    print(f"  L15 using batter_id={id_col} type={type_col} "
-          f"launch_speed={ls_col} launch_speed_angle={lsa_col} launch_angle={la_col}")
-
-    if not (id_col and ls_col):
-        print(f"  WARNING: required L15 columns not found - check the printed "
-              f"CSV columns above. Falling back to season-only power for everyone.")
-        return {}
-
+    chunk_days = 5
     per_batter = {}
-    for row in rows:
-        if type_col and row.get(type_col) != "X":
-            continue
-        ls_raw = row.get(ls_col)
-        if not ls_raw:
-            continue
-        pid_raw = row.get(id_col)
-        if not pid_raw:
-            continue
+    total_rows_seen = 0
+    chunks_at_cap = 0
+    chunk_count = 0
+    printed_columns = False
+
+    cur = start_date
+    while cur <= end_date:
+        chunk_end = min(cur + datetime.timedelta(days=chunk_days - 1), end_date)
+        chunk_count += 1
+        url = (
+            "https://baseballsavant.mlb.com/statcast_search/csv"
+            "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
+            "&hfGT=R%7C&hfC=&hfSea=" + str(YEAR) + "%7C&hfSit="
+            "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
+            "&hfSA=&game_date_gt=" + cur.isoformat()
+            + "&game_date_lt=" + chunk_end.isoformat()
+            + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
+            "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
+            "&group_by=name&sort_col=pitches&player_event_sort=api_p_release_speed"
+            "&sort_order=desc&min_pas=0&type=details"
+        )
         try:
-            pid = int(float(pid_raw))
-            ls = float(ls_raw)
-        except (TypeError, ValueError):
+            resp = requests.get(url, timeout=90, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+            text = resp.content.decode("utf-8-sig")
+            reader = csv.DictReader(io.StringIO(text))
+            rows = list(reader)
+            if not printed_columns and rows:
+                print(f"  Savant L15 event-level CSV columns: {reader.fieldnames}")
+                printed_columns = True
+        except Exception as e:
+            print(f"  WARNING: L15 chunk {cur}..{chunk_end} failed ({e}) - skipping this window.")
+            cur = chunk_end + datetime.timedelta(days=1)
             continue
-        lsa_raw = row.get(lsa_col) if lsa_col else None
-        is_barrel = (lsa_raw == "6")
-        d = per_batter.setdefault(pid, {"ev_sum": 0.0, "n": 0, "barrels": 0, "hardhit": 0,
-                                         "la_sum": 0.0, "la_n": 0})
-        d["ev_sum"] += ls
-        d["n"] += 1
-        if is_barrel:
-            d["barrels"] += 1
-        if ls >= 95:
-            d["hardhit"] += 1
-        la_raw = row.get(la_col) if la_col else None
-        if la_raw not in (None, ""):
+
+        total_rows_seen += len(rows)
+        if len(rows) >= SAVANT_ROW_CAP:
+            chunks_at_cap += 1
+            print(f"  WARNING: L15 chunk {cur}..{chunk_end} hit {len(rows)} rows - "
+                  f"at or above the real cap, still likely truncated.")
+
+        if not rows:
+            cur = chunk_end + datetime.timedelta(days=1)
+            continue
+
+        id_columns = ["batter", "player_id", "batter_id"]
+        id_col = next((c for c in id_columns if c in rows[0]), None)
+        type_columns = ["type"]
+        type_col = next((c for c in type_columns if c in rows[0]), None)
+        ls_columns = ["launch_speed"]
+        ls_col = next((c for c in ls_columns if c in rows[0]), None)
+        lsa_columns = ["launch_speed_angle"]
+        lsa_col = next((c for c in lsa_columns if c in rows[0]), None)
+        la_columns = ["launch_angle"]
+        la_col = next((c for c in la_columns if c in rows[0]), None)
+
+        if not (id_col and ls_col):
+            print(f"  WARNING: required L15 columns not found in chunk {cur}..{chunk_end} - skipping.")
+            cur = chunk_end + datetime.timedelta(days=1)
+            continue
+
+        for row in rows:
+            if type_col and row.get(type_col) != "X":
+                continue
+            ls_raw = row.get(ls_col)
+            if not ls_raw:
+                continue
+            pid_raw = row.get(id_col)
+            if not pid_raw:
+                continue
             try:
-                d["la_sum"] += float(la_raw)
-                d["la_n"] += 1
+                pid = int(float(pid_raw))
+                ls = float(ls_raw)
             except (TypeError, ValueError):
-                pass
+                continue
+            lsa_raw = row.get(lsa_col) if lsa_col else None
+            is_barrel = (lsa_raw == "6")
+            d = per_batter.setdefault(pid, {"ev_sum": 0.0, "n": 0, "barrels": 0, "hardhit": 0,
+                                             "la_sum": 0.0, "la_n": 0})
+            d["ev_sum"] += ls
+            d["n"] += 1
+            if is_barrel:
+                d["barrels"] += 1
+            if ls >= 95:
+                d["hardhit"] += 1
+            la_raw = row.get(la_col) if la_col else None
+            if la_raw not in (None, ""):
+                try:
+                    d["la_sum"] += float(la_raw)
+                    d["la_n"] += 1
+                except (TypeError, ValueError):
+                    pass
+
+        cur = chunk_end + datetime.timedelta(days=1)
 
     out = {}
     for pid, d in per_batter.items():
@@ -1252,6 +1269,8 @@ def fetch_batter_statcast_l15():
             "pa": d["n"],
             "launchAngle": round(d["la_sum"] / d["la_n"], 1) if d["la_n"] > 0 else None,
         }
+    print(f"  L15: {chunk_count} date chunks, {total_rows_seen} total rows seen, "
+          f"{chunks_at_cap} chunk(s) still hit the row cap (consider shrinking chunk_days if > 0)")
     print(f"  parsed L15 power data for {len(out)} batters from "
           f"{sum(d['n'] for d in per_batter.values())} batted-ball events")
     return out
@@ -1272,65 +1291,106 @@ def fetch_batter_statcast_l15():
 # HONEST COST: a full season of pitch-level events is meaningfully larger
 # than the 15-day version (one request, but a much bigger one) - real
 # runtime tradeoff for real HR-per-pitch-type data.
+# and the original single-request season fetch returned EXACTLY 25000 rows,
+# which is Baseball Savant's real API cap, not a coincidence of real data
+# volume. A single request across a full season (~700k+ pitches
+# league-wide) silently truncates to whatever the API returns first -
+# NOT a representative sample. Fixed below by chunking into date windows
+# small enough to stay under this cap.
+
+
 def fetch_batter_hr_by_pitch_type(season):
+    """v4.0 FIX (this session, after a real run confirmed the row-cap bug
+    - see chat discussion and SAVANT_ROW_CAP above): was one request for
+    the whole season, silently capped at 25,000 rows - a small, non-
+    representative slice of a real ~700k-pitch season, badly undercounting
+    real HR-by-pitch-type totals (confirmed low: only 180 total HRs
+    attributed in the run that surfaced this bug, well short of a real
+    season's total). Now chunks the season into multiple date-range
+    requests, each sized to stay safely under the real cap (~4,000
+    pitches/day league-wide x 5-day windows = ~20,000, real margin below
+    25,000), and aggregates real results across all chunks. A single
+    chunk failing is logged and skipped rather than aborting the whole
+    fetch - partial real season coverage is more honest and more useful
+    than an all-or-nothing failure.
+    """
     start_date = datetime.date(season, 3, 1)
     end_date = datetime.date.today()
-    url = (
-        "https://baseballsavant.mlb.com/statcast_search/csv"
-        "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
-        "&hfGT=R%7C&hfC=&hfSea=" + str(season) + "%7C&hfSit="
-        "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
-        "&hfSA=&game_date_gt=" + start_date.isoformat()
-        + "&game_date_lt=" + end_date.isoformat()
-        + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
-        "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
-        "&group_by=name&sort_col=pitches&player_event_sort=api_p_release_speed"
-        "&sort_order=desc&min_pas=0&type=details"
-    )
-    try:
-        resp = requests.get(url, timeout=180, headers={"User-Agent": "Mozilla/5.0"})
-        resp.raise_for_status()
-        text = resp.content.decode("utf-8-sig")
-        reader = csv.DictReader(io.StringIO(text))
-        rows = list(reader)
-        print(f"  Savant season HR-by-pitch-type CSV row count (all pitches): {len(rows)}")
-        if rows:
-            print(f"  sample row keys with values: "
-                  f"{ {k: rows[0].get(k) for k in ['batter','pitch_type','events','game_date']} }")
-    except Exception as e:
-        print(f"  WARNING: season HR-by-pitch-type fetch failed ({e}) - "
-              f"HR-per-pitch-type counts will be unavailable for everyone this run.")
-        return {}
-
-    id_columns = ["batter", "player_id", "batter_id"]
-    id_col = next((c for c in id_columns if rows and c in rows[0]), None)
-    pitch_columns = ["pitch_type"]
-    pitch_col = next((c for c in pitch_columns if rows and c in rows[0]), None)
-    events_columns = ["events"]
-    events_col = next((c for c in events_columns if rows and c in rows[0]), None)
-    print(f"  HR-by-pitch-type using batter_id={id_col} pitch_type={pitch_col} events={events_col}")
-
-    if not (id_col and pitch_col and events_col):
-        print(f"  WARNING: required columns not found for HR-by-pitch-type - check the "
-              f"printed CSV columns above. This data will be unavailable this run.")
-        return {}
-
+    chunk_days = 5
     per_batter = {}
-    for row in rows:
-        if row.get(events_col) != "home_run":
-            continue
-        pid_raw = row.get(id_col)
-        pitch_type = row.get(pitch_col)
-        if not pid_raw or not pitch_type:
-            continue
+    total_rows_seen = 0
+    chunks_at_cap = 0
+    chunk_count = 0
+
+    cur = start_date
+    while cur <= end_date:
+        chunk_end = min(cur + datetime.timedelta(days=chunk_days - 1), end_date)
+        chunk_count += 1
+        url = (
+            "https://baseballsavant.mlb.com/statcast_search/csv"
+            "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
+            "&hfGT=R%7C&hfC=&hfSea=" + str(season) + "%7C&hfSit="
+            "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
+            "&hfSA=&game_date_gt=" + cur.isoformat()
+            + "&game_date_lt=" + chunk_end.isoformat()
+            + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
+            "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
+            "&group_by=name&sort_col=pitches&player_event_sort=api_p_release_speed"
+            "&sort_order=desc&min_pas=0&type=details"
+        )
         try:
-            pid = int(float(pid_raw))
-        except (TypeError, ValueError):
+            resp = requests.get(url, timeout=90, headers={"User-Agent": "Mozilla/5.0"})
+            resp.raise_for_status()
+            text = resp.content.decode("utf-8-sig")
+            reader = csv.DictReader(io.StringIO(text))
+            rows = list(reader)
+        except Exception as e:
+            print(f"  WARNING: HR-by-pitch-type chunk {cur}..{chunk_end} failed ({e}) - "
+                  f"skipping this window, continuing with the rest of the season.")
+            cur = chunk_end + datetime.timedelta(days=1)
             continue
-        per_batter.setdefault(pid, {})
-        per_batter[pid][pitch_type] = per_batter[pid].get(pitch_type, 0) + 1
+
+        total_rows_seen += len(rows)
+        if len(rows) >= SAVANT_ROW_CAP:
+            chunks_at_cap += 1
+            print(f"  WARNING: chunk {cur}..{chunk_end} hit {len(rows)} rows - "
+                  f"at or above the real cap, still likely truncated. Consider a "
+                  f"smaller chunk_days value if this happens often.")
+
+        if not rows:
+            cur = chunk_end + datetime.timedelta(days=1)
+            continue
+
+        id_columns = ["batter", "player_id", "batter_id"]
+        id_col = next((c for c in id_columns if c in rows[0]), None)
+        pitch_columns = ["pitch_type"]
+        pitch_col = next((c for c in pitch_columns if c in rows[0]), None)
+        events_columns = ["events"]
+        events_col = next((c for c in events_columns if c in rows[0]), None)
+        if not (id_col and pitch_col and events_col):
+            print(f"  WARNING: required columns not found in chunk {cur}..{chunk_end} - skipping.")
+            cur = chunk_end + datetime.timedelta(days=1)
+            continue
+
+        for row in rows:
+            if row.get(events_col) != "home_run":
+                continue
+            pid_raw = row.get(id_col)
+            pitch_type = row.get(pitch_col)
+            if not pid_raw or not pitch_type:
+                continue
+            try:
+                pid = int(float(pid_raw))
+            except (TypeError, ValueError):
+                continue
+            per_batter.setdefault(pid, {})
+            per_batter[pid][pitch_type] = per_batter[pid].get(pitch_type, 0) + 1
+
+        cur = chunk_end + datetime.timedelta(days=1)
 
     total_hr = sum(sum(d.values()) for d in per_batter.values())
+    print(f"  HR-by-pitch-type: {chunk_count} date chunks, {total_rows_seen} total rows seen, "
+          f"{chunks_at_cap} chunk(s) still hit the row cap (consider shrinking chunk_days if > 0)")
     print(f"  parsed real season HR-by-pitch-type counts for {len(per_batter)} batters, "
           f"{total_hr} total home runs attributed to a specific pitch type")
     return per_batter
@@ -1371,8 +1431,20 @@ def fetch_pitch_mix_data():
         ba_col = next((c for c in ba_columns if rows and c in rows[0]), None)
         pa_columns = ["pa"]
         pa_col = next((c for c in pa_columns if rows and c in rows[0]), None)
+        # v4.0 NEW (this session, after a real run - see chat discussion):
+        # confirmed real columns present in the actual batter pitch-
+        # arsenal CSV - "woba" and "est_woba" (xwOBA) PER PITCH TYPE. This
+        # is genuinely real xwOBA data, more useful than a single season
+        # aggregate would have been since it's specific to each pitch
+        # type, and it needed no new fetch - this endpoint was already
+        # being called for AVG-vs-pitch data.
+        woba_columns = ["woba"]
+        xwoba_columns = ["est_woba"]
+        woba_col = next((c for c in woba_columns if rows and c in rows[0]), None)
+        xwoba_col = next((c for c in xwoba_columns if rows and c in rows[0]), None)
         print(f"  ({kind}) using id={id_col} pitch_type={pitch_col} "
-              f"usage={usage_col} metric={metric_col} ba={ba_col} pa={pa_col}")
+              f"usage={usage_col} metric={metric_col} ba={ba_col} pa={pa_col} "
+              f"woba={woba_col} xwoba={xwoba_col}")
 
         if not (id_col and pitch_col):
             print(f"  WARNING: couldn't identify required columns for {kind} "
@@ -1402,7 +1474,21 @@ def fetch_pitch_mix_data():
                 try:
                     ba_raw = float(row[ba_col])
                     pa_raw = int(float(row[pa_col]))
-                    batter_pitch_avg.setdefault(pid, {})[pitch_type] = {"ba": ba_raw, "pa": pa_raw}
+                    entry = {"ba": ba_raw, "pa": pa_raw}
+                    # Both optional, independent of ba/pa being present -
+                    # honest None if either real column wasn't found or
+                    # this particular row's value is blank.
+                    if woba_col and row.get(woba_col):
+                        try:
+                            entry["woba"] = float(row[woba_col])
+                        except (TypeError, ValueError):
+                            pass
+                    if xwoba_col and row.get(xwoba_col):
+                        try:
+                            entry["xwoba"] = float(row[xwoba_col])
+                        except (TypeError, ValueError):
+                            pass
+                    batter_pitch_avg.setdefault(pid, {})[pitch_type] = entry
                 except (ValueError, TypeError, KeyError):
                     pass
 
@@ -1518,6 +1604,11 @@ def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_p
             "ba": ba_entry["ba"] if ba_entry else None,
             "pa": ba_entry["pa"] if ba_entry else 0,
             "hardhit": round(hardhit_val, 3) if hardhit_val is not None else None,
+            # v4.0 NEW (this session, after a real run confirmed these
+            # columns are genuinely present): real wOBA/xwOBA for this
+            # batter against this specific pitch type.
+            "woba": ba_entry.get("woba") if ba_entry else None,
+            "xwoba": ba_entry.get("xwoba") if ba_entry else None,
             # v3.97 NEW: real count of home runs this batter has hit off
             # this specific pitch type this season, from real play events
             # (see fetch_batter_hr_by_pitch_type) - 0 is a real, honest
@@ -1554,6 +1645,8 @@ def build_full_season_pitch_type_breakdown(batter_id, batter_pitch_avg, batter_p
             "ba": ba_entry["ba"] if ba_entry else None,
             "pa": ba_entry["pa"] if ba_entry else 0,
             "hardhit": round(hardhit_val, 3) if hardhit_val is not None else None,
+            "woba": ba_entry.get("woba") if ba_entry else None,
+            "xwoba": ba_entry.get("xwoba") if ba_entry else None,
             "hr": hr_data.get(pitch_type, 0),
         }
     return breakdown
@@ -3188,13 +3281,15 @@ def main():
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
-                    # v3.99 NEW: saved but NOT yet consumed by
-                    # compute_hr_probability() - see the HONESTY NOTE in
-                    # fetch_batter_statcast(). Available for review/
-                    # calibration once a real run confirms real values.
-                    "xwoba": sc.get("xwoba"),
-                    "xwobacon": sc.get("xwobacon"),
-                    "flyballPct": sc.get("flyballPct"),
+                    # v4.0 CORRECTED (this session, after a real run - see
+                    # chat discussion): xwoba/xwobacon/flyballPct removed -
+                    # confirmed NOT present on this leaderboard, and
+                    # flyballPct was built on a mislabeled column ("fbld"
+                    # is not actually a percentage - see fetch_batter_
+                    # statcast()'s note). Replaced with the real,
+                    # confirmed sweetSpotPct. Still not consumed by
+                    # compute_hr_probability() - display/review data only.
+                    "sweetSpotPct": sc.get("sweetSpotPct"),
                     "l15Barrel": sc_l15.get("barrel"),
                     "l15Ev": sc_l15.get("ev"),
                     "l15Hardhit": sc_l15.get("hardhit"),
@@ -3617,7 +3712,7 @@ def write_daily_snapshot(players):
                 "hrProb": p.get("hrProb"), "hrrProb": p.get("hrrProb"), "tbProb": p.get("tbProb"),
                 "tier": p.get("tier"), "tierCappedReason": p.get("tierCappedReason"),
                 "barrel": p.get("barrel"), "ev": p.get("ev"), "hardhit": p.get("hardhit"),
-                "xwoba": p.get("xwoba"), "xwobacon": p.get("xwobacon"), "flyballPct": p.get("flyballPct"),
+                "sweetSpotPct": p.get("sweetSpotPct"),
                 "l15Barrel": p.get("l15Barrel"), "l15Ev": p.get("l15Ev"),
                 "l15Hardhit": p.get("l15Hardhit"), "l15PowerPa": p.get("l15PowerPa"),
                 "iso": p.get("iso"), "pa": p.get("pa"), "slg": p.get("slg"),
