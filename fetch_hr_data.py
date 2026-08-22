@@ -2737,9 +2737,24 @@ def compute_hr_probability(p, debug=False, return_mean=False):
     # situational) - this is deliberately a story about "his current form
     # matters more than his season-long power reading says," not about
     # matchup, so power is the right place to borrow from.
-    RECENT_WEIGHT_MAX = 0.30
-    RECENT_GATE_FLOOR = 0.45
-    RECENT_GATE_CEIL = 0.80
+    # v4.1 FIX (this session - see chat discussion, real board evidence:
+    # Jordan Walker and Max Muncy - both having hit a HR the day before -
+    # ranked #1 and #2 overall). Traced the real numbers for a matching
+    # profile: recent_confirmed_trust=0.639 easily cleared the old
+    # RECENT_GATE_FLOOR=0.45, pushing effective_w_recent from 0.14 up to
+    # 0.227 while cutting effective_w_power from 0.20 down to 0.113 to
+    # make room - recent form's actual contribution to the blend ended up
+    # 5x power's for that profile. Combined with the pre-existing
+    # exponential recency decay (RECENT_HR_DECAY_HALF_LIFE, which already
+    # gives yesterday's game close to full credit on its own), a single
+    # very recent HR was getting real, compounding, outsized pull. Raised
+    # the floor and lowered the ceiling weight so this mechanism still
+    # does its intended job (letting a real, well-established hot streak
+    # matter) but takes a stronger, more convincing signal to substantially
+    # override season power - not one recent game with modest confirmation.
+    RECENT_WEIGHT_MAX = 0.22
+    RECENT_GATE_FLOOR = 0.60
+    RECENT_GATE_CEIL = 0.85
     recent_gate = clamp01((recent_confirmed_trust - RECENT_GATE_FLOOR) / (RECENT_GATE_CEIL - RECENT_GATE_FLOOR))
     # v3.90 NEW (this session - see chat discussion, "don't want Ohtani
     # shooting even higher"): the story this mechanism is meant to tell -
