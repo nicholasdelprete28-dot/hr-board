@@ -1359,6 +1359,34 @@ def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_p
     return breakdown
 
 
+# v3.96 NEW (this session - see chat discussion, "season-long pitch-type
+# leaderboard"): build_pitch_type_breakdown() above is deliberately
+# scoped to only the pitch types TODAY's specific opponent throws - the
+# right scope for "how does he do against what he'll actually see today."
+# This sibling function has no such filter - it returns the batter's real
+# season-long performance against EVERY pitch type he's actually faced,
+# regardless of today's matchup. Same underlying real data
+# (batter_pitch_avg/batter_pitch_data), just not filtered down to one
+# pitcher's mix - answers a different real question ("who's the best
+# slider-hitter in baseball") that the matchup-scoped version can't.
+def build_full_season_pitch_type_breakdown(batter_id, batter_pitch_avg, batter_pitch_data):
+    ba_data = batter_pitch_avg.get(batter_id) or {}
+    hardhit_data = batter_pitch_data.get(batter_id) or {}
+    all_pitch_types = set(ba_data.keys()) | set(hardhit_data.keys())
+    breakdown = {}
+    for pitch_type in sorted(all_pitch_types):
+        ba_entry = ba_data.get(pitch_type)
+        hardhit_val = hardhit_data.get(pitch_type)
+        if ba_entry is None and hardhit_val is None:
+            continue
+        breakdown[pitch_type] = {
+            "ba": ba_entry["ba"] if ba_entry else None,
+            "pa": ba_entry["pa"] if ba_entry else 0,
+            "hardhit": round(hardhit_val, 3) if hardhit_val is not None else None,
+        }
+    return breakdown
+
+
 def get_team_roster(team_id):
     try:
         data = statsapi_get(f"teams/{team_id}/roster", {"rosterType": "active"})
@@ -2933,6 +2961,8 @@ def main():
                     batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mix, bstats.get("avg"))
                 pitch_type_breakdown = build_pitch_type_breakdown(
                     batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix)
+                pitch_type_breakdown_full = build_full_season_pitch_type_breakdown(
+                    batter_id, batter_pitch_avg, batter_pitch_data)
 
                 player_row = {
                     "playerType": "batter",
@@ -2954,6 +2984,7 @@ def main():
                     "avgVsMix": avg_vs_mix_val,
                     "avgVsMixPa": avg_vs_mix_pa,
                     "pitchTypeBreakdown": pitch_type_breakdown,
+                    "pitchTypeBreakdownFull": pitch_type_breakdown_full,
                     "oppBullpenEra": bullpen_cache.get(opp_team_id, {}).get("bullpenEra"),
                     "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"),
                     "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),
@@ -3435,6 +3466,7 @@ def write_daily_snapshot(players):
                 # v3.92: real per-pitch-type and full-week breakdowns,
                 # saved instead of discarded - see the build functions.
                 "pitchTypeBreakdown": p.get("pitchTypeBreakdown"),
+                "pitchTypeBreakdownFull": p.get("pitchTypeBreakdownFull"),
                 "dowBreakdown": p.get("dowBreakdown"),
             })
     path = f"history/{date_str}.json"
