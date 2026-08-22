@@ -1158,26 +1158,35 @@ def fetch_batter_statcast_l15():
     the intended full 15-day window, this whole session, quietly biasing
     the "recent power trend" signal that feeds compute_hr_probability().
     Fixed the same way as the season HR-by-pitch-type fetch: chunk the
-    date range into smaller windows, each safely under the real cap."""
+    date range into smaller windows, each safely under the real cap.
+
+    v4.2 FIX (this session - see chat discussion, "six minutes and still
+    running"): the v4.0 chunking fix ran its requests SEQUENTIALLY - a
+    real, serious performance regression traded for the correctness fix.
+    Every other multi-request fetch in this file (per-team, per-player)
+    already uses concurrent requests; this one didn't. Now fetches all
+    chunks concurrently and aggregates afterward, single-threaded (safe -
+    no shared-dict writes happen across threads, only after every fetch
+    is back)."""
     end_date = datetime.date.today()
     start_date = end_date - datetime.timedelta(days=15)
     chunk_days = 5
-    per_batter = {}
-    total_rows_seen = 0
-    chunks_at_cap = 0
-    chunk_count = 0
-    printed_columns = False
 
+    chunks = []
     cur = start_date
     while cur <= end_date:
         chunk_end = min(cur + datetime.timedelta(days=chunk_days - 1), end_date)
-        chunk_count += 1
+        chunks.append((cur, chunk_end))
+        cur = chunk_end + datetime.timedelta(days=1)
+
+    def fetch_one_chunk(date_range):
+        chunk_start, chunk_end = date_range
         url = (
             "https://baseballsavant.mlb.com/statcast_search/csv"
             "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
             "&hfGT=R%7C&hfC=&hfSea=" + str(YEAR) + "%7C&hfSit="
             "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
-            "&hfSA=&game_date_gt=" + cur.isoformat()
+            "&hfSA=&game_date_gt=" + chunk_start.isoformat()
             + "&game_date_lt=" + chunk_end.isoformat()
             + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
             "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
@@ -1190,22 +1199,33 @@ def fetch_batter_statcast_l15():
             text = resp.content.decode("utf-8-sig")
             reader = csv.DictReader(io.StringIO(text))
             rows = list(reader)
-            if not printed_columns and rows:
-                print(f"  Savant L15 event-level CSV columns: {reader.fieldnames}")
-                printed_columns = True
+            return (chunk_start, chunk_end, rows, reader.fieldnames, None)
         except Exception as e:
-            print(f"  WARNING: L15 chunk {cur}..{chunk_end} failed ({e}) - skipping this window.")
-            cur = chunk_end + datetime.timedelta(days=1)
+            return (chunk_start, chunk_end, None, None, e)
+
+    per_batter = {}
+    total_rows_seen = 0
+    chunks_at_cap = 0
+    printed_columns = False
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        results = list(executor.map(fetch_one_chunk, chunks))
+
+    for chunk_start, chunk_end, rows, fieldnames, err in results:
+        if err is not None:
+            print(f"  WARNING: L15 chunk {chunk_start}..{chunk_end} failed ({err}) - skipping this window.")
             continue
+        if not printed_columns and rows:
+            print(f"  Savant L15 event-level CSV columns: {fieldnames}")
+            printed_columns = True
 
         total_rows_seen += len(rows)
         if len(rows) >= SAVANT_ROW_CAP:
             chunks_at_cap += 1
-            print(f"  WARNING: L15 chunk {cur}..{chunk_end} hit {len(rows)} rows - "
+            print(f"  WARNING: L15 chunk {chunk_start}..{chunk_end} hit {len(rows)} rows - "
                   f"at or above the real cap, still likely truncated.")
 
         if not rows:
-            cur = chunk_end + datetime.timedelta(days=1)
             continue
 
         id_columns = ["batter", "player_id", "batter_id"]
@@ -1220,8 +1240,7 @@ def fetch_batter_statcast_l15():
         la_col = next((c for c in la_columns if c in rows[0]), None)
 
         if not (id_col and ls_col):
-            print(f"  WARNING: required L15 columns not found in chunk {cur}..{chunk_end} - skipping.")
-            cur = chunk_end + datetime.timedelta(days=1)
+            print(f"  WARNING: required L15 columns not found in chunk {chunk_start}..{chunk_end} - skipping.")
             continue
 
         for row in rows:
@@ -1256,8 +1275,6 @@ def fetch_batter_statcast_l15():
                 except (TypeError, ValueError):
                     pass
 
-        cur = chunk_end + datetime.timedelta(days=1)
-
     out = {}
     for pid, d in per_batter.items():
         if d["n"] <= 0:
@@ -1269,7 +1286,7 @@ def fetch_batter_statcast_l15():
             "pa": d["n"],
             "launchAngle": round(d["la_sum"] / d["la_n"], 1) if d["la_n"] > 0 else None,
         }
-    print(f"  L15: {chunk_count} date chunks, {total_rows_seen} total rows seen, "
+    print(f"  L15: {len(chunks)} date chunks (fetched concurrently), {total_rows_seen} total rows seen, "
           f"{chunks_at_cap} chunk(s) still hit the row cap (consider shrinking chunk_days if > 0)")
     print(f"  parsed L15 power data for {len(out)} batters from "
           f"{sum(d['n'] for d in per_batter.values())} batted-ball events")
@@ -1289,14 +1306,8 @@ def fetch_batter_statcast_l15():
 # well-documented Statcast Search schema this file already successfully
 # parses elsewhere, so it's the more reliable choice, not a guess.
 # HONEST COST: a full season of pitch-level events is meaningfully larger
-# than the 15-day version (one request, but a much bigger one) - real
-# runtime tradeoff for real HR-per-pitch-type data.
-# and the original single-request season fetch returned EXACTLY 25000 rows,
-# which is Baseball Savant's real API cap, not a coincidence of real data
-# volume. A single request across a full season (~700k+ pitches
-# league-wide) silently truncates to whatever the API returns first -
-# NOT a representative sample. Fixed below by chunking into date windows
-# small enough to stay under this cap.
+# than the 15-day version - real runtime tradeoff for real HR-per-pitch-
+# type data, mitigated by fetching chunks concurrently (see v4.2 below).
 
 
 def fetch_batter_hr_by_pitch_type(season):
@@ -1306,32 +1317,39 @@ def fetch_batter_hr_by_pitch_type(season):
     representative slice of a real ~700k-pitch season, badly undercounting
     real HR-by-pitch-type totals (confirmed low: only 180 total HRs
     attributed in the run that surfaced this bug, well short of a real
-    season's total). Now chunks the season into multiple date-range
-    requests, each sized to stay safely under the real cap (~4,000
-    pitches/day league-wide x 5-day windows = ~20,000, real margin below
-    25,000), and aggregates real results across all chunks. A single
-    chunk failing is logged and skipped rather than aborting the whole
-    fetch - partial real season coverage is more honest and more useful
-    than an all-or-nothing failure.
-    """
+    season's total). Chunks the season into multiple date-range requests,
+    each sized to stay safely under the real cap (~4,000 pitches/day
+    league-wide x 5-day windows = ~20,000, real margin below 25,000).
+
+    v4.2 FIX (this session - see chat discussion, "six minutes and still
+    running"): the v4.0 chunking fix ran ~35 real requests SEQUENTIALLY -
+    a real, serious performance regression traded for the correctness
+    fix, and almost certainly the actual cause of a 6+ minute run. Now
+    fetches all ~35 chunks CONCURRENTLY (same pattern already used
+    elsewhere in this file for per-team/per-player fetches) and
+    aggregates afterward, single-threaded - safe, since no shared-dict
+    writes happen across threads, only after every fetch is back. A
+    single chunk failing is logged and skipped rather than aborting the
+    whole fetch."""
     start_date = datetime.date(season, 3, 1)
     end_date = datetime.date.today()
     chunk_days = 5
-    per_batter = {}
-    total_rows_seen = 0
-    chunks_at_cap = 0
-    chunk_count = 0
 
+    chunks = []
     cur = start_date
     while cur <= end_date:
         chunk_end = min(cur + datetime.timedelta(days=chunk_days - 1), end_date)
-        chunk_count += 1
+        chunks.append((cur, chunk_end))
+        cur = chunk_end + datetime.timedelta(days=1)
+
+    def fetch_one_chunk(date_range):
+        chunk_start, chunk_end = date_range
         url = (
             "https://baseballsavant.mlb.com/statcast_search/csv"
             "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
             "&hfGT=R%7C&hfC=&hfSea=" + str(season) + "%7C&hfSit="
             "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
-            "&hfSA=&game_date_gt=" + cur.isoformat()
+            "&hfSA=&game_date_gt=" + chunk_start.isoformat()
             + "&game_date_lt=" + chunk_end.isoformat()
             + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
             "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
@@ -1344,21 +1362,31 @@ def fetch_batter_hr_by_pitch_type(season):
             text = resp.content.decode("utf-8-sig")
             reader = csv.DictReader(io.StringIO(text))
             rows = list(reader)
+            return (chunk_start, chunk_end, rows, None)
         except Exception as e:
-            print(f"  WARNING: HR-by-pitch-type chunk {cur}..{chunk_end} failed ({e}) - "
+            return (chunk_start, chunk_end, None, e)
+
+    per_batter = {}
+    total_rows_seen = 0
+    chunks_at_cap = 0
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        results = list(executor.map(fetch_one_chunk, chunks))
+
+    for chunk_start, chunk_end, rows, err in results:
+        if err is not None:
+            print(f"  WARNING: HR-by-pitch-type chunk {chunk_start}..{chunk_end} failed ({err}) - "
                   f"skipping this window, continuing with the rest of the season.")
-            cur = chunk_end + datetime.timedelta(days=1)
             continue
 
         total_rows_seen += len(rows)
         if len(rows) >= SAVANT_ROW_CAP:
             chunks_at_cap += 1
-            print(f"  WARNING: chunk {cur}..{chunk_end} hit {len(rows)} rows - "
+            print(f"  WARNING: chunk {chunk_start}..{chunk_end} hit {len(rows)} rows - "
                   f"at or above the real cap, still likely truncated. Consider a "
                   f"smaller chunk_days value if this happens often.")
 
         if not rows:
-            cur = chunk_end + datetime.timedelta(days=1)
             continue
 
         id_columns = ["batter", "player_id", "batter_id"]
@@ -1368,8 +1396,7 @@ def fetch_batter_hr_by_pitch_type(season):
         events_columns = ["events"]
         events_col = next((c for c in events_columns if c in rows[0]), None)
         if not (id_col and pitch_col and events_col):
-            print(f"  WARNING: required columns not found in chunk {cur}..{chunk_end} - skipping.")
-            cur = chunk_end + datetime.timedelta(days=1)
+            print(f"  WARNING: required columns not found in chunk {chunk_start}..{chunk_end} - skipping.")
             continue
 
         for row in rows:
@@ -1386,10 +1413,9 @@ def fetch_batter_hr_by_pitch_type(season):
             per_batter.setdefault(pid, {})
             per_batter[pid][pitch_type] = per_batter[pid].get(pitch_type, 0) + 1
 
-        cur = chunk_end + datetime.timedelta(days=1)
-
     total_hr = sum(sum(d.values()) for d in per_batter.values())
-    print(f"  HR-by-pitch-type: {chunk_count} date chunks, {total_rows_seen} total rows seen, "
+    print(f"  HR-by-pitch-type: {len(chunks)} date chunks (fetched concurrently), "
+          f"{total_rows_seen} total rows seen, "
           f"{chunks_at_cap} chunk(s) still hit the row cap (consider shrinking chunk_days if > 0)")
     print(f"  parsed real season HR-by-pitch-type counts for {len(per_batter)} batters, "
           f"{total_hr} total home runs attributed to a specific pitch type")
