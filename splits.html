@@ -286,10 +286,17 @@
   .badge-hot{background:rgba(227,165,72,0.18); color:var(--gold);}
   .badge-cold{background:rgba(139,148,141,0.12); color:var(--muted);}
   .player-row.top-pick{
-    background:linear-gradient(90deg, rgba(227,165,72,0.10), transparent 60%);
-    border-left:3px solid var(--gold);
+    background:linear-gradient(90deg, rgba(227,165,72,0.22), rgba(227,165,72,0.04) 75%);
+    border-left:5px solid var(--gold);
+    box-shadow:inset 0 0 0 1px rgba(227,165,72,0.35);
+    position:relative;
   }
-  .top-pick-star{color:var(--gold); font-size:12px;}
+  .top-pick-ribbon{
+    position:absolute; top:0; right:0; background:var(--gold); color:#171307;
+    font-family:var(--display); font-weight:700; font-size:9.5px; letter-spacing:0.4px;
+    padding:3px 10px; border-radius:0 0 0 8px;
+  }
+  .top-pick-star{color:var(--gold); font-size:13px; filter:drop-shadow(0 0 3px rgba(227,165,72,0.6));}
   .game-summary-strip{
     max-width:1440px; margin:12px auto 0; padding:12px 16px;
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
@@ -669,6 +676,9 @@ const STATIC_FACTORS = [
   {value: 'obp', label: 'OBP (season)', group: 'Power Metrics'},
   {value: 'l15hrRate', label: 'HR Rate Trend (L15)', group: 'Power Metrics'},
   {value: 'l30hrRate', label: 'HR Rate Trend (L30)', group: 'Power Metrics'},
+  {value: 'xwoba', label: 'xwOBA', group: 'Power Metrics'},
+  {value: 'xwobacon', label: 'xwOBAcon', group: 'Power Metrics'},
+  {value: 'flyballPct', label: 'Fly Ball %', group: 'Power Metrics'},
   {value: 'pitcherHr9Percentile', label: "Today's Pitcher HR/9 Percentile", group: 'Matchup'},
   {value: 'oppBullpenEra', label: 'Opposing Bullpen ERA', group: 'Matchup', invert: true},
   {value: 'oppBullpenWhip', label: 'Opposing Bullpen WHIP', group: 'Matchup', invert: true},
@@ -826,6 +836,9 @@ const SIMPLE_FIELD_FACTORS = {
   obp:         {field: 'obp',         pa: 'pa',        fmt: v => v.toFixed(3)},
   l15hrRate:   {field: 'l15hrRate',   pa: 'l15IsoPa',  fmt: v => (v*100).toFixed(1) + '%'},
   l30hrRate:   {field: 'l30hrRate',   pa: 'l30Pa',     fmt: v => (v*100).toFixed(1) + '%'},
+  xwoba:       {field: 'xwoba',       pa: 'pa',        fmt: v => v.toFixed(3)},
+  xwobacon:    {field: 'xwobacon',    pa: 'pa',        fmt: v => v.toFixed(3)},
+  flyballPct:  {field: 'flyballPct',  pa: 'pa',        fmt: v => (v*100).toFixed(1) + '%'},
   pitcherHr9Percentile: {field: 'pitcherHr9Percentile', pa: null, fmt: v => (v*100).toFixed(0) + 'th pctl'},
   oppBullpenEra:  {field: 'oppBullpenEra',  pa: 'oppBullpenIp', fmt: v => v.toFixed(2)},
   oppBullpenWhip: {field: 'oppBullpenWhip', pa: 'oppBullpenIp', fmt: v => v.toFixed(2)},
@@ -1005,6 +1018,7 @@ function render(){
     if (isTopPick) topPickGames.add(p.game);
     return `
     <div class="player-row ${isTopPick ? 'top-pick' : ''}" data-player-id="${p.playerId}">
+      ${isTopPick ? '<div class="top-pick-ribbon">TOP PICK</div>' : ''}
       <div class="row-rank">${i+1}</div>
       <div class="compare-check ${isChecked ? 'checked' : ''}" data-compare-id="${p.playerId}" title="Add to comparison">&#10003;</div>
       <div class="star-check ${isStarredToday(p.playerId) ? 'starred' : ''}" data-star-id="${p.playerId}" title="Add to watchlist">&#9733;</div>
@@ -1218,6 +1232,15 @@ function buildStatPanel(p, group, sortFactor){
       sb('OBP', p.obp, {sortKey: sortFactor.has('obp'), pa: p.pa, fmt: dec3}),
       sb('HR Trend (L15)', p.l15hrRate, {sortKey: sortFactor.has('l15hrRate'), pa: p.l15IsoPa, fmt: pct}),
       sb('HR Trend (L30)', p.l30hrRate, {sortKey: sortFactor.has('l30hrRate'), pa: p.l30Pa, fmt: pct}),
+      // v3.99 NEW (this session - see chat discussion): these three are
+      // ONLY shown when the backend actually found real data for them
+      // (see fetch_hr_data.py's HONESTY NOTE - not every Savant
+      // leaderboard export is guaranteed to include xwOBA/xwOBAcon/FB%).
+      // sb()'s isNA handling already shows a real dash when the value is
+      // null, so this degrades honestly either way.
+      sb('xwOBA', p.xwoba, {pa: p.pa, fmt: v=>v.toFixed(3)}),
+      sb('xwOBAcon', p.xwobacon, {pa: p.pa, fmt: v=>v.toFixed(3)}),
+      sb('Fly Ball %', p.flyballPct, {pa: p.pa, fmt: pct}),
     ].join('');
   }
   if (group === 'Matchup'){
