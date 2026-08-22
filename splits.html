@@ -185,6 +185,81 @@
   .player-row:hover{background:rgba(227,165,72,0.06);}
   .player-row:last-child{border-bottom:none;}
   .row-rank{font-family:var(--mono); font-size:12px; color:var(--muted2); width:22px; flex-shrink:0;}
+  .compare-check{
+    width:18px; height:18px; border-radius:5px; border:1.5px solid var(--muted2); flex-shrink:0;
+    cursor:pointer; display:flex; align-items:center; justify-content:center; color:transparent;
+  }
+  .compare-check:hover{border-color:var(--gold);}
+  .compare-check.checked{background:var(--gold); border-color:var(--gold); color:#171307;}
+  .star-check{
+    width:22px; height:22px; flex-shrink:0; cursor:pointer; display:flex; align-items:center;
+    justify-content:center; color:var(--muted2); font-size:16px;
+  }
+  .star-check:hover{color:var(--muted);}
+  .star-check.starred{color:var(--gold);}
+  .watchlist-btn{
+    font-family:var(--display); font-size:12px; font-weight:600; background:transparent; color:var(--gold);
+    border:1px solid var(--gold); border-radius:9px; padding:8px 14px; cursor:pointer; align-self:center;
+  }
+  .wl-summary{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:0; margin-bottom:18px;
+    border:1px solid var(--line); border-radius:10px; overflow:hidden;
+  }
+  .wl-summary-stat{padding:14px 10px; text-align:center; border-right:1px solid var(--line);}
+  .wl-summary-stat:last-child{border-right:none;}
+  .wl-summary-label{font-family:var(--mono); font-size:9px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.4px;}
+  .wl-summary-val{font-family:var(--mono); font-size:20px; color:var(--gold); font-weight:700; margin-top:4px;}
+  .wl-entry{
+    display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--line);
+  }
+  .wl-entry:last-child{border-bottom:none;}
+  .wl-entry-info{flex:1;}
+  .wl-entry-name{font-family:var(--body); font-weight:600; color:var(--text); font-size:13px;}
+  .wl-entry-meta{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:2px;}
+  .wl-result{font-family:var(--mono); font-size:11px; font-weight:700; padding:4px 10px; border-radius:7px;}
+  .wl-result.hit{background:rgba(79,219,154,0.16); color:#4fdb9a;}
+  .wl-result.miss{background:rgba(139,148,141,0.1); color:var(--muted);}
+  .wl-result.pending{background:rgba(227,165,72,0.1); color:var(--gold);}
+  .compare-bar{
+    display:none; position:sticky; bottom:14px; z-index:60; max-width:1440px; margin:14px auto 0;
+    background:var(--surface2); border:1px solid var(--gold); border-radius:12px; padding:12px 16px;
+    align-items:center; gap:12px; box-shadow:0 6px 24px rgba(0,0,0,0.4);
+  }
+  .compare-bar.show{display:flex;}
+  .compare-bar-text{font-family:var(--body); font-size:13px; color:var(--text); flex:1;}
+  .compare-bar-btn{
+    font-family:var(--display); font-weight:700; font-size:12.5px; background:var(--gold); color:#171307;
+    border:none; border-radius:8px; padding:8px 16px; cursor:pointer;
+  }
+  .compare-bar-clear{
+    font-family:var(--mono); font-size:11px; background:transparent; border:1px solid var(--line);
+    color:var(--muted); border-radius:8px; padding:8px 12px; cursor:pointer;
+  }
+
+  .compare-overlay{
+    display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.75);
+    align-items:flex-start; justify-content:center; padding:40px 14px; overflow-y:auto;
+  }
+  .compare-overlay.show{display:flex;}
+  .compare-panel{
+    background:var(--surface2); border:1px solid var(--line); border-radius:16px;
+    max-width:1100px; width:100%; padding:0; margin-bottom:40px;
+  }
+  .compare-header{
+    padding:18px 22px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;
+    position:sticky; top:0; background:var(--surface2); border-radius:16px 16px 0 0;
+  }
+  .compare-title{font-family:var(--display); font-weight:700; font-size:18px; color:var(--text);}
+  .compare-body{padding:20px 22px; display:grid; gap:16px;}
+  .compare-col-head{text-align:center; margin-bottom:12px;}
+  .compare-col-head .row-headshot{margin:0 auto 8px;}
+  .compare-col-name{font-family:var(--display); font-weight:700; font-size:15px; color:var(--text);}
+  .compare-col-meta{font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:2px;}
+  .compare-category{margin-bottom:16px;}
+  .compare-category-title{
+    font-family:var(--mono); font-size:10px; color:var(--gold); text-transform:uppercase;
+    letter-spacing:0.6px; margin-bottom:8px; border-bottom:1px solid var(--line); padding-bottom:5px;
+  }
   .row-headshot{
     width:44px; height:44px; border-radius:50%; border:2px solid; flex-shrink:0; position:relative;
     overflow:hidden; display:flex; align-items:center; justify-content:center;
@@ -345,10 +420,27 @@
     </div>
     <div class="result-count" id="resultCount"></div>
     <button class="guide-btn" id="guideBtn">&#128214; How to Use This</button>
+    <button class="watchlist-btn" id="watchlistBtn">&#9733; My Watchlist</button>
   </div>
 
   <div class="table-wrap" id="tableWrap"></div>
   <div class="empty-state" id="emptyState" style="display:none;">No batters match this factor with real data today.</div>
+
+  <div class="compare-bar" id="compareBar">
+    <div class="compare-bar-text" id="compareBarText"></div>
+    <button class="compare-bar-clear" id="compareBarClear">Clear</button>
+    <button class="compare-bar-btn" id="compareBarBtn">Compare</button>
+  </div>
+</div>
+
+<div class="compare-overlay" id="compareOverlay">
+  <div class="compare-panel">
+    <div class="compare-header">
+      <div class="compare-title" id="compareTitle"></div>
+      <button class="gmodal-close" id="compareClose">&times;</button>
+    </div>
+    <div class="compare-body" id="compareBody"></div>
+  </div>
 </div>
 
 <div class="gmodal-overlay" id="gmodalOverlay">
@@ -437,6 +529,11 @@
       </div>
 
       <div class="guide-section">
+        <div class="guide-section-title">Season Vs. Pitch Type</div>
+        <div class="guide-item">Same real data, but unfiltered - shows performance against a pitch type across the WHOLE season, regardless of today's opponent. Use this to answer "who's the best fastball hitter in baseball," not just "who's good today."</div>
+      </div>
+
+      <div class="guide-section">
         <div class="guide-section-title">Making Good Picks</div>
         <ul class="guide-tips">
           <li>Don't chase one number alone. A hot Recent Form with a bad Matchup is closer to a coin flip than a real edge.</li>
@@ -449,8 +546,64 @@
   </div>
 </div>
 
+<div class="guide-overlay" id="watchlistOverlay">
+  <div class="guide-panel">
+    <div class="guide-header">
+      <div class="guide-title">My Watchlist</div>
+      <button class="gmodal-close" id="watchlistClose">&times;</button>
+    </div>
+    <div class="guide-body" id="watchlistBody">Loading...</div>
+  </div>
+</div>
+
 <script>
 const DATA_URL = "./players.json";
+const HISTORY_BASE = "./history";
+
+// v3.96 NEW (this session - see chat discussion, "personal watchlist with
+// real accuracy tracking"): uses real browser localStorage (this is a
+// real static site with no backend database - localStorage is the
+// correct, always-available persistence layer here, NOT the Claude-
+// artifact-specific window.storage API, which doesn't exist in a
+// deployed website). Real accuracy comes from cross-referencing against
+// history/outcomes/{date}.json, which index.html already fetches and
+// relies on (confirmed real structure: {batter: {playerId: {hr,hrr,tb}},
+// pitcher: {playerId: {k}}}) - reused here rather than invented fresh.
+const WATCHLIST_KEY = 'gy_watchlist';
+
+function getWatchlist(){
+  try {
+    return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+function saveWatchlist(list){
+  try {
+    localStorage.setItem(WATCHLIST_KEY, JSON.stringify(list));
+  } catch(e) {
+    // localStorage unavailable (private browsing, storage full, etc.) -
+    // fail silently rather than break the page over a non-critical feature.
+  }
+}
+function todayStr(){
+  return new Date().toISOString().slice(0, 10);
+}
+function isStarredToday(playerId){
+  return getWatchlist().some(e => e.date === todayStr() && String(e.playerId) === String(playerId));
+}
+function toggleStar(p){
+  const list = getWatchlist();
+  const today = todayStr();
+  const idx = list.findIndex(e => e.date === today && String(e.playerId) === String(p.playerId));
+  if (idx >= 0) {
+    list.splice(idx, 1);
+  } else {
+    list.push({date: today, playerId: p.playerId, playerName: p.player, team: p.team, hrProbAtStar: p.hrProb});
+  }
+  saveWatchlist(list);
+}
+
 let players = [];
 
 // v3.92 NEW (this session - see chat discussion, "sort by a BUNCH of
@@ -540,12 +693,24 @@ function buildFactorOptions(){
   // real loaded data - never a hardcoded list a given day's slate might
   // not actually contain.
   const pitchTypesSeen = new Set();
+  const seasonPitchTypesSeen = new Set();
   players.forEach(p => {
     if (p.pitchTypeBreakdown) Object.keys(p.pitchTypeBreakdown).forEach(pt => pitchTypesSeen.add(pt));
+    if (p.pitchTypeBreakdownFull) Object.keys(p.pitchTypeBreakdownFull).forEach(pt => seasonPitchTypesSeen.add(pt));
   });
   if (pitchTypesSeen.size) {
     groups['Vs. Pitch Type'] = [...pitchTypesSeen].sort().map(pt => ({
       value: 'pitch:' + pt, label: `Vs. ${PITCH_NAMES[pt] || pt}`, group: 'Vs. Pitch Type',
+    }));
+  }
+  // v3.96 NEW (this session - see chat discussion, "season-long pitch-type
+  // leaderboard"): a separate category from the matchup-scoped one above -
+  // this one is never filtered to today's specific opponent, so it can
+  // answer "who's the best slider-hitter in baseball" rather than only
+  // "who's good against sliders today."
+  if (seasonPitchTypesSeen.size) {
+    groups['Season Vs. Pitch Type'] = [...seasonPitchTypesSeen].sort().map(pt => ({
+      value: 'spitch:' + pt, label: `${PITCH_NAMES[pt] || pt} (Season)`, group: 'Season Vs. Pitch Type',
     }));
   }
 
@@ -581,6 +746,13 @@ function renderCategoryTabs(){
 // (e.g. Barrel% from Power Metrics + Bullpen ERA from Matchup together).
 let selectedFactors = new Set(['hrProb']);
 
+// v3.96 NEW (this session - see chat discussion, "compare mode"):
+// separate from selectedFactors (which drives sort/composite) - this
+// tracks which players are checked for side-by-side comparison. Capped
+// at 3 since a wider comparison stops being scannable.
+let compareSet = new Set();
+const COMPARE_MAX = 3;
+
 function renderFactorPills(){
   const pillsEl = document.getElementById('factorPills');
   const factors = groupedFactors[activeGroup] || [];
@@ -596,7 +768,7 @@ function renderFactorPills(){
         selectedFactors.add(val);
       }
       const hasDow = [...selectedFactors].includes('dow');
-      const hasPitch = [...selectedFactors].some(f => f.startsWith('pitch:'));
+      const hasPitch = [...selectedFactors].some(f => f.startsWith('pitch:') || f.startsWith('spitch:'));
       document.getElementById('dayPickerGroup').style.display = hasDow ? '' : 'none';
       document.getElementById('pitchMetricGroup').style.display = hasPitch ? '' : 'none';
       renderFactorPills();
@@ -659,6 +831,17 @@ function getFactorValue(p, factorValue){
     const pt = factorValue.slice(6);
     const metric = document.getElementById('pitchMetric').value;
     const entry = p.pitchTypeBreakdown && p.pitchTypeBreakdown[pt];
+    if (!entry) return {val: null, pa: 0, fmt: v => v};
+    const raw = metric === 'ba' ? entry.ba : entry.hardhit;
+    return {
+      val: raw, pa: entry.pa,
+      fmt: v => metric === 'ba' ? v.toFixed(3) : (v*100).toFixed(0) + '%',
+    };
+  }
+  if (factorValue.startsWith('spitch:')){
+    const pt = factorValue.slice(7);
+    const metric = document.getElementById('pitchMetric').value;
+    const entry = p.pitchTypeBreakdownFull && p.pitchTypeBreakdownFull[pt];
     if (!entry) return {val: null, pa: 0, fmt: v => v};
     const raw = metric === 'ba' ? entry.ba : entry.hardhit;
     return {
@@ -744,9 +927,12 @@ function render(){
     const compositeBadge = compositeScore != null
       ? `<div class="stat-block is-sort-key"><div class="stat-block-label">Composite Match</div><div class="stat-block-val">${compositeScore.toFixed(0)}/100</div></div>`
       : '';
+    const isChecked = compareSet.has(String(p.playerId));
     return `
     <div class="player-row" data-player-id="${p.playerId}">
       <div class="row-rank">${i+1}</div>
+      <div class="compare-check ${isChecked ? 'checked' : ''}" data-compare-id="${p.playerId}" title="Add to comparison">&#10003;</div>
+      <div class="star-check ${isStarredToday(p.playerId) ? 'starred' : ''}" data-star-id="${p.playerId}" title="Add to watchlist">&#9733;</div>
       ${playerHeadshot(p)}
       <div class="row-identity">
         <div class="row-player">${p.player}</div>
@@ -766,6 +952,148 @@ function render(){
       if (p) openGraphModal(p);
     });
   });
+
+  tableEl.querySelectorAll('.compare-check').forEach(chk => {
+    chk.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = chk.dataset.compareId;
+      if (compareSet.has(id)) {
+        compareSet.delete(id);
+      } else {
+        if (compareSet.size >= COMPARE_MAX) {
+          alert(`You can compare up to ${COMPARE_MAX} players at once - remove one first.`);
+          return;
+        }
+        compareSet.add(id);
+      }
+      chk.classList.toggle('checked');
+      updateCompareBar();
+    });
+  });
+
+  tableEl.querySelectorAll('.star-check').forEach(star => {
+    star.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = star.dataset.starId;
+      const p = players.find(pl => String(pl.playerId) === String(id));
+      if (p) {
+        toggleStar(p);
+        star.classList.toggle('starred');
+      }
+    });
+  });
+}
+
+function updateCompareBar(){
+  const bar = document.getElementById('compareBar');
+  const n = compareSet.size;
+  if (n < 2) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  document.getElementById('compareBarText').textContent = `${n} player${n>1?'s':''} selected for comparison`;
+}
+
+function openCompareModal(){
+  const selectedPlayers = [...compareSet].map(id => players.find(p => String(p.playerId) === id)).filter(Boolean);
+  if (selectedPlayers.length < 2) return;
+
+  document.getElementById('compareTitle').textContent = `Comparing ${selectedPlayers.length} Players`;
+  const categories = Object.keys(groupedFactors);
+
+  const colsHtml = selectedPlayers.map(p => `
+    <div class="compare-col-head">
+      ${playerHeadshot(p)}
+      <div class="compare-col-name">${p.player}</div>
+      <div class="compare-col-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
+      <div class="row-tier ${tierClass(p.tier)}" style="margin-top:6px;">${(p.tier||'-').toUpperCase()}</div>
+    </div>`).join('');
+
+  const categoriesHtml = categories.map(cat => {
+    const colsForCat = selectedPlayers.map(p =>
+      `<div>${buildStatPanel(p, cat, selectedFactors)}</div>`
+    ).join('');
+    return `
+      <div class="compare-category">
+        <div class="compare-category-title">${cat}</div>
+        <div style="display:grid; grid-template-columns:repeat(${selectedPlayers.length}, 1fr); gap:16px;">
+          ${colsForCat}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('compareBody').innerHTML = `
+    <div style="display:grid; grid-template-columns:repeat(${selectedPlayers.length}, 1fr); gap:16px;">${colsHtml}</div>
+    ${categoriesHtml}`;
+
+  document.getElementById('compareOverlay').classList.add('show');
+}
+
+// v3.96 NEW (this session - see chat discussion, "real accuracy
+// tracking"): fetches history/outcomes/{date}.json for every unique PAST
+// date in the watchlist (today's entries just show live current data -
+// there's no "outcome" yet for a game that hasn't happened). Real
+// cross-referencing against real results, not a simulated or invented
+// accuracy number.
+async function fetchOutcomesForDate(dateStr){
+  try {
+    const res = await fetch(`${HISTORY_BASE}/outcomes/${dateStr}.json?t=${Date.now()}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) {
+    return null; // no outcomes file yet for this date (e.g. check_results.py hasn't run) - handled as "pending" below, not an error
+  }
+}
+
+async function openWatchlistModal(){
+  document.getElementById('watchlistOverlay').classList.add('show');
+  const body = document.getElementById('watchlistBody');
+  body.innerHTML = 'Loading...';
+
+  const list = getWatchlist();
+  if (!list.length){
+    body.innerHTML = `<div class="no-data" style="padding:20px 0;">Your watchlist is empty. Click the &#9733; star on any player row to add them.</div>`;
+    return;
+  }
+
+  const today = todayStr();
+  const pastDates = [...new Set(list.filter(e => e.date !== today).map(e => e.date))];
+  const outcomesByDate = {};
+  await Promise.all(pastDates.map(async d => { outcomesByDate[d] = await fetchOutcomesForDate(d); }));
+
+  let hits = 0, resolved = 0;
+  const entriesHtml = list.slice().reverse().map(entry => {
+    let resultHtml;
+    if (entry.date === today){
+      resultHtml = `<div class="wl-result pending">Today - Pending</div>`;
+    } else {
+      const dayOutcomes = outcomesByDate[entry.date];
+      const result = dayOutcomes && dayOutcomes.batter ? dayOutcomes.batter[String(entry.playerId)] : null;
+      if (!result){
+        resultHtml = `<div class="wl-result pending">Not Resolved Yet</div>`;
+      } else {
+        resolved++;
+        const didHit = result.hr > 0;
+        if (didHit) hits++;
+        resultHtml = `<div class="wl-result ${didHit ? 'hit' : 'miss'}">${didHit ? 'HIT - ' + result.hr + ' HR' : 'No HR'}</div>`;
+      }
+    }
+    return `
+      <div class="wl-entry">
+        <div class="wl-entry-info">
+          <div class="wl-entry-name">${entry.playerName}</div>
+          <div class="wl-entry-meta">${entry.team || ''} &middot; ${entry.date} &middot; was ${entry.hrProbAtStar != null ? entry.hrProbAtStar.toFixed(1)+'%' : 'N/A'} at time of pick</div>
+        </div>
+        ${resultHtml}
+      </div>`;
+  }).join('');
+
+  const hitRate = resolved > 0 ? (hits / resolved * 100).toFixed(1) + '%' : '&mdash;';
+  body.innerHTML = `
+    <div class="wl-summary">
+      <div class="wl-summary-stat"><div class="wl-summary-label">Total Picks</div><div class="wl-summary-val">${list.length}</div></div>
+      <div class="wl-summary-stat"><div class="wl-summary-label">Resolved</div><div class="wl-summary-val">${resolved}</div></div>
+      <div class="wl-summary-stat"><div class="wl-summary-label">Your Hit Rate</div><div class="wl-summary-val">${hitRate}</div></div>
+    </div>
+    ${entriesHtml}`;
 }
 
 // v3.94 NEW (this session - see chat discussion, "every single # and
@@ -862,6 +1190,32 @@ function buildStatPanel(p, group, sortFactor){
       return `
         <div class="pitch-mix-item" style="${isSortKey ? 'border-color:var(--gold); background:rgba(227,165,72,0.07);' : ''}">
           <div class="pitch-mix-name">${name} <span class="pitch-mix-usage">${(d.pitcherUsage*100).toFixed(0)}% usage</span></div>
+          <div class="pitch-mix-stats">
+            <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
+            <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
+            <span style="color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</span>
+          </div>
+        </div>`;
+    }).join('');
+    return `<div class="pitch-mix-row">${items}</div>`;
+  }
+  if (group === 'Season Vs. Pitch Type'){
+    // v3.96 NEW (this session): unfiltered - shows the batter's real
+    // season performance against EVERY pitch type he's faced, not just
+    // today's opponent's mix. No "usage%" shown here on purpose - usage
+    // is a property of a SPECIFIC pitcher's arsenal, which doesn't apply
+    // to a season-wide, opponent-agnostic view.
+    const breakdown = p.pitchTypeBreakdownFull || {};
+    const types = Object.keys(breakdown);
+    if (!types.length) return `<div class="no-data">No season pitch-mix data available.</div>`;
+    const items = types.map(pt => {
+      const d = breakdown[pt];
+      const name = PITCH_NAMES[pt] || pt;
+      const isSortKey = sortFactor.has('spitch:' + pt);
+      const lowSample = d.pa > 0 && d.pa < 15;
+      return `
+        <div class="pitch-mix-item" style="${isSortKey ? 'border-color:var(--gold); background:rgba(227,165,72,0.07);' : ''}">
+          <div class="pitch-mix-name">${name}</div>
           <div class="pitch-mix-stats">
             <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
             <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
@@ -1008,6 +1362,21 @@ document.getElementById('guideBtn').addEventListener('click', () => document.get
 document.getElementById('guideClose').addEventListener('click', () => document.getElementById('guideOverlay').classList.remove('show'));
 document.getElementById('guideOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'guideOverlay') document.getElementById('guideOverlay').classList.remove('show');
+});
+document.getElementById('compareBarBtn').addEventListener('click', openCompareModal);
+document.getElementById('compareBarClear').addEventListener('click', () => {
+  compareSet.clear();
+  updateCompareBar();
+  render();
+});
+document.getElementById('compareClose').addEventListener('click', () => document.getElementById('compareOverlay').classList.remove('show'));
+document.getElementById('compareOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'compareOverlay') document.getElementById('compareOverlay').classList.remove('show');
+});
+document.getElementById('watchlistBtn').addEventListener('click', openWatchlistModal);
+document.getElementById('watchlistClose').addEventListener('click', () => document.getElementById('watchlistOverlay').classList.remove('show'));
+document.getElementById('watchlistOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'watchlistOverlay') document.getElementById('watchlistOverlay').classList.remove('show');
 });
 document.getElementById('gmodalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'gmodalOverlay') closeGraphModal();
