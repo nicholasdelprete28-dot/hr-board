@@ -276,6 +276,30 @@
     font-family:var(--mono); font-size:10px; color:var(--gold); text-transform:uppercase;
     letter-spacing:0.6px; margin-bottom:8px; border-bottom:1px solid var(--line); padding-bottom:5px;
   }
+
+  /* v4.4 NEW (this session) - Pitcher Lookup: pitcher's real arsenal +
+     a matrix of every opposing batter's real numbers per pitch type. */
+  .pl-arsenal{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px;}
+  .pl-arsenal-item{
+    background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px 14px; min-width:110px;
+  }
+  .pl-arsenal-name{font-family:var(--body); font-weight:700; font-size:13px; color:var(--text);}
+  .pl-arsenal-usage{font-family:var(--mono); font-size:16px; color:var(--gold); font-weight:700; margin-top:4px;}
+  .pl-arsenal-usage-label{font-family:var(--mono); font-size:8.5px; color:var(--muted2); text-transform:uppercase;}
+  .pl-matrix-wrap{overflow-x:auto;}
+  .pl-matrix{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12px;}
+  .pl-matrix th{
+    text-align:left; padding:9px 12px; color:var(--muted2); font-size:9.5px; text-transform:uppercase;
+    letter-spacing:0.4px; border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  .pl-matrix td{padding:9px 12px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  .pl-matrix tr:last-child td{border-bottom:none;}
+  .pl-matrix tr:hover td{background:rgba(227,165,72,0.04);}
+  .pl-batter-cell{display:flex; align-items:center; gap:8px;}
+  .pl-batter-name{font-family:var(--body); font-weight:600; color:var(--text); font-size:12.5px;}
+  .pl-cell-hr{color:var(--gold); font-weight:700;}
+  .pl-cell-na{color:var(--muted2); font-style:italic;}
+  .pl-cell-low{color:var(--stat-bad);}
   .row-headshot{
     width:44px; height:44px; border-radius:50%; border:2px solid; flex-shrink:0; position:relative;
     overflow:hidden; display:flex; align-items:center; justify-content:center;
@@ -460,6 +484,10 @@
       <div class="control-label">Game</div>
       <select id="gameFilter"><option value="">All Games</option></select>
     </div>
+    <div class="control-group" id="pitcherLookupGroup" style="display:none;">
+      <div class="control-label">Pitcher Lookup</div>
+      <select id="pitcherLookupSelect"><option value="">Select a pitcher...</option></select>
+    </div>
     <div class="control-group">
       <div class="control-label">Direction</div>
       <div class="dir-toggle desc" id="dirToggle">&#8595; Highest First</div>
@@ -492,6 +520,22 @@
       <button class="gmodal-close" id="compareClose">&times;</button>
     </div>
     <div class="compare-body" id="compareBody"></div>
+  </div>
+</div>
+
+<div class="compare-overlay" id="pitcherLookupOverlay">
+  <div class="compare-panel" style="max-width:1300px;">
+    <div class="compare-header">
+      <div>
+        <div class="compare-title" id="plTitle"></div>
+        <div class="compare-col-meta" id="plMeta" style="margin-top:4px;"></div>
+      </div>
+      <button class="gmodal-close" id="plClose">&times;</button>
+    </div>
+    <div class="compare-body">
+      <div class="pl-arsenal" id="plArsenal"></div>
+      <div class="pl-matrix-wrap" id="plMatrixWrap"></div>
+    </div>
   </div>
 </div>
 
@@ -1458,12 +1502,122 @@ function updateGameSummaryStrip(){
   `;
 }
 
+// v4.4 NEW (this session - see chat discussion, "select a game, select a
+// pitcher, see the pitch mix and how everyone stacks up"): every batter's
+// pitchTypeBreakdown was ALREADY scoped to today's specific opposing
+// pitcher's real arsenal (usage%, plus that batter's own AVG/hard-hit%/HR
+// against each pitch - see fetch_hr_data.py build_pitch_type_breakdown()).
+// This is a pure frontend reorganization of already-real data - no new
+// backend fetch, no new numbers - just flipped from "one batter, his
+// matchup" to "one pitcher, every batter who'll actually face him today."
+function updatePitcherLookupOptions(){
+  const selectedGame = document.getElementById('gameFilter').value;
+  const groupEl = document.getElementById('pitcherLookupGroup');
+  const selectEl = document.getElementById('pitcherLookupSelect');
+  if (!selectedGame){
+    groupEl.style.display = 'none';
+    selectEl.value = '';
+    return;
+  }
+  const gameBatters = players.filter(p => p.playerType === 'batter' && p.game === selectedGame);
+  // Real starting pitchers for this game are derivable directly from the
+  // batters themselves - every batter on team A shares the same real
+  // opposing pitcher (team B's starter), and vice versa. At most 2
+  // distinct pitchers per game, never hardcoded.
+  const seenPitchers = new Map();
+  gameBatters.forEach(p => {
+    if (p.oppPitcherId && !seenPitchers.has(p.oppPitcherId)){
+      seenPitchers.set(p.oppPitcherId, p.pitcher);
+    }
+  });
+  if (!seenPitchers.size){
+    groupEl.style.display = 'none';
+    return;
+  }
+  groupEl.style.display = '';
+  selectEl.innerHTML = '<option value="">Select a pitcher...</option>' +
+    [...seenPitchers.entries()].map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+}
+
+function openPitcherLookupModal(pitcherId){
+  const facingBatters = players.filter(p => p.playerType === 'batter' && String(p.oppPitcherId) === String(pitcherId));
+  if (!facingBatters.length) return;
+  const pitcherName = facingBatters[0].pitcher;
+  const facingTeam = facingBatters[0].team;
+  const gameStr = facingBatters[0].game;
+
+  // The real per-pitch usage% is identical across every batter facing
+  // this pitcher (it's a property of the PITCHER, not the batter) - pull
+  // it once from whichever facing batter has the fullest breakdown.
+  const withBreakdown = facingBatters.filter(p => p.pitchTypeBreakdown && Object.keys(p.pitchTypeBreakdown).length);
+  const arsenalSource = withBreakdown.reduce((best, p) =>
+    (!best || Object.keys(p.pitchTypeBreakdown).length > Object.keys(best.pitchTypeBreakdown).length) ? p : best, null);
+
+  if (!arsenalSource){
+    document.getElementById('plTitle').textContent = pitcherName;
+    document.getElementById('plMeta').textContent = `${gameStr} - no real pitch-mix data available for this matchup yet.`;
+    document.getElementById('plArsenal').innerHTML = '';
+    document.getElementById('plMatrixWrap').innerHTML = '';
+    document.getElementById('pitcherLookupOverlay').classList.add('show');
+    return;
+  }
+
+  const pitchTypes = Object.entries(arsenalSource.pitchTypeBreakdown)
+    .sort((a, b) => b[1].pitcherUsage - a[1].pitcherUsage);
+
+  document.getElementById('plTitle').textContent = pitcherName;
+  document.getElementById('plMeta').textContent = `${gameStr} - facing ${facingTeam}'s real lineup, ${pitchTypes.length} real pitch types tracked`;
+
+  document.getElementById('plArsenal').innerHTML = pitchTypes.map(([pt, d]) => `
+    <div class="pl-arsenal-item">
+      <div class="pl-arsenal-name">${PITCH_NAMES[pt] || pt}</div>
+      <div class="pl-arsenal-usage-label">Usage</div>
+      <div class="pl-arsenal-usage">${(d.pitcherUsage*100).toFixed(0)}%</div>
+    </div>`).join('');
+
+  // Sort batters by hrProb by default - the most relevant threats first.
+  const sortedBatters = [...facingBatters].sort((a, b) => (b.hrProb || 0) - (a.hrProb || 0));
+
+  const headerCells = pitchTypes.map(([pt]) => `<th>${PITCH_NAMES[pt] || pt}</th>`).join('');
+  const rows = sortedBatters.map(p => {
+    const cells = pitchTypes.map(([pt]) => {
+      const d = p.pitchTypeBreakdown ? p.pitchTypeBreakdown[pt] : null;
+      if (!d || d.ba == null) return `<td class="pl-cell-na">N/A</td>`;
+      const lowSample = d.pa > 0 && d.pa < 15;
+      const hrTag = d.hr > 0 ? `<span class="pl-cell-hr">${d.hr}HR </span>` : '';
+      return `<td class="${lowSample ? 'pl-cell-low' : ''}">${hrTag}${d.ba.toFixed(3)}${lowSample ? ' &#9888;' : ''}</td>`;
+    }).join('');
+    return `
+      <tr>
+        <td>
+          <div class="pl-batter-cell">
+            ${playerHeadshot(p)}
+            <div class="pl-batter-name">${p.player}<div style="font-family:var(--mono); font-size:9px; color:var(--muted2);">${p.hrProb != null ? p.hrProb.toFixed(1)+'% HR Prob' : ''}</div></div>
+          </div>
+        </td>
+        ${cells}
+      </tr>`;
+  }).join('');
+
+  document.getElementById('plMatrixWrap').innerHTML = `
+    <table class="pl-matrix">
+      <thead><tr><th>Batter</th>${headerCells}</tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="font-family:var(--body); font-size:10.5px; color:var(--muted2); margin-top:10px;">
+      Cell = real AVG against that specific pitch type this season &middot; gold = real HRs hit off it &middot; &#9888; = under 15 PA, small sample
+    </div>`;
+
+  document.getElementById('pitcherLookupOverlay').classList.add('show');
+}
+
 
 document.getElementById('dayPicker').addEventListener('change', render);
 document.getElementById('pitchMetric').addEventListener('change', render);
 document.getElementById('searchBox').addEventListener('input', render);
 document.getElementById('gameFilter').addEventListener('change', () => {
   updateGameSummaryStrip();
+  updatePitcherLookupOptions();
   render();
 });
 document.getElementById('dirToggle').addEventListener('click', () => {
@@ -1597,6 +1751,13 @@ document.getElementById('watchlistBtn').addEventListener('click', openWatchlistM
 document.getElementById('watchlistClose').addEventListener('click', () => document.getElementById('watchlistOverlay').classList.remove('show'));
 document.getElementById('watchlistOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'watchlistOverlay') document.getElementById('watchlistOverlay').classList.remove('show');
+});
+document.getElementById('pitcherLookupSelect').addEventListener('change', (e) => {
+  if (e.target.value) openPitcherLookupModal(e.target.value);
+});
+document.getElementById('plClose').addEventListener('click', () => document.getElementById('pitcherLookupOverlay').classList.remove('show'));
+document.getElementById('pitcherLookupOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'pitcherLookupOverlay') document.getElementById('pitcherLookupOverlay').classList.remove('show');
 });
 document.getElementById('gmodalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'gmodalOverlay') closeGraphModal();
