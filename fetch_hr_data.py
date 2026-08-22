@@ -1010,6 +1010,55 @@ def get_season_totals_hitting(batter_id, season):
         return None
 
 
+# v4.3 NEW (this session - see chat discussion, real gap: Joc Pederson
+# showing "Season ISO: N/A" and hard-capped below PRIME/STRONG despite a
+# real 27.4% hrProb). get_season_batting_stats() (the bulk call) only
+# returned 137 real rows in a real run - HONEST UNCERTAINTY: could not
+# confirm from public documentation whether MLB's bulk "stats?stats=
+# season&group=hitting" endpoint defaults to some kind of qualified-
+# batter-only filter, but 137 lines up suspiciously well with a real
+# rough count of true everyday-PA-qualified regulars across 30 teams,
+# and part-time/platoon players like Pederson are exactly the profile
+# that would fall outside that kind of threshold. Rather than guess
+# further at WHY, this mirrors the EXACT already-proven fix this file
+# already uses for the analogous pitcher-side gap
+# (get_pitcher_season_stats/"reliable per-pitcher season stats") - a
+# real, individual per-player API call as a supplement for anyone
+# missing from the bulk response, not a guess at the bulk endpoint's
+# real filtering logic.
+def get_reliable_batter_season_stats(batter_id, season):
+    try:
+        data = statsapi_get(f"people/{batter_id}/stats", {
+            "stats": "season", "group": "hitting", "season": season, "sportId": 1
+        })
+        splits = data.get("stats", [{}])[0].get("splits", [])
+        if not splits:
+            return None
+        stat = splits[0].get("stat", {})
+        avg = stat.get("avg")
+        slg = stat.get("slg")
+        if avg in (None, "", "-") or slg in (None, "", "-"):
+            return None
+        try:
+            avg_f = float(avg)
+            slg_f = float(slg)
+        except (TypeError, ValueError):
+            return None
+        obp = stat.get("obp")
+        pa = stat.get("plateAppearances")
+        try:
+            obp_f = float(obp) if obp not in (None, "", "-") else None
+        except (TypeError, ValueError):
+            obp_f = None
+        try:
+            pa_i = int(pa) if pa not in (None, "") else None
+        except (TypeError, ValueError):
+            pa_i = None
+        return {"iso": slg_f - avg_f, "avg": avg_f, "obp": obp_f, "pa": pa_i, "slg": slg_f}
+    except Exception:
+        return None
+
+
 def window_stats(games):
     n = len(games)
     if n == 0:
@@ -3370,6 +3419,43 @@ def main():
     print(f"  sides with a CONFIRMED lineup: {sides_confirmed_lineup}")
     print(f"  sides using a PROJECTED lineup (from last game): {sides_projected_lineup}")
     print(f"  sides with no lineup available at all: {sides_no_lineup_at_all}")
+
+    # v4.3 NEW (this session - see chat discussion, real Joc Pederson gap):
+    # supplement any batter actually needed today whose real avg/iso data
+    # is missing from the bulk get_season_batting_stats() response (only
+    # 137 rows in a real run - see get_reliable_batter_season_stats()'s
+    # docstring) with a real, individual per-player API call - the same
+    # already-proven "reliable stats" fix already used for pitchers.
+    # Scoped to only today's real batters (not the whole league) and
+    # fetched concurrently, matching every other multi-request fetch in
+    # this file.
+    missing_batter_ids = {batter_id for player_row, batter_id, _ in rows if player_row.get("iso") is None}
+    if missing_batter_ids:
+        print(f"Fetching reliable per-batter season stats for {len(missing_batter_ids)} "
+              f"batters missing from the bulk response...")
+
+        def fetch_one_batter_stat(bid):
+            return bid, get_reliable_batter_season_stats(bid, YEAR)
+
+        reliable_batter_stats = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+            for bid, stats in executor.map(fetch_one_batter_stat, missing_batter_ids):
+                if stats:
+                    reliable_batter_stats[bid] = stats
+        recovered = 0
+        for player_row, batter_id, _ in rows:
+            stats = reliable_batter_stats.get(batter_id)
+            if stats and player_row.get("iso") is None:
+                player_row["iso"] = stats["iso"]
+                player_row["avg"] = stats["avg"]
+                player_row["obp"] = stats["obp"]
+                player_row["slg"] = stats["slg"]
+                if player_row.get("pa") is None:
+                    player_row["pa"] = stats["pa"]
+                recovered += 1
+        print(f"  recovered real season stats for {recovered} of {len(missing_batter_ids)} "
+              f"batters via the reliable per-player fallback "
+              f"({len(missing_batter_ids) - recovered} still genuinely unavailable)")
 
     print(f"Fetching per-player matchup data ({len(rows)} players, concurrently)...")
 
