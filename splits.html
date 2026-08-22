@@ -289,6 +289,7 @@
     background:linear-gradient(90deg, rgba(227,165,72,0.10), transparent 60%);
     border-left:3px solid var(--gold);
   }
+  .top-pick-star{color:var(--gold); font-size:12px;}
   .game-summary-strip{
     max-width:1440px; margin:12px auto 0; padding:12px 16px;
     background:var(--surface2); border:1px solid var(--line); border-radius:10px;
@@ -985,20 +986,31 @@ function render(){
   emptyEl.style.display = 'none';
   tableEl.style.display = '';
 
+  // v3.99 FIX (this session - see chat discussion, "how will yk what to
+  // highlight" + the real competitor pattern): was highlighting only ONE
+  // overall #1 row on the whole page. The real, more useful pattern
+  // (confirmed from the screenshots) is one top pick PER GAME - since
+  // `ranked` is already sorted by whatever factor/composite is active,
+  // the first player encountered from each distinct game IS that game's
+  // best pick under the current sort. Naturally collapses to a single
+  // top pick when a specific game is selected via the Game filter.
+  const topPickGames = new Set();
+
   const rows = ranked.map(({p, compositeScore}, i) => {
     const compositeBadge = compositeScore != null
       ? `<div class="stat-block is-sort-key"><div class="stat-block-label">Composite Match</div><div class="stat-block-val">${compositeScore.toFixed(0)}/100</div></div>`
       : '';
     const isChecked = compareSet.has(String(p.playerId));
-    const isTopPick = i === 0;
+    const isTopPick = !!p.game && !topPickGames.has(p.game);
+    if (isTopPick) topPickGames.add(p.game);
     return `
     <div class="player-row ${isTopPick ? 'top-pick' : ''}" data-player-id="${p.playerId}">
-      <div class="row-rank">${isTopPick ? '&#9733;' : i+1}</div>
+      <div class="row-rank">${i+1}</div>
       <div class="compare-check ${isChecked ? 'checked' : ''}" data-compare-id="${p.playerId}" title="Add to comparison">&#10003;</div>
       <div class="star-check ${isStarredToday(p.playerId) ? 'starred' : ''}" data-star-id="${p.playerId}" title="Add to watchlist">&#9733;</div>
       ${playerHeadshot(p)}
       <div class="row-identity">
-        <div class="row-player">${p.player}</div>
+        <div class="row-player">${p.player}${isTopPick ? ' <span class="top-pick-star" title="Best pick in this game, by the current sort">&#9733;</span>' : ''}</div>
         <div class="row-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
         <div class="row-tier ${tierClass(p.tier)}">${(p.tier||'-').toUpperCase()}</div>
         ${buildRowBadges(p)}
