@@ -143,12 +143,50 @@ def nfl_get(path, params=None):
     return resp.json()
 
 
+def fetch_with_season_fallback(fetch_fn, seasons, label):
+    """v1.1 NEW (this session - see chat discussion, real error from a live
+    run): nfl_data_py's weekly/seasonal/pbp data is only published for
+    seasons that have actually had games played - before Week 1 of a new
+    season (or in the offseason), that season's stats file simply doesn't
+    exist yet on nflverse's end, and the fetch 404s. Real confirmed
+    behavior from your run: import_schedules([2026]) succeeded (272 rows -
+    schedules ARE published in advance), but import_weekly_data([2026])
+    404'd (stats can't exist for games that haven't happened).
+
+    FIX: on a fetch failure for the requested season(s), fall back to the
+    most recent prior season and say so clearly - the same real principle
+    already used in fetch_hr_data.py for early-season MLB batters
+    (blending in last year's data when this year's sample is too thin) -
+    just applied at the more extreme case of THIS year having no data at
+    all yet, rather than just a small sample."""
+    try:
+        df = fetch_fn(seasons)
+        if df is not None and len(df) > 0:
+            return df, seasons
+    except Exception as e:
+        print(f"  {label} fetch failed for season(s) {seasons} ({e}) - "
+              f"falling back to the most recent prior season.")
+    fallback_seasons = [s - 1 for s in seasons]
+    print(f"  retrying {label} with fallback season(s) {fallback_seasons}...")
+    try:
+        df = fetch_fn(fallback_seasons)
+        print(f"  {label}: using {fallback_seasons} data (current season {seasons} not yet available)")
+        return df, fallback_seasons
+    except Exception as e:
+        print(f"  WARNING: {label} fetch also failed for fallback season(s) {fallback_seasons} ({e}) - "
+              f"this data will be unavailable this run.")
+        return None, seasons
+
+
 def get_weekly_player_stats(seasons):
     """Real per-week player stats (targets, carries, red-zone touches
     where available, TDs) via nfl_data_py. Defensive column-checking
     pattern, matching fetch_hr_data.py's Baseball Savant CSV handling -
-    see module HONESTY NOTE."""
-    df = nfl.import_weekly_data(seasons)
+    see module HONESTY NOTE. Season-fallback wrapped - see
+    fetch_with_season_fallback()."""
+    df, used_seasons = fetch_with_season_fallback(nfl.import_weekly_data, seasons, "weekly player stats")
+    if df is None:
+        return df
     print(f"  weekly player stats: {len(df)} rows returned, columns: {list(df.columns)[:25]}"
           f"{'...' if len(df.columns) > 25 else ''}")
 
@@ -163,8 +201,9 @@ def get_weekly_player_stats(seasons):
 
 
 def get_seasonal_player_stats(seasons):
-    df = nfl.import_seasonal_data(seasons)
-    print(f"  seasonal player stats: {len(df)} rows returned")
+    df, used_seasons = fetch_with_season_fallback(nfl.import_seasonal_data, seasons, "seasonal player stats")
+    if df is not None:
+        print(f"  seasonal player stats: {len(df)} rows returned")
     return df
 
 
@@ -192,10 +231,17 @@ def get_pbp_redzone(seasons):
     purchased DVOA-style number, a real, derivable rate from the same
     free play-by-play data. This is the NFL equivalent of the MLB file's
     own oppBullpenEra/whip computation: a real aggregate built from
-    already-available play-level data, not a new external dependency."""
+    already-available play-level data, not a new external dependency.
+    Season-fallback wrapped - see fetch_with_season_fallback()."""
     columns = ["game_id", "week", "posteam", "defteam", "yardline_100",
                "touchdown", "play_type", "season"]
-    df = nfl.import_pbp_data(seasons, columns=columns, downcast=True)
+
+    def _fetch(seas):
+        return nfl.import_pbp_data(seas, columns=columns, downcast=True)
+
+    df, used_seasons = fetch_with_season_fallback(_fetch, seasons, "play-by-play")
+    if df is None:
+        return None
     print(f"  play-by-play: {len(df)} total plays returned")
     missing = [c for c in columns if c not in df.columns]
     if missing:
