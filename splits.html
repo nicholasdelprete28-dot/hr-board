@@ -87,8 +87,28 @@
   .title-icon{color:var(--gold); flex-shrink:0;}
   .subtitle{font-size:12px; color:var(--muted2); margin-top:2px; font-family:var(--body);}
 
+  .category-tabs{
+    max-width:1440px; margin:16px auto 0; display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .category-tab{
+    font-family:var(--display); font-size:12.5px; font-weight:600; letter-spacing:0.2px;
+    background:var(--surface2); border:1px solid var(--line); border-radius:9px;
+    color:var(--muted); padding:8px 14px; cursor:pointer; text-transform:uppercase;
+  }
+  .category-tab.active{color:var(--gold); border-color:var(--gold); background:rgba(227,165,72,0.08);}
+
+  .factor-pills{
+    max-width:1440px; margin:9px auto 0; display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .factor-pill{
+    font-family:var(--mono); font-size:11.5px; background:transparent; border:1px solid var(--line);
+    border-radius:20px; color:var(--muted); padding:6px 13px; cursor:pointer;
+  }
+  .factor-pill:hover{border-color:var(--muted); color:var(--text);}
+  .factor-pill.active{background:var(--gold); border-color:var(--gold); color:#171307; font-weight:700;}
+
   .controls-bar{
-    max-width:1440px; margin:16px auto 0; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
+    max-width:1440px; margin:14px auto 0; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
   }
   .control-group{display:flex; flex-direction:column; gap:5px;}
   .control-label{font-family:var(--mono); font-size:9.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.8px;}
@@ -112,30 +132,65 @@
     font-family:var(--mono); font-size:11px; color:var(--muted2); margin-left:auto; align-self:center;
   }
 
+  /* v3.94 REWRITE (this session - see chat discussion, "SUPER in depth" -
+     replaced the plain sparse <table> with a rich row-panel layout: each
+     player gets an identity block on the left and a full labeled stat
+     grid on the right, sized to whatever category is active - not just
+     the single sorted value. */
   .table-wrap{
-    max-width:1440px; margin:18px auto 0; overflow-x:auto;
+    max-width:1440px; margin:18px auto 0;
     border:1px solid var(--line); border-radius:14px; background:var(--surface2);
+    overflow:hidden;
   }
-  table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:12.5px; white-space:nowrap;}
-  thead th{
-    text-align:left; padding:12px 14px; color:var(--muted2); font-size:10px; text-transform:uppercase;
-    letter-spacing:0.6px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--surface2);
+  .player-row{
+    display:flex; align-items:center; gap:16px; padding:14px 16px;
+    border-bottom:1px solid var(--line); cursor:pointer; transition:background .12s;
   }
-  tbody tr{border-bottom:1px solid var(--line); cursor:pointer; transition:background .12s;}
-  tbody tr:hover{background:rgba(227,165,72,0.06);}
-  tbody tr:last-child{border-bottom:none;}
-  td{padding:11px 14px;}
-  .td-player{font-family:var(--body); font-weight:600; color:var(--text); font-size:13px;}
-  .td-meta{color:var(--muted); font-size:10.5px; font-family:var(--mono); margin-top:2px;}
-  .td-rank{color:var(--muted2); width:30px;}
-  .td-highlight{color:var(--gold); font-weight:700; font-size:13.5px;}
-  .td-tier{font-size:9.5px; font-weight:700; padding:3px 7px; border-radius:5px; letter-spacing:0.4px;}
+  .player-row:hover{background:rgba(227,165,72,0.06);}
+  .player-row:last-child{border-bottom:none;}
+  .row-rank{font-family:var(--mono); font-size:12px; color:var(--muted2); width:22px; flex-shrink:0;}
+  .row-identity{width:168px; flex-shrink:0;}
+  .row-player{font-family:var(--body); font-weight:700; color:var(--text); font-size:13.5px; line-height:1.25;}
+  .row-meta{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:3px;}
+  .row-tier{
+    font-size:8.5px; font-weight:700; padding:2px 6px; border-radius:5px; letter-spacing:0.4px;
+    display:inline-block; margin-top:4px;
+  }
   .tier-prime{color:#4fdb9a; background:rgba(79,219,154,0.16);}
   .tier-strong{color:#5bc8e8; background:rgba(91,200,232,0.16);}
   .tier-inplay{color:#e3a548; background:rgba(227,165,72,0.16);}
   .tier-longshot{color:var(--muted); background:rgba(139,148,141,0.1);}
-  .low-sample{color:var(--stat-bad);}
+
+  .stat-panel{
+    flex:1; min-width:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(84px, 1fr)); gap:2px 10px;
+  }
+  .stat-block{padding:2px 0;}
+  .stat-block-label{
+    font-family:var(--mono); font-size:8px; color:var(--muted2); text-transform:uppercase;
+    letter-spacing:0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .stat-block-val{font-family:var(--mono); font-size:13px; color:var(--text); margin-top:2px; white-space:nowrap;}
+  .stat-block.is-sort-key{background:rgba(227,165,72,0.09); border-radius:6px; padding:2px 6px; margin:-2px -6px;}
+  .stat-block.is-sort-key .stat-block-val{color:var(--gold); font-weight:700;}
+  .stat-block.low-sample .stat-block-val{color:var(--stat-bad);}
+  .stat-block-na .stat-block-val{color:var(--muted2); font-style:italic;}
+
+  .pitch-mix-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .pitch-mix-item{
+    background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:6px 10px; min-width:120px;
+  }
+  .pitch-mix-name{font-family:var(--body); font-size:11px; font-weight:600; color:var(--text);}
+  .pitch-mix-usage{font-family:var(--mono); font-size:9px; color:var(--gold);}
+  .pitch-mix-stats{font-family:var(--mono); font-size:10.5px; color:var(--muted); margin-top:3px; display:flex; gap:8px;}
+
+  .low-sample-flag{color:var(--stat-bad); font-size:9px; margin-left:2px;}
   .no-data{color:var(--muted2); font-style:italic;}
+
+  @media (max-width: 900px){
+    .player-row{flex-wrap:wrap;}
+    .row-identity{width:100%;}
+    .stat-panel{grid-template-columns:repeat(auto-fill, minmax(72px, 1fr));}
+  }
 
   .empty-state{
     max-width:1440px; margin:60px auto; text-align:center; padding:40px 20px; color:var(--muted);
@@ -212,11 +267,10 @@
 </header>
 
 <div class="wrap">
+  <div class="category-tabs" id="categoryTabs"></div>
+  <div class="factor-pills" id="factorPills"></div>
+
   <div class="controls-bar">
-    <div class="control-group">
-      <div class="control-label">Sort By</div>
-      <select id="sortFactor"></select>
-    </div>
     <div class="control-group" id="dayPickerGroup" style="display:none;">
       <div class="control-label">Day</div>
       <select id="dayPicker">
@@ -331,8 +385,10 @@ const PITCH_NAMES = {FF:'4-Seam FB', SI:'Sinker', FC:'Cutter', SL:'Slider', ST:'
 let sortDesc = true;
 let currentFactor = 'hrProb';
 
+let groupedFactors = {};
+let activeGroup = 'Model';
+
 function buildFactorOptions(){
-  const sel = document.getElementById('sortFactor');
   const groups = {};
   STATIC_FACTORS.forEach(f => { (groups[f.group] = groups[f.group] || []).push(f); });
 
@@ -349,10 +405,47 @@ function buildFactorOptions(){
     }));
   }
 
-  sel.innerHTML = Object.entries(groups).map(([group, opts]) =>
-    `<optgroup label="${group}">${opts.map(o => `<option value="${o.value}">${o.label}</option>`).join('')}</optgroup>`
-  ).join('');
+  groupedFactors = groups;
+  renderCategoryTabs();
+  renderFactorPills();
 }
+
+// v3.94 NEW (this session - see chat discussion, "separate tabs" instead
+// of one big dropdown): a two-level picker - category tabs up top,
+// factor pills for whichever category is active underneath. Clicking a
+// tab only switches which pills are shown; clicking a pill actually
+// changes currentFactor and re-sorts the table.
+function renderCategoryTabs(){
+  const tabsEl = document.getElementById('categoryTabs');
+  tabsEl.innerHTML = Object.keys(groupedFactors).map(group =>
+    `<div class="category-tab ${group === activeGroup ? 'active' : ''}" data-group="${group}">${group}</div>`
+  ).join('');
+  tabsEl.querySelectorAll('.category-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      activeGroup = tab.dataset.group;
+      renderCategoryTabs();
+      renderFactorPills();
+    });
+  });
+}
+
+function renderFactorPills(){
+  const pillsEl = document.getElementById('factorPills');
+  const factors = groupedFactors[activeGroup] || [];
+  pillsEl.innerHTML = factors.map(f =>
+    `<div class="factor-pill ${f.value === currentFactor ? 'active' : ''}" data-value="${f.value}">${f.label}</div>`
+  ).join('');
+  pillsEl.querySelectorAll('.factor-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      currentFactor = pill.dataset.value;
+      document.getElementById('dayPickerGroup').style.display = currentFactor === 'dow' ? '' : 'none';
+      document.getElementById('pitchMetricGroup').style.display = currentFactor.startsWith('pitch:') ? '' : 'none';
+      renderFactorPills();
+      render();
+    });
+  });
+}
+
 
 // v3.93 NEW (this session): data-driven map for all the new straightforward
 // field-based factors, instead of one giant if-chain - each real field
@@ -422,8 +515,8 @@ function tierClass(tier){
 }
 
 function render(){
-  const factorMeta = [...STATIC_FACTORS, ...[...document.querySelectorAll('#sortFactor option')].map(o => ({value: o.value, label: o.textContent}))]
-    .find(f => f.value === currentFactor) || {label: currentFactor};
+  const allFactors = Object.values(groupedFactors).flat();
+  const factorMeta = allFactors.find(f => f.value === currentFactor) || {label: currentFactor};
   const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
 
   const batters = players.filter(p => p.playerType === 'batter');
@@ -453,35 +546,134 @@ function render(){
   const rows = withFactor.map(({p, f}, i) => {
     const lowSample = f.pa != null && f.pa > 0 && f.pa < 15;
     return `
-    <tr data-player-id="${p.playerId}">
-      <td class="td-rank">${i+1}</td>
-      <td>
-        <div class="td-player">${p.player}</div>
-        <div class="td-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
-      </td>
-      <td><div class="td-tier ${tierClass(p.tier)}">${(p.tier||'-').toUpperCase()}</div></td>
-      <td class="td-highlight ${lowSample ? 'low-sample' : ''}">${f.fmt(f.val)}${lowSample ? ' &#9888;' : ''}</td>
-      <td>${f.pa != null ? f.pa + ' PA' : '&mdash;'}</td>
-      <td>${p.hrProb != null ? p.hrProb.toFixed(1) + '%' : '&mdash;'}</td>
-    </tr>`;
+    <div class="player-row" data-player-id="${p.playerId}">
+      <div class="row-rank">${i+1}</div>
+      <div class="row-identity">
+        <div class="row-player">${p.player}</div>
+        <div class="row-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
+        <div class="row-tier ${tierClass(p.tier)}">${(p.tier||'-').toUpperCase()}</div>
+      </div>
+      <div class="stat-panel">${buildStatPanel(p, activeGroup, currentFactor)}</div>
+    </div>`;
   }).join('');
 
-  tableEl.innerHTML = `
-    <table>
-      <thead><tr>
-        <th>#</th><th>Player</th><th>Tier</th><th>${factorMeta.label}</th><th>Sample</th><th>Overall HR%</th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>`;
+  tableEl.innerHTML = rows;
 
-  tableEl.querySelectorAll('tbody tr').forEach(tr => {
-    tr.addEventListener('click', () => {
-      const playerId = tr.dataset.playerId;
+  tableEl.querySelectorAll('.player-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const playerId = row.dataset.playerId;
       const p = players.find(pl => String(pl.playerId) === String(playerId));
       if (p) openGraphModal(p);
     });
   });
 }
+
+// v3.94 NEW (this session - see chat discussion, "every single # and
+// what they mean... SUPER in depth"): builds the FULL right-side stat
+// panel for a row, scoped to whichever category tab is active - not
+// just the one currently-sorted value. The actively-sorted factor still
+// gets visually called out (gold highlight) within the panel so it's
+// clear what's driving the row order, but every other real number in
+// that category is shown alongside it for context, always labeled.
+function sb(label, val, opts){
+  opts = opts || {};
+  const isNA = val == null;
+  const lowSample = opts.pa != null && opts.pa > 0 && opts.pa < 15;
+  const cls = ['stat-block', opts.sortKey ? 'is-sort-key' : '', isNA ? 'stat-block-na' : '', lowSample ? 'low-sample' : ''].filter(Boolean).join(' ');
+  const displayVal = isNA ? '&mdash;' : (opts.fmt ? opts.fmt(val) : val);
+  const warn = lowSample ? '<span class="low-sample-flag" title="Under 15 PA - small sample">&#9888;</span>' : '';
+  return `<div class="${cls}"><div class="stat-block-label">${label}</div><div class="stat-block-val">${displayVal}${warn}</div></div>`;
+}
+
+function buildStatPanel(p, group, sortFactor){
+  const pct = v => v == null ? null : (v*100).toFixed(1) + '%';
+  const dec2 = v => v == null ? null : v.toFixed(2);
+  const dec3 = v => v == null ? null : v.toFixed(3);
+
+  if (group === 'Model'){
+    return [
+      sb('HR Prob', p.hrProb, {sortKey: sortFactor==='hrProb', fmt: v=>v.toFixed(1)+'%'}),
+      sb('Power', p.score, {sortKey: sortFactor==='score', fmt: v=>v.toFixed(1)}),
+      sb('Opp Pitcher HR/9', p.phr9, {sortKey: sortFactor==='phr9', fmt: v=>v.toFixed(2)}),
+      sb('Recent (L15 HR)', p.l15hr, {sortKey: sortFactor==='l15hr', pa: p.l15IsoPa, fmt: v=>v+' HR'}),
+      sb('Platoon (AVG vs hand)', p.avgmix, {sortKey: sortFactor==='avgmix', pa: p.avgmixPa, fmt: dec3}),
+      sb("Vs Today's Mix", p.avgVsMix, {sortKey: sortFactor==='avgVsMix', pa: p.avgVsMixPa, fmt: dec3}),
+    ].join('');
+  }
+  if (group === 'Power Metrics'){
+    return [
+      sb('Barrel% (Szn)', p.barrel, {sortKey: sortFactor==='barrel', pa: p.pa, fmt: pct}),
+      sb('Barrel% (L15)', p.l15Barrel, {sortKey: sortFactor==='l15Barrel', pa: p.l15PowerPa, fmt: pct}),
+      sb('Exit Velo (Szn)', p.ev, {sortKey: sortFactor==='ev', pa: p.pa, fmt: v=>v.toFixed(1)}),
+      sb('Exit Velo (L15)', p.l15Ev, {sortKey: sortFactor==='l15Ev', pa: p.l15PowerPa, fmt: v=>v.toFixed(1)}),
+      sb('Hard-Hit% (Szn)', p.hardhit, {sortKey: sortFactor==='hardhit', pa: p.pa, fmt: pct}),
+      sb('Hard-Hit% (L15)', p.l15Hardhit, {sortKey: sortFactor==='l15Hardhit', pa: p.l15PowerPa, fmt: pct}),
+      sb('ISO', p.iso, {sortKey: sortFactor==='iso', pa: p.pa, fmt: dec3}),
+      sb('SLG', p.slg, {sortKey: sortFactor==='slg', pa: p.pa, fmt: dec3}),
+      sb('AVG', p.avg, {sortKey: sortFactor==='avg', pa: p.pa, fmt: dec3}),
+      sb('OBP', p.obp, {sortKey: sortFactor==='obp', pa: p.pa, fmt: dec3}),
+      sb('HR Trend (L15)', p.l15hrRate, {sortKey: sortFactor==='l15hrRate', pa: p.l15IsoPa, fmt: pct}),
+      sb('HR Trend (L30)', p.l30hrRate, {sortKey: sortFactor==='l30hrRate', pa: p.l30Pa, fmt: pct}),
+    ].join('');
+  }
+  if (group === 'Matchup'){
+    return [
+      sb("Pitcher HR/9 %ile", p.pitcherHr9Percentile, {sortKey: sortFactor==='pitcherHr9Percentile', fmt: v=>(v*100).toFixed(0)+'th'}),
+      sb('Bullpen ERA', p.oppBullpenEra, {sortKey: sortFactor==='oppBullpenEra', pa: p.oppBullpenIp, fmt: dec2}),
+      sb('Bullpen WHIP', p.oppBullpenWhip, {sortKey: sortFactor==='oppBullpenWhip', pa: p.oppBullpenIp, fmt: dec2}),
+      sb('RISP AVG', p.risp, {sortKey: sortFactor==='risp', pa: p.rispPa, fmt: dec3}),
+    ].join('');
+  }
+  if (group === 'Park & Weather'){
+    return [
+      sb('Park Factor', p.park, {sortKey: sortFactor==='park', fmt: v=>v.toFixed(2)}),
+      sb('Wind Score', p.wind, {sortKey: sortFactor==='wind', fmt: v=>v.toFixed(1)}),
+      sb('Temp', p.temp, {sortKey: sortFactor==='temp', fmt: v=>v.toFixed(0)+'&deg;F'}),
+      sb('Wind Detail', p.windDesc, {fmt: v=>v}),
+    ].join('');
+  }
+  if (group === 'Team Context'){
+    return [
+      sb('Proj. HR (Game)', p.gameProjectedHR, {sortKey: sortFactor==='gameProjectedHR', fmt: v=>v.toFixed(2)}),
+      sb('Proj. HR (Team)', p.teamProjectedHR, {sortKey: sortFactor==='teamProjectedHR', fmt: v=>v.toFixed(2)}),
+      sb('Lineup Bonus', p.lbonus, {sortKey: sortFactor==='lbonus', fmt: v=>v.toFixed(0)}),
+    ].join('');
+  }
+  if (group === 'Situational'){
+    const day = document.getElementById('dayPicker').value;
+    const dowEntry = p.dowBreakdown && p.dowBreakdown[day];
+    return [
+      sb(day + ' HR Rate', dowEntry ? dowEntry.hrRate : null, {sortKey: sortFactor==='dow', pa: dowEntry ? dowEntry.pa : null, fmt: pct}),
+      sb('Home HR Rate', p.homeHrRate, {sortKey: sortFactor==='home', pa: p.homePa, fmt: pct}),
+      sb('Road HR Rate', p.roadHrRate, {sortKey: sortFactor==='road', pa: p.roadPa, fmt: pct}),
+      sb('Day Game Rate', p.dayHrRate, {sortKey: sortFactor==='day', pa: p.dayPa, fmt: pct}),
+      sb('Night Game Rate', p.nightHrRate, {sortKey: sortFactor==='night', pa: p.nightPa, fmt: pct}),
+    ].join('');
+  }
+  if (group === 'Vs. Pitch Type'){
+    const breakdown = p.pitchTypeBreakdown || {};
+    const types = Object.keys(breakdown);
+    if (!types.length) return `<div class="no-data">No pitch-mix data for today's matchup.</div>`;
+    const items = types.map(pt => {
+      const d = breakdown[pt];
+      const name = PITCH_NAMES[pt] || pt;
+      const isSortKey = sortFactor === 'pitch:' + pt;
+      const lowSample = d.pa > 0 && d.pa < 15;
+      return `
+        <div class="pitch-mix-item" style="${isSortKey ? 'border-color:var(--gold); background:rgba(227,165,72,0.07);' : ''}">
+          <div class="pitch-mix-name">${name} <span class="pitch-mix-usage">${(d.pitcherUsage*100).toFixed(0)}% usage</span></div>
+          <div class="pitch-mix-stats">
+            <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
+            <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
+            <span style="color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</span>
+          </div>
+        </div>`;
+    }).join('');
+    return `<div class="pitch-mix-row">${items}</div>`;
+  }
+  return '';
+}
+
 
 async function load(){
   try {
@@ -497,12 +689,6 @@ async function load(){
   render();
 }
 
-document.getElementById('sortFactor').addEventListener('change', (e) => {
-  currentFactor = e.target.value;
-  document.getElementById('dayPickerGroup').style.display = currentFactor === 'dow' ? '' : 'none';
-  document.getElementById('pitchMetricGroup').style.display = currentFactor.startsWith('pitch:') ? '' : 'none';
-  render();
-});
 document.getElementById('dayPicker').addEventListener('change', render);
 document.getElementById('pitchMetric').addEventListener('change', render);
 document.getElementById('searchBox').addEventListener('input', render);
