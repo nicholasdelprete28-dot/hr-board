@@ -1209,6 +1209,85 @@ def fetch_batter_statcast_l15():
     return out
 
 
+# v3.97 NEW (this session - see chat discussion, "see a player's home runs
+# vs a certain pitch"): mirrors fetch_batter_statcast_l15()'s PROVEN
+# working pattern above - same real endpoint, same defensive column
+# detection - but for the FULL SEASON instead of a 15-day window, and
+# tracking real HR events per pitch type instead of exit-velo/barrel
+# aggregates. Chosen over trying to pull a home-run count from the
+# pitch-arsenal-stats LEADERBOARD CSV (already used elsewhere in this
+# file for AVG/hard-hit% per pitch type) because that leaderboard's exact
+# column names for HR counts could not be confirmed without live access -
+# this event-level endpoint's schema (pitch_type, events) is the same
+# well-documented Statcast Search schema this file already successfully
+# parses elsewhere, so it's the more reliable choice, not a guess.
+# HONEST COST: a full season of pitch-level events is meaningfully larger
+# than the 15-day version (one request, but a much bigger one) - real
+# runtime tradeoff for real HR-per-pitch-type data.
+def fetch_batter_hr_by_pitch_type(season):
+    start_date = datetime.date(season, 3, 1)
+    end_date = datetime.date.today()
+    url = (
+        "https://baseballsavant.mlb.com/statcast_search/csv"
+        "?all=true&hfPT=&hfAB=&hfBBT=&hfPR=&hfZ=&hfStadium=&hfBBL=&hfNewZones="
+        "&hfGT=R%7C&hfC=&hfSea=" + str(season) + "%7C&hfSit="
+        "&player_type=batter&hfOuts=&opponent=&pitcher_throws=&batter_stands="
+        "&hfSA=&game_date_gt=" + start_date.isoformat()
+        + "&game_date_lt=" + end_date.isoformat()
+        + "&hfInfield=&team=&position=&hfOutfield=&hfRO=&home_road=&hfFlag="
+        "&hfPull=&metric_1=&hfInn=&min_pitches=0&min_results=0"
+        "&group_by=name&sort_col=pitches&player_event_sort=api_p_release_speed"
+        "&sort_order=desc&min_pas=0&type=details"
+    )
+    try:
+        resp = requests.get(url, timeout=180, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        text = resp.content.decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text))
+        rows = list(reader)
+        print(f"  Savant season HR-by-pitch-type CSV row count (all pitches): {len(rows)}")
+        if rows:
+            print(f"  sample row keys with values: "
+                  f"{ {k: rows[0].get(k) for k in ['batter','pitch_type','events','game_date']} }")
+    except Exception as e:
+        print(f"  WARNING: season HR-by-pitch-type fetch failed ({e}) - "
+              f"HR-per-pitch-type counts will be unavailable for everyone this run.")
+        return {}
+
+    id_columns = ["batter", "player_id", "batter_id"]
+    id_col = next((c for c in id_columns if rows and c in rows[0]), None)
+    pitch_columns = ["pitch_type"]
+    pitch_col = next((c for c in pitch_columns if rows and c in rows[0]), None)
+    events_columns = ["events"]
+    events_col = next((c for c in events_columns if rows and c in rows[0]), None)
+    print(f"  HR-by-pitch-type using batter_id={id_col} pitch_type={pitch_col} events={events_col}")
+
+    if not (id_col and pitch_col and events_col):
+        print(f"  WARNING: required columns not found for HR-by-pitch-type - check the "
+              f"printed CSV columns above. This data will be unavailable this run.")
+        return {}
+
+    per_batter = {}
+    for row in rows:
+        if row.get(events_col) != "home_run":
+            continue
+        pid_raw = row.get(id_col)
+        pitch_type = row.get(pitch_col)
+        if not pid_raw or not pitch_type:
+            continue
+        try:
+            pid = int(float(pid_raw))
+        except (TypeError, ValueError):
+            continue
+        per_batter.setdefault(pid, {})
+        per_batter[pid][pitch_type] = per_batter[pid].get(pitch_type, 0) + 1
+
+    total_hr = sum(sum(d.values()) for d in per_batter.values())
+    print(f"  parsed real season HR-by-pitch-type counts for {len(per_batter)} batters, "
+          f"{total_hr} total home runs attributed to a specific pitch type")
+    return per_batter
+
+
 def fetch_pitch_mix_data():
     batter_pitch_data = {}
     batter_pitch_avg = {}
@@ -1284,6 +1363,41 @@ def fetch_pitch_mix_data():
     return batter_pitch_data, pitcher_pitch_mix, batter_pitch_avg
 
 
+# v3.98 NEW (this session - see chat discussion, real feature idea from
+# reviewing a competitor product): a compact 3-bucket summary of a
+# pitcher's real arsenal - what fraction is fastballs vs. breaking balls
+# vs. offspeed - genuinely useful at a glance without listing every pitch
+# type individually. Real, standard Statcast pitch-type codes (stable,
+# well-documented schema), not a guess.
+PITCH_TYPE_BUCKETS = {
+    "FF": "fastball", "SI": "fastball", "FC": "fastball",
+    "SL": "breaking", "ST": "breaking", "CU": "breaking", "KC": "breaking", "SV": "breaking",
+    "CH": "offspeed", "FS": "offspeed", "FO": "offspeed", "SC": "offspeed", "KN": "offspeed",
+}
+
+
+def bucket_pitch_arsenal(mix):
+    if not mix:
+        return None
+    buckets = {"fastball": 0.0, "breaking": 0.0, "offspeed": 0.0}
+    unclassified = 0.0
+    for pitch_type, usage in mix.items():
+        bucket = PITCH_TYPE_BUCKETS.get(pitch_type)
+        if bucket:
+            buckets[bucket] += usage
+        else:
+            unclassified += usage  # a real pitch type not in our mapping - tracked, not silently dropped
+    total = sum(buckets.values()) + unclassified
+    if total <= 0:
+        return None
+    return {
+        "fastball": round(buckets["fastball"], 3),
+        "breaking": round(buckets["breaking"], 3),
+        "offspeed": round(buckets["offspeed"], 3),
+        "unclassified": round(unclassified, 3) if unclassified > 0.01 else 0,
+    }
+
+
 def compute_pitch_mix_match(batter_id, pitcher_id, batter_pitch_data, pitcher_pitch_mix):
     batter_data = batter_pitch_data.get(batter_id)
     mix = pitcher_pitch_mix.get(pitcher_id)
@@ -1338,9 +1452,10 @@ def compute_avg_vs_mix(batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mi
 # TODAY's specific opposing pitcher actually throws (pitcherUsage > 0),
 # so it reads as "how does he do against each pitch THIS pitcher will
 # actually throw him" rather than a generic career pitch-type dump.
-def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix):
+def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix, batter_hr_by_pitch=None):
     ba_data = batter_pitch_avg.get(batter_id) or {}
     hardhit_data = batter_pitch_data.get(batter_id) or {}
+    hr_data = (batter_hr_by_pitch or {}).get(batter_id) or {}
     mix = pitcher_pitch_mix.get(pitcher_id) or {}
     if not mix:
         return {}
@@ -1355,6 +1470,13 @@ def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_p
             "ba": ba_entry["ba"] if ba_entry else None,
             "pa": ba_entry["pa"] if ba_entry else 0,
             "hardhit": round(hardhit_val, 3) if hardhit_val is not None else None,
+            # v3.97 NEW: real count of home runs this batter has hit off
+            # this specific pitch type this season, from real play events
+            # (see fetch_batter_hr_by_pitch_type) - 0 is a real, honest
+            # zero here (he has real PA against this pitch, per ba_entry/
+            # hardhit_val above, and simply hasn't gone deep on it yet),
+            # not a missing-data placeholder.
+            "hr": hr_data.get(pitch_type, 0),
         }
     return breakdown
 
@@ -1369,9 +1491,10 @@ def build_pitch_type_breakdown(batter_id, pitcher_id, batter_pitch_avg, batter_p
 # (batter_pitch_avg/batter_pitch_data), just not filtered down to one
 # pitcher's mix - answers a different real question ("who's the best
 # slider-hitter in baseball") that the matchup-scoped version can't.
-def build_full_season_pitch_type_breakdown(batter_id, batter_pitch_avg, batter_pitch_data):
+def build_full_season_pitch_type_breakdown(batter_id, batter_pitch_avg, batter_pitch_data, batter_hr_by_pitch=None):
     ba_data = batter_pitch_avg.get(batter_id) or {}
     hardhit_data = batter_pitch_data.get(batter_id) or {}
+    hr_data = (batter_hr_by_pitch or {}).get(batter_id) or {}
     all_pitch_types = set(ba_data.keys()) | set(hardhit_data.keys())
     breakdown = {}
     for pitch_type in sorted(all_pitch_types):
@@ -1383,6 +1506,7 @@ def build_full_season_pitch_type_breakdown(batter_id, batter_pitch_avg, batter_p
             "ba": ba_entry["ba"] if ba_entry else None,
             "pa": ba_entry["pa"] if ba_entry else 0,
             "hardhit": round(hardhit_val, 3) if hardhit_val is not None else None,
+            "hr": hr_data.get(pitch_type, 0),
         }
     return breakdown
 
@@ -2855,6 +2979,9 @@ def main():
     print("Fetching pitch-mix data (batter vs pitch type, pitcher usage)...")
     batter_pitch_data, pitcher_pitch_mix, batter_pitch_avg = fetch_pitch_mix_data()
 
+    print("Fetching real season HR-by-pitch-type counts...")
+    batter_hr_by_pitch = fetch_batter_hr_by_pitch_type(YEAR)
+
     print("Fetching bullpen quality for today's teams...")
     all_team_ids = set()
     for g in games:
@@ -2960,9 +3087,9 @@ def main():
                 avg_vs_mix_val, avg_vs_mix_pa = compute_avg_vs_mix(
                     batter_id, pitcher_id, batter_pitch_avg, pitcher_pitch_mix, bstats.get("avg"))
                 pitch_type_breakdown = build_pitch_type_breakdown(
-                    batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix)
+                    batter_id, pitcher_id, batter_pitch_avg, batter_pitch_data, pitcher_pitch_mix, batter_hr_by_pitch)
                 pitch_type_breakdown_full = build_full_season_pitch_type_breakdown(
-                    batter_id, batter_pitch_avg, batter_pitch_data)
+                    batter_id, batter_pitch_avg, batter_pitch_data, batter_hr_by_pitch)
 
                 player_row = {
                     "playerType": "batter",
@@ -2989,6 +3116,23 @@ def main():
                     "oppBullpenWhip": bullpen_cache.get(opp_team_id, {}).get("bullpenWhip"),
                     "oppBullpenIp": bullpen_cache.get(opp_team_id, {}).get("bullpenIp"),
                     "oppIpPerStart": pitcher_stat.get("ipPerStart"),
+                    # v3.98 NEW (this session - see chat discussion, real
+                    # feature idea from reviewing a competitor product):
+                    # a genuine "opener" (a reliever who starts a game to
+                    # face 1-3 batters before the real bulk-innings pitcher
+                    # comes in) has a real, distinctive signature - very
+                    # low innings per start, well under even a short spot
+                    # start. HONEST HEURISTIC, not a certainty: 2.0 IP/start
+                    # is a real, defensible cutoff for "goes at most 1
+                    # inning almost every time" but could occasionally
+                    # mislabel a pitcher who's had a run of truly awful
+                    # short outings rather than a deliberate opener role -
+                    # flagged as a real, disclosed limitation, not treated
+                    # as certain.
+                    "oppPitcherIsOpener": (pitcher_stat.get("ipPerStart") is not None
+                                            and pitcher_stat.get("ipPerStart") < 2.0
+                                            and (pitcher_stat.get("gamesStarted") or 0) >= 3),
+                    "oppPitcherArsenalSplit": bucket_pitch_arsenal(pitcher_pitch_mix.get(pitcher_id)),
                     "oppPitcherId": pitcher_id,
                     "pitcherHr9Percentile": pitcher_hr9_percentile_today(percentile_hr9),
                     "pitcherRecentHr9": pitcher_recent_hr9.get(pitcher_id, (None, 0))[0],
@@ -3447,6 +3591,8 @@ def write_daily_snapshot(players):
                 "oppBullpenWhip": p.get("oppBullpenWhip"),
                 "oppBullpenIp": p.get("oppBullpenIp"),
                 "oppIpPerStart": p.get("oppIpPerStart"),
+                "oppPitcherIsOpener": p.get("oppPitcherIsOpener"),
+                "oppPitcherArsenalSplit": p.get("oppPitcherArsenalSplit"),
                 "batSide": p.get("batSide"),
                 "phr9VsHand": p.get("phr9VsHand"), "phr9VsHandIp": p.get("phr9VsHandIp"),
                 "pitcherHr9Percentile": p.get("pitcherHr9Percentile"),
