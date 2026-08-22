@@ -693,9 +693,7 @@ const STATIC_FACTORS = [
   {value: 'obp', label: 'OBP (season)', group: 'Power Metrics'},
   {value: 'l15hrRate', label: 'HR Rate Trend (L15)', group: 'Power Metrics'},
   {value: 'l30hrRate', label: 'HR Rate Trend (L30)', group: 'Power Metrics'},
-  {value: 'xwoba', label: 'xwOBA', group: 'Power Metrics'},
-  {value: 'xwobacon', label: 'xwOBAcon', group: 'Power Metrics'},
-  {value: 'flyballPct', label: 'Fly Ball %', group: 'Power Metrics'},
+  {value: 'sweetSpotPct', label: 'Sweet Spot %', group: 'Power Metrics'},
   {value: 'pitcherHr9Percentile', label: "Today's Pitcher HR/9 Percentile", group: 'Matchup'},
   {value: 'oppBullpenEra', label: 'Opposing Bullpen ERA', group: 'Matchup', invert: true},
   {value: 'oppBullpenWhip', label: 'Opposing Bullpen WHIP', group: 'Matchup', invert: true},
@@ -899,9 +897,7 @@ const SIMPLE_FIELD_FACTORS = {
   obp:         {field: 'obp',         pa: 'pa',        fmt: v => v.toFixed(3)},
   l15hrRate:   {field: 'l15hrRate',   pa: 'l15IsoPa',  fmt: v => (v*100).toFixed(1) + '%'},
   l30hrRate:   {field: 'l30hrRate',   pa: 'l30Pa',     fmt: v => (v*100).toFixed(1) + '%'},
-  xwoba:       {field: 'xwoba',       pa: 'pa',        fmt: v => v.toFixed(3)},
-  xwobacon:    {field: 'xwobacon',    pa: 'pa',        fmt: v => v.toFixed(3)},
-  flyballPct:  {field: 'flyballPct',  pa: 'pa',        fmt: v => (v*100).toFixed(1) + '%'},
+  sweetSpotPct: {field: 'sweetSpotPct', pa: 'pa',        fmt: v => (v*100).toFixed(1) + '%'},
   pitcherHr9Percentile: {field: 'pitcherHr9Percentile', pa: null, fmt: v => (v*100).toFixed(0) + 'th pctl'},
   oppBullpenEra:  {field: 'oppBullpenEra',  pa: 'oppBullpenIp', fmt: v => v.toFixed(2)},
   oppBullpenWhip: {field: 'oppBullpenWhip', pa: 'oppBullpenIp', fmt: v => v.toFixed(2)},
@@ -1062,14 +1058,21 @@ function render(){
   emptyEl.style.display = 'none';
   tableEl.style.display = '';
 
-  // v3.99 FIX (this session - see chat discussion, "how will yk what to
-  // highlight" + the real competitor pattern): was highlighting only ONE
-  // overall #1 row on the whole page. The real, more useful pattern
-  // (confirmed from the screenshots) is one top pick PER GAME - since
-  // `ranked` is already sorted by whatever factor/composite is active,
-  // the first player encountered from each distinct game IS that game's
-  // best pick under the current sort. Naturally collapses to a single
-  // top pick when a specific game is selected via the Game filter.
+  // v4.1 FIX (this session - see chat discussion, "why is half the board
+  // lit up"): the earlier version highlighted one top pick PER GAME
+  // unconditionally - but in the default "All Games" cross-game ranking,
+  // the top of an overall list is naturally made up of the best player
+  // from MANY different games, so most rows near the top legitimately
+  // "won" their own game's highlight at once. With highlights everywhere,
+  // none of them stand out - the actual problem reported. "Top pick per
+  // lineup" only makes real sense once you're looking at ONE game at a
+  // time (matching how the competitor's tool always works - one matchup
+  // view, never a combined list) - so this now only activates once a
+  // specific game is selected via the Game filter. In the unfiltered
+  // "All Games" view, no rows are highlighted at all - the honest choice,
+  // rather than picking an arbitrary single winner across 15 unrelated
+  // games.
+  const gameFilterActive = document.getElementById('gameFilter').value;
   const topPickGames = new Set();
 
   const rows = ranked.map(({p, compositeScore}, i) => {
@@ -1077,7 +1080,7 @@ function render(){
       ? `<div class="stat-block is-sort-key"><div class="stat-block-label">Composite Match</div><div class="stat-block-val">${compositeScore.toFixed(0)}/100</div></div>`
       : '';
     const isChecked = compareSet.has(String(p.playerId));
-    const isTopPick = !!p.game && !topPickGames.has(p.game);
+    const isTopPick = !!gameFilterActive && !!p.game && !topPickGames.has(p.game);
     if (isTopPick) topPickGames.add(p.game);
     return `
     <div class="player-row ${isTopPick ? 'top-pick' : ''}" data-player-id="${p.playerId}">
@@ -1296,14 +1299,13 @@ function buildStatPanel(p, group, sortFactor){
       sb('HR Trend (L15)', p.l15hrRate, {sortKey: sortFactor.has('l15hrRate'), pa: p.l15IsoPa, fmt: pct}),
       sb('HR Trend (L30)', p.l30hrRate, {sortKey: sortFactor.has('l30hrRate'), pa: p.l30Pa, fmt: pct}),
       // v3.99 NEW (this session - see chat discussion): these three are
-      // ONLY shown when the backend actually found real data for them
-      // (see fetch_hr_data.py's HONESTY NOTE - not every Savant
-      // leaderboard export is guaranteed to include xwOBA/xwOBAcon/FB%).
-      // sb()'s isNA handling already shows a real dash when the value is
-      // null, so this degrades honestly either way.
-      sb('xwOBA', p.xwoba, {pa: p.pa, fmt: v=>v.toFixed(3)}),
-      sb('xwOBAcon', p.xwobacon, {pa: p.pa, fmt: v=>v.toFixed(3)}),
-      sb('Fly Ball %', p.flyballPct, {pa: p.pa, fmt: pct}),
+      // v4.0 CORRECTED (this session, after a real run - see chat
+      // discussion): xwOBA/xwOBAcon confirmed NOT present on this
+      // leaderboard. "Fly Ball %" was based on a mislabeled column - a
+      // real sample value (88.5 for a contact hitter) made far more
+      // sense as an exit-velocity split than a percentage, so it's been
+      // replaced with a real, unambiguous field instead.
+      sb('Sweet Spot %', p.sweetSpotPct, {sortKey: sortFactor.has('sweetSpotPct'), pa: p.pa, fmt: pct}),
     ].join('');
   }
   if (group === 'Matchup'){
@@ -1360,6 +1362,7 @@ function buildStatPanel(p, group, sortFactor){
           <div class="pitch-mix-stats">
             <span style="color:${d.hr > 0 ? 'var(--gold)' : 'var(--muted2)'}; font-weight:${d.hr > 0 ? 700 : 400};">${d.hr} HR</span>
             <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
+            <span>${d.xwoba != null ? d.xwoba.toFixed(3) : 'N/A'} xwOBA</span>
             <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
             <span style="color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</span>
           </div>
@@ -1387,6 +1390,7 @@ function buildStatPanel(p, group, sortFactor){
           <div class="pitch-mix-stats">
             <span style="color:${d.hr > 0 ? 'var(--gold)' : 'var(--muted2)'}; font-weight:${d.hr > 0 ? 700 : 400};">${d.hr} HR</span>
             <span>${d.ba != null ? d.ba.toFixed(3) : 'N/A'} AVG</span>
+            <span>${d.xwoba != null ? d.xwoba.toFixed(3) : 'N/A'} xwOBA</span>
             <span>${d.hardhit != null ? (d.hardhit*100).toFixed(0)+'%' : 'N/A'} HH</span>
             <span style="color:${lowSample ? 'var(--stat-bad)' : 'var(--muted2)'};">${d.pa} PA${lowSample ? ' &#9888;' : ''}</span>
           </div>
