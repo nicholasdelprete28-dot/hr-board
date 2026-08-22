@@ -1094,6 +1094,31 @@ def fetch_batter_statcast():
               f"printed CSV columns above and add the real name to the "
               f"matching *_columns list in fetch_batter_statcast().")
 
+    # v3.99 NEW (this session - see chat discussion, ideas drawn from
+    # reviewing a competitor product's real displayed stats - xwOBAcon and
+    # fly-ball rate are established, real Statcast metrics this file
+    # never looked for before, even though this SAME leaderboard call may
+    # already return them alongside EV/barrel/hard-hit in one row.
+    # HONESTY NOTE: unconfirmed without a live run whether this specific
+    # leaderboard endpoint includes these columns - defensive detection
+    # only, same as everything else in this function. If the printed
+    # columns above show these aren't here, a different Savant leaderboard
+    # (e.g. /leaderboard/expected_statistics for xwOBA, or a batted-ball-
+    # profile leaderboard for FB%) would need its own fetch - not
+    # guessed at here. This adds DATA ONLY - it does not change
+    # compute_hr_probability()'s formula. That should only happen after a
+    # real run confirms these values exist and what real ranges look
+    # like, the same calibration discipline used for every other constant
+    # in this file - not before.
+    xwoba_columns = ["xwoba", "est_woba", "xwoba_x"]
+    xwobacon_columns = ["xwobacon", "est_woba_minus_woba_diff", "xwoba_con"]
+    fb_columns = ["fbld", "fb_percent", "flyball_percent", "fb_pct"]
+    xwoba_col = next((c for c in xwoba_columns if rows and c in rows[0]), None)
+    xwobacon_col = next((c for c in xwobacon_columns if rows and c in rows[0]), None)
+    fb_col = next((c for c in fb_columns if rows and c in rows[0]), None)
+    print(f"  using xwOBA column: {xwoba_col} | xwOBAcon column: {xwobacon_col} | FB% column: {fb_col}"
+          f"{' (none found - these fields will be unavailable this run, see HONESTY NOTE above)' if not (xwoba_col or xwobacon_col or fb_col) else ''}")
+
     out = {}
     for row in rows:
         pid_raw = row.get(id_col_used) if id_col_used else None
@@ -1101,11 +1126,34 @@ def fetch_batter_statcast():
             continue
         try:
             pid = int(pid_raw)
-            out[pid] = {
+            entry = {
                 "ev": float((row.get(ev_col) if ev_col else None) or 0),
                 "barrel": float((row.get(barrel_col) if barrel_col else None) or 0) / 100,
                 "hardhit": float((row.get(hardhit_col) if hardhit_col else None) or 0) / 100,
             }
+            # Each of these three is independently optional - a batter
+            # missing just one doesn't lose the others, and none of them
+            # default to a fake 0 the way ev/barrel/hardhit above do
+            # (those three are treated as required elsewhere downstream;
+            # these new ones are not yet consumed anywhere, so None is
+            # the honest, safe default until they are).
+            if xwoba_col and row.get(xwoba_col):
+                try:
+                    entry["xwoba"] = float(row[xwoba_col])
+                except (TypeError, ValueError):
+                    pass
+            if xwobacon_col and row.get(xwobacon_col):
+                try:
+                    entry["xwobacon"] = float(row[xwobacon_col])
+                except (TypeError, ValueError):
+                    pass
+            if fb_col and row.get(fb_col):
+                try:
+                    raw_fb = float(row[fb_col])
+                    entry["flyballPct"] = raw_fb / 100 if raw_fb > 1 else raw_fb
+                except (TypeError, ValueError):
+                    pass
+            out[pid] = entry
         except (TypeError, ValueError):
             continue
     return out
@@ -3140,6 +3188,13 @@ def main():
                     "barrel": sc.get("barrel"),
                     "ev": sc.get("ev"),
                     "hardhit": sc.get("hardhit"),
+                    # v3.99 NEW: saved but NOT yet consumed by
+                    # compute_hr_probability() - see the HONESTY NOTE in
+                    # fetch_batter_statcast(). Available for review/
+                    # calibration once a real run confirms real values.
+                    "xwoba": sc.get("xwoba"),
+                    "xwobacon": sc.get("xwobacon"),
+                    "flyballPct": sc.get("flyballPct"),
                     "l15Barrel": sc_l15.get("barrel"),
                     "l15Ev": sc_l15.get("ev"),
                     "l15Hardhit": sc_l15.get("hardhit"),
@@ -3562,6 +3617,7 @@ def write_daily_snapshot(players):
                 "hrProb": p.get("hrProb"), "hrrProb": p.get("hrrProb"), "tbProb": p.get("tbProb"),
                 "tier": p.get("tier"), "tierCappedReason": p.get("tierCappedReason"),
                 "barrel": p.get("barrel"), "ev": p.get("ev"), "hardhit": p.get("hardhit"),
+                "xwoba": p.get("xwoba"), "xwobacon": p.get("xwobacon"), "flyballPct": p.get("flyballPct"),
                 "l15Barrel": p.get("l15Barrel"), "l15Ev": p.get("l15Ev"),
                 "l15Hardhit": p.get("l15Hardhit"), "l15PowerPa": p.get("l15PowerPa"),
                 "iso": p.get("iso"), "pa": p.get("pa"), "slg": p.get("slg"),
