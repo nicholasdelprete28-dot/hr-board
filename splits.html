@@ -131,6 +131,42 @@
   .result-count{
     font-family:var(--mono); font-size:11px; color:var(--muted2); margin-left:auto; align-self:center;
   }
+  .guide-btn{
+    font-family:var(--display); font-size:12px; font-weight:600; background:var(--gold); color:#171307;
+    border:none; border-radius:9px; padding:9px 15px; cursor:pointer; align-self:center;
+  }
+
+  /* v3.95 NEW (this session) - guide modal */
+  .guide-overlay{
+    display:none; position:fixed; inset:0; z-index:300; background:rgba(0,0,0,0.75);
+    align-items:flex-start; justify-content:center; padding:40px 14px; overflow-y:auto;
+  }
+  .guide-overlay.show{display:flex;}
+  .guide-panel{
+    background:var(--surface2); border:1px solid var(--line); border-radius:16px;
+    max-width:680px; width:100%; padding:0; margin-bottom:40px;
+  }
+  .guide-header{
+    padding:20px 24px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;
+    position:sticky; top:0; background:var(--surface2); border-radius:16px 16px 0 0;
+  }
+  .guide-title{font-family:var(--display); font-weight:700; font-size:19px; color:var(--text);}
+  .guide-body{padding:20px 24px;}
+  .guide-intro{
+    background:rgba(227,165,72,0.08); border:1px solid rgba(227,165,72,0.3); border-radius:10px;
+    padding:14px 16px; margin-bottom:20px; font-family:var(--body); font-size:13px; color:var(--text); line-height:1.6;
+  }
+  .guide-section{margin-bottom:20px;}
+  .guide-section-title{
+    font-family:var(--display); font-weight:700; font-size:14px; color:var(--gold);
+    text-transform:uppercase; letter-spacing:0.4px; margin-bottom:8px;
+  }
+  .guide-item{margin-bottom:9px; font-family:var(--body); font-size:12.5px; line-height:1.55; color:var(--muted);}
+  .guide-item b{color:var(--text);}
+  .guide-tips{
+    background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-top:6px;
+  }
+  .guide-tips li{font-family:var(--body); font-size:12.5px; color:var(--muted); line-height:1.6; margin-bottom:6px;}
 
   /* v3.94 REWRITE (this session - see chat discussion, "SUPER in depth" -
      replaced the plain sparse <table> with a rich row-panel layout: each
@@ -149,6 +185,15 @@
   .player-row:hover{background:rgba(227,165,72,0.06);}
   .player-row:last-child{border-bottom:none;}
   .row-rank{font-family:var(--mono); font-size:12px; color:var(--muted2); width:22px; flex-shrink:0;}
+  .row-headshot{
+    width:44px; height:44px; border-radius:50%; border:2px solid; flex-shrink:0; position:relative;
+    overflow:hidden; display:flex; align-items:center; justify-content:center;
+  }
+  .row-headshot-fallback{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--display); font-weight:700; font-size:13px; color:#fff;
+  }
+  .row-headshot-img{width:100%; height:100%; object-fit:cover; position:relative; z-index:1;}
   .row-identity{width:168px; flex-shrink:0;}
   .row-player{font-family:var(--body); font-weight:700; color:var(--text); font-size:13.5px; line-height:1.25;}
   .row-meta{font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:3px;}
@@ -299,6 +344,7 @@
       <input type="text" class="search-input" id="searchBox" placeholder="Player or team...">
     </div>
     <div class="result-count" id="resultCount"></div>
+    <button class="guide-btn" id="guideBtn">&#128214; How to Use This</button>
   </div>
 
   <div class="table-wrap" id="tableWrap"></div>
@@ -321,6 +367,85 @@
       <select id="filterHome"><option value="">Home &amp; Road</option><option value="home">Home Only</option><option value="road">Road Only</option></select>
     </div>
     <div id="gmodalBody"></div>
+  </div>
+</div>
+
+<div class="guide-overlay" id="guideOverlay">
+  <div class="guide-panel">
+    <div class="guide-header">
+      <div class="guide-title">How to Use This Page</div>
+      <button class="gmodal-close" id="guideClose">&times;</button>
+    </div>
+    <div class="guide-body">
+      <div class="guide-intro">
+        Pick a category tab below, then click one or more factor pills. Selecting <b>one</b> factor sorts players
+        by that real number directly. Selecting <b>multiple</b> factors (even across different category tabs)
+        combines them into a <b>Composite Match</b> score from 0-100 - it's the average of how well each player
+        ranks against everyone else on every factor you've picked. 100 means best-in-the-field on everything
+        selected; 0 means worst. Click any player's row to see their real game log, filterable by pitcher, day,
+        and opponent.
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Model</div>
+        <div class="guide-item"><b>HR Probability</b> - the single best all-around estimate of how likely this batter is to homer today. Blends everything below into one number.</div>
+        <div class="guide-item"><b>Power</b> - overall raw ability, based on exit velocity, barrel rate, and home run production.</div>
+        <div class="guide-item"><b>Matchup (opp. pitcher HR/9)</b> - how home-run-prone today's opposing pitcher has been. Lower number = tougher pitcher to face.</div>
+        <div class="guide-item"><b>Recent Form</b> - home runs over their last 15 games. A hot-streak indicator, not a guarantee it continues.</div>
+        <div class="guide-item"><b>Platoon Edge</b> - how well they hit same-handed vs. opposite-handed pitching, applied to today's actual starter.</div>
+        <div class="guide-item"><b>Vs Today's Mix</b> - how well this batter specifically handles the exact blend of pitch types (fastball, slider, etc.) today's pitcher actually throws.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Power Metrics</div>
+        <div class="guide-item"><b>Barrel %</b> - share of batted balls hit with the ideal exit velocity + launch angle combo. The single best predictor of raw power.</div>
+        <div class="guide-item"><b>Exit Velocity</b> - average speed the ball leaves the bat. Higher = harder contact.</div>
+        <div class="guide-item"><b>Hard-Hit %</b> - share of batted balls hit 95+ mph.</div>
+        <div class="guide-item"><b>Season vs. L15</b> - full-year rate vs. just their last 15 games. Comparing the two shows whether their underlying contact quality is trending up or down, not just their luck.</div>
+        <div class="guide-item"><b>ISO</b> - extra-base power per at-bat, a cleaner power read than slugging.</div>
+        <div class="guide-item"><b>SLG / AVG / OBP</b> - standard total bases per at-bat, batting average, and on-base rate.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Matchup</div>
+        <div class="guide-item"><b>Pitcher HR/9 Percentile</b> - how today's starter ranks among ALL of today's starters for homers allowed. Higher percentile = juicier matchup.</div>
+        <div class="guide-item"><b>Bullpen ERA / WHIP</b> - quality of the opposing relief corps, relevant if the batter sees the bullpen later in the game.</div>
+        <div class="guide-item"><b>RISP AVG</b> - batting average with runners in scoring position.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Park &amp; Weather</div>
+        <div class="guide-item"><b>Park Factor</b> - how much a park inflates or suppresses home runs vs. a neutral park (1.00 = neutral, higher = hitter-friendly).</div>
+        <div class="guide-item"><b>Wind Score</b> - how much today's wind should help (positive) or hurt (negative) fly balls.</div>
+        <div class="guide-item"><b>Temperature</b> - warmer air is thinner; fly balls carry slightly farther.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Team Context</div>
+        <div class="guide-item"><b>Projected Total HR</b> - a real, math-derived estimate of total home runs for the game or team, built by adding up every individual starter's own real HR estimate - not a separate guess.</div>
+        <div class="guide-item"><b>Lineup Spot Bonus</b> - reflects batting order. Hitters higher in the order get more at-bats, and therefore more chances.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Situational</div>
+        <div class="guide-item"><b>Day of Week / Home vs Road / Day vs Night</b> - real historical splits. Always check the PA count next to these - a hot Tuesday rate over 12 PA is noise, not signal.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Vs. Pitch Type</div>
+        <div class="guide-item">Real career performance against every pitch type today's specific opposing pitcher actually throws, weighted by how often he throws it. A hitter who mashes sliders facing a pitcher who throws 40% sliders is a real, specific edge the main board doesn't spell out directly.</div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-section-title">Making Good Picks</div>
+        <ul class="guide-tips">
+          <li>Don't chase one number alone. A hot Recent Form with a bad Matchup is closer to a coin flip than a real edge.</li>
+          <li>Watch the &#9888; warning icon - it means under 15 PA for that specific number. It's a real stat, just a noisy one.</li>
+          <li>Combining 2-4 <i>related</i> factors (e.g. Power + Matchup + Vs Today's Mix) into a Composite Match tends to be more reliable than staring at any single number.</li>
+          <li>This page exists to show you <i>why</i> a player ranks where he does on the main board, or to surface an angle - like a specific pitch-type edge - the main board doesn't spell out on its own.</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -379,12 +504,31 @@ const STATIC_FACTORS = [
   {value: 'day', label: 'Day Game HR Rate', group: 'Situational'},
   {value: 'night', label: 'Night Game HR Rate', group: 'Situational'},
 ];
+// v3.95 NEW (this session): real team colors and the real MLB headshot
+// CDN pattern, copied exactly from index.html (same graceful onerror
+// fallback to initials) rather than guessing at a new image source.
+const TEAM_COLORS = {
+  LAA:'#BA0021', AZ:'#A71930', BAL:'#DF4601', BOS:'#BD3039', CHC:'#0E3386',
+  CIN:'#C6011F', CLE:'#00385D', COL:'#333366', DET:'#0C2340', HOU:'#EB6E1F',
+  KC:'#004687', LAD:'#005A9C', WSH:'#AB0003', NYM:'#FF5910', ATH:'#003831',
+  PIT:'#FDB827', SD:'#2F241D', SEA:'#0C2C56', SF:'#FD5A1E', STL:'#C41E3A',
+  TB:'#092C5C', TEX:'#003278', TOR:'#134A8E', MIN:'#002B5C', PHI:'#E81828',
+  ATL:'#CE1141', CWS:'#27251F', MIA:'#00A3E0', NYY:'#003087', MIL:'#12284B',
+};
+function playerHeadshot(p){
+  const teamColor = TEAM_COLORS[p.team] || '#3a4038';
+  const initials = p.player.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  const img = p.playerId
+    ? `<img class="row-headshot-img" src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_180,q_auto:best/v1/people/${p.playerId}/headshot/67/current" onerror="this.style.display='none'">`
+    : '';
+  return `<div class="row-headshot" style="border-color:${teamColor}; background:linear-gradient(160deg, ${teamColor}, ${teamColor}99);">
+    <div class="row-headshot-fallback">${initials}</div>${img}</div>`;
+}
+
 const PITCH_NAMES = {FF:'4-Seam FB', SI:'Sinker', FC:'Cutter', SL:'Slider', ST:'Sweeper',
   CU:'Curveball', KC:'Knuckle Curve', CH:'Changeup', FS:'Splitter', KN:'Knuckleball'};
 
 let sortDesc = true;
-let currentFactor = 'hrProb';
-
 let groupedFactors = {};
 let activeGroup = 'Model';
 
@@ -429,17 +573,32 @@ function renderCategoryTabs(){
   });
 }
 
+// v3.95 REWRITE (this session - see chat discussion, "choose multiple
+// factors at the same time"): currentFactor (single value) is replaced
+// with selectedFactors (a Set) - clicking a pill now TOGGLES membership
+// instead of replacing the selection. Selections persist across category
+// tabs on purpose, so you can build a real cross-category combination
+// (e.g. Barrel% from Power Metrics + Bullpen ERA from Matchup together).
+let selectedFactors = new Set(['hrProb']);
+
 function renderFactorPills(){
   const pillsEl = document.getElementById('factorPills');
   const factors = groupedFactors[activeGroup] || [];
   pillsEl.innerHTML = factors.map(f =>
-    `<div class="factor-pill ${f.value === currentFactor ? 'active' : ''}" data-value="${f.value}">${f.label}</div>`
+    `<div class="factor-pill ${selectedFactors.has(f.value) ? 'active' : ''}" data-value="${f.value}">${f.label}</div>`
   ).join('');
   pillsEl.querySelectorAll('.factor-pill').forEach(pill => {
     pill.addEventListener('click', () => {
-      currentFactor = pill.dataset.value;
-      document.getElementById('dayPickerGroup').style.display = currentFactor === 'dow' ? '' : 'none';
-      document.getElementById('pitchMetricGroup').style.display = currentFactor.startsWith('pitch:') ? '' : 'none';
+      const val = pill.dataset.value;
+      if (selectedFactors.has(val)) {
+        if (selectedFactors.size > 1) selectedFactors.delete(val); // always keep at least one selected
+      } else {
+        selectedFactors.add(val);
+      }
+      const hasDow = [...selectedFactors].includes('dow');
+      const hasPitch = [...selectedFactors].some(f => f.startsWith('pitch:'));
+      document.getElementById('dayPickerGroup').style.display = hasDow ? '' : 'none';
+      document.getElementById('pitchMetricGroup').style.display = hasPitch ? '' : 'none';
       renderFactorPills();
       render();
     });
@@ -514,28 +673,66 @@ function tierClass(tier){
   return {prime: 'tier-prime', strong: 'tier-strong', inplay: 'tier-inplay', longshot: 'tier-longshot'}[tier] || 'tier-longshot';
 }
 
+// v3.95 NEW (this session): percentile-based composite scoring - the
+// honest way to combine factors on very different real scales (a
+// percentage, an HR/9 rate, a raw PA count) into one comparable ranking.
+// For each selected factor, every batter with real data for it gets a
+// 0-100 percentile rank among all batters who have real data for THAT
+// factor; a player's composite score is the average of their percentile
+// across every currently-selected factor. A player missing real data
+// for even one selected factor is excluded from the composite entirely
+// (not silently averaged over fewer factors) - same "never fake a
+// number" standard as everything else on this page.
+function computePercentiles(batters, factorValue){
+  const withVal = batters.map(p => ({p, f: getFactorValue(p, factorValue)})).filter(({f}) => f.val != null);
+  const invert = STATIC_FACTORS.find(f => f.value === factorValue)?.invert;
+  const goodness = v => invert ? -v : v;
+  const sorted = [...withVal].sort((a, b) => goodness(a.f.val) - goodness(b.f.val));
+  const n = sorted.length;
+  const map = new Map();
+  sorted.forEach((item, idx) => map.set(item.p.playerId, n > 1 ? (idx / (n - 1)) * 100 : 50));
+  return map;
+}
+
 function render(){
+  const factorsArr = [...selectedFactors];
   const allFactors = Object.values(groupedFactors).flat();
-  const factorMeta = allFactors.find(f => f.value === currentFactor) || {label: currentFactor};
   const searchTerm = document.getElementById('searchBox').value.toLowerCase().trim();
-
-  const batters = players.filter(p => p.playerType === 'batter');
-  const withFactor = batters
-    .map(p => ({p, f: getFactorValue(p, currentFactor)}))
-    .filter(({p}) => !searchTerm || p.player.toLowerCase().includes(searchTerm) || (p.team||'').toLowerCase().includes(searchTerm))
-    .filter(({f}) => f.val != null);
-
-  const invert = STATIC_FACTORS.find(f => f.value === currentFactor)?.invert;
-  withFactor.sort((a, b) => {
-    const diff = (a.f.val - b.f.val) * (invert ? -1 : 1);
-    return sortDesc ? -diff : diff;
-  });
-
-  document.getElementById('resultCount').textContent = `${withFactor.length} of ${batters.length} batters have real data for this factor`;
+  const batters = players.filter(p => p.playerType === 'batter')
+    .filter(p => !searchTerm || p.player.toLowerCase().includes(searchTerm) || (p.team||'').toLowerCase().includes(searchTerm));
 
   const emptyEl = document.getElementById('emptyState');
   const tableEl = document.getElementById('tableWrap');
-  if (!withFactor.length){
+  let ranked; // array of {p, displayVal, displayFmt, pa, compositeScore (or null)}
+
+  if (factorsArr.length === 1){
+    // Single factor: unchanged behavior - sort directly by the real value.
+    const fv = factorsArr[0];
+    const withFactor = batters.map(p => ({p, f: getFactorValue(p, fv)})).filter(({f}) => f.val != null);
+    const invert = STATIC_FACTORS.find(f => f.value === fv)?.invert;
+    withFactor.sort((a, b) => {
+      const diff = (a.f.val - b.f.val) * (invert ? -1 : 1);
+      return sortDesc ? -diff : diff;
+    });
+    ranked = withFactor.map(({p, f}) => ({p, compositeScore: null}));
+    document.getElementById('resultCount').textContent = `${ranked.length} of ${batters.length} batters have real data for this factor`;
+  } else {
+    // Multiple factors: composite percentile score across all of them.
+    const percentileMaps = factorsArr.map(fv => computePercentiles(batters, fv));
+    const withComposite = [];
+    batters.forEach(p => {
+      const pcts = percentileMaps.map(m => m.get(p.playerId));
+      if (pcts.some(v => v == null)) return;
+      const avg = pcts.reduce((s, v) => s + v, 0) / pcts.length;
+      withComposite.push({p, compositeScore: avg});
+    });
+    withComposite.sort((a, b) => sortDesc ? b.compositeScore - a.compositeScore : a.compositeScore - b.compositeScore);
+    ranked = withComposite;
+    document.getElementById('resultCount').textContent =
+      `${ranked.length} of ${batters.length} batters have real data for ALL ${factorsArr.length} selected factors`;
+  }
+
+  if (!ranked.length){
     emptyEl.style.display = '';
     tableEl.style.display = 'none';
     return;
@@ -543,17 +740,20 @@ function render(){
   emptyEl.style.display = 'none';
   tableEl.style.display = '';
 
-  const rows = withFactor.map(({p, f}, i) => {
-    const lowSample = f.pa != null && f.pa > 0 && f.pa < 15;
+  const rows = ranked.map(({p, compositeScore}, i) => {
+    const compositeBadge = compositeScore != null
+      ? `<div class="stat-block is-sort-key"><div class="stat-block-label">Composite Match</div><div class="stat-block-val">${compositeScore.toFixed(0)}/100</div></div>`
+      : '';
     return `
     <div class="player-row" data-player-id="${p.playerId}">
       <div class="row-rank">${i+1}</div>
+      ${playerHeadshot(p)}
       <div class="row-identity">
         <div class="row-player">${p.player}</div>
         <div class="row-meta">${p.team || ''} ${p.game ? '&middot; ' + p.game : ''}</div>
         <div class="row-tier ${tierClass(p.tier)}">${(p.tier||'-').toUpperCase()}</div>
       </div>
-      <div class="stat-panel">${buildStatPanel(p, activeGroup, currentFactor)}</div>
+      <div class="stat-panel">${compositeBadge}${buildStatPanel(p, activeGroup, selectedFactors)}</div>
     </div>`;
   }).join('');
 
@@ -592,62 +792,62 @@ function buildStatPanel(p, group, sortFactor){
 
   if (group === 'Model'){
     return [
-      sb('HR Prob', p.hrProb, {sortKey: sortFactor==='hrProb', fmt: v=>v.toFixed(1)+'%'}),
-      sb('Power', p.score, {sortKey: sortFactor==='score', fmt: v=>v.toFixed(1)}),
-      sb('Opp Pitcher HR/9', p.phr9, {sortKey: sortFactor==='phr9', fmt: v=>v.toFixed(2)}),
-      sb('Recent (L15 HR)', p.l15hr, {sortKey: sortFactor==='l15hr', pa: p.l15IsoPa, fmt: v=>v+' HR'}),
-      sb('Platoon (AVG vs hand)', p.avgmix, {sortKey: sortFactor==='avgmix', pa: p.avgmixPa, fmt: dec3}),
-      sb("Vs Today's Mix", p.avgVsMix, {sortKey: sortFactor==='avgVsMix', pa: p.avgVsMixPa, fmt: dec3}),
+      sb('HR Prob', p.hrProb, {sortKey: sortFactor.has('hrProb'), fmt: v=>v.toFixed(1)+'%'}),
+      sb('Power', p.score, {sortKey: sortFactor.has('score'), fmt: v=>v.toFixed(1)}),
+      sb('Opp Pitcher HR/9', p.phr9, {sortKey: sortFactor.has('phr9'), fmt: v=>v.toFixed(2)}),
+      sb('Recent (L15 HR)', p.l15hr, {sortKey: sortFactor.has('l15hr'), pa: p.l15IsoPa, fmt: v=>v+' HR'}),
+      sb('Platoon (AVG vs hand)', p.avgmix, {sortKey: sortFactor.has('avgmix'), pa: p.avgmixPa, fmt: dec3}),
+      sb("Vs Today's Mix", p.avgVsMix, {sortKey: sortFactor.has('avgVsMix'), pa: p.avgVsMixPa, fmt: dec3}),
     ].join('');
   }
   if (group === 'Power Metrics'){
     return [
-      sb('Barrel% (Szn)', p.barrel, {sortKey: sortFactor==='barrel', pa: p.pa, fmt: pct}),
-      sb('Barrel% (L15)', p.l15Barrel, {sortKey: sortFactor==='l15Barrel', pa: p.l15PowerPa, fmt: pct}),
-      sb('Exit Velo (Szn)', p.ev, {sortKey: sortFactor==='ev', pa: p.pa, fmt: v=>v.toFixed(1)}),
-      sb('Exit Velo (L15)', p.l15Ev, {sortKey: sortFactor==='l15Ev', pa: p.l15PowerPa, fmt: v=>v.toFixed(1)}),
-      sb('Hard-Hit% (Szn)', p.hardhit, {sortKey: sortFactor==='hardhit', pa: p.pa, fmt: pct}),
-      sb('Hard-Hit% (L15)', p.l15Hardhit, {sortKey: sortFactor==='l15Hardhit', pa: p.l15PowerPa, fmt: pct}),
-      sb('ISO', p.iso, {sortKey: sortFactor==='iso', pa: p.pa, fmt: dec3}),
-      sb('SLG', p.slg, {sortKey: sortFactor==='slg', pa: p.pa, fmt: dec3}),
-      sb('AVG', p.avg, {sortKey: sortFactor==='avg', pa: p.pa, fmt: dec3}),
-      sb('OBP', p.obp, {sortKey: sortFactor==='obp', pa: p.pa, fmt: dec3}),
-      sb('HR Trend (L15)', p.l15hrRate, {sortKey: sortFactor==='l15hrRate', pa: p.l15IsoPa, fmt: pct}),
-      sb('HR Trend (L30)', p.l30hrRate, {sortKey: sortFactor==='l30hrRate', pa: p.l30Pa, fmt: pct}),
+      sb('Barrel% (Szn)', p.barrel, {sortKey: sortFactor.has('barrel'), pa: p.pa, fmt: pct}),
+      sb('Barrel% (L15)', p.l15Barrel, {sortKey: sortFactor.has('l15Barrel'), pa: p.l15PowerPa, fmt: pct}),
+      sb('Exit Velo (Szn)', p.ev, {sortKey: sortFactor.has('ev'), pa: p.pa, fmt: v=>v.toFixed(1)}),
+      sb('Exit Velo (L15)', p.l15Ev, {sortKey: sortFactor.has('l15Ev'), pa: p.l15PowerPa, fmt: v=>v.toFixed(1)}),
+      sb('Hard-Hit% (Szn)', p.hardhit, {sortKey: sortFactor.has('hardhit'), pa: p.pa, fmt: pct}),
+      sb('Hard-Hit% (L15)', p.l15Hardhit, {sortKey: sortFactor.has('l15Hardhit'), pa: p.l15PowerPa, fmt: pct}),
+      sb('ISO', p.iso, {sortKey: sortFactor.has('iso'), pa: p.pa, fmt: dec3}),
+      sb('SLG', p.slg, {sortKey: sortFactor.has('slg'), pa: p.pa, fmt: dec3}),
+      sb('AVG', p.avg, {sortKey: sortFactor.has('avg'), pa: p.pa, fmt: dec3}),
+      sb('OBP', p.obp, {sortKey: sortFactor.has('obp'), pa: p.pa, fmt: dec3}),
+      sb('HR Trend (L15)', p.l15hrRate, {sortKey: sortFactor.has('l15hrRate'), pa: p.l15IsoPa, fmt: pct}),
+      sb('HR Trend (L30)', p.l30hrRate, {sortKey: sortFactor.has('l30hrRate'), pa: p.l30Pa, fmt: pct}),
     ].join('');
   }
   if (group === 'Matchup'){
     return [
-      sb("Pitcher HR/9 %ile", p.pitcherHr9Percentile, {sortKey: sortFactor==='pitcherHr9Percentile', fmt: v=>(v*100).toFixed(0)+'th'}),
-      sb('Bullpen ERA', p.oppBullpenEra, {sortKey: sortFactor==='oppBullpenEra', pa: p.oppBullpenIp, fmt: dec2}),
-      sb('Bullpen WHIP', p.oppBullpenWhip, {sortKey: sortFactor==='oppBullpenWhip', pa: p.oppBullpenIp, fmt: dec2}),
-      sb('RISP AVG', p.risp, {sortKey: sortFactor==='risp', pa: p.rispPa, fmt: dec3}),
+      sb("Pitcher HR/9 %ile", p.pitcherHr9Percentile, {sortKey: sortFactor.has('pitcherHr9Percentile'), fmt: v=>(v*100).toFixed(0)+'th'}),
+      sb('Bullpen ERA', p.oppBullpenEra, {sortKey: sortFactor.has('oppBullpenEra'), pa: p.oppBullpenIp, fmt: dec2}),
+      sb('Bullpen WHIP', p.oppBullpenWhip, {sortKey: sortFactor.has('oppBullpenWhip'), pa: p.oppBullpenIp, fmt: dec2}),
+      sb('RISP AVG', p.risp, {sortKey: sortFactor.has('risp'), pa: p.rispPa, fmt: dec3}),
     ].join('');
   }
   if (group === 'Park & Weather'){
     return [
-      sb('Park Factor', p.park, {sortKey: sortFactor==='park', fmt: v=>v.toFixed(2)}),
-      sb('Wind Score', p.wind, {sortKey: sortFactor==='wind', fmt: v=>v.toFixed(1)}),
-      sb('Temp', p.temp, {sortKey: sortFactor==='temp', fmt: v=>v.toFixed(0)+'&deg;F'}),
+      sb('Park Factor', p.park, {sortKey: sortFactor.has('park'), fmt: v=>v.toFixed(2)}),
+      sb('Wind Score', p.wind, {sortKey: sortFactor.has('wind'), fmt: v=>v.toFixed(1)}),
+      sb('Temp', p.temp, {sortKey: sortFactor.has('temp'), fmt: v=>v.toFixed(0)+'&deg;F'}),
       sb('Wind Detail', p.windDesc, {fmt: v=>v}),
     ].join('');
   }
   if (group === 'Team Context'){
     return [
-      sb('Proj. HR (Game)', p.gameProjectedHR, {sortKey: sortFactor==='gameProjectedHR', fmt: v=>v.toFixed(2)}),
-      sb('Proj. HR (Team)', p.teamProjectedHR, {sortKey: sortFactor==='teamProjectedHR', fmt: v=>v.toFixed(2)}),
-      sb('Lineup Bonus', p.lbonus, {sortKey: sortFactor==='lbonus', fmt: v=>v.toFixed(0)}),
+      sb('Proj. HR (Game)', p.gameProjectedHR, {sortKey: sortFactor.has('gameProjectedHR'), fmt: v=>v.toFixed(2)}),
+      sb('Proj. HR (Team)', p.teamProjectedHR, {sortKey: sortFactor.has('teamProjectedHR'), fmt: v=>v.toFixed(2)}),
+      sb('Lineup Bonus', p.lbonus, {sortKey: sortFactor.has('lbonus'), fmt: v=>v.toFixed(0)}),
     ].join('');
   }
   if (group === 'Situational'){
     const day = document.getElementById('dayPicker').value;
     const dowEntry = p.dowBreakdown && p.dowBreakdown[day];
     return [
-      sb(day + ' HR Rate', dowEntry ? dowEntry.hrRate : null, {sortKey: sortFactor==='dow', pa: dowEntry ? dowEntry.pa : null, fmt: pct}),
-      sb('Home HR Rate', p.homeHrRate, {sortKey: sortFactor==='home', pa: p.homePa, fmt: pct}),
-      sb('Road HR Rate', p.roadHrRate, {sortKey: sortFactor==='road', pa: p.roadPa, fmt: pct}),
-      sb('Day Game Rate', p.dayHrRate, {sortKey: sortFactor==='day', pa: p.dayPa, fmt: pct}),
-      sb('Night Game Rate', p.nightHrRate, {sortKey: sortFactor==='night', pa: p.nightPa, fmt: pct}),
+      sb(day + ' HR Rate', dowEntry ? dowEntry.hrRate : null, {sortKey: sortFactor.has('dow'), pa: dowEntry ? dowEntry.pa : null, fmt: pct}),
+      sb('Home HR Rate', p.homeHrRate, {sortKey: sortFactor.has('home'), pa: p.homePa, fmt: pct}),
+      sb('Road HR Rate', p.roadHrRate, {sortKey: sortFactor.has('road'), pa: p.roadPa, fmt: pct}),
+      sb('Day Game Rate', p.dayHrRate, {sortKey: sortFactor.has('day'), pa: p.dayPa, fmt: pct}),
+      sb('Night Game Rate', p.nightHrRate, {sortKey: sortFactor.has('night'), pa: p.nightPa, fmt: pct}),
     ].join('');
   }
   if (group === 'Vs. Pitch Type'){
@@ -657,7 +857,7 @@ function buildStatPanel(p, group, sortFactor){
     const items = types.map(pt => {
       const d = breakdown[pt];
       const name = PITCH_NAMES[pt] || pt;
-      const isSortKey = sortFactor === 'pitch:' + pt;
+      const isSortKey = sortFactor.has('pitch:' + pt);
       const lowSample = d.pa > 0 && d.pa < 15;
       return `
         <div class="pitch-mix-item" style="${isSortKey ? 'border-color:var(--gold); background:rgba(227,165,72,0.07);' : ''}">
@@ -804,6 +1004,11 @@ function renderGraphModalBody(){
 }
 
 document.getElementById('gmodalClose').addEventListener('click', closeGraphModal);
+document.getElementById('guideBtn').addEventListener('click', () => document.getElementById('guideOverlay').classList.add('show'));
+document.getElementById('guideClose').addEventListener('click', () => document.getElementById('guideOverlay').classList.remove('show'));
+document.getElementById('guideOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'guideOverlay') document.getElementById('guideOverlay').classList.remove('show');
+});
 document.getElementById('gmodalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'gmodalOverlay') closeGraphModal();
 });
