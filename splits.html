@@ -107,6 +107,22 @@
   .factor-pill:hover{border-color:var(--muted); color:var(--text);}
   .factor-pill.active{background:var(--gold); border-color:var(--gold); color:#171307; font-weight:700;}
 
+  .selected-bar{
+    max-width:1440px; margin:10px auto 0; display:none; flex-wrap:wrap; gap:6px; align-items:center;
+    padding:10px 12px; background:rgba(227,165,72,0.06); border:1px solid rgba(227,165,72,0.25); border-radius:10px;
+  }
+  .selected-bar.show{display:flex;}
+  .selected-bar-label{font-family:var(--mono); font-size:9.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.5px; margin-right:2px;}
+  .selected-chip{
+    display:flex; align-items:center; gap:6px; background:var(--gold); color:#171307;
+    font-family:var(--mono); font-size:11px; font-weight:700; padding:5px 6px 5px 11px; border-radius:16px;
+  }
+  .selected-chip-x{
+    cursor:pointer; width:16px; height:16px; border-radius:50%; background:rgba(23,19,7,0.25);
+    display:flex; align-items:center; justify-content:center; font-size:11px; line-height:1;
+  }
+  .selected-chip-x:hover{background:rgba(23,19,7,0.45);}
+
   .controls-bar{
     max-width:1440px; margin:14px auto 0; display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;
   }
@@ -418,6 +434,7 @@
 <div class="wrap">
   <div class="category-tabs" id="categoryTabs"></div>
   <div class="factor-pills" id="factorPills"></div>
+  <div class="selected-bar" id="selectedBar"></div>
 
   <div class="controls-bar">
     <div class="control-group" id="dayPickerGroup" style="display:none;">
@@ -791,6 +808,13 @@ let selectedFactors = new Set(['hrProb']);
 let compareSet = new Set();
 const COMPARE_MAX = 3;
 
+function updateContextControlVisibility(){
+  const hasDow = [...selectedFactors].includes('dow');
+  const hasPitch = [...selectedFactors].some(f => f.startsWith('pitch:') || f.startsWith('spitch:'));
+  document.getElementById('dayPickerGroup').style.display = hasDow ? '' : 'none';
+  document.getElementById('pitchMetricGroup').style.display = hasPitch ? '' : 'none';
+}
+
 function renderFactorPills(){
   const pillsEl = document.getElementById('factorPills');
   const factors = groupedFactors[activeGroup] || [];
@@ -805,11 +829,50 @@ function renderFactorPills(){
       } else {
         selectedFactors.add(val);
       }
-      const hasDow = [...selectedFactors].includes('dow');
-      const hasPitch = [...selectedFactors].some(f => f.startsWith('pitch:') || f.startsWith('spitch:'));
-      document.getElementById('dayPickerGroup').style.display = hasDow ? '' : 'none';
-      document.getElementById('pitchMetricGroup').style.display = hasPitch ? '' : 'none';
+      updateContextControlVisibility();
       renderFactorPills();
+      render();
+    });
+  });
+  renderSelectedBar();
+}
+
+// v3.99 NEW (this session - see chat discussion, "you can't see the
+// selections you've made"): selectedFactors persists across category
+// tabs on purpose (so a cross-category composite is possible), but that
+// meant switching tabs hid whatever was already picked elsewhere with no
+// way to see or manage it. This is a persistent summary, visible
+// regardless of which category tab is active, with a real per-factor
+// remove button - not just a a count.
+function renderSelectedBar(){
+  const barEl = document.getElementById('selectedBar');
+  const allFactors = Object.values(groupedFactors).flat();
+  const selected = [...selectedFactors];
+
+  if (selected.length <= 1){
+    // A single selection is already shown as the active pill right above -
+    // no need to duplicate it here. The bar earns its place once there's
+    // something that could otherwise get lost switching tabs.
+    barEl.classList.remove('show');
+    return;
+  }
+  barEl.classList.add('show');
+  const chips = selected.map(val => {
+    const meta = allFactors.find(f => f.value === val);
+    const label = meta ? meta.label : val;
+    return `<div class="selected-chip" data-remove-value="${val}">
+      ${label}
+      <div class="selected-chip-x" data-remove-value="${val}">&times;</div>
+    </div>`;
+  }).join('');
+  barEl.innerHTML = `<div class="selected-bar-label">Combining ${selected.length} factors:</div>${chips}`;
+
+  barEl.querySelectorAll('.selected-chip-x').forEach(x => {
+    x.addEventListener('click', () => {
+      const val = x.dataset.removeValue;
+      if (selectedFactors.size > 1) selectedFactors.delete(val);
+      updateContextControlVisibility();
+      renderFactorPills(); // also re-renders this bar
       render();
     });
   });
