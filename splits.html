@@ -87,6 +87,56 @@
   .title-icon{color:var(--gold); flex-shrink:0;}
   .subtitle{font-size:12px; color:var(--muted2); margin-top:2px; font-family:var(--body);}
 
+  /* v4.5 NEW (this session) - Quick Pick: plain-language front door onto
+     the same real ranking engine the explorer below uses. */
+  .qp-panel{
+    max-width:1440px; margin:16px auto 0; padding:22px 24px;
+    background:linear-gradient(135deg, rgba(227,165,72,0.09), rgba(227,165,72,0.02));
+    border:1px solid rgba(227,165,72,0.3); border-radius:16px;
+  }
+  .qp-title{font-family:var(--display); font-weight:700; font-size:19px; color:var(--text);}
+  .qp-subtitle{font-family:var(--body); font-size:13px; color:var(--muted); margin-top:4px;}
+  .qp-options{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px; margin-top:16px;}
+  .qp-option{
+    display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:10px;
+    background:var(--surface2); border:1px solid var(--line); cursor:pointer; transition:border-color .15s;
+  }
+  .qp-option:hover{border-color:var(--muted);}
+  .qp-option.checked{border-color:var(--gold); background:rgba(227,165,72,0.10);}
+  .qp-option-check{
+    width:18px; height:18px; border-radius:5px; border:1.5px solid var(--muted2); flex-shrink:0; margin-top:1px;
+    display:flex; align-items:center; justify-content:center; color:transparent; font-size:12px;
+  }
+  .qp-option.checked .qp-option-check{background:var(--gold); border-color:var(--gold); color:#171307;}
+  .qp-option-label{font-family:var(--body); font-weight:700; font-size:13px; color:var(--text);}
+  .qp-option-desc{font-family:var(--body); font-size:11px; color:var(--muted); margin-top:2px; line-height:1.4;}
+  .qp-actions{display:flex; align-items:center; gap:14px; margin-top:18px;}
+  .qp-find-btn{
+    font-family:var(--display); font-weight:700; font-size:14px; background:var(--gold); color:#171307;
+    border:none; border-radius:10px; padding:12px 24px; cursor:pointer;
+  }
+  .qp-find-btn:disabled{background:var(--line); color:var(--muted2); cursor:default;}
+  .qp-count{font-family:var(--mono); font-size:11.5px; color:var(--muted2);}
+  .qp-results{margin-top:18px;}
+  .qp-result-row{
+    display:flex; align-items:center; gap:14px; padding:12px 14px; background:var(--surface2);
+    border:1px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer;
+  }
+  .qp-result-row:hover{border-color:var(--gold);}
+  .qp-result-rank{font-family:var(--display); font-weight:700; font-size:18px; color:var(--gold); width:24px;}
+  .qp-result-info{flex:1;}
+  .qp-result-name{font-family:var(--body); font-weight:700; font-size:14px; color:var(--text);}
+  .qp-result-why{font-family:var(--body); font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .qp-result-score{font-family:var(--mono); font-size:20px; font-weight:700; color:var(--gold); text-align:right;}
+  .qp-result-score-label{font-family:var(--mono); font-size:8.5px; color:var(--muted2); text-transform:uppercase; text-align:right;}
+  .qp-empty{font-family:var(--body); font-size:13px; color:var(--muted); padding:14px 0;}
+
+  .explorer-divider{
+    max-width:1440px; margin:26px auto 10px; display:flex; align-items:center; gap:14px;
+    font-family:var(--mono); font-size:10.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.6px;
+  }
+  .explorer-divider::before, .explorer-divider::after{content:''; flex:1; height:1px; background:var(--line);}
+
   .category-tabs{
     max-width:1440px; margin:16px auto 0; display:flex; gap:6px; flex-wrap:wrap;
   }
@@ -456,6 +506,21 @@
 </header>
 
 <div class="wrap">
+  <div class="qp-panel">
+    <div class="qp-header">
+      <div class="qp-title">&#127919; Not Sure Where to Start? Tell Us What Matters to You</div>
+      <div class="qp-subtitle">Pick anything below - we'll find who ranks best on exactly that, no digging required.</div>
+    </div>
+    <div class="qp-options" id="qpOptions"></div>
+    <div class="qp-actions">
+      <button class="qp-find-btn" id="qpFindBtn">Find My Best Picks</button>
+      <div class="qp-count" id="qpCount"></div>
+    </div>
+    <div class="qp-results" id="qpResults"></div>
+  </div>
+
+  <div class="explorer-divider"><span>Or explore everything yourself</span></div>
+
   <div class="category-tabs" id="categoryTabs"></div>
   <div class="factor-pills" id="factorPills"></div>
   <div class="selected-bar" id="selectedBar"></div>
@@ -1054,6 +1119,133 @@ function computePercentiles(batters, factorValue){
   return map;
 }
 
+// v4.5 NEW (this session - see chat discussion, "help people identify
+// exactly who has the highest rated HR probability based on different
+// things they pick"): the ranking logic (single-factor sort vs composite
+// percentile scoring) is extracted out of render() so both the main
+// table AND the new simple Quick Pick panel below can share the exact
+// same real logic - no duplicated, potentially-drifting copy.
+// v4.5 NEW (this session - see chat discussion, "help people identify
+// exactly who has the highest rated HR probability based on different
+// things they pick, because it's still confusing"): a curated, plain-
+// language list mapping to the SAME real factor values the deep explorer
+// already uses - a friendly front door, not a separate system. Each
+// option can map to more than one real factor (e.g. "Great Park &
+// Weather" quietly combines park AND wind) - the composite scoring
+// engine handles that exactly the same way multi-selecting pills does.
+const QUICK_PICK_OPTIONS = [
+  {id:'best_matchup', label:'Best Overall Matchup', desc:'Our single blended HR probability number', factors:['hrProb']},
+  {id:'raw_power', label:'Raw Power', desc:'Season-long power profile - exit velo, barrels, ISO', factors:['score']},
+  {id:'weak_pitcher', label:'Weak Opposing Pitcher', desc:'Real history of allowing home runs', factors:['phr9']},
+  {id:'hot_streak', label:'On a Hot Streak', desc:'Real home runs over their last 15 games', factors:['l15hr']},
+  {id:'good_weather', label:'Great Park & Weather', desc:"Today's park and wind favor hitters", factors:['park','wind']},
+  {id:'platoon', label:'Platoon Advantage', desc:"Real edge vs today's pitcher's throwing hand", factors:['avgmix']},
+  {id:'contact_quality', label:'Elite Recent Contact', desc:'Genuinely squaring the ball up lately', factors:['l15Barrel','l15Ev']},
+  {id:'tired_bullpen', label:'Tired Opposing Bullpen', desc:'Real bullpen ERA, in case the starter gets pulled early', factors:['oppBullpenEra']},
+];
+let qpSelected = new Set();
+
+function renderQuickPickOptions(){
+  const el = document.getElementById('qpOptions');
+  el.innerHTML = QUICK_PICK_OPTIONS.map(opt => `
+    <div class="qp-option ${qpSelected.has(opt.id) ? 'checked' : ''}" data-qp-id="${opt.id}">
+      <div class="qp-option-check">&#10003;</div>
+      <div>
+        <div class="qp-option-label">${opt.label}</div>
+        <div class="qp-option-desc">${opt.desc}</div>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('.qp-option').forEach(card => {
+    card.addEventListener('click', () => {
+      const id = card.dataset.qpId;
+      if (qpSelected.has(id)) qpSelected.delete(id); else qpSelected.add(id);
+      renderQuickPickOptions();
+      updateQpCount();
+    });
+  });
+  updateQpCount();
+}
+
+function updateQpCount(){
+  const btn = document.getElementById('qpFindBtn');
+  const countEl = document.getElementById('qpCount');
+  btn.disabled = qpSelected.size === 0;
+  countEl.textContent = qpSelected.size ? `${qpSelected.size} thing${qpSelected.size>1?'s':''} selected` : '';
+}
+
+function runQuickPick(){
+  const chosen = QUICK_PICK_OPTIONS.filter(o => qpSelected.has(o.id));
+  if (!chosen.length) return;
+  const factorsArr = [...new Set(chosen.flatMap(o => o.factors))];
+  const batters = players.filter(p => p.playerType === 'batter');
+  const ranked = computeRanking(factorsArr, batters, true).slice(0, 5);
+
+  const resultsEl = document.getElementById('qpResults');
+  if (!ranked.length){
+    resultsEl.innerHTML = `<div class="qp-empty">No batters have real data for everything you picked - try selecting fewer things.</div>`;
+    return;
+  }
+
+  resultsEl.innerHTML = ranked.map(({p, compositeScore}, i) => {
+    // Real, specific reasons - not generic praise - pulled from the
+    // exact same real values getFactorValue() already validated.
+    const whyParts = chosen.map(o => {
+      const primaryFactor = o.factors[0];
+      const f = getFactorValue(p, primaryFactor);
+      if (f.val == null) return null;
+      return `${o.label}: ${f.fmt(f.val)}`;
+    }).filter(Boolean);
+    const scoreDisplay = compositeScore != null ? compositeScore.toFixed(0) + '/100' : (p.hrProb != null ? p.hrProb.toFixed(1)+'%' : '—');
+    const scoreLabel = compositeScore != null ? 'Match Score' : 'HR Prob';
+    return `
+      <div class="qp-result-row" data-player-id="${p.playerId}">
+        <div class="qp-result-rank">${i+1}</div>
+        ${playerHeadshot(p)}
+        <div class="qp-result-info">
+          <div class="qp-result-name">${p.player} <span style="color:var(--muted); font-weight:400; font-size:11px;">${p.team||''} ${p.game ? '&middot; '+p.game : ''}</span></div>
+          <div class="qp-result-why">${whyParts.join(' &middot; ')}</div>
+        </div>
+        <div>
+          <div class="qp-result-score">${scoreDisplay}</div>
+          <div class="qp-result-score-label">${scoreLabel}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  resultsEl.querySelectorAll('.qp-result-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const p = players.find(pl => String(pl.playerId) === row.dataset.playerId);
+      if (p) openGraphModal(p);
+    });
+  });
+}
+
+function computeRanking(factorsArr, batters, descending){
+  let ranked;
+  if (factorsArr.length === 1){
+    const fv = factorsArr[0];
+    const withFactor = batters.map(p => ({p, f: getFactorValue(p, fv)})).filter(({f}) => f.val != null);
+    const invert = STATIC_FACTORS.find(f => f.value === fv)?.invert;
+    withFactor.sort((a, b) => {
+      const diff = (a.f.val - b.f.val) * (invert ? -1 : 1);
+      return descending ? -diff : diff;
+    });
+    ranked = withFactor.map(({p}) => ({p, compositeScore: null}));
+  } else {
+    const percentileMaps = factorsArr.map(fv => computePercentiles(batters, fv));
+    const withComposite = [];
+    batters.forEach(p => {
+      const pcts = percentileMaps.map(m => m.get(p.playerId));
+      if (pcts.some(v => v == null)) return;
+      const avg = pcts.reduce((s, v) => s + v, 0) / pcts.length;
+      withComposite.push({p, compositeScore: avg});
+    });
+    withComposite.sort((a, b) => descending ? b.compositeScore - a.compositeScore : a.compositeScore - b.compositeScore);
+    ranked = withComposite;
+  }
+  return ranked;
+}
+
 function render(){
   const factorsArr = [...selectedFactors];
   const allFactors = Object.values(groupedFactors).flat();
@@ -1065,31 +1257,11 @@ function render(){
 
   const emptyEl = document.getElementById('emptyState');
   const tableEl = document.getElementById('tableWrap');
-  let ranked; // array of {p, displayVal, displayFmt, pa, compositeScore (or null)}
 
+  const ranked = computeRanking(factorsArr, batters, sortDesc);
   if (factorsArr.length === 1){
-    // Single factor: unchanged behavior - sort directly by the real value.
-    const fv = factorsArr[0];
-    const withFactor = batters.map(p => ({p, f: getFactorValue(p, fv)})).filter(({f}) => f.val != null);
-    const invert = STATIC_FACTORS.find(f => f.value === fv)?.invert;
-    withFactor.sort((a, b) => {
-      const diff = (a.f.val - b.f.val) * (invert ? -1 : 1);
-      return sortDesc ? -diff : diff;
-    });
-    ranked = withFactor.map(({p, f}) => ({p, compositeScore: null}));
     document.getElementById('resultCount').textContent = `${ranked.length} of ${batters.length} batters have real data for this factor`;
   } else {
-    // Multiple factors: composite percentile score across all of them.
-    const percentileMaps = factorsArr.map(fv => computePercentiles(batters, fv));
-    const withComposite = [];
-    batters.forEach(p => {
-      const pcts = percentileMaps.map(m => m.get(p.playerId));
-      if (pcts.some(v => v == null)) return;
-      const avg = pcts.reduce((s, v) => s + v, 0) / pcts.length;
-      withComposite.push({p, compositeScore: avg});
-    });
-    withComposite.sort((a, b) => sortDesc ? b.compositeScore - a.compositeScore : a.compositeScore - b.compositeScore);
-    ranked = withComposite;
     document.getElementById('resultCount').textContent =
       `${ranked.length} of ${batters.length} batters have real data for ALL ${factorsArr.length} selected factors`;
   }
@@ -1458,6 +1630,7 @@ async function load(){
   }
   buildFactorOptions();
   buildGameFilterOptions();
+  renderQuickPickOptions();
   render();
 }
 
@@ -1759,6 +1932,7 @@ document.getElementById('plClose').addEventListener('click', () => document.getE
 document.getElementById('pitcherLookupOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'pitcherLookupOverlay') document.getElementById('pitcherLookupOverlay').classList.remove('show');
 });
+document.getElementById('qpFindBtn').addEventListener('click', runQuickPick);
 document.getElementById('gmodalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'gmodalOverlay') closeGraphModal();
 });
