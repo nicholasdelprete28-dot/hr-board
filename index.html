@@ -1170,14 +1170,38 @@ function computeConsensus(entries){
   }
   return best == null ? null : Number(best);
 }
+// v4.3 FIX (this session - see chat discussion, real bug: Joc Pederson's
+// card showing "1.5" lines styled identically to every other player's
+// "0.5 anytime HR" lines - but 1.5 for a HR prop means 2+ home runs, a
+// completely different, much rarer bet, silently mislabeled as the same
+// thing). computeConsensus() picked whichever line had the most total
+// weight among whatever entries actually existed - with no concept of
+// what the REAL standard line for this prop type is. For a part-time
+// player where books simply never posted the standard 0.5 anytime-HR
+// market, an alternate "2+" line won by default (it was the only thing
+// present) and got shown with zero indication it means something
+// different. Mirrors the same principle already applied to the value-tab
+// line-mismatch fix earlier: only show real book data when it matches
+// the specific line the model actually means - otherwise show nothing,
+// never something silently misleading.
+const REAL_STANDARD_LINE = { hr: 0.5, hrr: 1.5, tb: 1.5 };  // k has no fixed standard - uses p.kLine per player, handled separately below
+
 function renderBookOdds(p, mode){
   const field = BOARD_TO_ODDS_FIELD[mode];
   if(!field) return '';
   const allEntries = (p.bookOdds && p.bookOdds[field]) || [];
   if(!allEntries.length) return '';
-  const consensus = computeConsensus(allEntries);
+  const expectedLine = mode === 'k' ? p.kLine : REAL_STANDARD_LINE[mode];
+  if(expectedLine == null) return '';
+  // Only ever consider entries at the REAL line this prop type actually
+  // means - an alternate line for a different real bet (e.g. "2+ HR"
+  // instead of "any HR") is never substituted in, regardless of how many
+  // books offer it or how much consensus weight it would otherwise win.
+  const onLineEntries = allEntries.filter(e => e.line === expectedLine);
+  if(!onLineEntries.length) return '';
+  const consensus = computeConsensus(onLineEntries);
   if(consensus == null) return '';
-  const entries = allEntries.filter(e => e.line === consensus);
+  const entries = onLineEntries.filter(e => e.line === consensus);
   if(!entries.length) return '';
   const pills = entries.map(d => {
     const priceStr = d.price == null ? '' : `<span class="bookodds-price">${d.price > 0 ? '+' : ''}${d.price}</span>`;
