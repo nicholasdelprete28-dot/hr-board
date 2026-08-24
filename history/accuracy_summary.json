@@ -1,88 +1,88 @@
 {
   "hr": {
     "prime": {
-      "hit": 39,
-      "total": 166
+      "hit": 41,
+      "total": 170
     },
     "strong": {
-      "hit": 129,
-      "total": 842
+      "hit": 138,
+      "total": 905
     },
     "inplay": {
-      "hit": 148,
-      "total": 1491
+      "hit": 164,
+      "total": 1655
     },
     "longshot": {
       "hit": 59,
-      "total": 860
+      "total": 899
     }
   },
   "hrr": {
     "strong": {
-      "hit": 626,
-      "total": 1354
+      "hit": 691,
+      "total": 1487
     },
     "prime": {
-      "hit": 333,
-      "total": 599
+      "hit": 366,
+      "total": 648
     },
     "inplay": {
-      "hit": 224,
-      "total": 536
+      "hit": 237,
+      "total": 567
     },
     "longshot": {
-      "hit": 303,
-      "total": 870
+      "hit": 323,
+      "total": 927
     }
   },
   "tb": {
     "strong": {
-      "hit": 326,
-      "total": 859
+      "hit": 364,
+      "total": 939
     },
     "prime": {
-      "hit": 116,
-      "total": 227
+      "hit": 123,
+      "total": 247
     },
     "inplay": {
-      "hit": 202,
-      "total": 604
+      "hit": 213,
+      "total": 644
     },
     "longshot": {
-      "hit": 481,
-      "total": 1669
+      "hit": 524,
+      "total": 1799
     }
   },
   "k": {
     "inplay": {
-      "hit": 54,
-      "total": 120
+      "hit": 55,
+      "total": 131
     },
     "strong": {
-      "hit": 50,
-      "total": 124
+      "hit": 54,
+      "total": 131
     },
     "prime": {
-      "hit": 47,
-      "total": 106
+      "hit": 52,
+      "total": 114
     },
     "longshot": {
       "hit": 8,
-      "total": 23
+      "total": 27
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 394,
-      "matched": 376
+      "real_total": 421,
+      "matched": 403
     },
     "hrr": {
-      "real_total": 1575,
-      "matched": 1492
+      "real_total": 1715,
+      "matched": 1623
     },
     "tb": {
-      "real_total": 1179,
-      "matched": 1129
+      "real_total": 1283,
+      "matched": 1228
     }
   }
 }
