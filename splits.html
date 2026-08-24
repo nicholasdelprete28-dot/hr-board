@@ -96,7 +96,27 @@
   }
   .qp-title{font-family:var(--display); font-weight:700; font-size:19px; color:var(--text);}
   .qp-subtitle{font-family:var(--body); font-size:13px; color:var(--muted); margin-top:4px;}
-  .qp-options{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px; margin-top:16px;}
+
+  .qp-presets{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:10px; margin-top:16px;}
+  .qp-preset-card{
+    padding:14px 16px; border-radius:12px; background:var(--surface2); border:1px solid var(--line);
+    cursor:pointer; transition:border-color .15s, transform .1s;
+  }
+  .qp-preset-card:hover{border-color:var(--gold); transform:translateY(-1px);}
+  .qp-preset-icon{font-size:20px;}
+  .qp-preset-label{font-family:var(--display); font-weight:700; font-size:14.5px; color:var(--text); margin-top:6px;}
+  .qp-preset-desc{font-family:var(--body); font-size:11px; color:var(--muted); margin-top:4px; line-height:1.4;}
+
+  .qp-custom-toggle{
+    display:flex; align-items:center; gap:6px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line);
+    font-family:var(--mono); font-size:11.5px; color:var(--muted); cursor:pointer; user-select:none;
+  }
+  .qp-custom-toggle:hover{color:var(--text);}
+  .qp-custom-toggle-arrow{display:inline-block; transition:transform .15s; color:var(--gold);}
+  .qp-custom-toggle-arrow.open{transform:rotate(90deg);}
+  .qp-custom-body{margin-top:12px;}
+
+  .qp-options{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px;}
   .qp-option{
     display:flex; align-items:flex-start; gap:10px; padding:12px 14px; border-radius:10px;
     background:var(--surface2); border:1px solid var(--line); cursor:pointer; transition:border-color .15s;
@@ -509,13 +529,23 @@
   <div class="qp-panel">
     <div class="qp-header">
       <div class="qp-title">&#127919; Not Sure Where to Start? Tell Us What Matters to You</div>
-      <div class="qp-subtitle">Pick anything below - we'll find who ranks best on exactly that, no digging required.</div>
+      <div class="qp-subtitle">Pick a preset for an instant answer, or open the dropdown to build your own combination.</div>
     </div>
-    <div class="qp-options" id="qpOptions"></div>
-    <div class="qp-actions">
-      <button class="qp-find-btn" id="qpFindBtn">Find My Best Picks</button>
-      <div class="qp-count" id="qpCount"></div>
+
+    <div class="qp-presets" id="qpPresets"></div>
+
+    <div class="qp-custom-toggle" id="qpCustomToggle">
+      <span class="qp-custom-toggle-arrow" id="qpCustomArrow">&#9656;</span>
+      Or build your own combination
     </div>
+    <div class="qp-custom-body" id="qpCustomBody" style="display:none;">
+      <div class="qp-options" id="qpOptions"></div>
+      <div class="qp-actions">
+        <button class="qp-find-btn" id="qpFindBtn">Find My Best Picks</button>
+        <div class="qp-count" id="qpCount"></div>
+      </div>
+    </div>
+
     <div class="qp-results" id="qpResults"></div>
   </div>
 
@@ -807,6 +837,8 @@ const STATIC_FACTORS = [
   {value: 'oppBullpenEra', label: 'Opposing Bullpen ERA', group: 'Matchup', invert: true},
   {value: 'oppBullpenWhip', label: 'Opposing Bullpen WHIP', group: 'Matchup', invert: true},
   {value: 'risp', label: 'RISP AVG', group: 'Matchup'},
+  {value: 'primary_pitch_hr', label: "HR vs. Pitcher's Most-Used Pitch", group: 'Matchup'},
+  {value: 'mix_hr_total', label: "HR vs. Pitcher's Whole Mix", group: 'Matchup'},
   {value: 'park', label: 'Park Factor', group: 'Park & Weather'},
   {value: 'wind', label: 'Wind Score', group: 'Park & Weather'},
   {value: 'temp', label: 'Temperature', group: 'Park & Weather'},
@@ -1058,6 +1090,33 @@ function getFactorValue(p, factorValue){
       fmt: v => metric === 'ba' ? v.toFixed(3) : (v*100).toFixed(0) + '%',
     };
   }
+  // v4.8 NEW (this session - see chat discussion, "the specific pitch the
+  // pitcher uses the most and how many times a player has hit a HR off
+  // it"): unlike the static pitch:FF / pitch:SL pills above (fixed to
+  // ONE pitch code, only meaningful for batters facing a pitcher who
+  // actually throws that specific pitch), this is computed PER PLAYER -
+  // it finds whichever pitch type has the highest real pitcherUsage in
+  // THIS batter's own pitchTypeBreakdown (i.e. today's opposing pitcher's
+  // actual most-used pitch) and returns his real HR count against it.
+  // Fair across different matchups, since it's always relative to each
+  // player's own opponent, not one fixed pitch type for everyone.
+  if (factorValue === 'primary_pitch_hr'){
+    const breakdown = p.pitchTypeBreakdown;
+    if (!breakdown || !Object.keys(breakdown).length) return {val: null, pa: null, fmt: v => v};
+    const [pt, d] = Object.entries(breakdown).reduce((best, cur) =>
+      (!best || cur[1].pitcherUsage > best[1].pitcherUsage) ? cur : best, null);
+    return {val: d.hr, pa: d.pa, fmt: v => `${v} HR vs ${PITCH_NAMES[pt] || pt}`};
+  }
+  // The broader version: real total HRs summed across EVERY pitch type
+  // today's specific opposing pitcher actually throws - "how has he done
+  // against this guy's whole arsenal historically," not just his top pitch.
+  if (factorValue === 'mix_hr_total'){
+    const breakdown = p.pitchTypeBreakdown;
+    if (!breakdown || !Object.keys(breakdown).length) return {val: null, pa: null, fmt: v => v};
+    const totalHr = Object.values(breakdown).reduce((s, d) => s + (d.hr || 0), 0);
+    const totalPa = Object.values(breakdown).reduce((s, d) => s + (d.pa || 0), 0);
+    return {val: totalHr, pa: totalPa, fmt: v => `${v} HR vs his whole mix`};
+  }
   return {val: null, pa: null, fmt: v => v};
 }
 
@@ -1142,8 +1201,54 @@ const QUICK_PICK_OPTIONS = [
   {id:'platoon', label:'Platoon Advantage', desc:"Real edge vs today's pitcher's throwing hand", factors:['avgmix']},
   {id:'contact_quality', label:'Elite Recent Contact', desc:'Genuinely squaring the ball up lately', factors:['l15Barrel','l15Ev']},
   {id:'tired_bullpen', label:'Tired Opposing Bullpen', desc:'Real bullpen ERA, in case the starter gets pulled early', factors:['oppBullpenEra']},
+  {id:'best_pitch_history', label:'HR History vs. His Best Pitch', desc:"Real homers this batter has hit off the exact pitch type today's pitcher throws most", factors:['primary_pitch_hr']},
+  {id:'whole_mix_history', label:'HR History vs. His Whole Mix', desc:"Total real homers against every pitch type today's specific pitcher throws", factors:['mix_hr_total']},
 ];
 let qpSelected = new Set();
+
+// v4.7 NEW (this session - see chat discussion, "Perfect Storm shouldn't
+// just adhere to the model"): each preset draws from a DIFFERENT,
+// deliberately non-overlapping pool of the checkboxes above, specifically
+// so no preset just re-derives hrProb (which already internally blends
+// power+matchup+park/wind) under a different name. The Safe Play is
+// about his own talent/form only; Matchup Special is about today's
+// opposing pitching only; Perfect Storm is about today's external
+// setting only (park/weather/bullpen) - deliberately excluding his own
+// power, recent form, AND the opposing starter, so it answers a genuinely
+// different question than the other three, not a repackaged HR Prob sort.
+const QP_PRESETS = [
+  {id:'safe_play', icon:'&#128737;&#65039;', label:'The Safe Play', desc:"A genuinely great hitter, in good current form - regardless of today's specific matchup.", ids:['raw_power','contact_quality']},
+  {id:'riding_heat', icon:'&#128293;', label:'Riding the Heat', desc:'A real, confirmed hot streak - not just a lucky recent game.', ids:['hot_streak','contact_quality']},
+  {id:'matchup_special', icon:'&#127919;', label:'Matchup Special', desc:"Today's specific pitching matchup only - could surface a bat that isn't otherwise elite.", ids:['weak_pitcher','platoon','tired_bullpen']},
+  {id:'perfect_storm', icon:'&#127786;&#65039;', label:'Perfect Storm', desc:"Everything about TODAY lining up - park, weather, tired bullpen, and real history vs. the exact pitch he's about to see most. Not generic power or overall form.", ids:['good_weather','tired_bullpen','best_pitch_history']},
+];
+
+function renderPresets(){
+  const el = document.getElementById('qpPresets');
+  el.innerHTML = QP_PRESETS.map(preset => `
+    <div class="qp-preset-card" data-preset-id="${preset.id}">
+      <div class="qp-preset-icon">${preset.icon}</div>
+      <div class="qp-preset-label">${preset.label}</div>
+      <div class="qp-preset-desc">${preset.desc}</div>
+    </div>`).join('');
+  el.querySelectorAll('.qp-preset-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const preset = QP_PRESETS.find(p => p.id === card.dataset.presetId);
+      if (!preset) return;
+      qpSelected = new Set(preset.ids);
+      renderQuickPickOptions();
+      runQuickPick();
+    });
+  });
+}
+
+function toggleQpCustom(){
+  const body = document.getElementById('qpCustomBody');
+  const arrow = document.getElementById('qpCustomArrow');
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : '';
+  arrow.classList.toggle('open', !isOpen);
+}
 
 function renderQuickPickOptions(){
   const el = document.getElementById('qpOptions');
@@ -1529,12 +1634,26 @@ function buildStatPanel(p, group, sortFactor){
     const arsenalStr = arsenal
       ? `${(arsenal.fastball*100).toFixed(0)}/${(arsenal.breaking*100).toFixed(0)}/${(arsenal.offspeed*100).toFixed(0)}`
       : null;
+    // Same real per-player "primary pitch" computation as getFactorValue()'s
+    // primary_pitch_hr/mix_hr_total - duplicated here only because sb()
+    // needs a plain value+formatter, not the {val,pa,fmt} wrapper shape.
+    const breakdown = p.pitchTypeBreakdown;
+    let primaryPitchHr = null, primaryPitchPa = null, primaryPitchName = null, mixHrTotal = null, mixPaTotal = null;
+    if (breakdown && Object.keys(breakdown).length){
+      const [pt, d] = Object.entries(breakdown).reduce((best, cur) =>
+        (!best || cur[1].pitcherUsage > best[1].pitcherUsage) ? cur : best, null);
+      primaryPitchHr = d.hr; primaryPitchPa = d.pa; primaryPitchName = PITCH_NAMES[pt] || pt;
+      mixHrTotal = Object.values(breakdown).reduce((s, e) => s + (e.hr || 0), 0);
+      mixPaTotal = Object.values(breakdown).reduce((s, e) => s + (e.pa || 0), 0);
+    }
     return [
       sb("Pitcher HR/9 %ile", p.pitcherHr9Percentile, {sortKey: sortFactor.has('pitcherHr9Percentile'), fmt: v=>(v*100).toFixed(0)+'th'}),
       sb('Bullpen ERA', p.oppBullpenEra, {sortKey: sortFactor.has('oppBullpenEra'), pa: p.oppBullpenIp, fmt: dec2}),
       sb('Bullpen WHIP', p.oppBullpenWhip, {sortKey: sortFactor.has('oppBullpenWhip'), pa: p.oppBullpenIp, fmt: dec2}),
       sb('RISP AVG', p.risp, {sortKey: sortFactor.has('risp'), pa: p.rispPa, fmt: dec3}),
       sb('FB/BR/OF Mix', arsenalStr, {fmt: v=>v}),
+      sb(primaryPitchName ? `HR vs ${primaryPitchName}` : 'HR vs His Best Pitch', primaryPitchHr, {sortKey: sortFactor.has('primary_pitch_hr'), pa: primaryPitchPa, fmt: v=>v+' HR'}),
+      sb('HR vs Whole Mix', mixHrTotal, {sortKey: sortFactor.has('mix_hr_total'), pa: mixPaTotal, fmt: v=>v+' HR'}),
     ].join('');
   }
   if (group === 'Park & Weather'){
@@ -1631,6 +1750,7 @@ async function load(){
   buildFactorOptions();
   buildGameFilterOptions();
   renderQuickPickOptions();
+  renderPresets();
   render();
 }
 
@@ -1700,7 +1820,7 @@ function updatePitcherLookupOptions(){
   const seenPitchers = new Map();
   gameBatters.forEach(p => {
     if (p.oppPitcherId && !seenPitchers.has(p.oppPitcherId)){
-      seenPitchers.set(p.oppPitcherId, p.pitcher);
+      seenPitchers.set(p.oppPitcherId, {name: p.pitcher, team: pitcherTeamFromGame(p.game, p.team)});
     }
   });
   if (!seenPitchers.size){
@@ -1709,7 +1829,19 @@ function updatePitcherLookupOptions(){
   }
   groupEl.style.display = '';
   selectEl.innerHTML = '<option value="">Select a pitcher...</option>' +
-    [...seenPitchers.entries()].map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+    [...seenPitchers.entries()].map(([id, info]) => `<option value="${id}">${info.name}${info.team ? ' (' + info.team + ')' : ''}</option>`).join('');
+}
+
+// v4.6 NEW (this session - see chat discussion, "put the team in
+// parens next to pitcher names"): a pitcher's own team is always the
+// OTHER team in the game string from whichever team's batters are
+// facing him - derived directly from real data already present
+// (p.game, p.team), never a new fetch or a guess.
+function pitcherTeamFromGame(game, facingTeam){
+  if (!game) return '';
+  const parts = game.split(' @ ').map(s => s.trim());
+  if (parts.length !== 2) return '';
+  return parts.find(t => t !== facingTeam) || '';
 }
 
 function openPitcherLookupModal(pitcherId){
@@ -1718,6 +1850,8 @@ function openPitcherLookupModal(pitcherId){
   const pitcherName = facingBatters[0].pitcher;
   const facingTeam = facingBatters[0].team;
   const gameStr = facingBatters[0].game;
+  const pitcherTeam = pitcherTeamFromGame(gameStr, facingTeam);
+  const pitcherDisplayName = pitcherName + (pitcherTeam ? ` (${pitcherTeam})` : '');
 
   // The real per-pitch usage% is identical across every batter facing
   // this pitcher (it's a property of the PITCHER, not the batter) - pull
@@ -1727,7 +1861,7 @@ function openPitcherLookupModal(pitcherId){
     (!best || Object.keys(p.pitchTypeBreakdown).length > Object.keys(best.pitchTypeBreakdown).length) ? p : best, null);
 
   if (!arsenalSource){
-    document.getElementById('plTitle').textContent = pitcherName;
+    document.getElementById('plTitle').textContent = pitcherDisplayName;
     document.getElementById('plMeta').textContent = `${gameStr} - no real pitch-mix data available for this matchup yet.`;
     document.getElementById('plArsenal').innerHTML = '';
     document.getElementById('plMatrixWrap').innerHTML = '';
@@ -1738,7 +1872,7 @@ function openPitcherLookupModal(pitcherId){
   const pitchTypes = Object.entries(arsenalSource.pitchTypeBreakdown)
     .sort((a, b) => b[1].pitcherUsage - a[1].pitcherUsage);
 
-  document.getElementById('plTitle').textContent = pitcherName;
+  document.getElementById('plTitle').textContent = pitcherDisplayName;
   document.getElementById('plMeta').textContent = `${gameStr} - facing ${facingTeam}'s real lineup, ${pitchTypes.length} real pitch types tracked`;
 
   document.getElementById('plArsenal').innerHTML = pitchTypes.map(([pt, d]) => `
@@ -1828,14 +1962,14 @@ function openGraphModal(p){
 
   // Populate filter dropdowns from this player's REAL games only.
   const pitchers = [...new Map(modalGames.filter(g => g.oppPitcherId)
-    .map(g => [g.oppPitcherId, g.oppPitcherName])).entries()];
+    .map(g => [g.oppPitcherId, {name: g.oppPitcherName, team: g.opp}])).entries()];
   const opponents = [...new Set(modalGames.map(g => g.opp).filter(Boolean))].sort();
   const daysPresent = [...new Set(modalGames.map(g => dowFromDateStr(g.date)))];
   const orderedDays = DOW_ORDER.filter(d => daysPresent.includes(d));
 
   const pitcherSel = document.getElementById('filterPitcher');
   pitcherSel.innerHTML = '<option value="">All Pitchers</option>' +
-    pitchers.map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+    pitchers.map(([id, info]) => `<option value="${id}">${info.name}${info.team ? ' (' + info.team + ')' : ''}</option>`).join('');
 
   const oppSel = document.getElementById('filterOpp');
   oppSel.innerHTML = '<option value="">All Opponents</option>' +
@@ -1933,6 +2067,7 @@ document.getElementById('pitcherLookupOverlay').addEventListener('click', (e) =>
   if (e.target.id === 'pitcherLookupOverlay') document.getElementById('pitcherLookupOverlay').classList.remove('show');
 });
 document.getElementById('qpFindBtn').addEventListener('click', runQuickPick);
+document.getElementById('qpCustomToggle').addEventListener('click', toggleQpCustom);
 document.getElementById('gmodalOverlay').addEventListener('click', (e) => {
   if (e.target.id === 'gmodalOverlay') closeGraphModal();
 });
