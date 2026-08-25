@@ -2,87 +2,87 @@
   "hr": {
     "prime": {
       "hit": 41,
-      "total": 170
+      "total": 173
     },
     "strong": {
-      "hit": 138,
-      "total": 905
+      "hit": 141,
+      "total": 951
     },
     "inplay": {
-      "hit": 164,
-      "total": 1655
+      "hit": 174,
+      "total": 1751
     },
     "longshot": {
-      "hit": 59,
-      "total": 899
+      "hit": 63,
+      "total": 928
     }
   },
   "hrr": {
     "strong": {
-      "hit": 691,
-      "total": 1487
+      "hit": 734,
+      "total": 1572
     },
     "prime": {
-      "hit": 366,
-      "total": 648
+      "hit": 381,
+      "total": 684
     },
     "inplay": {
-      "hit": 237,
-      "total": 567
+      "hit": 246,
+      "total": 589
     },
     "longshot": {
-      "hit": 323,
-      "total": 927
+      "hit": 335,
+      "total": 958
     }
   },
   "tb": {
     "strong": {
-      "hit": 364,
-      "total": 939
+      "hit": 386,
+      "total": 984
     },
     "prime": {
-      "hit": 123,
-      "total": 247
+      "hit": 126,
+      "total": 264
     },
     "inplay": {
-      "hit": 213,
-      "total": 644
+      "hit": 223,
+      "total": 677
     },
     "longshot": {
-      "hit": 524,
-      "total": 1799
+      "hit": 550,
+      "total": 1878
     }
   },
   "k": {
     "inplay": {
-      "hit": 55,
-      "total": 131
+      "hit": 59,
+      "total": 139
     },
     "strong": {
-      "hit": 54,
-      "total": 131
+      "hit": 58,
+      "total": 138
     },
     "prime": {
-      "hit": 52,
-      "total": 114
+      "hit": 54,
+      "total": 118
     },
     "longshot": {
-      "hit": 8,
-      "total": 27
+      "hit": 9,
+      "total": 28
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 421,
-      "matched": 403
+      "real_total": 438,
+      "matched": 420
     },
     "hrr": {
-      "real_total": 1715,
-      "matched": 1623
+      "real_total": 1799,
+      "matched": 1702
     },
     "tb": {
-      "real_total": 1283,
-      "matched": 1228
+      "real_total": 1350,
+      "matched": 1289
     }
   }
 }
