@@ -1,70 +1,70 @@
 {
   "hr": {
     "prime": {
-      "hit": 46,
-      "total": 204
+      "hit": 53,
+      "total": 223
     },
     "strong": {
-      "hit": 205,
-      "total": 1285
+      "hit": 210,
+      "total": 1342
     },
     "inplay": {
-      "hit": 246,
-      "total": 2533
+      "hit": 263,
+      "total": 2682
     },
     "longshot": {
-      "hit": 74,
-      "total": 1169
+      "hit": 79,
+      "total": 1211
     }
   },
   "hrr": {
     "strong": {
-      "hit": 1050,
-      "total": 2229
+      "hit": 1114,
+      "total": 2345
     },
     "prime": {
-      "hit": 527,
-      "total": 947
+      "hit": 568,
+      "total": 1012
     },
     "inplay": {
-      "hit": 303,
-      "total": 764
+      "hit": 319,
+      "total": 796
     },
     "longshot": {
-      "hit": 431,
-      "total": 1251
+      "hit": 459,
+      "total": 1305
     }
   },
   "tb": {
     "strong": {
-      "hit": 540,
-      "total": 1356
+      "hit": 577,
+      "total": 1432
     },
     "prime": {
-      "hit": 181,
-      "total": 387
+      "hit": 193,
+      "total": 413
     },
     "inplay": {
-      "hit": 294,
-      "total": 896
+      "hit": 311,
+      "total": 935
     },
     "longshot": {
-      "hit": 740,
-      "total": 2552
+      "hit": 786,
+      "total": 2678
     }
   },
   "k": {
     "inplay": {
-      "hit": 85,
-      "total": 193
+      "hit": 91,
+      "total": 208
     },
     "strong": {
-      "hit": 80,
-      "total": 186
+      "hit": 83,
+      "total": 194
     },
     "prime": {
-      "hit": 85,
-      "total": 161
+      "hit": 88,
+      "total": 168
     },
     "longshot": {
       "hit": 14,
@@ -73,16 +73,16 @@
   },
   "_coverage": {
     "hr": {
-      "real_total": 600,
-      "matched": 573
+      "real_total": 636,
+      "matched": 607
     },
     "hrr": {
-      "real_total": 2468,
-      "matched": 2326
+      "real_total": 2629,
+      "matched": 2475
     },
     "tb": {
-      "real_total": 1848,
-      "matched": 1766
+      "real_total": 1964,
+      "matched": 1878
     }
   }
 }
