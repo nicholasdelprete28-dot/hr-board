@@ -2,87 +2,87 @@
   "hr": {
     "prime": {
       "hit": 53,
-      "total": 223
+      "total": 231
     },
     "strong": {
-      "hit": 210,
-      "total": 1342
+      "hit": 223,
+      "total": 1418
     },
     "inplay": {
-      "hit": 263,
-      "total": 2682
+      "hit": 279,
+      "total": 2823
     },
     "longshot": {
-      "hit": 79,
-      "total": 1211
+      "hit": 81,
+      "total": 1255
     }
   },
   "hrr": {
     "strong": {
-      "hit": 1114,
-      "total": 2345
+      "hit": 1168,
+      "total": 2464
     },
     "prime": {
-      "hit": 568,
-      "total": 1012
+      "hit": 612,
+      "total": 1081
     },
     "inplay": {
-      "hit": 319,
-      "total": 796
+      "hit": 330,
+      "total": 820
     },
     "longshot": {
-      "hit": 459,
-      "total": 1305
+      "hit": 481,
+      "total": 1362
     }
   },
   "tb": {
     "strong": {
-      "hit": 577,
-      "total": 1432
+      "hit": 607,
+      "total": 1510
     },
     "prime": {
-      "hit": 193,
-      "total": 413
+      "hit": 208,
+      "total": 440
     },
     "inplay": {
-      "hit": 311,
-      "total": 935
+      "hit": 326,
+      "total": 979
     },
     "longshot": {
-      "hit": 786,
-      "total": 2678
+      "hit": 825,
+      "total": 2798
     }
   },
   "k": {
     "inplay": {
-      "hit": 91,
-      "total": 208
+      "hit": 99,
+      "total": 220
     },
     "strong": {
-      "hit": 83,
-      "total": 194
+      "hit": 87,
+      "total": 205
     },
     "prime": {
-      "hit": 88,
-      "total": 168
+      "hit": 91,
+      "total": 172
     },
     "longshot": {
       "hit": 14,
-      "total": 39
+      "total": 41
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 636,
-      "matched": 607
+      "real_total": 669,
+      "matched": 638
     },
     "hrr": {
-      "real_total": 2629,
-      "matched": 2475
+      "real_total": 2774,
+      "matched": 2606
     },
     "tb": {
-      "real_total": 1964,
-      "matched": 1878
+      "real_total": 2076,
+      "matched": 1977
     }
   }
 }
