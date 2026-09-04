@@ -2,87 +2,87 @@
   "hr": {
     "prime": {
       "hit": 53,
-      "total": 231
+      "total": 235
     },
     "strong": {
-      "hit": 223,
-      "total": 1418
+      "hit": 228,
+      "total": 1460
     },
     "inplay": {
-      "hit": 279,
-      "total": 2823
+      "hit": 287,
+      "total": 2917
     },
     "longshot": {
-      "hit": 81,
-      "total": 1255
+      "hit": 82,
+      "total": 1275
     }
   },
   "hrr": {
     "strong": {
-      "hit": 1168,
-      "total": 2464
+      "hit": 1203,
+      "total": 2533
     },
     "prime": {
-      "hit": 612,
-      "total": 1081
+      "hit": 628,
+      "total": 1118
     },
     "inplay": {
-      "hit": 330,
-      "total": 820
+      "hit": 339,
+      "total": 847
     },
     "longshot": {
-      "hit": 481,
-      "total": 1362
+      "hit": 490,
+      "total": 1389
     }
   },
   "tb": {
     "strong": {
-      "hit": 607,
-      "total": 1510
+      "hit": 626,
+      "total": 1559
     },
     "prime": {
-      "hit": 208,
-      "total": 440
+      "hit": 213,
+      "total": 453
     },
     "inplay": {
-      "hit": 326,
-      "total": 979
+      "hit": 335,
+      "total": 1002
     },
     "longshot": {
-      "hit": 825,
-      "total": 2798
+      "hit": 839,
+      "total": 2873
     }
   },
   "k": {
     "inplay": {
-      "hit": 99,
-      "total": 220
+      "hit": 102,
+      "total": 225
     },
     "strong": {
-      "hit": 87,
-      "total": 205
+      "hit": 88,
+      "total": 209
     },
     "prime": {
-      "hit": 91,
-      "total": 172
+      "hit": 94,
+      "total": 178
     },
     "longshot": {
       "hit": 14,
-      "total": 41
+      "total": 44
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 669,
-      "matched": 638
+      "real_total": 684,
+      "matched": 652
     },
     "hrr": {
-      "real_total": 2774,
-      "matched": 2606
+      "real_total": 2848,
+      "matched": 2675
     },
     "tb": {
-      "real_total": 2076,
-      "matched": 1977
+      "real_total": 2126,
+      "matched": 2024
     }
   }
 }
