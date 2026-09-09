@@ -1,0 +1,98 @@
+{
+  "hr": {
+    "strong": {
+      "hit": 13,
+      "total": 65
+    },
+    "prime": {
+      "hit": 0,
+      "total": 3
+    },
+    "inplay": {
+      "hit": 20,
+      "total": 166
+    },
+    "longshot": {
+      "hit": 2,
+      "total": 36
+    }
+  },
+  "hrr": {
+    "prime": {
+      "hit": 33,
+      "total": 62
+    },
+    "strong": {
+      "hit": 57,
+      "total": 130
+    },
+    "longshot": {
+      "hit": 24,
+      "total": 53
+    },
+    "inplay": {
+      "hit": 13,
+      "total": 25
+    }
+  },
+  "tb": {
+    "prime": {
+      "hit": 9,
+      "total": 20
+    },
+    "strong": {
+      "hit": 37,
+      "total": 91
+    },
+    "longshot": {
+      "hit": 45,
+      "total": 127
+    },
+    "inplay": {
+      "hit": 10,
+      "total": 32
+    }
+  },
+  "k": {
+    "longshot": {
+      "hit": 1,
+      "total": 4
+    },
+    "strong": {
+      "hit": 4,
+      "total": 8
+    },
+    "prime": {
+      "hit": 2,
+      "total": 6
+    },
+    "inplay": {
+      "hit": 4,
+      "total": 12
+    }
+  },
+  "_coverage": {
+    "hr": {
+      "real_total": 38,
+      "matched": 35
+    },
+    "hrr": {
+      "real_total": 137,
+      "matched": 127
+    },
+    "tb": {
+      "real_total": 109,
+      "matched": 101
+    }
+  },
+  "_rankStats": {
+    "hr": {
+      "totalHitters": 35,
+      "totalRanked": 270,
+      "medianRank": 106,
+      "top10Pct": 8.6,
+      "top20Pct": 14.3,
+      "top30Pct": 20.0
+    }
+  }
+}
