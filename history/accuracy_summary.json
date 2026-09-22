@@ -5,52 +5,52 @@
       "total": 380
     },
     "strong": {
-      "hit": 441,
-      "total": 2605
+      "hit": 443,
+      "total": 2611
     },
     "inplay": {
-      "hit": 498,
-      "total": 5142
+      "hit": 504,
+      "total": 5181
     },
     "longshot": {
       "hit": 119,
-      "total": 1889
+      "total": 1898
     }
   },
   "hrr": {
     "strong": {
-      "hit": 2129,
-      "total": 4474
+      "hit": 2135,
+      "total": 4493
     },
     "prime": {
-      "hit": 1156,
-      "total": 2008
+      "hit": 1163,
+      "total": 2021
     },
     "inplay": {
-      "hit": 524,
-      "total": 1323
+      "hit": 526,
+      "total": 1330
     },
     "longshot": {
-      "hit": 753,
-      "total": 2211
+      "hit": 758,
+      "total": 2226
     }
   },
   "tb": {
     "strong": {
-      "hit": 1161,
-      "total": 2847
+      "hit": 1165,
+      "total": 2861
     },
     "prime": {
-      "hit": 383,
-      "total": 796
+      "hit": 385,
+      "total": 800
     },
     "inplay": {
-      "hit": 557,
-      "total": 1562
+      "hit": 560,
+      "total": 1567
     },
     "longshot": {
-      "hit": 1377,
-      "total": 4811
+      "hit": 1384,
+      "total": 4842
     }
   },
   "k": {
@@ -59,12 +59,12 @@
       "total": 383
     },
     "strong": {
-      "hit": 164,
-      "total": 363
+      "hit": 166,
+      "total": 368
     },
     "prime": {
-      "hit": 150,
-      "total": 294
+      "hit": 151,
+      "total": 295
     },
     "longshot": {
       "hit": 27,
@@ -73,16 +73,16 @@
   },
   "_coverage": {
     "hr": {
-      "real_total": 1210,
-      "matched": 1154
+      "real_total": 1219,
+      "matched": 1162
     },
     "hrr": {
-      "real_total": 4849,
-      "matched": 4579
+      "real_total": 4870,
+      "matched": 4599
     },
     "tb": {
-      "real_total": 3652,
-      "matched": 3492
+      "real_total": 3669,
+      "matched": 3508
     }
   }
 }
