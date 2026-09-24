@@ -1,88 +1,88 @@
 {
   "hr": {
     "prime": {
-      "hit": 97,
-      "total": 391
+      "hit": 99,
+      "total": 407
     },
     "strong": {
-      "hit": 451,
-      "total": 2683
+      "hit": 459,
+      "total": 2759
     },
     "inplay": {
-      "hit": 513,
-      "total": 5303
+      "hit": 525,
+      "total": 5438
     },
     "longshot": {
-      "hit": 121,
-      "total": 1945
+      "hit": 123,
+      "total": 1987
     }
   },
   "hrr": {
     "strong": {
-      "hit": 2184,
-      "total": 4608
+      "hit": 2244,
+      "total": 4741
     },
     "prime": {
-      "hit": 1191,
-      "total": 2076
+      "hit": 1225,
+      "total": 2131
     },
     "inplay": {
-      "hit": 541,
-      "total": 1367
+      "hit": 547,
+      "total": 1395
     },
     "longshot": {
-      "hit": 767,
-      "total": 2271
+      "hit": 781,
+      "total": 2324
     }
   },
   "tb": {
     "strong": {
-      "hit": 1198,
-      "total": 2936
+      "hit": 1228,
+      "total": 3023
     },
     "prime": {
-      "hit": 394,
-      "total": 824
+      "hit": 404,
+      "total": 844
     },
     "inplay": {
-      "hit": 572,
-      "total": 1605
+      "hit": 587,
+      "total": 1644
     },
     "longshot": {
-      "hit": 1411,
-      "total": 4957
+      "hit": 1437,
+      "total": 5080
     }
   },
   "k": {
     "inplay": {
-      "hit": 167,
-      "total": 394
+      "hit": 171,
+      "total": 405
     },
     "strong": {
-      "hit": 167,
-      "total": 376
+      "hit": 170,
+      "total": 383
     },
     "prime": {
-      "hit": 157,
-      "total": 302
+      "hit": 161,
+      "total": 312
     },
     "longshot": {
       "hit": 27,
-      "total": 78
+      "total": 80
     }
   },
   "_coverage": {
     "hr": {
-      "real_total": 1244,
-      "matched": 1185
+      "real_total": 1271,
+      "matched": 1210
     },
     "hrr": {
-      "real_total": 4986,
-      "matched": 4704
+      "real_total": 5111,
+      "matched": 4821
     },
     "tb": {
-      "real_total": 3759,
-      "matched": 3593
+      "real_total": 3849,
+      "matched": 3678
     }
   }
 }
