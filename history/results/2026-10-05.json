@@ -1,0 +1,17 @@
+{
+  "_coverage": {
+    "hr": {
+      "real_total": 1,
+      "matched": 1
+    },
+    "hrr": {
+      "real_total": 15,
+      "matched": 15
+    },
+    "tb": {
+      "real_total": 9,
+      "matched": 9
+    }
+  },
+  "_rankStats": {}
+}
