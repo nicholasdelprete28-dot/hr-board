@@ -73,16 +73,16 @@
   },
   "_coverage": {
     "hr": {
-      "real_total": 1445,
-      "matched": 1373
+      "real_total": 1448,
+      "matched": 1376
     },
     "hrr": {
-      "real_total": 5814,
-      "matched": 5490
+      "real_total": 5822,
+      "matched": 5498
     },
     "tb": {
-      "real_total": 4374,
-      "matched": 4176
+      "real_total": 4379,
+      "matched": 4181
     }
   }
 }
